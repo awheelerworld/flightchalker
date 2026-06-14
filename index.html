@@ -8,7 +8,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Flight Chalker — League Platform</title>
+<title>Flight Chalker — League Platform v3</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -25,8 +25,8 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-
 .screen.active{display:block}
 
 /* ── Landing ── */
-#screen-landing{background:radial-gradient(ellipse at 60% 30%,#1e3a28 0%,var(--bg) 70%)}
-#screen-landing.active{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center}
+#screen-landing{background:var(--bg)}
+#screen-landing.active{display:block}
 .landing-logo svg{width:100px;height:100px;margin-bottom:1.5rem}
 .landing-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:2.8rem;letter-spacing:.04em;text-transform:uppercase;line-height:1;margin-bottom:.4rem}
 .landing-title span{color:var(--amber)}
@@ -321,6 +321,8 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
 .spin.blue{border-top-color:#8ac4ff}
 @keyframes sp{to{transform:rotate(360deg)}}
 .divider{height:1px;background:var(--border);margin:1.25rem 0}
+html{scroll-behavior:smooth}
+.section-anchor{padding-top:1.5rem}
 .badge-live{display:inline-block;background:#1a2a1e;border:1px solid var(--green);color:var(--gl);font-family:'Barlow Condensed',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:1px 6px;border-radius:3px;margin-left:6px;vertical-align:middle}
 /* ── Public page ── */
 .public-hero{text-align:center;padding:2rem 1rem 1.5rem;border-bottom:1px solid var(--border);margin-bottom:1.5rem}
@@ -349,27 +351,113 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
 <body>
 
 <!-- ═══ LANDING ═══ -->
-<div id="screen-landing" class="screen active">
-  <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="50" cy="50" r="48" stroke="#4a7c59" stroke-width="3"/>
-    <circle cx="50" cy="50" r="36" stroke="#4a7c59" stroke-width="2"/>
-    <circle cx="50" cy="50" r="24" stroke="#4a7c59" stroke-width="2"/>
-    <circle cx="50" cy="50" r="13" stroke="#e8c840" stroke-width="2"/>
-    <circle cx="50" cy="50" r="5" fill="#e8c840"/>
-    <line x1="75" y1="25" x2="54" y2="46" stroke="#e0d8c8" stroke-width="3" stroke-linecap="round"/>
-    <polygon points="54,46 77,22 84,30" fill="#e8c840"/>
-  </svg>
-  <div class="landing-title">Flight <span>Chalker</span></div>
-  <div class="landing-sub">Monday League Darts</div>
-  <div class="landing-sub2">League Platform</div>
-  <div class="landing-btns">
-    <button class="btn-land-s" style="border-color:var(--amber);color:var(--amber)" onclick="goTo('public');loadPublicLeagues()">&#127350; View League Table</button>
-    <button class="btn-land-p" onclick="goTo('register')">Register Your Team</button>
-    <button class="btn-land-s" onclick="goTo('login')">Team Login</button>
-    <div style="height:.25rem"></div>
-    <button class="btn-land-admin" onclick="goTo('admin-login')">⚙ League Admin</button>
+<div id="screen-landing" class="screen active" style="display:block!important;background:var(--bg);min-height:100vh;flex-direction:unset;align-items:unset;justify-content:unset;padding:0;text-align:unset">
+
+  <div id="top"></div>
+  <!-- Hero section -->
+  <div style="background:radial-gradient(ellipse at 60% 30%,#1e3a28 0%,var(--bg) 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2.5rem 2rem 2rem;text-align:center;min-height:60vh">
+    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:45px;height:45px;margin-bottom:.75rem">
+      <circle cx="50" cy="50" r="48" stroke="#4a7c59" stroke-width="3"/>
+      <circle cx="50" cy="50" r="36" stroke="#4a7c59" stroke-width="2"/>
+      <circle cx="50" cy="50" r="24" stroke="#4a7c59" stroke-width="2"/>
+      <circle cx="50" cy="50" r="13" stroke="#e8c840" stroke-width="2"/>
+      <circle cx="50" cy="50" r="5" fill="#e8c840"/>
+      <line x1="75" y1="25" x2="54" y2="46" stroke="#e0d8c8" stroke-width="3" stroke-linecap="round"/>
+      <polygon points="54,46 77,22 84,30" fill="#e8c840"/>
+    </svg>
+    <div class="landing-title">Flight <span>Chalker</span></div>
+    <div class="landing-sub">Monday League Darts</div>
+    <div class="landing-sub2">League Platform</div>
+    <div class="landing-btns">
+      <button class="btn-land-s" style="border-color:var(--amber);color:var(--amber)" onclick="goTo('public');loadPublicLeagues()">&#127350; View League Table</button>
+      <a href="#section-register" class="btn-land-p" style="text-decoration:none;display:block;text-align:center">Register Your Team</a>
+      <a href="#section-login" class="btn-land-s" style="text-decoration:none;display:block;text-align:center">Team Login</a>
+      <div style="height:.25rem"></div>
+      <a href="#section-admin-login" class="btn-land-admin" style="text-decoration:none;display:block;text-align:center">⚙ League Admin</a>
+    </div>
+    <div style="margin-top:2rem;color:var(--dim);font-size:.8rem;letter-spacing:.06em">↓ scroll down to get started</div>
   </div>
-  <div class="landing-footer">powered by awheelerworld · flightchalker.co.uk</div>
+
+  <!-- Register section -->
+  <div id="section-register" class="section-anchor" style="display:flex;justify-content:center;padding:2rem 1rem;border-top:1px solid var(--border);scroll-margin-top:0">
+    <div class="auth-card">
+      <h2>Register Your Team</h2>
+      <p>Enter your league code and team details to get started. Your league code will have been provided by your league administrator.</p>
+      <div class="afield"><label>League Code</label><input type="text" id="reg-league-code" placeholder="e.g. ABC123" style="text-transform:uppercase"></div>
+      <div id="reg-league-info" style="display:none;background:var(--s3);border:1px solid var(--border);border-radius:6px;padding:.75rem;margin-bottom:1rem;font-size:.85rem">
+        <div style="font-weight:600;color:var(--amber)" id="reg-league-name"></div>
+        <div style="color:var(--dim);font-size:.8rem;margin-top:3px" id="reg-league-format"></div>
+      </div>
+      <button class="btns" style="margin-bottom:1rem;width:100%" onclick="lookupLeague()">Look Up League</button>
+      <div class="afield"><label>Team Name</label><input type="text" id="reg-team" placeholder="e.g. The Crown Arrows"></div>
+      <div class="afield">
+        <label>Players <span style="font-weight:400;text-transform:none;letter-spacing:0">(type name, press Enter)</span></label>
+        <div class="player-tags" id="reg-player-tags" style="display:flex;flex-wrap:wrap;gap:.4rem;padding:.5rem .6rem;background:var(--bg);border:1px solid var(--border);border-radius:5px;min-height:46px;align-items:center;cursor:text" onclick="document.getElementById('reg-player-input').focus()">
+          <input id="reg-player-input" placeholder="Type name, press Enter…" style="background:none;border:none;color:var(--text);font-family:Barlow,sans-serif;font-size:.9rem;outline:none;min-width:120px;flex:1" onkeydown="handleTagInput(event)">
+        </div>
+      </div>
+      <div class="afield"><label>Secret Word <span style="font-weight:400;text-transform:none;letter-spacing:0">(used if you forget your PIN)</span></label><input type="text" id="reg-secret" placeholder="e.g. your pub name"><span class="hint">Keep this memorable — you'll need it to recover your PIN</span></div>
+      <div class="arow"><button class="btnp" onclick="registerTeam()"><span id="reg-spin" style="display:none" class="spin"></span>Register</button></div>
+      <div class="ast" id="reg-status"></div>
+      <div style="text-align:right;margin-top:1rem"><a href="#top" style="font-size:.75rem;color:var(--dim);text-decoration:none;font-family:'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase">↑ Back to top</a></div>
+    </div>
+  </div>
+
+  <!-- Login section -->
+  <div id="section-login" class="section-anchor" style="display:flex;justify-content:center;padding:2rem 1rem;border-top:1px solid var(--border);scroll-margin-top:0">
+    <div class="auth-card">
+      <h2>Team Login</h2>
+      <p>Enter your team name and PIN to access your league scorer.</p>
+      <div class="afield"><label>Team Name</label><input type="text" id="login-team" placeholder="e.g. The Crown Arrows"></div>
+      <div class="afield"><label>PIN</label>
+        <div style="position:relative;display:flex;align-items:center">
+          <input type="password" id="login-pin" maxlength="4" placeholder="4-digit PIN" onkeydown="if(event.key==='Enter')loginTeam()" style="background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:Barlow,sans-serif;font-size:.9rem;padding:.5rem 2.5rem .5rem .75rem;width:100%">
+          <button type="button" onclick="togglePw('login-pin',this)" style="position:absolute;right:8px;background:none;border:none;color:var(--dim);cursor:pointer;font-size:.8rem;padding:0;font-family:'Barlow Condensed',sans-serif;letter-spacing:.04em">SHOW</button>
+        </div>
+      </div>
+      <div class="arow"><button class="btnp" onclick="loginTeam()"><span id="login-spin" style="display:none" class="spin"></span>Log In</button></div>
+      <div class="ast" id="login-status"></div>
+      <a href="#section-forgot-pin" class="back-link" style="color:var(--amber);text-decoration:none">Forgot PIN? →</a>
+      <div style="text-align:right;margin-top:1rem"><a href="#top" style="font-size:.75rem;color:var(--dim);text-decoration:none;font-family:'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase">↑ Back to top</a></div>
+    </div>
+  </div>
+
+  <!-- Forgot PIN section -->
+  <div id="section-forgot-pin" class="section-anchor" style="display:flex;justify-content:center;padding:2rem 1rem;border-top:1px solid var(--border);scroll-margin-top:0">
+    <div class="auth-card">
+      <h2>Forgot Your PIN?</h2>
+      <p>Enter your team name and the secret word you chose when registering. Your PIN will be shown if they match.</p>
+      <div class="afield"><label>Team Name</label><input type="text" id="fp-team" placeholder="e.g. The Crown Arrows"></div>
+      <div class="afield"><label>Secret Word</label><input type="text" id="fp-secret" placeholder="Your secret word" onkeydown="if(event.key==='Enter')recoverPIN()"></div>
+      <div class="arow"><button class="btnp" onclick="recoverPIN()"><span id="fp-spin" style="display:none" class="spin"></span>Recover PIN</button></div>
+      <div id="fp-result" style="display:none" class="pin-reveal-box">
+        <div style="font-size:.8rem;color:var(--dim);margin-bottom:.5rem">Your PIN is:</div>
+        <div class="pin-reveal-num" id="fp-pin">0000</div>
+        <div style="font-size:.75rem;color:var(--dim);margin-top:.5rem">Keep this safe!</div>
+      </div>
+      <div class="ast" id="fp-status"></div>
+      <div style="text-align:right;margin-top:1rem"><a href="#top" style="font-size:.75rem;color:var(--dim);text-decoration:none;font-family:'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase">↑ Back to top</a></div>
+    </div>
+  </div>
+
+  <!-- Admin login section -->
+  <div id="section-admin-login" class="section-anchor" style="display:flex;justify-content:center;padding:2rem 1rem 3rem;border-top:1px solid var(--border);scroll-margin-top:0">
+    <div class="auth-card" style="border-color:var(--blue);background:#0d1e2e">
+      <h2 style="color:#8ac4ff">⚙ League Admin</h2>
+      <p>Enter the master admin password to manage leagues.</p>
+      <div class="afield"><label>Admin Password</label>
+        <div style="position:relative;display:flex;align-items:center">
+          <input type="password" id="admin-pw" placeholder="Master password" onkeydown="if(event.key==='Enter')adminLogin()" style="background:var(--bg);border:1px solid var(--blue);border-radius:5px;color:var(--text);font-family:Barlow,sans-serif;font-size:.9rem;padding:.5rem 2.5rem .5rem .75rem;width:100%">
+          <button type="button" onclick="togglePw('admin-pw',this)" style="position:absolute;right:8px;background:none;border:none;color:#5a9abf;cursor:pointer;font-size:.8rem;padding:0;font-family:'Barlow Condensed',sans-serif;letter-spacing:.04em">SHOW</button>
+        </div>
+      </div>
+      <div class="arow"><button class="btn-admin" onclick="adminLogin()"><span id="admin-spin" style="display:none" class="spin blue"></span>Log In</button></div>
+      <div class="ast" id="admin-status"></div>
+      <div style="text-align:right;margin-top:1rem"><a href="#top" style="font-size:.75rem;color:var(--dim);text-decoration:none;font-family:'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase">↑ Back to top</a></div>
+    </div>
+  </div>
+
+  <footer style="text-align:center;padding:1rem 1rem 2rem;font-size:.7rem;color:#4a5a4a;letter-spacing:.08em;font-family:Barlow,sans-serif;border-top:1px solid var(--border)">powered by awheelerworld · flightchalker.co.uk</footer>
 </div>
 
 <!-- ═══ PUBLIC ═══ -->
@@ -426,87 +514,13 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
   <footer style="text-align:center;padding:1.5rem 1rem 2rem;font-size:.7rem;color:#4a5a4a;letter-spacing:.08em;font-family:Barlow,sans-serif">powered by awheelerworld · flightchalker.co.uk</footer>
 </div>
 
-<!-- ═══ REGISTER ═══ -->
-<div id="screen-register" class="screen auth-wrap">
-  <div class="auth-card">
-    <h2>Register Your Team</h2>
-    <p>Enter your league code and team details to get started. Your league code will have been provided by your league administrator.</p>
-    <div class="afield"><label>League Code</label><input type="text" id="reg-league-code" placeholder="e.g. ABC123" style="text-transform:uppercase"></div>
-    <div id="reg-league-info" style="display:none;background:var(--s3);border:1px solid var(--border);border-radius:6px;padding:.75rem;margin-bottom:1rem;font-size:.85rem">
-      <div style="font-weight:600;color:var(--amber)" id="reg-league-name"></div>
-      <div style="color:var(--dim);font-size:.8rem;margin-top:3px" id="reg-league-format"></div>
-    </div>
-    <button class="btns" style="margin-bottom:1rem;width:100%" onclick="lookupLeague()">Look Up League</button>
-    <div class="afield"><label>Team Name</label><input type="text" id="reg-team" placeholder="e.g. The Crown Arrows"></div>
-    <div class="afield">
-      <label>Players <span style="font-weight:400;text-transform:none;letter-spacing:0">(type name, press Enter)</span></label>
-      <div class="player-tags" id="reg-player-tags" style="display:flex;flex-wrap:wrap;gap:.4rem;padding:.5rem .6rem;background:var(--bg);border:1px solid var(--border);border-radius:5px;min-height:46px;align-items:center;cursor:text" onclick="document.getElementById('reg-player-input').focus()">
-        <input id="reg-player-input" placeholder="Type name, press Enter…" style="background:none;border:none;color:var(--text);font-family:Barlow,sans-serif;font-size:.9rem;outline:none;min-width:120px;flex:1" onkeydown="handleTagInput(event)">
-      </div>
-    </div>
-    <div class="afield"><label>Secret Word <span style="font-weight:400;text-transform:none;letter-spacing:0">(used if you forget your PIN)</span></label><input type="text" id="reg-secret" placeholder="e.g. your pub name"><span class="hint">Keep this memorable — you'll need it to recover your PIN</span></div>
-    <div class="arow"><button class="btnp" onclick="registerTeam()"><span id="reg-spin" style="display:none" class="spin"></span>Register</button></div>
-    <div class="ast" id="reg-status"></div>
-    <span class="back-link" onclick="goTo('landing')">← Back</span>
-  </div>
-</div>
 
-<!-- ═══ PIN REVEAL ═══ -->
-<div id="screen-pin" class="screen auth-wrap">
-  <div class="auth-card">
-    <h2>Team Registered!</h2>
-    <p>Your team PIN is shown below. Share it with your players. <strong style="color:var(--red)">Write it down — you won't see it again.</strong></p>
-    <div class="pin-box"><div class="pin-num" id="pin-display">0000</div><div class="pin-lbl">Your Team PIN</div></div>
-    <p style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:1rem;color:var(--amber);margin:.5rem 0" id="pin-team-name"></p>
-    <div class="arow"><button class="btnp" onclick="goToApp()">Enter the App →</button></div>
-  </div>
-</div>
 
-<!-- ═══ TEAM LOGIN ═══ -->
-<div id="screen-login" class="screen auth-wrap">
-  <div class="auth-card">
-    <h2>Team Login</h2>
-    <p>Enter your team name and PIN to access your league scorer.</p>
-    <div class="afield"><label>Team Name</label><input type="text" id="login-team" placeholder="e.g. The Crown Arrows"></div>
-    <div class="afield"><label>PIN</label><input type="password" id="login-pin" maxlength="4" placeholder="4-digit PIN" onkeydown="if(event.key==='Enter')loginTeam()"></div>
-    <div class="arow"><button class="btnp" onclick="loginTeam()"><span id="login-spin" style="display:none" class="spin"></span>Log In</button></div>
-    <div class="ast" id="login-status"></div>
-    <div style="margin-top:.75rem;display:flex;gap:1.5rem">
-      <span class="back-link" onclick="goTo('landing')">← Back</span>
-      <span class="back-link" style="color:var(--amber)" onclick="goTo('forgot-pin')">Forgot PIN?</span>
-    </div>
-  </div>
-</div>
 
-<!-- ═══ FORGOT PIN ═══ -->
-<div id="screen-forgot-pin" class="screen auth-wrap">
-  <div class="auth-card">
-    <h2>Forgot Your PIN?</h2>
-    <p>Enter your team name and the secret word you chose when registering. Your PIN will be shown if they match.</p>
-    <div class="afield"><label>Team Name</label><input type="text" id="fp-team" placeholder="e.g. The Crown Arrows"></div>
-    <div class="afield"><label>Secret Word</label><input type="text" id="fp-secret" placeholder="Your secret word" onkeydown="if(event.key==='Enter')recoverPIN()"></div>
-    <div class="arow"><button class="btnp" onclick="recoverPIN()"><span id="fp-spin" style="display:none" class="spin"></span>Recover PIN</button></div>
-    <div id="fp-result" style="display:none" class="pin-reveal-box">
-      <div style="font-size:.8rem;color:var(--dim);margin-bottom:.5rem">Your PIN is:</div>
-      <div class="pin-reveal-num" id="fp-pin">0000</div>
-      <div style="font-size:.75rem;color:var(--dim);margin-top:.5rem">Keep this safe!</div>
-    </div>
-    <div class="ast" id="fp-status"></div>
-    <span class="back-link" onclick="goTo('login')">← Back to Login</span>
-  </div>
-</div>
 
-<!-- ═══ ADMIN LOGIN ═══ -->
-<div id="screen-admin-login" class="screen auth-wrap">
-  <div class="auth-card" style="border-color:var(--blue);background:#0d1e2e">
-    <h2 style="color:#8ac4ff">League Admin</h2>
-    <p>Enter the master admin password to manage leagues.</p>
-    <div class="afield"><label>Admin Password</label><input type="password" id="admin-pw" placeholder="Master password" onkeydown="if(event.key==='Enter')adminLogin()"></div>
-    <div class="arow"><button class="btn-admin" onclick="adminLogin()"><span id="admin-spin" style="display:none" class="spin blue"></span>Log In</button></div>
-    <div class="ast" id="admin-status"></div>
-    <span class="back-link" onclick="goTo('landing')">← Back</span>
-  </div>
-</div>
+
+
+
 
 <!-- ═══ TEAM APP ═══ -->
 <div id="screen-app" class="screen">
@@ -692,6 +706,17 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
   </main>
 </div>
 
+<!-- PIN Reveal overlay -->
+<div id="pin-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;align-items:center;justify-content:center;padding:1rem">
+  <div class="auth-card" style="max-width:400px">
+    <h2>Team Registered! &#127881;</h2>
+    <p>Your team PIN is shown below. Share it with your players. <strong style="color:var(--red)">Write it down — you won't see it again.</strong></p>
+    <div class="pin-box"><div class="pin-num" id="pin-display">0000</div><div class="pin-lbl">Your Team PIN</div></div>
+    <p style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:1rem;color:var(--amber);margin:.5rem 0" id="pin-team-name"></p>
+    <div class="arow"><button class="btnp" onclick="closePinOverlay()">Enter the App →</button></div>
+  </div>
+</div>
+
 <!-- Modal -->
 <div class="mo" id="modal" onclick="closeMo(event)"><div class="mb" id="mbody"></div></div>
 <!-- Confirm -->
@@ -727,11 +752,27 @@ async function sbPatch(table,filter,body){
 
 // ── Navigation ────────────────────────────────────────────────────────────────
 function goTo(screen){
+  // Inline sections on landing page - just scroll to them
+  var inlineSections=['register','login','forgot-pin','admin-login'];
+  if(inlineSections.includes(screen)){
+    // Make sure landing is active
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById('screen-landing').classList.add('active');
+    var target=document.getElementById('section-'+screen);
+    if(target){setTimeout(function(){target.scrollIntoView({behavior:'smooth',block:'start'});},50);return;}
+  }
+  if(screen==='landing'){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById('screen-landing').classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+    return;
+  }
+  // Full screen switch for app, admin, public etc
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   var el=document.getElementById('screen-'+screen);
-  if(el)el.classList.add('active');
+  if(el){el.classList.add('active');window.scrollTo({top:0,behavior:'smooth'});}
 }
-function logout(){currentTeam=null;currentLeague=null;players=[];matchHistory=[];leagueFixtures=[];leagueTeams=[];localStorage.removeItem('mld_session');goTo('landing');}
+function logout(){currentTeam=null;currentLeague=null;players=[];matchHistory=[];leagueFixtures=[];leagueTeams=[];localStorage.removeItem('mld_session');goTo('landing');window.scrollTo({top:0,behavior:'smooth'});}
 function adminLogout(){localStorage.removeItem('mld_admin');goTo('landing');}
 
 // ── Session ───────────────────────────────────────────────────────────────────
@@ -740,7 +781,12 @@ document.addEventListener('DOMContentLoaded',async function(){
   const sess=localStorage.getItem('mld_session');
   if(sess){try{const d=JSON.parse(sess);currentTeam=d.team;currentLeague=d.league;await loadTeamData();goTo('app');document.getElementById('screen-app').classList.add('active');}catch(e){localStorage.removeItem('mld_session');}}
   const adminSess=localStorage.getItem('mld_admin');
-  if(adminSess){goTo('admin');document.getElementById('screen-admin').classList.add('active');loadAdminData();}
+  if(adminSess&&!sess){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById('screen-admin').classList.add('active');
+    swAdmin('leagues');
+    loadAdminData();
+  }
 });
 
 // ── League lookup ─────────────────────────────────────────────────────────────
@@ -815,12 +861,13 @@ async function registerTeam(){
     localStorage.setItem('mld_session',JSON.stringify({team:currentTeam,league:currentLeague}));
     document.getElementById('pin-display').textContent=pin;
     document.getElementById('pin-team-name').textContent=teamName+' · '+regLeague.name;
-    goTo('pin');
+    document.getElementById('pin-overlay').style.display='flex';
   }catch(e){st.textContent='Error: '+e.message;st.className='ast err';}
   sp.style.display='none';
 }
 
 async function goToApp(){await loadTeamData();goTo('app');document.getElementById('screen-app').classList.add('active');}
+function closePinOverlay(){document.getElementById('pin-overlay').style.display='none';goToApp();}
 
 // ── Login ─────────────────────────────────────────────────────────────────────
 async function loginTeam(){
@@ -848,9 +895,15 @@ async function loginTeam(){
 function adminLogin(){
   const pw=document.getElementById('admin-pw').value;
   const st=document.getElementById('admin-status');
+  if(!pw){st.textContent='Please enter the admin password.';st.className='ast err';return;}
   if(pw!==MASTER_PW){st.textContent='Incorrect password.';st.className='ast err';return;}
   localStorage.setItem('mld_admin','1');
-  goTo('admin');document.getElementById('screen-admin').classList.add('active');
+  // Clear any team session to avoid conflicts
+  localStorage.removeItem('mld_session');
+  currentTeam=null;currentLeague=null;
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-admin').classList.add('active');
+  swAdmin('leagues');
   loadAdminData();
 }
 
@@ -1285,42 +1338,386 @@ async function saveEdit(){
   var mw=0,ml=0,e8=0;
   (editSt.data.singles||[]).forEach(function(s){if(s.result==='win')mw++;else if(s.result==='loss')ml++;e8+=(s.scores||[]).length;});
   (editSt.data.doubles||[]).forEach(function(d){if(d.result==='win')mw++;else if(d.result==='loss')ml++;e8+=(d.scores1||[]).length+(d.scores2||[]).length;});
-  if(editSt.data.team4){if(editSt.data.team4.result==='win')mw++;else if(editSt.data.team4.result==='loss')ml++;(editSt.data.team4.scores||[]).forEach(function(a){e8+=(a||[]).length;});}
-  var sp=document.getElementById('espin');if(sp)sp.style.display='inline-block';
-  try{await sbPatch('team_matches','id=eq.'+editSt.id,{match_date:date,opponent:opp,venue,wins:mw,losses:ml,eighties:e8,data:editSt.data});toast('Match updated!');closeMo();await renderHistory();}
-  catch(e){toast('Update failed: '+e.message,true);}
-  var s2=document.getElementById('espin');if(s2)s2.style.display='none';
+  if(editSt.data.team4){if(editSt.data.team4.result==='win')mw++;else if(editSt.data.team4.result==='loss')ml++;(editSt.data.team4.scores||[]).forEach(function(a){e8+=(a||[])leteMatch(){if(!delId)return;try{await sb('team_matches?id=eq.'+delId,{method:'DELETE'});closeConfirm();toast('Match deleted');await renderH+;sc.push.apply(sc,x.scores||[]);}});
+    db.forEach(function(x){if(x.p1===player){if(x.result==='win')w++;else if(x.result==='loss')lon(id){if(charts[id]){charts[id].destroy();delete charts[id];}});
+  var go={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8a9080',font:{family:"'Barlow Condensed',sans-serif",size:11}}}},scales:{x:{ticks:{color:'#8a9080',font:{family:"'Barlow Condensed',sans-serif",size:10}},grid:{color:'#2a3a2a'}},y:{ticks:{color:'#8a9080',font:{family:"'Barlow Condensed',sans-serif",size:10}},grid:{color:'#2a3a2a'},beginAtZero:true}}};
+  charts['cwl']=new Chart(document.getElementById('cwl'),{type:'line',data:{labels:wlL,datasets:[{label:'Wins',data:wlW,borderColor:'#4a8855',backgroundColor:'rgba(74,136,85,0.15)',tension:.3,fill:true,pointBackgroundColor:'#4a8855'},{label:'Losses',data:wlL2,borderColor:'#c0392b',backgroundColor:'rgba(192,57,43,0.1)',tension:.3,fill:true,pointBackgroundColor:'#c0392b'}]},options:go});
+  charts['chs']=new Chart(document.getElementById('chs'),{type:'bar',data:{labels:hsL,datasets:[{label:'Count',data:hsC,backgroundColor:'rgba(232,200,64,0.5)',borderColor:'#e8c840',borderWidth:1},{label:'Highest',data:hsM,type:'line',borderColor:'#e8c840',backgroundColor:'transparent',tension:.3,pointBackgroundColor:'#e8c840',yAxisID:'y1'}]},options:Object.assign({},go,{scales:Object.assign({},go.scales,{y1:{position:'right',ticks:{color:'#8a9080',font:{family:"'Barlow Condensed',sans-serif",size:10}},grid:{drawOnChartArea:false},beginAtZero:true}})})});
 }
 
-// ── Delete ────────────────────────────────────────────────────────────────────
-function askDel(id,opp){delId=id;document.getElementById('confirm-title').textContent='Delete Match?';document.getElementById('cmsg').textContent='Delete match vs "'+opp+'"? This cannot be undone.';confirmCb=doDeleteMatch;document.getElementById('confirm').classList.add('open');}
-function closeConfirm(){document.getElementById('confirm').classList.remove('open');delId=null;confirmCb=null;}
-async function doConfirm(){if(confirmCb)await confirmCb();}
-async function doDeleteMatch(){if(!delId)return;try{await sb('team_matches?id=eq.'+delId,{method:'DELETE'});closeConfirm();toast('Match deleted');await renderHistory();}catch(e){toast('Delete failed: '+e.message,true);}}
+// ── PDF ───────────────────────────────────────────────────────────────────────
+function downloadPDF(idx){
+  var m=matchHistory[idx];
+  var jsPDF=window.jspdf.jsPDF;
+  var doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  var W=210,pad=16,y=pad;
+  doc.setFillColor(10,21,37);doc.rect(0,0,W,22,'F');
+  doc.setTextColor(232,200,64);doc.setFont('helvetica','bold');doc.setFontSize(14);
+  doc.text('FLIGHT CHALKER — LEAGUE PLATFORM',pad,13);
+  doc.setTextColor(138,144,128);doc.setFont('helvetica','normal');doc.setFontSize(7);
+  doc.text('flightchalker.co.uk',W-pad,18,'right');y=30;
+  doc.setTextColor(138,200,255);doc.setFont('helvetica','bold');doc.setFontSize(9);
+  doc.text((currentLeague?currentLeague.name:'').toUpperCase(),pad,y);y+=6;
+  doc.setTextColor(224,216,200);doc.setFontSize(14);doc.text(currentTeam.team_name.toUpperCase()+' vs '+m.opponent.toUpperCase(),pad,y);y+=6;
+  var matchDate=new Date(m.match_date+'T00:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(138,144,128);doc.text(matchDate+' · '+m.venue.charAt(0).toUpperCase()+m.venue.slice(1),pad,y);y+=10;
+  var won=m.wins>m.losses;
+  doc.setFillColor(26,37,26);doc.roundedRect(pad,y,W-pad*2,14,2,2,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(16);
+  doc.setTextColor(won?168:255,won?255:170,won?184:170);doc.text(String(m.wins),pad+8,y+10);
+  doc.setTextColor(138,144,128);doc.setFontSize(12);doc.text('–',pad+18,y+10);
+  doc.setTextColor(won?255:168,won?170:255,won?170:184);doc.setFontSize(16);doc.text(String(m.losses),pad+24,y+10);
+  doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(232,200,64);doc.text(won?'WIN':'LOSS',W-pad-5,y+10,'right');y+=20;
+  var mdata=m.data||{};var singles=mdata.singles||[];var doubles=mdata.doubles||[];var team4=mdata.team4||{};
+  function sHdr(t){doc.setFillColor(74,124,89);doc.rect(pad,y,W-pad*2,6,'F');doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(7);doc.text(t.toUpperCase(),pad+3,y+4.2);y+=8;}
+  function mRow(lbl,names,result,scores,legs){
+    var rh=10;var isW=result==='win',isL=result==='loss';
+    doc.setFillColor(isW?26:isL?34:30,isW?42:isL?26:37,isW?30:isL?26:30);
+    doc.rect(pad,y,W-pad*2,rh,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(138,144,128);doc.text(lbl,pad+2,y+6.5);
+    doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(224,216,200);doc.text(names,pad+14,y+6.5);
+    if(legs){doc.setFontSize(7);doc.setTextColor(138,144,128);doc.text(legs,pad+80,y+6.5);}
+    if(isW||isL){var bx=W-pad-30;doc.setFillColor(isW?74:122,isW?136:32,isW?85:32);doc.roundedRect(bx,y+2,14,6,1,1,'F');doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(isW?168:255,isW?255:170,isW?184:170);doc.text(isW?'WIN':'LOSS',bx+7,y+6.5,'center');}
+    if(scores&&scores.length){doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(232,200,64);doc.text(scores.join('  '),W-pad-14,y+6.5,'right');}
+    y+=rh+1;
+  }
+  sHdr('Singles');singles.forEach(function(s,i){var legs=s.legsFor!==undefined?(s.legsFor+'-'+s.legsAgainst):null;mRow('S'+(i+1),s.player||'—',s.result,s.scores||[],legs);});y+=3;
+  if(doubles.length){sHdr('Doubles');doubles.forEach(function(d,i){var legs=d.legsFor!==undefined?(d.legsFor+'-'+d.legsAgainst):null;mRow('D'+(i+1),(d.p1||'—')+' & '+(d.p2||'—'),d.result,[].concat(d.scores1||[],d.scores2||[]),legs);});y+=3;}
+  if(team4&&team4.result!==undefined){sHdr('Team Game');var tN=[];for(var pi=1;pi<=6;pi++){if(team4['p'+pi])tN.push(team4['p'+pi]);}mRow('Team',tN.join(', '),team4.result,(team4.scores||[]).flat(),null);y+=3;}
+  doc.setDrawColor(74,124,89);doc.setLineWidth(.5);doc.line(pad,y,W-pad,y);y+=5;
+  doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(138,144,128);
+  doc.text('Flight Chalker League Platform · flightchalker.co.uk',W/2,y,'center');
+  var safe=m.opponent.replace(/[^a-z0-9]/gi,'_').toLowerCase();
+  doc.save('match-'+safe+'-'+m.match_date+'.pdf');
+}
 
-// ── Stats ─────────────────────────────────────────────────────────────────────
-function renderStats(){
-  var player=document.getElementById('spsel').value;
-  var el=document.getElementById('scontent');
-  if(!player){el.innerHTML='<div class="nh">Select a player to see their stats.</div>';return;}
-  if(!matchHistory.length){el.innerHTML='<div class="nh">No match data available.</div>';return;}
-  var pm=[];
-  matchHistory.slice().reverse().forEach(function(m){
-    var mdata=m.data||{};var s=mdata.singles||[];var db=mdata.doubles||[];var t4=mdata.team4||{};
-    var date=new Date(m.match_date+'T00:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
-    var w=0,l=0,sc=[];
-    s.forEach(function(x){if(x.player===player){if(x.result==='win')w++;else if(x.result==='loss')l++;sc.push.apply(sc,x.scores||[]);}});
-    db.forEach(function(x){if(x.p1===player){if(x.result==='win')w++;else if(x.result==='loss')l++;sc.push.apply(sc,x.scores1||[]);}if(x.p2===player){if(x.result==='win')w++;else if(x.result==='loss')l++;sc.push.apply(sc,x.scores2||[]);}});
-    for(var pi=1;pi<=6;pi++){if(t4['p'+pi]===player){if(t4.result==='win')w++;else if(t4.result==='loss')l++;sc.push.apply(sc,(t4.scores&&t4.scores[pi-1])||[]);break;}}
-    if(w>0||l>0||sc.length>0)pm.push({date,wins:w,losses:l,scores:sc});
-  });
-  if(!pm.length){el.innerHTML='<div class="nh">'+esc(player)+' has not played in any recorded matches.</div>';return;}
-  var tw=pm.reduce(function(a,b){return a+b.wins;},0);var tl=pm.reduce(function(a,b){return a+b.losses;},0);
-  var tot=tw+tl;var allSc=pm.flatMap(function(m){return m.scores;});var hi=allSc.length?Math.max.apply(null,allSc):0;var wp=tot?Math.round(tw/tot*100):0;
-  var cw=0,cl=0,wlL=[],wlW=[],wlL2=[];
-  pm.forEach(function(m){cw+=m.wins;cl+=m.losses;wlL.push(m.date);wlW.push(cw);wlL2.push(cl);});
-  var hsL=pm.map(function(m){return m.date;});var hsC=pm.map(function(m){return m.scores.length;});var hsM=pm.map(function(m){return m.scores.length?Math.max.apply(null,m.scores):0;});
-  el.innerHTML='<div class="sg"><div class="scard"><div class="v g">'+tw+'</div><div class="lb">Legs Won</div></div><div class="scard"><div class="v r">'+tl+'</div><div class="lb">Legs Lost</div></div><div class="scard"><div class="v '+(wp>=50?'g':'r')+'">'+wp+'%</div><div class="lb">Win Rate</div></div><div class="scard"><div class="v a">'+allSc.length+'</div><div class="lb">80+ Scores</div></div><div class="scard"><div class="v a">'+(hi||'—')+'</div><div class="lb">Highest</div></div><div class="scard"><div class="v">'+pm.length+'</div><div class="lb">Matches</div></div></div><div class="cc"><h3>Cumulative Wins &amp; Losses</h3><div class="cw"><canvas id="cwl"></canvas></div></div><div class="cc"><h3>80+ Scores Per Match</h3><div class="cw"><canvas id="chs"></canvas></div></div><div class="cc"><h3>All 80+ Scores</h3><div class="scl">'+(allSc.sort(function(a,b){return b-a;}).map(function(s){return s===180?'<span class="sp2" style="background:#5a3000;border-color:#e8c840;color:#fff">&#9733; 180</span>':'<span class="sp2">'+s+'</span>';}).join('')||'<span style="color:var(--dim)">None yet</span>')+'</div></div>';
-  ['cwl','chs'].forEach(function(id){if(charts[id]){charts[id].destroy();delete charts[id];}});
-  var go={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8a9080',font:{family:"'Barlow Condensed',sans-serif",size:11}}}},scales:{x:{ticks:{color:'#8a9080',font:{family:"'Barlow Condensed',sans-serif",size:10}},grid:{color:'#2a3a2a'}},y:{ticks:{color:'#8a9080',font:{family:"'Barlow Condensed',sans-serif",size:10}},grid:{color:'#2a3a2a'},beginAtZero:true}}};
-  charts['cwl']=new Chart(docume
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+function sw(name){
+  var names=['match','fixtures','table','history','players','stats'];
+  document.querySelectorAll('#screen-app .tab').forEach(function(t,i){t.classList.toggle('active',names[i]===name);});
+  document.querySelectorAll('#screen-app .tc').forEach(function(c){c.classList.remove('active');});
+  document.getElementById('tab-'+name).classList.add('active');
+  if(name==='history')renderHistory();
+  if(name==='table')renderLeagueTable();
+  if(name==='fixtures')renderFixtures();
+  if(name==='stats'){if(!matchHistory.length)renderHistory().then(renderStats);else renderStats();}
+}
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
+function closeMo(e){if(!e||e.target===document.getElementById('modal')){document.getElementById('modal').classList.remove('open');editSt=null;}}
+
+// ── Admin ─────────────────────────────────────────────────────────────────────
+async function loadAdminData(){
+  var el=document.getElementById('admin-leagues-list');
+  if(!el){console.error('admin-leagues-list not found');return;}
+  el.innerHTML='<div class="lh"><span class="spin blue"></span> Loading leagues…</div>';
+  try{
+    var leagues=await sb('leagues?order=created_at.desc&select=*');
+    var teams=await sb('teams?select=id,team_name,league_id');
+    if(!leagues||!leagues.length){el.innerHTML='<div class="nh">No leagues created yet. Use the Create League tab to add one.</div>';return;}
+    el.innerHTML=leagues.map(function(l){
+      var lTeams=teams.filter(function(t){return t.league_id===l.id;});
+      var code=l.id.replace(/-/g,'').toUpperCase().slice(0,8);
+      return '<div class="league-card" onclick="showLeagueDetail(\''+l.id+'\',\''+esc(l.name)+'\')">'
+        +'<div><div class="league-card-name">'+esc(l.name)+'</div>'
+        +'<div class="league-card-meta">'+l.match_night+'s · '+l.num_singles+' singles · '+l.num_doubles+' doubles · '+l.starting_score+'</div></div>'
+        +'<div><div class="league-card-teams">'+lTeams.length+' team'+(lTeams.length!==1?'s':'')+'</div>'
+        +'<div style="font-size:.7rem;color:var(--blue-l)">Code: '+code+'</div></div>'
+        +'</div>';
+    }).join('');
+  }catch(e){el.innerHTML='<div class="nh">Error: '+esc(e.message)+'</div>';}
+}
+
+async function showLeagueDetail(leagueId,leagueName){
+  swAdmin('league-detail');
+  var el=document.getElementById('admin-league-detail-content');
+  el.innerHTML='<div class="lh"><span class="spin blue"></span> Loading '+esc(leagueName)+'…</div>';
+  try{
+    var league=await sb('leagues?id=eq.'+leagueId+'&select=*');league=league[0];
+    var teams=await sb('teams?league_id=eq.'+leagueId+'&order=team_name.asc&select=*');
+    var fixtures=await sb('league_fixtures?league_id=eq.'+leagueId+'&order=fixture_date.asc&select=*');
+    var teamMap={};teams.forEach(function(t){teamMap[t.id]=t.team_name;});
+    var code=league.id.replace(/-/g,'').toUpperCase().slice(0,8);
+    var h='<button class="btns" style="margin-bottom:1rem" onclick="swAdmin(\'leagues\');loadAdminData()">← All Leagues</button>';
+    h+='<div class="admin-section"><h3>'+esc(league.name)+'</h3>';
+    h+='<div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1rem">';
+    h+='<span class="tag blue">Code: '+code+'</span>';
+    h+='<span class="tag amber">'+league.match_night+'s</span>';
+    h+='<span class="tag green">'+teams.length+' teams</span>';
+    h+='</div>';
+    h+='<div style="font-size:.85rem;color:var(--dim);line-height:1.7">';
+    h+='Singles: '+league.num_singles+' (best of '+league.best_of_singles+') · ';
+    h+='Doubles: '+league.num_doubles+' (best of '+league.best_of_doubles+') · ';
+    h+='Team game: '+(league.team_game_players>0?league.team_game_players+' players':'none')+' · ';
+    h+='Starting score: '+league.starting_score+' · ';
+    h+='Points: W='+league.points_win+' D='+league.points_draw+' L='+league.points_loss;
+    h+='</div></div>';
+
+    // Season management
+    h+='<div class="admin-section"><h3>Season Management</h3>';
+    h+='<div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">';
+    h+='<div style="font-size:.9rem;color:var(--text)">Current Season: <strong style="color:var(--amber)">Season '+league.current_season+'</strong></div>';
+    h+='<button class="btn-admin" onclick="startNewSeason(&quot;'+leagueId+'&quot;,&quot;'+esc(leagueName)+'&quot;,'+league.current_season+')">Start New Season</button>';
+    h+='</div>';
+    h+='<p style="font-size:.8rem;color:var(--dim);margin-top:.75rem">Starting a new season keeps all history but creates a fresh league table. Teams keep their accounts.</p>';
+    h+='</div>';
+    h+='<div class="admin-section"><h3>Registered Teams ('+teams.length+')</h3>';
+    if(!teams.length){h+='<div class="nh">No teams registered yet.</div>';}
+    else{h+=teams.map(function(t){return '<div class="team-row"><span class="team-row-name">'+esc(t.team_name)+'</span><span class="team-row-meta">PIN: '+t.pin+'</span><button class="hb del" onclick="deleteTeamConfirm(\''+t.id+'\',\''+esc(t.team_name)+'\')">Remove</button></div>';}).join('');}
+    h+='</div>';
+
+    h+='<div class="admin-section"><h3>Fixtures ('+fixtures.length+')</h3>';
+    h+='<div style="margin-bottom:1rem">';
+    h+='<div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end;margin-bottom:.75rem">';
+    h+='<div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:120px"><label style="font-size:.72rem;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:.1em">Date</label><input type="date" id="af-date" style="background:var(--bg);border:1px solid var(--blue);border-radius:4px;color:var(--text);padding:.35rem .6rem;font-size:.85rem;font-family:Barlow,sans-serif"></div>';
+    h+='<div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:120px"><label style="font-size:.72rem;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:.1em">Home Team</label><select id="af-home" style="background:var(--bg);border:1px solid var(--blue);border-radius:4px;color:var(--text);padding:.35rem .6rem;font-size:.85rem;font-family:Barlow,sans-serif"><option value="">— Select —</option>'+teams.map(function(t){return '<option value="'+t.id+'">'+esc(t.team_name)+'</option>';}).join('')+'</select></div>';
+    h+='<div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:120px"><label style="font-size:.72rem;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:.1em">Away Team</label><select id="af-away" style="background:var(--bg);border:1px solid var(--blue);border-radius:4px;color:var(--text);padding:.35rem .6rem;font-size:.85rem;font-family:Barlow,sans-serif"><option value="">— Select —</option>'+teams.map(function(t){return '<option value="'+t.id+'">'+esc(t.team_name)+'</option>';}).join('')+'</select></div>';
+    h+='</div><button class="btn-admin" onclick="addAdminFixture(\''+leagueId+'\')">Add Fixture</button></div>';
+    if(fixtures.length){
+      h+=fixtures.map(function(f){
+        var d=new Date(f.fixture_date+'T00:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+        return '<div class="fx-entry'+(f.played?' past':'')+'"><div class="fx-date">'+d+'</div>'
+          +'<div class="fx-teams">'+esc(teamMap[f.home_team_id]||'?')+'<span class="vs">vs</span>'+esc(teamMap[f.away_team_id]||'?')+'</div>'
+          +'<span class="fx-status '+(f.played?'played':'upcoming')+'">'+(f.played?'Played':'Upcoming')+'</span>'
+          +'<button class="hb del" onclick="deleteFixtureAdmin(\''+f.id+'\',\''+leagueId+'\',\''+esc(leagueName)+'\')">Delete</button></div>';
+      }).join('');
+    }else{h+='<div class="nh">No fixtures added yet.</div>';}
+    h+='</div>';
+    el.innerHTML=h;
+  }catch(e){el.innerHTML='<div class="nh">Error: '+esc(e.message)+'</div>';}
+}
+
+async function addAdminFixture(leagueId){
+  var date=document.getElementById('af-date').value;
+  var home=document.getElementById('af-home').value;
+  var away=document.getElementById('af-away').value;
+  if(!date||!home||!away){toast('Please fill in date and both teams',true);return;}
+  if(home===away){toast('Home and away teams must be different',true);return;}
+  try{var leagueRow=await sb('leagues?id=eq.'+leagueId+'&select=current_season');var seas=(leagueRow&&leagueRow[0]?leagueRow[0].current_season:1);
+  await sb('league_fixtures',{method:'POST',prefer:'return=minimal',body:JSON.stringify({league_id:leagueId,home_team_id:home,away_team_id:away,fixture_date:date,season:seas})});toast('Fixture added!');showLeagueDetail(leagueId,'');}
+  catch(e){toast('Error: '+e.message,true);}
+}
+
+function deleteTeamConfirm(id,name){delId=id;document.getElementById('confirm-title').textContent='Remove Team?';document.getElementById('cmsg').textContent='Remove "'+name+'" from the league? This cannot be undone.';confirmCb=async function(){try{await sb('teams?id=eq.'+id,{method:'DELETE'});closeConfirm();toast('Team removed');loadAdminData();}catch(e){toast('Error: '+e.message,true);}};document.getElementById('confirm').classList.add('open');}
+async function deleteFixtureAdmin(id,leagueId,leagueName){try{await sb('league_fixtures?id=eq.'+id,{method:'DELETE'});toast('Fixture removed');showLeagueDetail(leagueId,leagueName);}catch(e){toast('Error: '+e.message,true);}}
+
+async function createLeague(){
+  var name=document.getElementById('cl-name').value.trim();
+  var pw=document.getElementById('cl-pw').value.trim();
+  var night=document.getElementById('cl-night').value;
+  var ns=parseInt(document.getElementById('cl-singles').value);
+  var nd=parseInt(document.getElementById('cl-doubles').value);
+  var tg=parseInt(document.getElementById('cl-teamgame').value);
+  var score=parseInt(document.getElementById('cl-score').value);
+  var bos=parseInt(document.getElementById('cl-bosing').value);
+  var bod=parseInt(document.getElementById('cl-bodub').value);
+  var pw2=parseInt(document.getElementById('cl-pwin').value);
+  var pd=parseInt(document.getElementById('cl-pdraw').value);
+  var pl=parseInt(document.getElementById('cl-ploss').value);
+  var st=document.getElementById('cl-status');
+  if(!name||!pw){st.textContent='League name and password required.';st.className='ast err';return;}
+  document.getElementById('cl-spin').style.display='inline-block';st.textContent='';
+  try{
+    var res=await sb('leagues',{method:'POST',prefer:'return=representation',body:JSON.stringify({name,admin_password:pw,match_night:night,num_singles:ns,num_doubles:nd,team_game_players:tg,starting_score:score,best_of_singles:bos,best_of_doubles:bod,points_win:pw2,points_draw:pd,points_loss:pl})});
+    var newLeague=res[0];
+    var code=newLeague.id.replace(/-/g,'').toUpperCase().slice(0,8);
+    st.innerHTML='<span style="color:var(--gl)">✓ League created!</span> Team registration code: <strong style="color:var(--amber)">'+code+'</strong>';
+    st.className='ast';
+    document.getElementById('cl-name').value='';document.getElementById('cl-pw').value='';
+    swAdmin('leagues');loadAdminData();
+  }catch(e){st.textContent='Error: '+e.message;st.className='ast err';}
+  document.getElementById('cl-spin').style.display='none';
+}
+
+function swAdmin(name){
+  var names=['leagues','create-league','league-detail'];
+  document.querySelectorAll('#screen-admin .tab').forEach(function(t,i){t.classList.toggle('active',names[i]===name);});
+  document.querySelectorAll('#screen-admin .tc').forEach(function(c){c.classList.remove('active');});
+  var el=document.getElementById('atab-'+name);if(el)el.classList.add('active');
+}
+
+// ── Public league page ───────────────────────────────────────────────────────
+let publicLeague=null;
+
+async function loadPublicLeagues(){
+  var el=document.getElementById('public-leagues-list');
+  el.innerHTML='<div class="lh"><span class="spin"></span> Loading…</div>';
+  try{
+    var leagues=await sb('leagues?order=name.asc&select=id,name,match_night,num_singles,num_doubles,current_season');
+    if(!leagues.length){el.innerHTML='<div class="nh">No leagues available yet.</div>';return;}
+    el.innerHTML='<div class="public-league-list">'+leagues.map(function(l){
+      return '<button class="public-league-btn" onclick="openPublicLeague(&quot;'+l.id+'&quot;,&quot;'+esc(l.name)+'&quot;)">'
+        +'<div><div class="pub-league-name">'+esc(l.name)+'</div>'
+        +'<div class="pub-league-meta">'+l.match_night+'s · Season '+l.current_season+'</div></div>'
+        +'<span class="pub-league-arrow">›</span></button>';
+    }).join('')+'</div>';
+  }catch(e){el.innerHTML='<div class="nh">Error: '+esc(e.message)+'</div>';}
+}
+
+async function openPublicLeague(leagueId,leagueName){
+  publicLeague={id:leagueId,name:leagueName};
+  try{
+    var rows=await sb('leagues?id=eq.'+leagueId+'&select=*');
+    publicLeague=rows[0];
+  }catch(e){}
+  document.getElementById('pub-league-title').textContent=publicLeague.name;
+  goTo('public-league');
+  document.getElementById('screen-public-league').classList.add('active');
+  // Populate season selector
+  var sel=document.getElementById('pub-season-sel');
+  sel.innerHTML='';
+  for(var i=1;i<=(publicLeague.current_season||1);i++){
+    sel.innerHTML+='<option value="'+i+'" '+(i===publicLeague.current_season?'selected':'')+'>Season '+i+'</option>';
+  }
+  loadPublicTable();
+  loadPublicFixtures();
+  loadPublicScorers();
+}
+
+function swPublic(name){
+  var names=['pub-table','pub-fixtures','pub-scorers'];
+  document.querySelectorAll('#screen-public-league .tab').forEach(function(t,i){t.classList.toggle('active',names[i]===name);});
+  document.querySelectorAll('#screen-public-league .tc').forEach(function(c){c.classList.remove('active');});
+  document.getElementById('tab-'+name).classList.add('active');
+}
+
+async function loadPublicTable(){
+  var wrap=document.getElementById('pub-table-wrap');
+  wrap.innerHTML='<div class="lh"><span class="spin"></span> Loading…</div>';
+  var season=parseInt(document.getElementById('pub-season-sel').value)||1;
+  try{
+    var teams=await sb('teams?league_id=eq.'+publicLeague.id+'&select=id,team_name');
+    if(!teams.length){wrap.innerHTML='<div class="nh">No teams registered yet.</div>';return;}
+    var allMatches=await sb('team_matches?team_id=in.('+teams.map(function(t){return t.id;}).join(',')+')'+'&season=eq.'+season+'&select=team_id,wins,losses,match_date');
+    var tableData=teams.map(function(t){
+      var tM=allMatches.filter(function(m){return m.team_id===t.id;});
+      var played=tM.length;
+      var wins=tM.filter(function(m){return m.wins>m.losses;}).length;
+      var draws=tM.filter(function(m){return m.wins===m.losses&&played>0;}).length;
+      var losses2=tM.filter(function(m){return m.wins<m.losses;}).length;
+      var gw=tM.reduce(function(a,m){return a+m.wins;},0);
+      var gl=tM.reduce(function(a,m){return a+m.losses;},0);
+      var pts=wins*(publicLeague.points_win||2)+draws*(publicLeague.points_draw||1)+losses2*(publicLeague.points_loss||0);
+      var form=tM.slice().sort(function(a,b){return a.match_date<b.match_date?1:-1;}).slice(0,5).map(function(m){return m.wins>m.losses?'w':(m.wins===m.losses?'d':'l');}).reverse();
+      return{name:t.team_name,played,wins,draws,losses:losses2,gw,gl,gd:gw-gl,pts,form};
+    });
+    tableData.sort(function(a,b){return b.pts-a.pts||(b.gd-a.gd)||(b.gw-a.gw);});
+    var html='<table class="league-table"><thead><tr><th class="pos">#</th><th>Team</th><th class="num">P</th><th class="num">W</th><th class="num">D</th><th class="num">L</th><th class="num">GW</th><th class="num">GL</th><th class="num">GD</th><th class="num">Pts</th><th>Form</th></tr></thead><tbody>';
+    tableData.forEach(function(t,i){
+      html+='<tr><td class="pos">'+(i+1)+'</td><td class="team-name">'+esc(t.name)+'</td>'
+        +'<td class="num">'+t.played+'</td><td class="num">'+t.wins+'</td><td class="num">'+t.draws+'</td><td class="num">'+t.losses+'</td>'
+        +'<td class="num">'+t.gw+'</td><td class="num">'+t.gl+'</td>'
+        +'<td class="num" style="color:'+(t.gd>0?'var(--gl)':t.gd<0?'var(--red)':'var(--dim)')+'">'+( t.gd>0?'+':'')+t.gd+'</td>'
+        +'<td class="num pts">'+t.pts+'</td>'
+        +'<td>'+t.form.map(function(f){return '<span class="form-pip '+f+'">'+f.toUpperCase()+'</span>';}).join('')+'</td>'
+        +'</tr>';
+    });
+    html+='</tbody></table><p style="font-size:.72rem;color:var(--dim);margin-top:.75rem">GW = Games Won · GL = Games Lost · GD = Difference · Pts = Points</p>';
+    wrap.innerHTML=html;
+  }catch(e){wrap.innerHTML='<div class="nh">Error: '+esc(e.message)+'</div>';}
+}
+
+async function loadPublicFixtures(){
+  var wrap=document.getElementById('pub-fixtures-wrap');
+  wrap.innerHTML='<div class="lh"><span class="spin"></span> Loading…</div>';
+  var season=parseInt(document.getElementById('pub-season-sel').value)||1;
+  try{
+    var rows=await sb('league_fixtures?league_id=eq.'+publicLeague.id+'&season=eq.'+season+'&order=fixture_date.asc');
+    if(!rows||!rows.length){wrap.innerHTML='<div class="nh">No fixtures scheduled.</div>';return;}
+    var teamIds=[...new Set(rows.flatMap(function(r){return[r.home_team_id,r.away_team_id];}))];
+    var teamRows=await sb('teams?id=in.('+teamIds.join(',')+')'+'&select=id,team_name');
+    var teamMap={};teamRows.forEach(function(t){teamMap[t.id]=t.team_name;});
+    var today=new Date();today.setHours(0,0,0,0);
+    wrap.innerHTML=rows.map(function(f){
+      var d=new Date(f.fixture_date+'T00:00:00');
+      var fmt=d.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+      var diff=Math.round((d-today)/(1000*60*60*24));
+      var dlbl=diff===0?'Today!':diff===1?'Tomorrow':diff<0?Math.abs(diff)+'d ago':'In '+diff+'d';
+      return '<div class="fx-entry'+(diff<0?' past':'')+(diff===0?' today':'')+'"><div class="fx-date">'+fmt+'</div>'
+        +'<div class="fx-teams">'+esc(teamMap[f.home_team_id]||'?')+'<span class="vs">vs</span>'+esc(teamMap[f.away_team_id]||'?')+'</div>'
+        +'<span class="fx-status '+(f.played?'played':'upcoming')+'">'+(f.played?'Played':'Upcoming')+'</span></div>';
+    }).join('');
+  }catch(e){wrap.innerHTML='<div class="nh">Error: '+esc(e.message)+'</div>';}
+}
+
+async function loadPublicScorers(){
+  var wrap=document.getElementById('pub-scorers-wrap');
+  wrap.innerHTML='<div class="lh"><span class="spin"></span> Loading…</div>';
+  var season=parseInt(document.getElementById('pub-season-sel').value)||1;
+  try{
+    var teams=await sb('teams?league_id=eq.'+publicLeague.id+'&select=id,team_name');
+    if(!teams.length){wrap.innerHTML='<div class="nh">No data yet.</div>';return;}
+    var matches=await sb('team_matches?team_id=in.('+teams.map(function(t){return t.id;}).join(',')+')'+'&season=eq.'+season+'&select=team_id,data');
+    var teamMap={};teams.forEach(function(t){teamMap[t.id]=t.team_name;});
+    // Aggregate 80+ scores per player
+    var playerScores={};
+    matches.forEach(function(m){
+      var mdata=m.data||{};
+      var teamName=teamMap[m.team_id]||'Unknown';
+      function addScores(player,scores){
+        if(!player)return;
+        var key=player+'|'+teamName;
+        if(!playerScores[key])playerScores[key]={player,team:teamName,count:0,highest:0};
+        playerScores[key].count+=(scores||[]).length;
+        (scores||[]).forEach(function(s){if(s>playerScores[key].highest)playerScores[key].highest=s;});
+      }
+      (mdata.singles||[]).forEach(function(s){addScores(s.player,s.scores);});
+      (mdata.doubles||[]).forEach(function(d){addScores(d.p1,d.scores1);addScores(d.p2,d.scores2);});
+      if(mdata.team4&&mdata.team4.scores){for(var pi=1;pi<=6;pi++){if(mdata.team4['p'+pi])addScores(mdata.team4['p'+pi],mdata.team4.scores[pi-1]);}}
+    });
+    var sorted=Object.values(playerScores).filter(function(p){return p.count>0;}).sort(function(a,b){return b.count-a.count||(b.highest-a.highest);}).slice(0,20);
+    if(!sorted.length){wrap.innerHTML='<div class="nh">No scores recorded yet.</div>';return;}
+    wrap.innerHTML='<div class="top-scorers">'+sorted.map(function(p,i){
+      return '<div class="scorer-row"><span class="scorer-rank">'+(i+1)+'</span>'
+        +'<div><div class="scorer-name">'+esc(p.player)+'</div><div class="scorer-team">'+esc(p.team)+'</div></div>'
+        +'<div style="text-align:right"><div class="scorer-val">'+p.count+'</div><div style="font-size:.7rem;color:var(--dim)">scores</div></div>'
+        +(p.highest===180?'<span style="color:var(--amber);font-size:.85rem;font-weight:700;font-family:Barlow,sans-serif">&#9733; 180</span>':'')
+        +'</div>';
+    }).join('')+'</div>';
+  }catch(e){wrap.innerHTML='<div class="nh">Error: '+esc(e.message)+'</div>';}
+}
+
+// ── PIN recovery ──────────────────────────────────────────────────────────────
+async function recoverPIN(){
+  var teamName=document.getElementById('fp-team').value.trim();
+  var secret=document.getElementById('fp-secret').value.trim().toLowerCase();
+  var st=document.getElementById('fp-status');
+  var sp=document.getElementById('fp-spin');
+  var res=document.getElementById('fp-result');
+  res.style.display='none';st.textContent='';
+  if(!teamName||!secret){st.textContent='Please enter both fields.';st.className='ast err';return;}
+  sp.style.display='inline-block';
+  try{
+    var rows=await sb('teams?team_name=eq.'+encodeURIComponent(teamName)+'&select=pin,secret_word');
+    if(!rows||!rows.length){st.textContent='Team not found.';st.className='ast err';sp.style.display='none';return;}
+    var team=rows[0];
+    if((team.secret_word||'').toLowerCase()!==secret){st.textContent='Secret word does not match.';st.className='ast err';sp.style.display='none';return;}
+    document.getElementById('fp-pin').textContent=team.pin;
+    res.style.display='block';st.textContent='';
+  }catch(e){st.textContent='Error: '+e.message;st.className='ast err';}
+  sp.style.display='none';
+}
+
+// ── Season management ─────────────────────────────────────────────────────────
+async function startNewSeason(leagueId,leagueName,currentSeason){
+  var newSeason=currentSeason+1;
+  document.getElementById('confirm-title').textContent='Start Season '+newSeason+'?';
+  document.getElementById('cmsg').textContent='This will archive Season '+currentSeason+' and start a fresh Season '+newSeason+'. All teams keep their accounts. Results history is preserved.';
+  confirmCb=async function(){
+    try{
+      await sbPatch('leagues','id=eq.'+leagueId,{current_season:newSeason});
+      closeConfirm();toast('Season '+newSeason+' started!');showLeagueDetail(leagueId,leagueName);
+    }catch(e){toast('Error: '+e.message,true);}
+  };
+  document.getElementById('confirm').classList.add('open');
+}
+
+// ── Update registerTeam to include secret_word and season ─────────────────────
+// ── Update saveMatch to include season ────────────────────────────────────────
+
+// ── Utils ─────────────────────────────────────────────────────────────────────
+function toast(msg,isErr){var t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(isErr?' err':'')+' show';setTimeout(function(){t.classList.remove('show');},2500);}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+</script>
+</body>
+</html>
