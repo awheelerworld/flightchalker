@@ -8,7 +8,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Flight Chalker — League Platform</title>
+<title>Flight Chalker — League Platform v3</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -25,8 +25,8 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-
 .screen.active{display:block}
 
 /* ── Landing ── */
-#screen-landing{background:radial-gradient(ellipse at 60% 30%,#1e3a28 0%,var(--bg) 70%)}
-#screen-landing.active{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center}
+#screen-landing{background:var(--bg)}
+#screen-landing.active{display:block}
 .landing-logo svg{width:100px;height:100px;margin-bottom:1.5rem}
 .landing-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:2.8rem;letter-spacing:.04em;text-transform:uppercase;line-height:1;margin-bottom:.4rem}
 .landing-title span{color:var(--amber)}
@@ -321,6 +321,8 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
 .spin.blue{border-top-color:#8ac4ff}
 @keyframes sp{to{transform:rotate(360deg)}}
 .divider{height:1px;background:var(--border);margin:1.25rem 0}
+html{scroll-behavior:smooth}
+.section-anchor{padding-top:1.5rem}
 .badge-live{display:inline-block;background:#1a2a1e;border:1px solid var(--green);color:var(--gl);font-family:'Barlow Condensed',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:1px 6px;border-radius:3px;margin-left:6px;vertical-align:middle}
 /* ── Public page ── */
 .public-hero{text-align:center;padding:2rem 1rem 1.5rem;border-bottom:1px solid var(--border);margin-bottom:1.5rem}
@@ -349,27 +351,113 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
 <body>
 
 <!-- ═══ LANDING ═══ -->
-<div id="screen-landing" class="screen active">
-  <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="50" cy="50" r="48" stroke="#4a7c59" stroke-width="3"/>
-    <circle cx="50" cy="50" r="36" stroke="#4a7c59" stroke-width="2"/>
-    <circle cx="50" cy="50" r="24" stroke="#4a7c59" stroke-width="2"/>
-    <circle cx="50" cy="50" r="13" stroke="#e8c840" stroke-width="2"/>
-    <circle cx="50" cy="50" r="5" fill="#e8c840"/>
-    <line x1="75" y1="25" x2="54" y2="46" stroke="#e0d8c8" stroke-width="3" stroke-linecap="round"/>
-    <polygon points="54,46 77,22 84,30" fill="#e8c840"/>
-  </svg>
-  <div class="landing-title">Flight <span>Chalker</span></div>
-  <div class="landing-sub">Monday League Darts</div>
-  <div class="landing-sub2">League Platform</div>
-  <div class="landing-btns">
-    <button class="btn-land-s" style="border-color:var(--amber);color:var(--amber)" onclick="goTo('public');loadPublicLeagues()">&#127350; View League Table</button>
-    <button class="btn-land-p" onclick="goTo('register')">Register Your Team</button>
-    <button class="btn-land-s" onclick="goTo('login')">Team Login</button>
-    <div style="height:.25rem"></div>
-    <button class="btn-land-admin" onclick="goTo('admin-login')">⚙ League Admin</button>
+<div id="screen-landing" class="screen active" style="display:block!important;background:var(--bg);min-height:100vh;flex-direction:unset;align-items:unset;justify-content:unset;padding:0;text-align:unset">
+
+  <div id="top"></div>
+  <!-- Hero section -->
+  <div style="background:radial-gradient(ellipse at 60% 30%,#1e3a28 0%,var(--bg) 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2.5rem 2rem 2rem;text-align:center;min-height:60vh">
+    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:45px;height:45px;margin-bottom:.75rem">
+      <circle cx="50" cy="50" r="48" stroke="#4a7c59" stroke-width="3"/>
+      <circle cx="50" cy="50" r="36" stroke="#4a7c59" stroke-width="2"/>
+      <circle cx="50" cy="50" r="24" stroke="#4a7c59" stroke-width="2"/>
+      <circle cx="50" cy="50" r="13" stroke="#e8c840" stroke-width="2"/>
+      <circle cx="50" cy="50" r="5" fill="#e8c840"/>
+      <line x1="75" y1="25" x2="54" y2="46" stroke="#e0d8c8" stroke-width="3" stroke-linecap="round"/>
+      <polygon points="54,46 77,22 84,30" fill="#e8c840"/>
+    </svg>
+    <div class="landing-title">Flight <span>Chalker</span></div>
+    <div class="landing-sub">Monday League Darts</div>
+    <div class="landing-sub2">League Platform</div>
+    <div class="landing-btns">
+      <button class="btn-land-s" style="border-color:var(--amber);color:var(--amber)" onclick="goTo('public');loadPublicLeagues()">&#127350; View League Table</button>
+      <a href="#section-register" class="btn-land-p" style="text-decoration:none;display:block;text-align:center">Register Your Team</a>
+      <a href="#section-login" class="btn-land-s" style="text-decoration:none;display:block;text-align:center">Team Login</a>
+      <div style="height:.25rem"></div>
+      <a href="#section-admin-login" class="btn-land-admin" style="text-decoration:none;display:block;text-align:center">⚙ League Admin</a>
+    </div>
+    <div style="margin-top:2rem;color:var(--dim);font-size:.8rem;letter-spacing:.06em">↓ scroll down to get started</div>
   </div>
-  <div class="landing-footer">powered by awheelerworld · flightchalker.co.uk</div>
+
+  <!-- Register section -->
+  <div id="section-register" class="section-anchor" style="display:flex;justify-content:center;padding:2rem 1rem;border-top:1px solid var(--border);scroll-margin-top:0">
+    <div class="auth-card">
+      <h2>Register Your Team</h2>
+      <p>Enter your league code and team details to get started. Your league code will have been provided by your league administrator.</p>
+      <div class="afield"><label>League Code</label><input type="text" id="reg-league-code" placeholder="e.g. ABC123" style="text-transform:uppercase"></div>
+      <div id="reg-league-info" style="display:none;background:var(--s3);border:1px solid var(--border);border-radius:6px;padding:.75rem;margin-bottom:1rem;font-size:.85rem">
+        <div style="font-weight:600;color:var(--amber)" id="reg-league-name"></div>
+        <div style="color:var(--dim);font-size:.8rem;margin-top:3px" id="reg-league-format"></div>
+      </div>
+      <button class="btns" style="margin-bottom:1rem;width:100%" onclick="lookupLeague()">Look Up League</button>
+      <div class="afield"><label>Team Name</label><input type="text" id="reg-team" placeholder="e.g. The Crown Arrows"></div>
+      <div class="afield">
+        <label>Players <span style="font-weight:400;text-transform:none;letter-spacing:0">(type name, press Enter)</span></label>
+        <div class="player-tags" id="reg-player-tags" style="display:flex;flex-wrap:wrap;gap:.4rem;padding:.5rem .6rem;background:var(--bg);border:1px solid var(--border);border-radius:5px;min-height:46px;align-items:center;cursor:text" onclick="document.getElementById('reg-player-input').focus()">
+          <input id="reg-player-input" placeholder="Type name, press Enter…" style="background:none;border:none;color:var(--text);font-family:Barlow,sans-serif;font-size:.9rem;outline:none;min-width:120px;flex:1" onkeydown="handleTagInput(event)">
+        </div>
+      </div>
+      <div class="afield"><label>Secret Word <span style="font-weight:400;text-transform:none;letter-spacing:0">(used if you forget your PIN)</span></label><input type="text" id="reg-secret" placeholder="e.g. your pub name"><span class="hint">Keep this memorable — you'll need it to recover your PIN</span></div>
+      <div class="arow"><button class="btnp" onclick="registerTeam()"><span id="reg-spin" style="display:none" class="spin"></span>Register</button></div>
+      <div class="ast" id="reg-status"></div>
+      <div style="text-align:right;margin-top:1rem"><a href="#top" style="font-size:.75rem;color:var(--dim);text-decoration:none;font-family:'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase">↑ Back to top</a></div>
+    </div>
+  </div>
+
+  <!-- Login section -->
+  <div id="section-login" class="section-anchor" style="display:flex;justify-content:center;padding:2rem 1rem;border-top:1px solid var(--border);scroll-margin-top:0">
+    <div class="auth-card">
+      <h2>Team Login</h2>
+      <p>Enter your team name and PIN to access your league scorer.</p>
+      <div class="afield"><label>Team Name</label><input type="text" id="login-team" placeholder="e.g. The Crown Arrows"></div>
+      <div class="afield"><label>PIN</label>
+        <div style="position:relative;display:flex;align-items:center">
+          <input type="password" id="login-pin" maxlength="4" placeholder="4-digit PIN" onkeydown="if(event.key==='Enter')loginTeam()" style="background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:Barlow,sans-serif;font-size:.9rem;padding:.5rem 2.5rem .5rem .75rem;width:100%">
+          <button type="button" onclick="togglePw('login-pin',this)" style="position:absolute;right:8px;background:none;border:none;color:var(--dim);cursor:pointer;font-size:.8rem;padding:0;font-family:'Barlow Condensed',sans-serif;letter-spacing:.04em">SHOW</button>
+        </div>
+      </div>
+      <div class="arow"><button class="btnp" onclick="loginTeam()"><span id="login-spin" style="display:none" class="spin"></span>Log In</button></div>
+      <div class="ast" id="login-status"></div>
+      <a href="#section-forgot-pin" class="back-link" style="color:var(--amber);text-decoration:none">Forgot PIN? →</a>
+      <div style="text-align:right;margin-top:1rem"><a href="#top" style="font-size:.75rem;color:var(--dim);text-decoration:none;font-family:'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase">↑ Back to top</a></div>
+    </div>
+  </div>
+
+  <!-- Forgot PIN section -->
+  <div id="section-forgot-pin" class="section-anchor" style="display:flex;justify-content:center;padding:2rem 1rem;border-top:1px solid var(--border);scroll-margin-top:0">
+    <div class="auth-card">
+      <h2>Forgot Your PIN?</h2>
+      <p>Enter your team name and the secret word you chose when registering. Your PIN will be shown if they match.</p>
+      <div class="afield"><label>Team Name</label><input type="text" id="fp-team" placeholder="e.g. The Crown Arrows"></div>
+      <div class="afield"><label>Secret Word</label><input type="text" id="fp-secret" placeholder="Your secret word" onkeydown="if(event.key==='Enter')recoverPIN()"></div>
+      <div class="arow"><button class="btnp" onclick="recoverPIN()"><span id="fp-spin" style="display:none" class="spin"></span>Recover PIN</button></div>
+      <div id="fp-result" style="display:none" class="pin-reveal-box">
+        <div style="font-size:.8rem;color:var(--dim);margin-bottom:.5rem">Your PIN is:</div>
+        <div class="pin-reveal-num" id="fp-pin">0000</div>
+        <div style="font-size:.75rem;color:var(--dim);margin-top:.5rem">Keep this safe!</div>
+      </div>
+      <div class="ast" id="fp-status"></div>
+      <div style="text-align:right;margin-top:1rem"><a href="#top" style="font-size:.75rem;color:var(--dim);text-decoration:none;font-family:'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase">↑ Back to top</a></div>
+    </div>
+  </div>
+
+  <!-- Admin login section -->
+  <div id="section-admin-login" class="section-anchor" style="display:flex;justify-content:center;padding:2rem 1rem 3rem;border-top:1px solid var(--border);scroll-margin-top:0">
+    <div class="auth-card" style="border-color:var(--blue);background:#0d1e2e">
+      <h2 style="color:#8ac4ff">⚙ League Admin</h2>
+      <p>Enter the master admin password to manage leagues.</p>
+      <div class="afield"><label>Admin Password</label>
+        <div style="position:relative;display:flex;align-items:center">
+          <input type="password" id="admin-pw" placeholder="Master password" onkeydown="if(event.key==='Enter')adminLogin()" style="background:var(--bg);border:1px solid var(--blue);border-radius:5px;color:var(--text);font-family:Barlow,sans-serif;font-size:.9rem;padding:.5rem 2.5rem .5rem .75rem;width:100%">
+          <button type="button" onclick="togglePw('admin-pw',this)" style="position:absolute;right:8px;background:none;border:none;color:#5a9abf;cursor:pointer;font-size:.8rem;padding:0;font-family:'Barlow Condensed',sans-serif;letter-spacing:.04em">SHOW</button>
+        </div>
+      </div>
+      <div class="arow"><button class="btn-admin" onclick="adminLogin()"><span id="admin-spin" style="display:none" class="spin blue"></span>Log In</button></div>
+      <div class="ast" id="admin-status"></div>
+      <div style="text-align:right;margin-top:1rem"><a href="#top" style="font-size:.75rem;color:var(--dim);text-decoration:none;font-family:'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase">↑ Back to top</a></div>
+    </div>
+  </div>
+
+  <footer style="text-align:center;padding:1rem 1rem 2rem;font-size:.7rem;color:#4a5a4a;letter-spacing:.08em;font-family:Barlow,sans-serif;border-top:1px solid var(--border)">powered by awheelerworld · flightchalker.co.uk</footer>
 </div>
 
 <!-- ═══ PUBLIC ═══ -->
@@ -426,87 +514,13 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
   <footer style="text-align:center;padding:1.5rem 1rem 2rem;font-size:.7rem;color:#4a5a4a;letter-spacing:.08em;font-family:Barlow,sans-serif">powered by awheelerworld · flightchalker.co.uk</footer>
 </div>
 
-<!-- ═══ REGISTER ═══ -->
-<div id="screen-register" class="screen auth-wrap">
-  <div class="auth-card">
-    <h2>Register Your Team</h2>
-    <p>Enter your league code and team details to get started. Your league code will have been provided by your league administrator.</p>
-    <div class="afield"><label>League Code</label><input type="text" id="reg-league-code" placeholder="e.g. ABC123" style="text-transform:uppercase"></div>
-    <div id="reg-league-info" style="display:none;background:var(--s3);border:1px solid var(--border);border-radius:6px;padding:.75rem;margin-bottom:1rem;font-size:.85rem">
-      <div style="font-weight:600;color:var(--amber)" id="reg-league-name"></div>
-      <div style="color:var(--dim);font-size:.8rem;margin-top:3px" id="reg-league-format"></div>
-    </div>
-    <button class="btns" style="margin-bottom:1rem;width:100%" onclick="lookupLeague()">Look Up League</button>
-    <div class="afield"><label>Team Name</label><input type="text" id="reg-team" placeholder="e.g. The Crown Arrows"></div>
-    <div class="afield">
-      <label>Players <span style="font-weight:400;text-transform:none;letter-spacing:0">(type name, press Enter)</span></label>
-      <div class="player-tags" id="reg-player-tags" style="display:flex;flex-wrap:wrap;gap:.4rem;padding:.5rem .6rem;background:var(--bg);border:1px solid var(--border);border-radius:5px;min-height:46px;align-items:center;cursor:text" onclick="document.getElementById('reg-player-input').focus()">
-        <input id="reg-player-input" placeholder="Type name, press Enter…" style="background:none;border:none;color:var(--text);font-family:Barlow,sans-serif;font-size:.9rem;outline:none;min-width:120px;flex:1" onkeydown="handleTagInput(event)">
-      </div>
-    </div>
-    <div class="afield"><label>Secret Word <span style="font-weight:400;text-transform:none;letter-spacing:0">(used if you forget your PIN)</span></label><input type="text" id="reg-secret" placeholder="e.g. your pub name"><span class="hint">Keep this memorable — you'll need it to recover your PIN</span></div>
-    <div class="arow"><button class="btnp" onclick="registerTeam()"><span id="reg-spin" style="display:none" class="spin"></span>Register</button></div>
-    <div class="ast" id="reg-status"></div>
-    <span class="back-link" onclick="goTo('landing')">← Back</span>
-  </div>
-</div>
 
-<!-- ═══ PIN REVEAL ═══ -->
-<div id="screen-pin" class="screen auth-wrap">
-  <div class="auth-card">
-    <h2>Team Registered!</h2>
-    <p>Your team PIN is shown below. Share it with your players. <strong style="color:var(--red)">Write it down — you won't see it again.</strong></p>
-    <div class="pin-box"><div class="pin-num" id="pin-display">0000</div><div class="pin-lbl">Your Team PIN</div></div>
-    <p style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:1rem;color:var(--amber);margin:.5rem 0" id="pin-team-name"></p>
-    <div class="arow"><button class="btnp" onclick="goToApp()">Enter the App →</button></div>
-  </div>
-</div>
 
-<!-- ═══ TEAM LOGIN ═══ -->
-<div id="screen-login" class="screen auth-wrap">
-  <div class="auth-card">
-    <h2>Team Login</h2>
-    <p>Enter your team name and PIN to access your league scorer.</p>
-    <div class="afield"><label>Team Name</label><input type="text" id="login-team" placeholder="e.g. The Crown Arrows"></div>
-    <div class="afield"><label>PIN</label><input type="password" id="login-pin" maxlength="4" placeholder="4-digit PIN" onkeydown="if(event.key==='Enter')loginTeam()"></div>
-    <div class="arow"><button class="btnp" onclick="loginTeam()"><span id="login-spin" style="display:none" class="spin"></span>Log In</button></div>
-    <div class="ast" id="login-status"></div>
-    <div style="margin-top:.75rem;display:flex;gap:1.5rem">
-      <span class="back-link" onclick="goTo('landing')">← Back</span>
-      <span class="back-link" style="color:var(--amber)" onclick="goTo('forgot-pin')">Forgot PIN?</span>
-    </div>
-  </div>
-</div>
 
-<!-- ═══ FORGOT PIN ═══ -->
-<div id="screen-forgot-pin" class="screen auth-wrap">
-  <div class="auth-card">
-    <h2>Forgot Your PIN?</h2>
-    <p>Enter your team name and the secret word you chose when registering. Your PIN will be shown if they match.</p>
-    <div class="afield"><label>Team Name</label><input type="text" id="fp-team" placeholder="e.g. The Crown Arrows"></div>
-    <div class="afield"><label>Secret Word</label><input type="text" id="fp-secret" placeholder="Your secret word" onkeydown="if(event.key==='Enter')recoverPIN()"></div>
-    <div class="arow"><button class="btnp" onclick="recoverPIN()"><span id="fp-spin" style="display:none" class="spin"></span>Recover PIN</button></div>
-    <div id="fp-result" style="display:none" class="pin-reveal-box">
-      <div style="font-size:.8rem;color:var(--dim);margin-bottom:.5rem">Your PIN is:</div>
-      <div class="pin-reveal-num" id="fp-pin">0000</div>
-      <div style="font-size:.75rem;color:var(--dim);margin-top:.5rem">Keep this safe!</div>
-    </div>
-    <div class="ast" id="fp-status"></div>
-    <span class="back-link" onclick="goTo('login')">← Back to Login</span>
-  </div>
-</div>
 
-<!-- ═══ ADMIN LOGIN ═══ -->
-<div id="screen-admin-login" class="screen auth-wrap">
-  <div class="auth-card" style="border-color:var(--blue);background:#0d1e2e">
-    <h2 style="color:#8ac4ff">League Admin</h2>
-    <p>Enter the master admin password to manage leagues.</p>
-    <div class="afield"><label>Admin Password</label><input type="password" id="admin-pw" placeholder="Master password" onkeydown="if(event.key==='Enter')adminLogin()"></div>
-    <div class="arow"><button class="btn-admin" onclick="adminLogin()"><span id="admin-spin" style="display:none" class="spin blue"></span>Log In</button></div>
-    <div class="ast" id="admin-status"></div>
-    <span class="back-link" onclick="goTo('landing')">← Back</span>
-  </div>
-</div>
+
+
+
 
 <!-- ═══ TEAM APP ═══ -->
 <div id="screen-app" class="screen">
@@ -692,6 +706,17 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
   </main>
 </div>
 
+<!-- PIN Reveal overlay -->
+<div id="pin-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;align-items:center;justify-content:center;padding:1rem">
+  <div class="auth-card" style="max-width:400px">
+    <h2>Team Registered! &#127881;</h2>
+    <p>Your team PIN is shown below. Share it with your players. <strong style="color:var(--red)">Write it down — you won't see it again.</strong></p>
+    <div class="pin-box"><div class="pin-num" id="pin-display">0000</div><div class="pin-lbl">Your Team PIN</div></div>
+    <p style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:1rem;color:var(--amber);margin:.5rem 0" id="pin-team-name"></p>
+    <div class="arow"><button class="btnp" onclick="closePinOverlay()">Enter the App →</button></div>
+  </div>
+</div>
+
 <!-- Modal -->
 <div class="mo" id="modal" onclick="closeMo(event)"><div class="mb" id="mbody"></div></div>
 <!-- Confirm -->
@@ -727,20 +752,59 @@ async function sbPatch(table,filter,body){
 
 // ── Navigation ────────────────────────────────────────────────────────────────
 function goTo(screen){
+  // Inline sections on landing page - just scroll to them
+  var inlineSections=['register','login','forgot-pin','admin-login'];
+  if(inlineSections.includes(screen)){
+    // Make sure landing is active
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById('screen-landing').classList.add('active');
+    var target=document.getElementById('section-'+screen);
+    if(target){setTimeout(function(){target.scrollIntoView({behavior:'smooth',block:'start'});},50);return;}
+  }
+  if(screen==='landing'){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById('screen-landing').classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+    return;
+  }
+  // Full screen switch for app, admin, public etc
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   var el=document.getElementById('screen-'+screen);
-  if(el)el.classList.add('active');
+  if(el){el.classList.add('active');window.scrollTo({top:0,behavior:'smooth'});}
 }
-function logout(){currentTeam=null;currentLeague=null;players=[];matchHistory=[];leagueFixtures=[];leagueTeams=[];localStorage.removeItem('mld_session');goTo('landing');}
-function adminLogout(){localStorage.removeItem('mld_admin');goTo('landing');}
+function logout(){
+  currentTeam=null;currentLeague=null;players=[];matchHistory=[];leagueFixtures=[];leagueTeams=[];
+  localStorage.removeItem('mld_session');
+  document.getElementById('screen-app').style.display='none';
+  document.getElementById('screen-landing').style.display='block';
+  document.getElementById('screen-landing').classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function adminLogout(){
+  localStorage.removeItem('mld_admin');
+  document.getElementById('screen-admin').style.display='none';
+  document.getElementById('screen-landing').style.display='block';
+  document.getElementById('screen-landing').classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
 
 // ── Session ───────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded',async function(){
   document.getElementById('mdate').value=new Date().toISOString().split('T')[0];
   const sess=localStorage.getItem('mld_session');
-  if(sess){try{const d=JSON.parse(sess);currentTeam=d.team;currentLeague=d.league;await loadTeamData();goTo('app');document.getElementById('screen-app').classList.add('active');}catch(e){localStorage.removeItem('mld_session');}}
+  if(sess){try{const d=JSON.parse(sess);currentTeam=d.team;currentLeague=d.league;await loadTeamData();
+    document.getElementById('screen-landing').style.display='none';
+    document.getElementById('screen-app').style.display='block';
+    document.getElementById('screen-app').classList.add('active');
+  }catch(e){localStorage.removeItem('mld_session');}}
   const adminSess=localStorage.getItem('mld_admin');
-  if(adminSess){goTo('admin');document.getElementById('screen-admin').classList.add('active');loadAdminData();}
+  if(adminSess&&!sess){
+    document.getElementById('screen-landing').style.display='none';
+    document.getElementById('screen-admin').style.display='block';
+    document.getElementById('screen-admin').classList.add('active');
+    swAdmin('leagues');
+    loadAdminData();
+  }
 });
 
 // ── League lookup ─────────────────────────────────────────────────────────────
@@ -815,12 +879,19 @@ async function registerTeam(){
     localStorage.setItem('mld_session',JSON.stringify({team:currentTeam,league:currentLeague}));
     document.getElementById('pin-display').textContent=pin;
     document.getElementById('pin-team-name').textContent=teamName+' · '+regLeague.name;
-    goTo('pin');
+    document.getElementById('pin-overlay').style.display='flex';
   }catch(e){st.textContent='Error: '+e.message;st.className='ast err';}
   sp.style.display='none';
 }
 
-async function goToApp(){await loadTeamData();goTo('app');document.getElementById('screen-app').classList.add('active');}
+async function goToApp(){
+  await loadTeamData();
+  document.getElementById('screen-landing').style.display='none';
+  document.getElementById('screen-app').style.display='block';
+  document.getElementById('screen-app').classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function closePinOverlay(){document.getElementById('pin-overlay').style.display='none';goToApp();}
 
 // ── Login ─────────────────────────────────────────────────────────────────────
 async function loginTeam(){
@@ -839,7 +910,11 @@ async function loginTeam(){
     if(!leagueRows||!leagueRows.length){st.textContent='League not found.';st.className='ast err';sp.style.display='none';return;}
     currentTeam=team;currentLeague=leagueRows[0];
     localStorage.setItem('mld_session',JSON.stringify({team:currentTeam,league:currentLeague}));
-    await loadTeamData();goTo('app');document.getElementById('screen-app').classList.add('active');
+    await loadTeamData();
+    document.getElementById('screen-landing').style.display='none';
+    document.getElementById('screen-app').style.display='block';
+    document.getElementById('screen-app').classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
   }catch(e){st.textContent='Error: '+e.message;st.className='ast err';}
   sp.style.display='none';
 }
@@ -848,9 +923,18 @@ async function loginTeam(){
 function adminLogin(){
   const pw=document.getElementById('admin-pw').value;
   const st=document.getElementById('admin-status');
+  if(!pw){st.textContent='Please enter the admin password.';st.className='ast err';return;}
   if(pw!==MASTER_PW){st.textContent='Incorrect password.';st.className='ast err';return;}
   localStorage.setItem('mld_admin','1');
-  goTo('admin');document.getElementById('screen-admin').classList.add('active');
+  localStorage.removeItem('mld_session');
+  currentTeam=null;currentLeague=null;
+  // Hide landing, show admin
+  document.getElementById('screen-landing').style.display='none';
+  document.getElementById('screen-admin').style.display='block';
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-admin').classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+  swAdmin('leagues');
   loadAdminData();
 }
 
@@ -1277,50 +1361,4 @@ function ewlH(key,r){return '<div class="ewl"><button class="ewb '+(r==='win'?'a
 function setEWL(key,r){var w=document.getElementById('eww-'+key);var l=document.getElementById('ewl2-'+key);if(w)w.className='ewb'+(r==='win'?' aw':'');if(l)l.className='ewb'+(r==='loss'?' al':'');if(/^es\d/.test(key))editSt.data.singles[parseInt(key.slice(2))].result=r;else if(/^ed\d/.test(key))editSt.data.doubles[parseInt(key.slice(2))].result=r;else if(/^et0$/.test(key))editSt.data.team4.result=r;}
 function eswH(key,scores){var chips=scores.map(function(v,i){return '<span class="ech'+(v===180?' max180':'')+'">'+( v===180?'&#9733; 180':v)+'<button class="ecx" onclick="rmES(&quot;'+key+'&quot;,'+i+')">×</button></span>';}).join('');return '<div class="esw"><div class="escc" id="ec-'+key+'">'+chips+'</div><div class="esir"><input class="esi" id="ei-'+key+'" type="number" min="80" max="180" placeholder="80+" onkeydown="if(event.key===\'Enter\'){event.preventDefault();addES(&quot;'+key+'&quot;);}"><button class="eab" onclick="addES(&quot;'+key+'&quot;)">+</button></div></div>';}
 function getEArr(key){if(/^es\d+$/.test(key))return editSt.data.singles[parseInt(key.slice(2))].scores;if(/^ed\d+p1$/.test(key))return editSt.data.doubles[parseInt(key.slice(2,-2))].scores1;if(/^ed\d+p2$/.test(key))return editSt.data.doubles[parseInt(key.slice(2,-2))].scores2;if(/^et0p\d+$/.test(key)){var pi=parseInt(key.slice(4))-1;if(!editSt.data.team4.scores[pi])editSt.data.team4.scores[pi]=[];return editSt.data.team4.scores[pi];}return null;}
-function addES(key){var inp=document.getElementById('ei-'+key);var val=parseInt(inp.value);if(isNaN(val)||val<80||val>180){toast('Enter 80–180');inp.focus();return;}var arr=getEArr(key);if(!arr)return;arr.push(val);var el=document.getElementById('ec-'+key);if(el)el.innerHTML=arr.map(function(v,i){return '<span class="ech'+(v===180?' max180':'')+'">'+( v===180?'&#9733; 180':v)+'<button class="ecx" onclick="rmES(&quot;'+key+'&quot;,'+i+')">×</button></span>';}).join('');inp.value='';inp.focus();}
-function rmES(key,idx){var arr=getEArr(key);if(!arr)return;arr.splice(idx,1);var el=document.getElementById('ec-'+key);if(el)el.innerHTML=arr.map(function(v,i){return '<span class="ech'+(v===180?' max180':'')+'">'+( v===180?'&#9733; 180':v)+'<button class="ecx" onclick="rmES(&quot;'+key+'&quot;,'+i+')">×</button></span>';}).join('');}
-async function saveEdit(){
-  var date=document.getElementById('ed').value;var opp=document.getElementById('eo').value.trim();var venue=document.getElementById('ev').value;
-  if(!opp||!date){toast('Date and opponent required');return;}
-  var mw=0,ml=0,e8=0;
-  (editSt.data.singles||[]).forEach(function(s){if(s.result==='win')mw++;else if(s.result==='loss')ml++;e8+=(s.scores||[]).length;});
-  (editSt.data.doubles||[]).forEach(function(d){if(d.result==='win')mw++;else if(d.result==='loss')ml++;e8+=(d.scores1||[]).length+(d.scores2||[]).length;});
-  if(editSt.data.team4){if(editSt.data.team4.result==='win')mw++;else if(editSt.data.team4.result==='loss')ml++;(editSt.data.team4.scores||[]).forEach(function(a){e8+=(a||[]).length;});}
-  var sp=document.getElementById('espin');if(sp)sp.style.display='inline-block';
-  try{await sbPatch('team_matches','id=eq.'+editSt.id,{match_date:date,opponent:opp,venue,wins:mw,losses:ml,eighties:e8,data:editSt.data});toast('Match updated!');closeMo();await renderHistory();}
-  catch(e){toast('Update failed: '+e.message,true);}
-  var s2=document.getElementById('espin');if(s2)s2.style.display='none';
-}
-
-// ── Delete ────────────────────────────────────────────────────────────────────
-function askDel(id,opp){delId=id;document.getElementById('confirm-title').textContent='Delete Match?';document.getElementById('cmsg').textContent='Delete match vs "'+opp+'"? This cannot be undone.';confirmCb=doDeleteMatch;document.getElementById('confirm').classList.add('open');}
-function closeConfirm(){document.getElementById('confirm').classList.remove('open');delId=null;confirmCb=null;}
-async function doConfirm(){if(confirmCb)await confirmCb();}
-async function doDeleteMatch(){if(!delId)return;try{await sb('team_matches?id=eq.'+delId,{method:'DELETE'});closeConfirm();toast('Match deleted');await renderHistory();}catch(e){toast('Delete failed: '+e.message,true);}}
-
-// ── Stats ─────────────────────────────────────────────────────────────────────
-function renderStats(){
-  var player=document.getElementById('spsel').value;
-  var el=document.getElementById('scontent');
-  if(!player){el.innerHTML='<div class="nh">Select a player to see their stats.</div>';return;}
-  if(!matchHistory.length){el.innerHTML='<div class="nh">No match data available.</div>';return;}
-  var pm=[];
-  matchHistory.slice().reverse().forEach(function(m){
-    var mdata=m.data||{};var s=mdata.singles||[];var db=mdata.doubles||[];var t4=mdata.team4||{};
-    var date=new Date(m.match_date+'T00:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
-    var w=0,l=0,sc=[];
-    s.forEach(function(x){if(x.player===player){if(x.result==='win')w++;else if(x.result==='loss')l++;sc.push.apply(sc,x.scores||[]);}});
-    db.forEach(function(x){if(x.p1===player){if(x.result==='win')w++;else if(x.result==='loss')l++;sc.push.apply(sc,x.scores1||[]);}if(x.p2===player){if(x.result==='win')w++;else if(x.result==='loss')l++;sc.push.apply(sc,x.scores2||[]);}});
-    for(var pi=1;pi<=6;pi++){if(t4['p'+pi]===player){if(t4.result==='win')w++;else if(t4.result==='loss')l++;sc.push.apply(sc,(t4.scores&&t4.scores[pi-1])||[]);break;}}
-    if(w>0||l>0||sc.length>0)pm.push({date,wins:w,losses:l,scores:sc});
-  });
-  if(!pm.length){el.innerHTML='<div class="nh">'+esc(player)+' has not played in any recorded matches.</div>';return;}
-  var tw=pm.reduce(function(a,b){return a+b.wins;},0);var tl=pm.reduce(function(a,b){return a+b.losses;},0);
-  var tot=tw+tl;var allSc=pm.flatMap(function(m){return m.scores;});var hi=allSc.length?Math.max.apply(null,allSc):0;var wp=tot?Math.round(tw/tot*100):0;
-  var cw=0,cl=0,wlL=[],wlW=[],wlL2=[];
-  pm.forEach(function(m){cw+=m.wins;cl+=m.losses;wlL.push(m.date);wlW.push(cw);wlL2.push(cl);});
-  var hsL=pm.map(function(m){return m.date;});var hsC=pm.map(function(m){return m.scores.length;});var hsM=pm.map(function(m){return m.scores.length?Math.max.apply(null,m.scores):0;});
-  el.innerHTML='<div class="sg"><div class="scard"><div class="v g">'+tw+'</div><div class="lb">Legs Won</div></div><div class="scard"><div class="v r">'+tl+'</div><div class="lb">Legs Lost</div></div><div class="scard"><div class="v '+(wp>=50?'g':'r')+'">'+wp+'%</div><div class="lb">Win Rate</div></div><div class="scard"><div class="v a">'+allSc.length+'</div><div class="lb">80+ Scores</div></div><div class="scard"><div class="v a">'+(hi||'—')+'</div><div class="lb">Highest</div></div><div class="scard"><div class="v">'+pm.length+'</div><div class="lb">Matches</div></div></div><div class="cc"><h3>Cumulative Wins &amp; Losses</h3><div class="cw"><canvas id="cwl"></canvas></div></div><div class="cc"><h3>80+ Scores Per Match</h3><div class="cw"><canvas id="chs"></canvas></div></div><div class="cc"><h3>All 80+ Scores</h3><div class="scl">'+(allSc.sort(function(a,b){return b-a;}).map(function(s){return s===180?'<span class="sp2" style="background:#5a3000;border-color:#e8c840;color:#fff">&#9733; 180</span>':'<span class="sp2">'+s+'</span>';}).join('')||'<span style="color:var(--dim)">None yet</span>')+'</div></div>';
-  ['cwl','chs'].forEach(function(id){if(charts[id]){charts[id].destroy();delete charts[id];}});
-  var go={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8a9080',font:{family:"'Barlow Condensed',sans-serif",size:11}}}},scales:{x:{ticks:{color:'#8a9080',font:{family:"'Barlow Condensed',sans-serif",size:10}},grid:{color:'#2a3a2a'}},y:{ticks:{color:'#8a9080',font:{family:"'Barlow Condensed',sans-serif",size:10}},grid:{color:'#2a3a2a'},beginAtZero:true}}};
-  charts['cwl']=new Chart(docume
+function addES(key){var inp=document.getElementById('ei-'+key);var val=parseInt(inp.value);if(isNaN(val)||val<80||val>180){toast('Enter 80–180');inp.focus();return;}var arr=getEArr(key);if(!arr)return;arr.push(val);var el=document.getElementById('ec-'+key);if(el)el.innerHTML=arr.map(function(v,i){return '<span class="ech'+(v===180?' max180':'')+'">'+( v===180?'&#9733; 180':v)+'<button class="ecx" onclick="rmES(&quot;'+key+'&quot;,'+i+')">×</butt
