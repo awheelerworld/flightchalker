@@ -775,16 +775,18 @@ function goTo(screen){
 function logout(){
   currentTeam=null;currentLeague=null;players=[];matchHistory=[];leagueFixtures=[];leagueTeams=[];
   localStorage.removeItem('mld_session');
-  document.getElementById('screen-app').style.display='none';
-  document.getElementById('screen-landing').style.display='block';
-  document.getElementById('screen-landing').classList.add('active');
+  var a=document.getElementById('screen-app');
+  var l=document.getElementById('screen-landing');
+  a.style.display='none';a.classList.remove('active');
+  l.style.display='block';l.classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
 }
 function adminLogout(){
   localStorage.removeItem('mld_admin');
-  document.getElementById('screen-admin').style.display='none';
-  document.getElementById('screen-landing').style.display='block';
-  document.getElementById('screen-landing').classList.add('active');
+  var a=document.getElementById('screen-admin');
+  var l=document.getElementById('screen-landing');
+  a.style.display='none';a.classList.remove('active');
+  l.style.display='block';l.classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -799,11 +801,11 @@ document.addEventListener('DOMContentLoaded',async function(){
   }catch(e){localStorage.removeItem('mld_session');}}
   const adminSess=localStorage.getItem('mld_admin');
   if(adminSess&&!sess){
-    document.getElementById('screen-landing').style.display='none';
-    document.getElementById('screen-admin').style.display='block';
-    document.getElementById('screen-admin').classList.add('active');
-    swAdmin('leagues');
-    loadAdminData();
+    var l=document.getElementById('screen-landing');
+    var a=document.getElementById('screen-admin');
+    l.classList.remove('active');l.style.display='none';
+    a.style.display='block';a.classList.add('active');
+    swAdmin('leagues');loadAdminData();
   }
 });
 
@@ -886,9 +888,10 @@ async function registerTeam(){
 
 async function goToApp(){
   await loadTeamData();
-  document.getElementById('screen-landing').style.display='none';
-  document.getElementById('screen-app').style.display='block';
-  document.getElementById('screen-app').classList.add('active');
+  var l=document.getElementById('screen-landing');
+  var a=document.getElementById('screen-app');
+  l.classList.remove('active');l.style.display='none';
+  a.style.display='block';a.classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
 }
 function closePinOverlay(){document.getElementById('pin-overlay').style.display='none';goToApp();}
@@ -911,9 +914,10 @@ async function loginTeam(){
     currentTeam=team;currentLeague=leagueRows[0];
     localStorage.setItem('mld_session',JSON.stringify({team:currentTeam,league:currentLeague}));
     await loadTeamData();
-    document.getElementById('screen-landing').style.display='none';
-    document.getElementById('screen-app').style.display='block';
-    document.getElementById('screen-app').classList.add('active');
+    var l=document.getElementById('screen-landing');
+    var a=document.getElementById('screen-app');
+    l.classList.remove('active');l.style.display='none';
+    a.style.display='block';a.classList.add('active');
     window.scrollTo({top:0,behavior:'smooth'});
   }catch(e){st.textContent='Error: '+e.message;st.className='ast err';}
   sp.style.display='none';
@@ -929,10 +933,12 @@ function adminLogin(){
   localStorage.removeItem('mld_session');
   currentTeam=null;currentLeague=null;
   // Hide landing, show admin
-  document.getElementById('screen-landing').style.display='none';
-  document.getElementById('screen-admin').style.display='block';
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById('screen-admin').classList.add('active');
+  var landing=document.getElementById('screen-landing');
+  var admin=document.getElementById('screen-admin');
+  landing.classList.remove('active');
+  landing.style.display='none';
+  admin.style.display='block';
+  admin.classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
   swAdmin('leagues');
   loadAdminData();
@@ -1361,4 +1367,4 @@ function ewlH(key,r){return '<div class="ewl"><button class="ewb '+(r==='win'?'a
 function setEWL(key,r){var w=document.getElementById('eww-'+key);var l=document.getElementById('ewl2-'+key);if(w)w.className='ewb'+(r==='win'?' aw':'');if(l)l.className='ewb'+(r==='loss'?' al':'');if(/^es\d/.test(key))editSt.data.singles[parseInt(key.slice(2))].result=r;else if(/^ed\d/.test(key))editSt.data.doubles[parseInt(key.slice(2))].result=r;else if(/^et0$/.test(key))editSt.data.team4.result=r;}
 function eswH(key,scores){var chips=scores.map(function(v,i){return '<span class="ech'+(v===180?' max180':'')+'">'+( v===180?'&#9733; 180':v)+'<button class="ecx" onclick="rmES(&quot;'+key+'&quot;,'+i+')">×</button></span>';}).join('');return '<div class="esw"><div class="escc" id="ec-'+key+'">'+chips+'</div><div class="esir"><input class="esi" id="ei-'+key+'" type="number" min="80" max="180" placeholder="80+" onkeydown="if(event.key===\'Enter\'){event.preventDefault();addES(&quot;'+key+'&quot;);}"><button class="eab" onclick="addES(&quot;'+key+'&quot;)">+</button></div></div>';}
 function getEArr(key){if(/^es\d+$/.test(key))return editSt.data.singles[parseInt(key.slice(2))].scores;if(/^ed\d+p1$/.test(key))return editSt.data.doubles[parseInt(key.slice(2,-2))].scores1;if(/^ed\d+p2$/.test(key))return editSt.data.doubles[parseInt(key.slice(2,-2))].scores2;if(/^et0p\d+$/.test(key)){var pi=parseInt(key.slice(4))-1;if(!editSt.data.team4.scores[pi])editSt.data.team4.scores[pi]=[];return editSt.data.team4.scores[pi];}return null;}
-function addES(key){var inp=document.getElementById('ei-'+key);var val=parseInt(inp.value);if(isNaN(val)||val<80||val>180){toast('Enter 80–180');inp.focus();return;}var arr=getEArr(key);if(!arr)return;arr.push(val);var el=document.getElementById('ec-'+key);if(el)el.innerHTML=arr.map(function(v,i){return '<span class="ech'+(v===180?' max180':'')+'">'+( v===180?'&#9733; 180':v)+'<button class="ecx" onclick="rmES(&quot;'+key+'&quot;,'+i+')">×</butt
+function addES(key){var inp=document.getElementById('ei-'+key);var val=parseInt(inp.value);if(isNaN(val)||val<80||val>180){toast('Enter 80–180');inp.focus();return;}var arr=getEArr(key);if(!arr)return;arr.push(val);var el=document.getElementById('ec-'+key);if(el)el.innerHTML=arr.map(function(v,i){return '<span class="ech'+(v===180?' max180':'')+'">'+( v===180?'&#9733; 180':v)+'<button class="ecx" onclick="rmES(&quot;'+key+'&quot;,'
