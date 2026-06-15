@@ -23,6 +23,7 @@
 body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh}
 .screen{display:none;min-height:100vh}
 .screen.active{display:block}
+#screen-admin.active,#screen-app.active{position:fixed;top:0;left:0;right:0;bottom:0;overflow-y:auto;z-index:1000;background:var(--bg)}
 
 /* ── Landing ── */
 #screen-landing{background:var(--bg)}
@@ -775,18 +776,12 @@ function goTo(screen){
 function logout(){
   currentTeam=null;currentLeague=null;players=[];matchHistory=[];leagueFixtures=[];leagueTeams=[];
   localStorage.removeItem('mld_session');
-  var a=document.getElementById('screen-app');
-  var l=document.getElementById('screen-landing');
-  a.style.display='none';a.classList.remove('active');
-  l.style.display='block';l.classList.add('active');
+  document.getElementById('screen-app').classList.remove('active');
   window.scrollTo({top:0,behavior:'smooth'});
 }
 function adminLogout(){
   localStorage.removeItem('mld_admin');
-  var a=document.getElementById('screen-admin');
-  var l=document.getElementById('screen-landing');
-  a.style.display='none';a.classList.remove('active');
-  l.style.display='block';l.classList.add('active');
+  document.getElementById('screen-admin').classList.remove('active');
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -795,16 +790,11 @@ document.addEventListener('DOMContentLoaded',async function(){
   document.getElementById('mdate').value=new Date().toISOString().split('T')[0];
   const sess=localStorage.getItem('mld_session');
   if(sess){try{const d=JSON.parse(sess);currentTeam=d.team;currentLeague=d.league;await loadTeamData();
-    document.getElementById('screen-landing').style.display='none';
-    document.getElementById('screen-app').style.display='block';
     document.getElementById('screen-app').classList.add('active');
   }catch(e){localStorage.removeItem('mld_session');}}
   const adminSess=localStorage.getItem('mld_admin');
   if(adminSess&&!sess){
-    var l=document.getElementById('screen-landing');
-    var a=document.getElementById('screen-admin');
-    l.classList.remove('active');l.style.display='none';
-    a.style.display='block';a.classList.add('active');
+    document.getElementById('screen-admin').classList.add('active');
     swAdmin('leagues');loadAdminData();
   }
 });
@@ -888,10 +878,7 @@ async function registerTeam(){
 
 async function goToApp(){
   await loadTeamData();
-  var l=document.getElementById('screen-landing');
-  var a=document.getElementById('screen-app');
-  l.classList.remove('active');l.style.display='none';
-  a.style.display='block';a.classList.add('active');
+  document.getElementById('screen-app').classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
 }
 function closePinOverlay(){document.getElementById('pin-overlay').style.display='none';goToApp();}
@@ -914,10 +901,7 @@ async function loginTeam(){
     currentTeam=team;currentLeague=leagueRows[0];
     localStorage.setItem('mld_session',JSON.stringify({team:currentTeam,league:currentLeague}));
     await loadTeamData();
-    var l=document.getElementById('screen-landing');
-    var a=document.getElementById('screen-app');
-    l.classList.remove('active');l.style.display='none';
-    a.style.display='block';a.classList.add('active');
+    document.getElementById('screen-app').classList.add('active');
     window.scrollTo({top:0,behavior:'smooth'});
   }catch(e){st.textContent='Error: '+e.message;st.className='ast err';}
   sp.style.display='none';
@@ -932,13 +916,7 @@ function adminLogin(){
   localStorage.setItem('mld_admin','1');
   localStorage.removeItem('mld_session');
   currentTeam=null;currentLeague=null;
-  // Hide landing, show admin
-  var landing=document.getElementById('screen-landing');
-  var admin=document.getElementById('screen-admin');
-  landing.classList.remove('active');
-  landing.style.display='none';
-  admin.style.display='block';
-  admin.classList.add('active');
+  document.getElementById('screen-admin').classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
   swAdmin('leagues');
   loadAdminData();
@@ -1367,4 +1345,11 @@ function ewlH(key,r){return '<div class="ewl"><button class="ewb '+(r==='win'?'a
 function setEWL(key,r){var w=document.getElementById('eww-'+key);var l=document.getElementById('ewl2-'+key);if(w)w.className='ewb'+(r==='win'?' aw':'');if(l)l.className='ewb'+(r==='loss'?' al':'');if(/^es\d/.test(key))editSt.data.singles[parseInt(key.slice(2))].result=r;else if(/^ed\d/.test(key))editSt.data.doubles[parseInt(key.slice(2))].result=r;else if(/^et0$/.test(key))editSt.data.team4.result=r;}
 function eswH(key,scores){var chips=scores.map(function(v,i){return '<span class="ech'+(v===180?' max180':'')+'">'+( v===180?'&#9733; 180':v)+'<button class="ecx" onclick="rmES(&quot;'+key+'&quot;,'+i+')">×</button></span>';}).join('');return '<div class="esw"><div class="escc" id="ec-'+key+'">'+chips+'</div><div class="esir"><input class="esi" id="ei-'+key+'" type="number" min="80" max="180" placeholder="80+" onkeydown="if(event.key===\'Enter\'){event.preventDefault();addES(&quot;'+key+'&quot;);}"><button class="eab" onclick="addES(&quot;'+key+'&quot;)">+</button></div></div>';}
 function getEArr(key){if(/^es\d+$/.test(key))return editSt.data.singles[parseInt(key.slice(2))].scores;if(/^ed\d+p1$/.test(key))return editSt.data.doubles[parseInt(key.slice(2,-2))].scores1;if(/^ed\d+p2$/.test(key))return editSt.data.doubles[parseInt(key.slice(2,-2))].scores2;if(/^et0p\d+$/.test(key)){var pi=parseInt(key.slice(4))-1;if(!editSt.data.team4.scores[pi])editSt.data.team4.scores[pi]=[];return editSt.data.team4.scores[pi];}return null;}
-function addES(key){var inp=document.getElementById('ei-'+key);var val=parseInt(inp.value);if(isNaN(val)||val<80||val>180){toast('Enter 80–180');inp.focus();return;}var arr=getEArr(key);if(!arr)return;arr.push(val);var el=document.getElementById('ec-'+key);if(el)el.innerHTML=arr.map(function(v,i){return '<span class="ech'+(v===180?' max180':'')+'">'+( v===180?'&#9733; 180':v)+'<button class="ecx" onclick="rmES(&quot;'+key+'&quot;,'
+function addES(key){var inp=document.getElementById('ei-'+key);var val=parseInt(inp.value);if(isNaN(val)||val<80||val>180){toast('Enter 80–180');inp.focus();return;}var arr=getEArr(key);if(!arr)return;arr.push(val);var el=document.getElementById('ec-'+key);if(el)el.innerHTML=arr.map(function(v,i){return '<span class="ech'+(v===180?' max180':'')+'">'+( v===180?'&#9733; 180':v)+'<button class="ecx" onclick="rmES(&quot;'+key+'&quot;,'+i+')">×</button></span>';}).join('');inp.value='';inp.focus();}
+function rmES(key,idx){var arr=getEArr(key);if(!arr)return;arr.splice(idx,1);var el=document.getElementById('ec-'+key);if(el)el.innerHTML=arr.map(function(v,i){return '<span class="ech'+(v===180?' max180':'')+'">'+( v===180?'&#9733; 180':v)+'<button class="ecx" onclick="rmES(&quot;'+key+'&quot;,'+i+')">×</button></span>';}).join('');}
+async function saveEdit(){
+  var date=document.getElementById('ed').value;var opp=document.getElementById('eo').value.trim();var venue=document.getElementById('ev').value;
+  if(!opp||!date){toast('Date and opponent required');return;}
+  var mw=0,ml=0,e8=0;
+  (editSt.data.singles||[]).forEach(function(s){if(s.result==='win')mw++;else if(s.result==='loss')ml++;e8+=(s.scores||[]).length;});
+  (editSt.data.doubles||[]).forEach(function(d){if(d.result==='win')mw++;else if(d.result==='loss')ml++;e8+=(d.scores1||[]
