@@ -818,25 +818,22 @@ document.addEventListener('DOMContentLoaded',async function(){
 
 // ── League lookup ─────────────────────────────────────────────────────────────
 async function lookupLeague(){
-  const code=document.getElementById('reg-league-code').value.trim().toUpperCase();
+  var code=document.getElementById('reg-league-code').value.trim().toUpperCase().replace(/-/g,'');
   if(!code){toast('Please enter a league code',true);return;}
   try{
-    const rows=await sb('leagues?id=eq.'+code+'&select=*');
-    if(!rows||!rows.length){
-      // try by name code (first 6 chars of id)
-      const all=await sb('leagues?select=*');
-      const match=all.find(l=>l.id.replace(/-/g,'').toUpperCase().startsWith(code)||l.id.toUpperCase().includes(code));
-      if(!match){toast('League not found. Check your code.',true);return;}
-      regLeague=match;
-    } else {
-      regLeague=rows[0];
-    }
+    // Load all leagues and find one whose ID (without dashes) starts with the code
+    var all=await sb('leagues?select=*');
+    var match=all.find(function(l){
+      return l.id.replace(/-/g,'').toUpperCase().startsWith(code);
+    });
+    if(!match){toast('League not found. Check your code.',true);return;}
+    regLeague=match;
     document.getElementById('reg-league-info').style.display='block';
     document.getElementById('reg-league-name').textContent=regLeague.name;
     document.getElementById('reg-league-format').textContent=
       regLeague.num_singles+' singles · '+regLeague.num_doubles+' doubles · '+
       (regLeague.team_game_players>0?regLeague.team_game_players+'-player team game':'no team game')+
-      ' · '+regLeague.starting_score+' starting · '+regLeague.match_night+'s';
+      ' · '+(regLeague.starting_score||501)+' starting · '+regLeague.match_night+'s';
     toast('League found: '+regLeague.name);
   }catch(e){toast('Error: '+e.message,true);}
 }
@@ -853,16 +850,19 @@ function handleTagInput(e){
   if(e.key==='Backspace'&&inp.value===''&&regPlayers.length){regPlayers.pop();renderRegTags();}
 }
 function renderRegTags(){
-  const wrap=document.getElementById('reg-player-tags');
-  const inp=document.getElementById('reg-player-input');
-  wrap.innerHTML='';
+  var wrap=document.getElementById('reg-player-tags');
+  var inp=document.getElementById('reg-player-input');
+  // Remove all children except the input
+  var children=Array.from(wrap.childNodes);
+  children.forEach(function(c){if(c!==inp)wrap.removeChild(c);});
+  // Add tags before the input
   regPlayers.forEach(function(p,i){
-    const tag=document.createElement('span');
+    var tag=document.createElement('span');
     tag.style.cssText='background:var(--s3);border:1px solid var(--border);border-radius:20px;padding:2px 10px;font-size:.85rem;display:flex;align-items:center;gap:5px;white-space:nowrap';
     tag.innerHTML=esc(p)+'<button onclick="removeRegTag('+i+')" style="background:none;border:none;color:var(--dim);cursor:pointer;font-size:.9rem;line-height:1;padding:0">×</button>';
-    wrap.appendChild(tag);
+    wrap.insertBefore(tag,inp);
   });
-  wrap.appendChild(inp);inp.focus();
+  inp.focus();
 }
 function removeRegTag(i){regPlayers.splice(i,1);renderRegTags();}
 
@@ -1357,4 +1357,4 @@ function setEWL(key,r){var w=document.getElementById('eww-'+key);var l=document.
 function eswH(key,scores){var chips=scores.map(function(v,i){return '<span class="ech'+(v===180?' max180':'')+'">'+( v===180?'&#9733; 180':v)+'<button class="ecx" onclick="rmES(&quot;'+key+'&quot;,'+i+')">×</button></span>';}).join('');return '<div class="esw"><div class="escc" id="ec-'+key+'">'+chips+'</div><div class="esir"><input class="esi" id="ei-'+key+'" type="number" min="80" max="180" placeholder="80+" onkeydown="if(event.key===\'Enter\'){event.preventDefault();addES(&quot;'+key+'&quot;);}"><button class="eab" onclick="addES(&quot;'+key+'&quot;)">+</button></div></div>';}
 function getEArr(key){if(/^es\d+$/.test(key))return editSt.data.singles[parseInt(key.slice(2))].scores;if(/^ed\d+p1$/.test(key))return editSt.data.doubles[parseInt(key.slice(2,-2))].scores1;if(/^ed\d+p2$/.test(key))return editSt.data.doubles[parseInt(key.slice(2,-2))].scores2;if(/^et0p\d+$/.test(key)){var pi=parseInt(key.slice(4))-1;if(!editSt.data.team4.scores[pi])editSt.data.team4.scores[pi]=[];return editSt.data.team4.scores[pi];}return null;}
 function addES(key){var inp=document.getElementById('ei-'+key);var val=parseInt(inp.value);var thresh=currentTeam&&currentTeam.score_threshold?currentTeam.score_threshold:80;if(isNaN(val)||val<thresh||val>180){toast('Enter '+thresh+'–180');inp.focus();return;}var arr=getEArr(key);if(!arr)return;arr.push(val);var el=document.getElementById('ec-'+key);if(el)el.innerHTML=arr.map(function(v,i){return '<span class="ech'+(v===180?' max180':'')+'">'+( v===180?'&#9733; 180':v)+'<button class="ecx" onclick="rmES(&quot;'+key+'&quot;,'+i+')">×</button></span>';}).join('');inp.value='';inp.focus();}
-function rmES(key,idx){var arr=getEArr(key);if(!arr)return;arr.splice(idx,1);var el=document.getElementById('ec-'+key);if(el)el.innerHTML=arr.map(function(v,i){return '<span class="ech'+(
+function rmES(key,idx){var arr=getEArr(key);if(!arr)return;arr.splice(idx,1);var el=document.getElementById('ec-'+key);if(el)el.innerHTML=ar
