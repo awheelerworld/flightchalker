@@ -321,6 +321,14 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
 html{scroll-behavior:smooth}
 .section-anchor{padding-top:1.5rem}
 .badge-live{display:inline-block;background:#1a2a1e;border:1px solid var(--green);color:var(--gl);font-family:'Barlow Condensed',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:1px 6px;border-radius:3px;margin-left:6px;vertical-align:middle}
+.edit-panel{background:#0a1525;border:1px solid var(--blue);border-radius:8px;padding:1.25rem;margin-top:.5rem;display:none}
+.edit-panel.open{display:block}
+.edit-panel h4{font-family:'Barlow Condensed',sans-serif;font-size:.8rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#5a9abf;margin-bottom:1rem}
+.edit-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;margin-bottom:1rem}
+.edit-item{display:flex;flex-direction:column;gap:4px}
+.edit-item label{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--dim)}
+.edit-item input,.edit-item select{background:var(--bg);border:1px solid var(--blue);border-radius:4px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.9rem;padding:.4rem .6rem}
+.edit-item input:focus,.edit-item select:focus{outline:none;border-color:var(--blue-l)}
 /* ── Public page ── */
 .public-hero{text-align:center;padding:2rem 1rem 1.5rem;border-bottom:1px solid var(--border);margin-bottom:1.5rem}
 .public-hero h1{font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:900;text-transform:uppercase;letter-spacing:.04em;color:var(--amber);margin-bottom:.25rem}
@@ -373,7 +381,7 @@ html{scroll-behavior:smooth}
   </div>
   <main>
     <div class="tabs">
-      <button class="tab admin-tab active" onclick="swAdmin(&quot;leagues&quot;)">Leagues</button>
+      <button class="tab admin-tab active" id="tab-btn-leagues" onclick="swAdmin(&quot;leagues&quot;);loadAdminData()">Leagues</button>
       <button class="tab admin-tab" onclick="swAdmin(&quot;create-league&quot;)">Create League</button>>
     </div>
     <!-- LEAGUES LIST -->
@@ -1186,13 +1194,41 @@ async function loadAdminData(){
     el.innerHTML=leagues.map(function(l){
       var lTeams=teams.filter(function(t){return t.league_id===l.id;});
       var code=l.id.replace(/-/g,'').toUpperCase().slice(0,8);
-      return '<div class="league-card" onclick="showLeagueDetail(\''+l.id+'\',\''+esc(l.name)+'\')">'
-        +'<div><div class="league-card-name">'+esc(l.name)+'</div>'
-        +'<div class="league-card-meta">'+l.match_night+'s · '+l.num_singles+' singles · '+l.num_doubles+' doubles · '+l.starting_score+'</div></div>'
-        +'<div><div class="league-card-teams">'+lTeams.length+' team'+(lTeams.length!==1?'s':'')+'</div>'
-        +'<div style="font-size:.7rem;color:var(--blue-l)">Code: '+code+'</div></div>'
-        +'</div>';
-    }).join('');
+      return '<div style="margin-bottom:.75rem">'
+        +'<div class="league-card">'
+        +'<div onclick="showLeagueDetail(&quot;'+l.id+'&quot;,&quot;'+esc(l.name)+'&quot;)" style="flex:1;cursor:pointer">'
+        +'<div class="league-card-name">'+esc(l.name)+'</div>'
+        +'<div class="league-card-meta">'+l.match_night+'s · '+l.num_singles+' singles · '+l.num_doubles+' doubles · '+(l.starting_score||501)+'</div>'
+        +'</div>'
+        +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'
+        +'<div class="league-card-teams">'+lTeams.length+' team'+(lTeams.length!==1?'s':'')+' registered</div>'
+        +'<div style="font-size:.7rem;color:var(--blue-l)">Code: '+code+'</div>'
+        +'<button class="btn-admin" style="font-size:.72rem;padding:3px 10px;margin-top:4px" onclick="toggleEditPanel(&quot;'+l.id+'&quot;)">✎ Edit</button>'
+        +'</div></div>'
+        +'<div class="edit-panel" id="edit-panel-'+l.id+'">'
+        +'<h4>Edit — '+esc(l.name)+'</h4>'
+        +'<div class="edit-grid">'
+        +'<div class="edit-item"><label>League Name</label><input type="text" id="el-name-'+l.id+'" value="'+esc(l.name)+'"></div>'
+        +'<div class="edit-item"><label>Match Night</label><select id="el-night-'+l.id+'"><option '+(l.match_night==='Monday'?'selected':'')+'>Monday</option><option '+(l.match_night==='Tuesday'?'selected':'')+'>Tuesday</option><option '+(l.match_night==='Wednesday'?'selected':'')+'>Wednesday</option><option '+(l.match_night==='Thursday'?'selected':'')+'>Thursday</option><option '+(l.match_night==='Friday'?'selected':'')+'>Friday</option><option '+(l.match_night==='Sunday'?'selected':'')+'>Sunday</option></select></div>'
+        +'<div class="edit-item"><label>Singles</label><input type="number" id="el-singles-'+l.id+'" value="'+(l.num_singles||6)+'" min="1" max="12"></div>'
+        +'<div class="edit-item"><label>Doubles</label><input type="number" id="el-doubles-'+l.id+'" value="'+(l.num_doubles||3)+'" min="0" max="6"></div>'
+        +'<div class="edit-item"><label>Team Game</label><select id="el-teamgame-'+l.id+'"><option value="0" '+(l.team_game_players===0?'selected':'')+'>None</option><option value="3" '+(l.team_game_players===3?'selected':'')+'>3 players</option><option value="4" '+(l.team_game_players===4?'selected':'')+'>4 players</option><option value="6" '+(l.team_game_players===6?'selected':'')+'>6 players</option></select></div>'
+        +'<div class="edit-item"><label>Singles Score</label><input type="number" id="el-sscore-'+l.id+'" value="'+(l.starting_score||501)+'" min="101"></div>'
+        +'<div class="edit-item"><label>Doubles Score</label><input type="number" id="el-dscore-'+l.id+'" value="'+(l.starting_score_doubles||601)+'" min="101"></div>'
+        +'<div class="edit-item"><label>Team Score</label><input type="number" id="el-tscore-'+l.id+'" value="'+(l.starting_score_team||1001)+'" min="101"></div>'
+        +'<div class="edit-item"><label>Singles Best Of</label><select id="el-bosing-'+l.id+'"><option value="1" '+(l.best_of_singles===1?'selected':'')+'>1 leg</option><option value="3" '+((l.best_of_singles||3)===3?'selected':'')+'>Best of 3</option><option value="5" '+(l.best_of_singles===5?'selected':'')+'>Best of 5</option></select></div>'
+        +'<div class="edit-item"><label>Doubles Best Of</label><select id="el-bodub-'+l.id+'"><option value="1" '+(l.best_of_doubles===1?'selected':'')+'>1 leg</option><option value="3" '+((l.best_of_doubles||3)===3?'selected':'')+'>Best of 3</option><option value="5" '+(l.best_of_doubles===5?'selected':'')+'>Best of 5</option></select></div>'
+        +'<div class="edit-item"><label>Points Win</label><input type="number" id="el-pwin-'+l.id+'" value="'+(l.points_win||2)+'" min="0"></div>'
+        +'<div class="edit-item"><label>Points Draw</label><input type="number" id="el-pdraw-'+l.id+'" value="'+(l.points_draw||1)+'" min="0"></div>'
+        +'<div class="edit-item"><label>Points Loss</label><input type="number" id="el-ploss-'+l.id+'" value="'+(l.points_loss||0)+'" min="0"></div>'
+        +'</div>'
+        +'<div style="display:flex;gap:.75rem;margin-top:.75rem">'
+        +'<button class="btn-admin" onclick="saveLeagueEdit(&quot;'+l.id+'&quot;)">Save Changes</button>'
+        +'<button class="btns" style="font-size:.85rem" onclick="toggleEditPanel(&quot;'+l.id+'&quot;)">Cancel</button>'
+        +'</div>'
+        +'<div class="ast" id="el-status-'+l.id+'"></div>'
+        +'</div></div>';
+    }).join('');;
   }catch(e){el.innerHTML='<div class="nh">Error: '+esc(e.message)+'</div>';}
 }
 
@@ -1210,53 +1246,4 @@ async function showLeagueDetail(leagueId,leagueName){
     h+='<div class="admin-section"><h3>'+esc(league.name)+'</h3>';
     h+='<div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1rem">';
     h+='<span class="tag blue">Code: '+code+'</span>';
-    h+='<span class="tag amber">'+league.match_night+'s</span>';
-    h+='<span class="tag green">'+teams.length+' teams</span>';
-    h+='</div>';
-    h+='<div style="font-size:.85rem;color:var(--dim);line-height:1.7">';
-    h+='Singles: '+league.num_singles+' (best of '+league.best_of_singles+') · ';
-    h+='Doubles: '+league.num_doubles+' (best of '+league.best_of_doubles+') · ';
-    h+='Team game: '+(league.team_game_players>0?league.team_game_players+' players':'none')+' · ';
-    h+='Singles: '+( league.starting_score||501)+' · Doubles: '+(league.starting_score_doubles||601)+' · Team: '+(league.starting_score_team||1001)+' · ';
-    h+='Points: W='+league.points_win+' D='+league.points_draw+' L='+league.points_loss;
-    h+='</div></div>';
-
-    // Season management
-    h+='<div class="admin-section"><h3>Season Management</h3>';
-    h+='<div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">';
-    h+='<div style="font-size:.9rem;color:var(--text)">Current Season: <strong style="color:var(--amber)">Season '+league.current_season+'</strong></div>';
-    h+='<button class="btn-admin" onclick="startNewSeason(&quot;'+leagueId+'&quot;,&quot;'+esc(leagueName)+'&quot;,'+league.current_season+')">Start New Season</button>';
-    h+='</div>';
-    h+='<p style="font-size:.8rem;color:var(--dim);margin-top:.75rem">Starting a new season keeps all history but creates a fresh league table. Teams keep their accounts.</p>';
-    h+='</div>';
-    h+='<div class="admin-section"><h3>Registered Teams ('+teams.length+')</h3>';
-    if(!teams.length){h+='<div class="nh">No teams registered yet.</div>';}
-    else{h+=teams.map(function(t){return '<div class="team-row"><span class="team-row-name">'+esc(t.team_name)+'</span><span class="team-row-meta">PIN: '+t.pin+'</span><button class="hb del" onclick="deleteTeamConfirm(\''+t.id+'\',\''+esc(t.team_name)+'\')">Remove</button></div>';}).join('');}
-    h+='</div>';
-
-    h+='<div class="admin-section"><h3>Fixtures ('+fixtures.length+')</h3>';
-    h+='<div style="margin-bottom:1rem">';
-    h+='<div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end;margin-bottom:.75rem">';
-    h+='<div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:120px"><label style="font-size:.72rem;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:.1em">Date</label><input type="date" id="af-date" style="background:var(--bg);border:1px solid var(--blue);border-radius:4px;color:var(--text);padding:.35rem .6rem;font-size:.85rem;font-family:Barlow,sans-serif"></div>';
-    h+='<div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:120px"><label style="font-size:.72rem;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:.1em">Home Team</label><select id="af-home" style="background:var(--bg);border:1px solid var(--blue);border-radius:4px;color:var(--text);padding:.35rem .6rem;font-size:.85rem;font-family:Barlow,sans-serif"><option value="">— Select —</option>'+teams.map(function(t){return '<option value="'+t.id+'">'+esc(t.team_name)+'</option>';}).join('')+'</select></div>';
-    h+='<div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:120px"><label style="font-size:.72rem;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:.1em">Away Team</label><select id="af-away" style="background:var(--bg);border:1px solid var(--blue);border-radius:4px;color:var(--text);padding:.35rem .6rem;font-size:.85rem;font-family:Barlow,sans-serif"><option value="">— Select —</option>'+teams.map(function(t){return '<option value="'+t.id+'">'+esc(t.team_name)+'</option>';}).join('')+'</select></div>';
-    h+='</div><button class="btn-admin" onclick="addAdminFixture(\''+leagueId+'\')">Add Fixture</button></div>';
-    if(fixtures.length){
-      h+=fixtures.map(function(f){
-        var d=new Date(f.fixture_date+'T00:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
-        return '<div class="fx-entry'+(f.played?' past':'')+'"><div class="fx-date">'+d+'</div>'
-          +'<div class="fx-teams">'+esc(teamMap[f.home_team_id]||'?')+'<span class="vs">vs</span>'+esc(teamMap[f.away_team_id]||'?')+'</div>'
-          +'<span class="fx-status '+(f.played?'played':'upcoming')+'">'+(f.played?'Played':'Upcoming')+'</span>'
-          +'<button class="hb del" onclick="deleteFixtureAdmin(\''+f.id+'\',\''+leagueId+'\',\''+esc(leagueName)+'\')">Delete</button></div>';
-      }).join('');
-    }else{h+='<div class="nh">No fixtures added yet.</div>';}
-    h+='</div>';
-    el.innerHTML=h;
-  }catch(e){el.innerHTML='<div class="nh">Error: '+esc(e.message)+'</div>';}
-}
-
-async function addAdminFixture(leagueId){
-  var date=document.getElementById('af-date').value;
-  var home=document.getElementById('af-home').value;
-  var away=document.getElementById('af-away').value;
-  if(!date||!home||!away){toast('Please fill in dat
+    h+='<span class="tag amber">'+leagu
