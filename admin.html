@@ -373,14 +373,8 @@ html{scroll-behavior:smooth}
   </div>
   <main>
     <div class="tabs">
-      <button class="tab admin-tab active" onclick="swAdmin('leagues')">Leagues</button>
-      <button class="tab admin-tab" onclick="
-  document.querySelectorAll('.tab.admin-tab').forEach(function(t){t.classList.remove('active');});
-  this.classList.add('active');
-  document.getElementById('atab-leagues').classList.remove('active');
-  document.getElementById('atab-create-league').classList.add('active');
-  document.getElementById('atab-league-detail').classList.remove('active');
-">Create League</button>
+      <button class="tab admin-tab active" onclick="swAdmin(&quot;leagues&quot;)">Leagues</button>
+      <button class="tab admin-tab" onclick="swAdmin(&quot;create-league&quot;)">Create League</button>>
     </div>
     <!-- LEAGUES LIST -->
     <div id="atab-leagues" class="tc active">
@@ -1258,4 +1252,11 @@ async function showLeagueDetail(leagueId,leagueName){
     }else{h+='<div class="nh">No fixtures added yet.</div>';}
     h+='</div>';
     el.innerHTML=h;
-  }catch(e){el.innerHTML='
+  }catch(e){el.innerHTML='<div class="nh">Error: '+esc(e.message)+'</div>';}
+}
+
+async function addAdminFixture(leagueId){
+  var date=document.getElementById('af-date').value;
+  var home=document.getElementById('af-home').value;
+  var away=document.getElementById('af-away').value;
+  if(!date||!home||!away){toast('Please fill in dat
