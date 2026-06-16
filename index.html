@@ -24,7 +24,7 @@
 body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh}
 .screen{display:none;min-height:100vh}
 .screen.active{display:block}
-#screen-admin.active,#screen-app.active{position:fixed;top:0;left:0;right:0;bottom:0;overflow-y:auto;z-index:1000;background:var(--bg)}
+#screen-admin.active,#screen-app.active{display:block!important;position:relative}
 
 /* ── Landing ── */
 #screen-landing{background:var(--bg)}
@@ -783,13 +783,21 @@ function goTo(screen){
 function logout(){
   currentTeam=null;currentLeague=null;players=[];matchHistory=[];leagueFixtures=[];leagueTeams=[];
   localStorage.removeItem('mld_session');
-  document.getElementById('screen-app').classList.remove('active');
-  window.scrollTo({top:0,behavior:'smooth'});
+  var appEl=document.getElementById('screen-app');
+  appEl.style.display='none';appEl.classList.remove('active');
+  var landEl=document.getElementById('screen-landing');
+  landEl.style.display='block';landEl.classList.add('active');
+  window.scrollTo(0,0);
 }
 function adminLogout(){
   localStorage.removeItem('mld_admin');
-  document.getElementById('screen-admin').classList.remove('active');
-  window.scrollTo({top:0,behavior:'smooth'});
+  var adminEl=document.getElementById('screen-admin');
+  adminEl.style.display='none';
+  adminEl.classList.remove('active');
+  var landEl=document.getElementById('screen-landing');
+  landEl.style.display='block';
+  landEl.classList.add('active');
+  window.scrollTo(0,0);
 }
 
 // ── Session ───────────────────────────────────────────────────────────────────
@@ -797,11 +805,15 @@ document.addEventListener('DOMContentLoaded',async function(){
   document.getElementById('mdate').value=new Date().toISOString().split('T')[0];
   const sess=localStorage.getItem('mld_session');
   if(sess){try{const d=JSON.parse(sess);currentTeam=d.team;currentLeague=d.league;await loadTeamData();
-    document.getElementById('screen-app').classList.add('active');
+    document.querySelectorAll('.screen').forEach(function(s){s.style.display='none';s.classList.remove('active');});
+    var appEl=document.getElementById('screen-app');
+    appEl.style.display='block';appEl.classList.add('active');
   }catch(e){localStorage.removeItem('mld_session');}}
   const adminSess=localStorage.getItem('mld_admin');
   if(adminSess&&!sess){
-    document.getElementById('screen-admin').classList.add('active');
+    document.querySelectorAll('.screen').forEach(function(s){s.style.display='none';s.classList.remove('active');});
+    var adminEl=document.getElementById('screen-admin');
+    adminEl.style.display='block';adminEl.classList.add('active');
     swAdmin('leagues');loadAdminData();
   }
 });
@@ -885,8 +897,10 @@ async function registerTeam(){
 
 async function goToApp(){
   await loadTeamData();
-  document.getElementById('screen-app').classList.add('active');
-  window.scrollTo({top:0,behavior:'smooth'});
+  document.querySelectorAll('.screen').forEach(function(s){s.style.display='none';s.classList.remove('active');});
+  var appEl=document.getElementById('screen-app');
+  appEl.style.display='block';appEl.classList.add('active');
+  window.scrollTo(0,0);
 }
 function closePinOverlay(){document.getElementById('pin-overlay').style.display='none';goToApp();}
 
@@ -908,8 +922,10 @@ async function loginTeam(){
     currentTeam=team;currentTeam.score_threshold=team.score_threshold||80;currentLeague=leagueRows[0];
     localStorage.setItem('mld_session',JSON.stringify({team:currentTeam,league:currentLeague}));
     await loadTeamData();
-    document.getElementById('screen-app').classList.add('active');
-    window.scrollTo({top:0,behavior:'smooth'});
+    document.querySelectorAll('.screen').forEach(function(s){s.style.display='none';s.classList.remove('active');});
+    var appEl=document.getElementById('screen-app');
+    appEl.style.display='block';appEl.classList.add('active');
+    window.scrollTo(0,0);
   }catch(e){st.textContent='Error: '+e.message;st.className='ast err';}
   sp.style.display='none';
 }
@@ -919,8 +935,16 @@ function adminLogin(){
   localStorage.setItem('mld_admin','1');
   localStorage.removeItem('mld_session');
   currentTeam=null;currentLeague=null;
-  document.getElementById('screen-admin').classList.add('active');
-  window.scrollTo({top:0,behavior:'smooth'});
+  // Hide all screens
+  document.querySelectorAll('.screen').forEach(function(s){
+    s.style.display='none';
+    s.classList.remove('active');
+  });
+  // Show admin screen
+  var adminEl=document.getElementById('screen-admin');
+  adminEl.style.display='block';
+  adminEl.classList.add('active');
+  window.scrollTo(0,0);
   swAdmin('leagues');
   loadAdminData();
 }
@@ -1347,6 +1371,4 @@ function openEdit(idx){
 function eOpts(sel){return '<option value="">— Select —</option>'+players.map(function(p){return '<option value="'+esc(p)+'" '+(p===sel?'selected':'')+'>'+esc(p)+'</option>';}).join('');}
 function ewlH(key,r){return '<div class="ewl"><button class="ewb '+(r==='win'?'aw':'')+'" id="eww-'+key+'" onclick="setEWL(&quot;'+key+'&quot;,&quot;win&quot;)">W</button><button class="ewb '+(r==='loss'?'al':'')+'" id="ewl2-'+key+'" onclick="setEWL(&quot;'+key+'&quot;,&quot;loss&quot;)">L</button></div>';}
 function setEWL(key,r){var w=document.getElementById('eww-'+key);var l=document.getElementById('ewl2-'+key);if(w)w.className='ewb'+(r==='win'?' aw':'');if(l)l.className='ewb'+(r==='loss'?' al':'');if(/^es\d/.test(key))editSt.data.singles[parseInt(key.slice(2))].result=r;else if(/^ed\d/.test(key))editSt.data.doubles[parseInt(key.slice(2))].result=r;else if(/^et0$/.test(key))editSt.data.team4.result=r;}
-function eswH(key,scores){var chips=scores.map(function(v,i){return '<span class="ech'+(v===180?' max180':'')+'">'+( v===180?'&#9733; 180':v)+'<button class="ecx" onclick="rmES(&quot;'+key+'&quot;,'+i+')">×</button></span>';}).join('');return '<div class="esw"><div class="escc" id="ec-'+key+'">'+chips+'</div><div class="esir"><input class="esi" id="ei-'+key+'" type="number" min="80" max="180" placeholder="80+" onkeydown="if(event.key===\'Enter\'){event.preventDefault();addES(&quot;'+key+'&quot;);}"><button class="eab" onclick="addES(&quot;'+key+'&quot;)">+</button></div></div>';}
-function getEArr(key){if(/^es\d+$/.test(key))return editSt.data.singles[parseInt(key.slice(2))].scores;if(/^ed\d+p1$/.test(key))return editSt.data.doubles[parseInt(key.slice(2,-2))].scores1;if(/^ed\d+p2$/.test(key))return editSt.data.doubles[parseInt(key.slice(2,-2))].scores2;if(/^et0p\d+$/.test(key)){var pi=parseInt(key.slice(4))-1;if(!editSt.data.team4.scores[pi])editSt.data.team4.scores[pi]=[];return editSt.data.team4.scores[pi];}return null;}
-function addES(key){var inp=document.getElementById('ei-'+key);var val=parseInt(inp.value);var thresh=currentTeam&&currentTeam.score_threshold?currentTeam.score_threshold:80;if(isNaN(val)||val<thresh||val>180){toast('Enter '+thresh+'–180');inp.focus();return;}var arr=getEArr(key);if(!arr)retur
+function eswH(key,scores){var chips=scores.map(function(v,i){return '<span class="ech'+(v===180?' max180':'')+'">'+( v===180?'&#9733; 180':v)+'<button class="ecx" onclick="rmES(&quot;'+key+'&quot;,'+i+')">×</button></span>';}).join('');return '<div class="es
