@@ -398,6 +398,16 @@ html{scroll-behavior:smooth}
         </div>
       </div>
       <div class="afield"><label>Secret Word <span style="font-weight:400;text-transform:none;letter-spacing:0">(used if you forget your PIN)</span></label><input type="text" id="reg-secret" placeholder="e.g. your pub name"><span class="hint">Keep this memorable — you'll need it to recover your PIN</span></div>
+      <div class="afield"><label>Minimum Score to Track <span style="font-weight:400;text-transform:none;letter-spacing:0">(your team's high score threshold)</span></label>
+        <select id="reg-threshold">
+          <option value="60">60+ (beginner friendly)</option>
+          <option value="80" selected>80+ (standard)</option>
+          <option value="100">100+ (intermediate)</option>
+          <option value="120">120+ (advanced)</option>
+          <option value="140">140+ (expert)</option>
+        </select>
+        <span class="hint">Scores at or above this number will be recorded as high scores</span>
+      </div>
       <div class="arow"><button class="btnp" onclick="registerTeam()"><span id="reg-spin" style="display:none" class="spin"></span>Register</button></div>
       <div class="ast" id="reg-status"></div>
       <div style="text-align:right;margin-top:1rem"><a href="#top" style="font-size:.75rem;color:var(--dim);text-decoration:none;font-family:'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase">↑ Back to top</a></div>
@@ -445,14 +455,8 @@ html{scroll-behavior:smooth}
   <div id="section-admin-login" class="section-anchor" style="display:flex;justify-content:center;padding:2rem 1rem 3rem;border-top:1px solid var(--border);scroll-margin-top:0">
     <div class="auth-card" style="border-color:var(--blue);background:#0d1e2e">
       <h2 style="color:#8ac4ff">⚙ League Admin</h2>
-      <p>Enter the master admin password to manage leagues.</p>
-      <div class="afield"><label>Admin Password</label>
-        <div style="position:relative;display:flex;align-items:center">
-          <input type="password" id="admin-pw" placeholder="Master password" onkeydown="if(event.key==='Enter')adminLogin()" style="background:var(--bg);border:1px solid var(--blue);border-radius:5px;color:var(--text);font-family:Barlow,sans-serif;font-size:.9rem;padding:.5rem 2.5rem .5rem .75rem;width:100%">
-          <button type="button" onclick="togglePw('admin-pw',this)" style="position:absolute;right:8px;background:none;border:none;color:#5a9abf;cursor:pointer;font-size:.8rem;padding:0;font-family:'Barlow Condensed',sans-serif;letter-spacing:.04em">SHOW</button>
-        </div>
-      </div>
-      <div class="arow"><button class="btn-admin" onclick="adminLogin()"><span id="admin-spin" style="display:none" class="spin blue"></span>Log In</button></div>
+      <p>Click below to access the league administration panel.</p>
+      <div class="arow"><button class="btn-admin" onclick="adminLogin()">Enter Admin Panel →</button></div>
       <div class="ast" id="admin-status"></div>
       <div style="text-align:right;margin-top:1rem"><a href="#top" style="font-size:.75rem;color:var(--dim);text-decoration:none;font-family:'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase">↑ Back to top</a></div>
     </div>
@@ -586,7 +590,7 @@ html{scroll-behavior:smooth}
           <div class="sbig" id="tmw" style="color:var(--amber)">0</div>
           <div class="slbl">Matches Won</div>
         </div>
-        <div class="e8t"><div class="num" id="t8">0</div><div class="lbl">80+ scores</div></div>
+        <div class="e8t"><div class="num" id="t8">0</div><div class="lbl" id="t8-label">80+ scores</div></div>
       </div>
       <div id="match-rows-container"></div>
       <div class="ar">
@@ -685,7 +689,9 @@ html{scroll-behavior:smooth}
           <div class="format-item"><label>Number of Singles</label><input type="number" id="cl-singles" value="6" min="1" max="12"></div>
           <div class="format-item"><label>Number of Doubles</label><input type="number" id="cl-doubles" value="3" min="0" max="6"></div>
           <div class="format-item"><label>Team Game Players</label><select id="cl-teamgame"><option value="0">No team game</option><option value="3">3 players</option><option value="4" selected>4 players</option><option value="6">6 players</option></select></div>
-          <div class="format-item"><label>Starting Score</label><input type="number" id="cl-score" value="501" min="101"></div>
+          <div class="format-item"><label>Singles Starting Score</label><input type="number" id="cl-score-singles" value="501" min="101"></div>
+          <div class="format-item"><label>Doubles Starting Score</label><input type="number" id="cl-score-doubles" value="601" min="101"></div>
+          <div class="format-item"><label>Team Game Starting Score</label><input type="number" id="cl-score-team" value="1001" min="101"></div>
           <div class="format-item"><label>Singles Best Of</label><select id="cl-bosing"><option value="1">1 leg</option><option value="3" selected>Best of 3</option><option value="5">Best of 5</option></select></div>
           <div class="format-item"><label>Doubles Best Of</label><select id="cl-bodub"><option value="1">1 leg</option><option value="3" selected>Best of 3</option><option value="5">Best of 5</option></select></div>
         </div>
@@ -863,10 +869,10 @@ async function registerTeam(){
   try{
     const existing=await sb('teams?team_name=eq.'+encodeURIComponent(teamName)+'&league_id=eq.'+regLeague.id+'&select=id');
     if(existing&&existing.length){st.textContent='That team name is already registered in this league.';st.className='ast err';sp.style.display='none';return;}
-    const teamRes=await sb('teams',{method:'POST',prefer:'return=representation',body:JSON.stringify({team_name:teamName,pin,league_id:regLeague.id,secret_word:secret})});
+    const teamRes=await sb('teams',{method:'POST',prefer:'return=representation',body:JSON.stringify({team_name:teamName,pin,league_id:regLeague.id,secret_word:secret,score_threshold:parseInt(document.getElementById('reg-threshold').value)||80})});
     const teamId=teamRes[0].id;
     for(const name of regPlayers){await sb('team_players',{method:'POST',prefer:'return=minimal',body:JSON.stringify({team_id:teamId,name})});}
-    currentTeam={id:teamId,team_name:teamName,pin,league_id:regLeague.id};
+    currentTeam={id:teamId,team_name:teamName,pin,league_id:regLeague.id,score_threshold:parseInt(document.getElementById('reg-threshold').value)||80};
     currentLeague=regLeague;
     localStorage.setItem('mld_session',JSON.stringify({team:currentTeam,league:currentLeague}));
     document.getElementById('pin-display').textContent=pin;
@@ -898,7 +904,7 @@ async function loginTeam(){
     if(team.pin!==pin){st.textContent='Incorrect PIN.';st.className='ast err';sp.style.display='none';return;}
     const leagueRows=await sb('leagues?id=eq.'+team.league_id+'&select=*');
     if(!leagueRows||!leagueRows.length){st.textContent='League not found.';st.className='ast err';sp.style.display='none';return;}
-    currentTeam=team;currentLeague=leagueRows[0];
+    currentTeam=team;currentTeam.score_threshold=team.score_threshold||80;currentLeague=leagueRows[0];
     localStorage.setItem('mld_session',JSON.stringify({team:currentTeam,league:currentLeague}));
     await loadTeamData();
     document.getElementById('screen-app').classList.add('active');
@@ -909,10 +915,6 @@ async function loginTeam(){
 
 // ── Admin login ───────────────────────────────────────────────────────────────
 function adminLogin(){
-  const pw=document.getElementById('admin-pw').value;
-  const st=document.getElementById('admin-status');
-  if(!pw){st.textContent='Please enter the admin password.';st.className='ast err';return;}
-  if(pw!==MASTER_PW){st.textContent='Incorrect password.';st.className='ast err';return;}
   localStorage.setItem('mld_admin','1');
   localStorage.removeItem('mld_session');
   currentTeam=null;currentLeague=null;
@@ -938,6 +940,7 @@ async function loadTeamData(){
   }catch(e){leagueTeams=[];}
   populateOpponentDropdown();
   renderPChips();populateStatSel();buildRows();updateBar();
+  var lbl=document.getElementById('t8-label');if(lbl)lbl.textContent=(currentTeam&&currentTeam.score_threshold?currentTeam.score_threshold:80)+'+ scores';
 }
 
 function populateOpponentDropdown(){
@@ -997,7 +1000,7 @@ function buildRows(){
   // Singles
   md.singles=Array.from({length:n},function(){return{player:'',legsFor:0,legsAgainst:0,result:null,scores:[]};});
   const sEl=document.createElement('div');sEl.className='mg';
-  sEl.innerHTML='<div class="slabel">Singles <span>'+n+' match'+(n!==1?'es':'')+' · best of '+currentLeague.best_of_singles+' legs · '+currentLeague.starting_score+'</span></div>';
+  sEl.innerHTML='<div class="slabel">Singles <span>'+n+' match'+(n!==1?'es':'')+' · best of '+currentLeague.best_of_singles+' legs · '+(currentLeague.starting_score||501)+'</span></div>';
   const sRows=document.createElement('div');sRows.id='singles-rows';
   for(var i=0;i<n;i++)sRows.appendChild(mkSingle(i));
   sEl.appendChild(sRows);c.appendChild(sEl);
@@ -1006,7 +1009,7 @@ function buildRows(){
   if(d>0){
     md.doubles=Array.from({length:d},function(){return{p1:'',p2:'',legsFor:0,legsAgainst:0,result:null,scores1:[],scores2:[]};});
     const dEl=document.createElement('div');dEl.className='mg';
-    dEl.innerHTML='<div class="slabel">Doubles <span>'+d+' match'+(d!==1?'es':'')+' · best of '+currentLeague.best_of_doubles+' legs · '+currentLeague.starting_score+'</span></div>';
+    dEl.innerHTML='<div class="slabel">Doubles <span>'+d+' match'+(d!==1?'es':'')+' · best of '+currentLeague.best_of_doubles+' legs · '+(currentLeague.starting_score_doubles||currentLeague.starting_score||601)+'</span></div>';
     const dRows=document.createElement('div');dRows.id='doubles-rows';
     for(var i=0;i<d;i++)dRows.appendChild(mkDouble(i));
     dEl.appendChild(dRows);c.appendChild(dEl);
@@ -1018,7 +1021,7 @@ function buildRows(){
     md.team4={result:null,scores:Array.from({length:t},function(){return[];})};
     for(var pi=0;pi<t;pi++)md.team4['p'+(pi+1)]='';
     const tEl=document.createElement('div');tEl.className='mg';
-    tEl.innerHTML='<div class="slabel">'+tgName+' <span>1 match · '+t+' players</span></div>';
+    tEl.innerHTML='<div class="slabel">'+tgName+' <span>1 match · '+t+' players · '+(currentLeague.starting_score_team||currentLeague.starting_score||1001)+'</span></div>';
     const tRows=document.createElement('div');tRows.id='team4-rows';
     tRows.appendChild(mkTeam(t));
     tEl.appendChild(tRows);c.appendChild(tEl);
@@ -1043,7 +1046,7 @@ function mkSingle(i){
   var r=document.createElement('div');r.className='mr';r.id='s-'+i;
   r.innerHTML='<div class="mn">S'+(i+1)+'</div><div class="mm">'
     +'<select class="ps" onchange="md.singles['+i+'].player=this.value;refreshDropdowns()">'+playerOpts()+'</select>'
-    +legsWidget('sf',i)+e8w('s'+i,'80+')+'</div>';
+    +legsWidget('sf',i)+e8w('s'+i,(currentTeam&&currentTeam.score_threshold?currentTeam.score_threshold:80)+'+')+'</div>';
   return r;
 }
 function mkDouble(i){
@@ -1088,7 +1091,7 @@ function adjLegs(prefix,i,dF,dA){
 // ── Score logging ─────────────────────────────────────────────────────────────
 function logScore(key){
   var inp=document.getElementById('inp-'+key);var val=parseInt(inp.value);
-  if(isNaN(val)||val<80||val>180){toast('Enter 80–180');inp.focus();return;}
+  var thresh=currentTeam&&currentTeam.score_threshold?currentTeam.score_threshold:80;if(isNaN(val)||val<thresh||val>180){toast('Enter '+thresh+'–180');inp.focus();return;}
   var arr=getArr(key);if(arr)arr.push(val);
   var chips=document.getElementById('chips-'+key);
   var c=document.createElement('div');c.className='sc'+(val===180?' max180':'');
@@ -1345,11 +1348,5 @@ function ewlH(key,r){return '<div class="ewl"><button class="ewb '+(r==='win'?'a
 function setEWL(key,r){var w=document.getElementById('eww-'+key);var l=document.getElementById('ewl2-'+key);if(w)w.className='ewb'+(r==='win'?' aw':'');if(l)l.className='ewb'+(r==='loss'?' al':'');if(/^es\d/.test(key))editSt.data.singles[parseInt(key.slice(2))].result=r;else if(/^ed\d/.test(key))editSt.data.doubles[parseInt(key.slice(2))].result=r;else if(/^et0$/.test(key))editSt.data.team4.result=r;}
 function eswH(key,scores){var chips=scores.map(function(v,i){return '<span class="ech'+(v===180?' max180':'')+'">'+( v===180?'&#9733; 180':v)+'<button class="ecx" onclick="rmES(&quot;'+key+'&quot;,'+i+')">×</button></span>';}).join('');return '<div class="esw"><div class="escc" id="ec-'+key+'">'+chips+'</div><div class="esir"><input class="esi" id="ei-'+key+'" type="number" min="80" max="180" placeholder="80+" onkeydown="if(event.key===\'Enter\'){event.preventDefault();addES(&quot;'+key+'&quot;);}"><button class="eab" onclick="addES(&quot;'+key+'&quot;)">+</button></div></div>';}
 function getEArr(key){if(/^es\d+$/.test(key))return editSt.data.singles[parseInt(key.slice(2))].scores;if(/^ed\d+p1$/.test(key))return editSt.data.doubles[parseInt(key.slice(2,-2))].scores1;if(/^ed\d+p2$/.test(key))return editSt.data.doubles[parseInt(key.slice(2,-2))].scores2;if(/^et0p\d+$/.test(key)){var pi=parseInt(key.slice(4))-1;if(!editSt.data.team4.scores[pi])editSt.data.team4.scores[pi]=[];return editSt.data.team4.scores[pi];}return null;}
-function addES(key){var inp=document.getElementById('ei-'+key);var val=parseInt(inp.value);if(isNaN(val)||val<80||val>180){toast('Enter 80–180');inp.focus();return;}var arr=getEArr(key);if(!arr)return;arr.push(val);var el=document.getElementById('ec-'+key);if(el)el.innerHTML=arr.map(function(v,i){return '<span class="ech'+(v===180?' max180':'')+'">'+( v===180?'&#9733; 180':v)+'<button class="ecx" onclick="rmES(&quot;'+key+'&quot;,'+i+')">×</button></span>';}).join('');inp.value='';inp.focus();}
-function rmES(key,idx){var arr=getEArr(key);if(!arr)return;arr.splice(idx,1);var el=document.getElementById('ec-'+key);if(el)el.innerHTML=arr.map(function(v,i){return '<span class="ech'+(v===180?' max180':'')+'">'+( v===180?'&#9733; 180':v)+'<button class="ecx" onclick="rmES(&quot;'+key+'&quot;,'+i+')">×</button></span>';}).join('');}
-async function saveEdit(){
-  var date=document.getElementById('ed').value;var opp=document.getElementById('eo').value.trim();var venue=document.getElementById('ev').value;
-  if(!opp||!date){toast('Date and opponent required');return;}
-  var mw=0,ml=0,e8=0;
-  (editSt.data.singles||[]).forEach(function(s){if(s.result==='win')mw++;else if(s.result==='loss')ml++;e8+=(s.scores||[]).length;});
-  (editSt.data.doubles||[]).forEach(function(d){if(d.result==='win')mw++;else if(d.result==='loss')ml++;e8+=(d.scores1||[]
+function addES(key){var inp=document.getElementById('ei-'+key);var val=parseInt(inp.value);var thresh=currentTeam&&currentTeam.score_threshold?currentTeam.score_threshold:80;if(isNaN(val)||val<thresh||val>180){toast('Enter '+thresh+'–180');inp.focus();return;}var arr=getEArr(key);if(!arr)return;arr.push(val);var el=document.getElementById('ec-'+key);if(el)el.innerHTML=arr.map(function(v,i){return '<span class="ech'+(v===180?' max180':'')+'">'+( v===180?'&#9733; 180':v)+'<button class="ecx" onclick="rmES(&quot;'+key+'&quot;,'+i+')">×</button></span>';}).join('');inp.value='';inp.focus();}
+function rmES(key,idx){var arr=getEArr(key);if(!arr)return;arr.splice(idx,1);var el=document.getElementById('ec-'+key);if(el)el.innerHTML=arr.map(function(v,i){return '<span class="ech'+(v===180?' max180':'')+'">'+( v===
