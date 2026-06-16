@@ -353,7 +353,7 @@ html{scroll-behavior:smooth}
 <body>
 
 <!-- ═══ LANDING ═══ -->
-<div id="screen-landing" class="screen active" style="display:block;background:var(--bg);min-height:100vh;flex-direction:unset;align-items:unset;justify-content:unset;padding:0;text-align:unset">
+<div id="screen-landing" class="screen" style="display:block;background:var(--bg);min-height:100vh;flex-direction:unset;align-items:unset;justify-content:unset;padding:0;text-align:unset">
 
   <div id="top"></div>
   <!-- Hero section -->
@@ -642,7 +642,7 @@ html{scroll-behavior:smooth}
 </div>
 
 <!-- ═══ ADMIN APP ═══ -->
-<div id="screen-admin" class="screen">
+<div id="screen-admin" class="screen active" style="display:block">
   <div id="admin-header">
     <div class="app-logo">
       <div class="app-logo-icon">
@@ -1371,4 +1371,4 @@ function openEdit(idx){
 function eOpts(sel){return '<option value="">— Select —</option>'+players.map(function(p){return '<option value="'+esc(p)+'" '+(p===sel?'selected':'')+'>'+esc(p)+'</option>';}).join('');}
 function ewlH(key,r){return '<div class="ewl"><button class="ewb '+(r==='win'?'aw':'')+'" id="eww-'+key+'" onclick="setEWL(&quot;'+key+'&quot;,&quot;win&quot;)">W</button><button class="ewb '+(r==='loss'?'al':'')+'" id="ewl2-'+key+'" onclick="setEWL(&quot;'+key+'&quot;,&quot;loss&quot;)">L</button></div>';}
 function setEWL(key,r){var w=document.getElementById('eww-'+key);var l=document.getElementById('ewl2-'+key);if(w)w.className='ewb'+(r==='win'?' aw':'');if(l)l.className='ewb'+(r==='loss'?' al':'');if(/^es\d/.test(key))editSt.data.singles[parseInt(key.slice(2))].result=r;else if(/^ed\d/.test(key))editSt.data.doubles[parseInt(key.slice(2))].result=r;else if(/^et0$/.test(key))editSt.data.team4.result=r;}
-function eswH(key,scores){var chips=scores.map(function(v,i){return '<span class="ech'+(v===180?' max180':'')+'">'+( v===180?'&#9733; 180':v)+'<button class="ecx" onclick="rmES(&quot;'+key+'&quot;,'+i+')">×</button></span>';}).join('');return '<div class="esw"><div class="escc"
+function eswH(key,scores){var chips=scores.map(function(v,i){return '<span class="ech'+(v===180?' max180':'')+'">'+( v===180?'&#9733; 180':v)+'<button class="ecx" onclick="rmES(&quot;'+key+'&quot;,'+i+')">×</button></span>';}).join('');return '<div class="
