@@ -27,7 +27,7 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-
 #screen-admin.active,#screen-app.active{display:block;position:relative}
 
 /* ── Landing ── */
-#screen-landing{background:var(--bg)}
+#screen-landing{background:var(--bg);min-height:100vh}
 #screen-landing.active{display:block}
 .landing-logo svg{width:100px;height:100px;margin-bottom:1.5rem}
 .landing-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:2.8rem;letter-spacing:.04em;text-transform:uppercase;line-height:1;margin-bottom:.4rem}
@@ -353,7 +353,7 @@ html{scroll-behavior:smooth}
 <body>
 
 <!-- ═══ LANDING ═══ -->
-<div id="screen-landing" class="screen" style="display:block;background:var(--bg);min-height:100vh;flex-direction:unset;align-items:unset;justify-content:unset;padding:0;text-align:unset">
+<div id="screen-landing" class="screen active">
 
   <div id="top"></div>
   <!-- Hero section -->
@@ -642,7 +642,7 @@ html{scroll-behavior:smooth}
 </div>
 
 <!-- ═══ ADMIN APP ═══ -->
-<div id="screen-admin" class="screen active" style="display:block">
+<div id="screen-admin" class="screen">
   <div id="admin-header">
     <div class="app-logo">
       <div class="app-logo-icon">
@@ -783,38 +783,36 @@ function goTo(screen){
 function logout(){
   currentTeam=null;currentLeague=null;players=[];matchHistory=[];leagueFixtures=[];leagueTeams=[];
   localStorage.removeItem('mld_session');
-  var appEl=document.getElementById('screen-app');
-  appEl.style.display='none';appEl.classList.remove('active');
-  var landEl=document.getElementById('screen-landing');
-  landEl.style.display='block';landEl.classList.add('active');
-  window.scrollTo(0,0);
+  showScreen('screen-landing');
 }
 function adminLogout(){
   localStorage.removeItem('mld_admin');
-  var adminEl=document.getElementById('screen-admin');
-  adminEl.style.display='none';
-  adminEl.classList.remove('active');
-  var landEl=document.getElementById('screen-landing');
-  landEl.style.display='block';
-  landEl.classList.add('active');
-  window.scrollTo(0,0);
+  showScreen('screen-landing');
 }
 
 // ── Session ───────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded',async function(){
-  document.getElementById('mdate').value=new Date().toISOString().split('T')[0];
-  const sess=localStorage.getItem('mld_session');
-  if(sess){try{const d=JSON.parse(sess);currentTeam=d.team;currentLeague=d.league;await loadTeamData();
-    document.querySelectorAll('.screen').forEach(function(s){s.style.display='none';s.classList.remove('active');});
-    var appEl=document.getElementById('screen-app');
-    appEl.style.display='block';appEl.classList.add('active');
-  }catch(e){localStorage.removeItem('mld_session');}}
-  const adminSess=localStorage.getItem('mld_admin');
-  if(adminSess&&!sess){
-    document.querySelectorAll('.screen').forEach(function(s){s.style.display='none';s.classList.remove('active');});
-    var adminEl=document.getElementById('screen-admin');
-    adminEl.style.display='block';adminEl.classList.add('active');
-    swAdmin('leagues');loadAdminData();
+  // Set date field if it exists
+  var mdateEl=document.getElementById('mdate');
+  if(mdateEl)mdateEl.value=new Date().toISOString().split('T')[0];
+
+  // Check for saved sessions
+  var sess=localStorage.getItem('mld_session');
+  var adminSess=localStorage.getItem('mld_admin');
+
+  if(sess){
+    try{
+      var d=JSON.parse(sess);
+      currentTeam=d.team;currentLeague=d.league;
+      await loadTeamData();
+      showScreen('screen-app');
+    }catch(e){localStorage.removeItem('mld_session');}
+  } else if(adminSess){
+    showScreen('screen-admin');
+    swAdmin('leagues');
+    loadAdminData();
+  } else {
+    showScreen('screen-landing');
   }
 });
 
@@ -897,10 +895,7 @@ async function registerTeam(){
 
 async function goToApp(){
   await loadTeamData();
-  document.querySelectorAll('.screen').forEach(function(s){s.style.display='none';s.classList.remove('active');});
-  var appEl=document.getElementById('screen-app');
-  appEl.style.display='block';appEl.classList.add('active');
-  window.scrollTo(0,0);
+  showScreen('screen-app');
 }
 function closePinOverlay(){document.getElementById('pin-overlay').style.display='none';goToApp();}
 
@@ -922,10 +917,7 @@ async function loginTeam(){
     currentTeam=team;currentTeam.score_threshold=team.score_threshold||80;currentLeague=leagueRows[0];
     localStorage.setItem('mld_session',JSON.stringify({team:currentTeam,league:currentLeague}));
     await loadTeamData();
-    document.querySelectorAll('.screen').forEach(function(s){s.style.display='none';s.classList.remove('active');});
-    var appEl=document.getElementById('screen-app');
-    appEl.style.display='block';appEl.classList.add('active');
-    window.scrollTo(0,0);
+    showScreen('screen-app');
   }catch(e){st.textContent='Error: '+e.message;st.className='ast err';}
   sp.style.display='none';
 }
@@ -935,16 +927,7 @@ function adminLogin(){
   localStorage.setItem('mld_admin','1');
   localStorage.removeItem('mld_session');
   currentTeam=null;currentLeague=null;
-  // Hide all screens
-  document.querySelectorAll('.screen').forEach(function(s){
-    s.style.display='none';
-    s.classList.remove('active');
-  });
-  // Show admin screen
-  var adminEl=document.getElementById('screen-admin');
-  adminEl.style.display='block';
-  adminEl.classList.add('active');
-  window.scrollTo(0,0);
+  showScreen('screen-admin');
   swAdmin('leagues');
   loadAdminData();
 }
@@ -1371,4 +1354,7 @@ function openEdit(idx){
 function eOpts(sel){return '<option value="">— Select —</option>'+players.map(function(p){return '<option value="'+esc(p)+'" '+(p===sel?'selected':'')+'>'+esc(p)+'</option>';}).join('');}
 function ewlH(key,r){return '<div class="ewl"><button class="ewb '+(r==='win'?'aw':'')+'" id="eww-'+key+'" onclick="setEWL(&quot;'+key+'&quot;,&quot;win&quot;)">W</button><button class="ewb '+(r==='loss'?'al':'')+'" id="ewl2-'+key+'" onclick="setEWL(&quot;'+key+'&quot;,&quot;loss&quot;)">L</button></div>';}
 function setEWL(key,r){var w=document.getElementById('eww-'+key);var l=document.getElementById('ewl2-'+key);if(w)w.className='ewb'+(r==='win'?' aw':'');if(l)l.className='ewb'+(r==='loss'?' al':'');if(/^es\d/.test(key))editSt.data.singles[parseInt(key.slice(2))].result=r;else if(/^ed\d/.test(key))editSt.data.doubles[parseInt(key.slice(2))].result=r;else if(/^et0$/.test(key))editSt.data.team4.result=r;}
-function eswH(key,scores){var chips=scores.map(function(v,i){return '<span class="ech'+(v===180?' max180':'')+'">'+( v===180?'&#9733; 180':v)+'<button class="ecx" onclick="rmES(&quot;'+key+'&quot;,'+i+')">×</button></span>';}).join('');return '<div class="
+function eswH(key,scores){var chips=scores.map(function(v,i){return '<span class="ech'+(v===180?' max180':'')+'">'+( v===180?'&#9733; 180':v)+'<button class="ecx" onclick="rmES(&quot;'+key+'&quot;,'+i+')">×</button></span>';}).join('');return '<div class="esw"><div class="escc" id="ec-'+key+'">'+chips+'</div><div class="esir"><input class="esi" id="ei-'+key+'" type="number" min="80" max="180" placeholder="80+" onkeydown="if(event.key===\'Enter\'){event.preventDefault();addES(&quot;'+key+'&quot;);}"><button class="eab" onclick="addES(&quot;'+key+'&quot;)">+</button></div></div>';}
+function getEArr(key){if(/^es\d+$/.test(key))return editSt.data.singles[parseInt(key.slice(2))].scores;if(/^ed\d+p1$/.test(key))return editSt.data.doubles[parseInt(key.slice(2,-2))].scores1;if(/^ed\d+p2$/.test(key))return editSt.data.doubles[parseInt(key.slice(2,-2))].scores2;if(/^et0p\d+$/.test(key)){var pi=parseInt(key.slice(4))-1;if(!editSt.data.team4.scores[pi])editSt.data.team4.scores[pi]=[];return editSt.data.team4.scores[pi];}return null;}
+function addES(key){var inp=document.getElementById('ei-'+key);var val=parseInt(inp.value);var thresh=currentTeam&&currentTeam.score_threshold?currentTeam.score_threshold:80;if(isNaN(val)||val<thresh||val>180){toast('Enter '+thresh+'–180');inp.focus();return;}var arr=getEArr(key);if(!arr)return;arr.push(val);var el=document.getElementById('ec-'+key);if(el)el.innerHTML=arr.map(function(v,i){return '<span class="ech'+(v===180?' max180':'')+'">'+( v===180?'&#9733; 180':v)+'<button class="ecx" onclick="rmES(&quot;'+key+'&quot;,'+i+')">×</button></span>';}).join('');inp.value='';inp.focus();}
+function rmES(key,idx){var arr=getEArr(key);if(!arr)return;arr.splice(idx,1);var el=document.getElementById('ec-'+key);if(el)el.innerHTML=arr.map(function(v,i){return '<span class="ech'+(v===180?' max180':'')+'">'+( v===18
