@@ -348,7 +348,7 @@ html{scroll-behavior:smooth}
 </style>
 </head>
 <body>
-<div id="screen-admin" class="screen">
+<div id="screen-admin" class="screen active">
   <div id="admin-header">
     <div class="app-logo">
       <div class="app-logo-icon">
@@ -361,8 +361,10 @@ html{scroll-behavior:smooth}
         </svg>
       </div>
       <div>
-        <div class="admin-logo-text">Flight <span>Chalker</span></div>
-        <div class="admin-logo-sub">League Administration</div>
+        <a href="/" style="text-decoration:none">
+          <div class="admin-logo-text">Flight <span>Chalker</span></div>
+          <div class="admin-logo-sub">League Administration</div>
+        </a>
       </div>
     </div>
     <div class="hright">
@@ -1257,5 +1259,4 @@ async function addAdminFixture(leagueId){
   var date=document.getElementById('af-date').value;
   var home=document.getElementById('af-home').value;
   var away=document.getElementById('af-away').value;
-  if(!date||!home||!away){toast('Please fill in date and both teams',true);return;}
-  if(home===away){toast('Home and away teams must be different
+  if(!date||!home||!away){toast('Please fill in date and both teams',tru
