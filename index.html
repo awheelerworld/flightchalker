@@ -803,13 +803,21 @@ document.addEventListener('DOMContentLoaded',async function(){
   var sess=localStorage.getItem('mld_session');
   var adminSess=localStorage.getItem('mld_admin');
 
-  if(sess){
+  // If ?home param or no session, always show landing
+  var params=new URLSearchParams(window.location.search);
+  var forceLanding=params.get('home')==='1';
+
+  if(forceLanding){
+    localStorage.removeItem('mld_session');
+    localStorage.removeItem('mld_admin');
+    showScreen('screen-landing');
+  } else if(sess){
     try{
       var d=JSON.parse(sess);
       currentTeam=d.team;currentLeague=d.league;
       await loadTeamData();
       showScreen('screen-app');
-    }catch(e){localStorage.removeItem('mld_session');}
+    }catch(e){localStorage.removeItem('mld_session');showScreen('screen-landing');}
   } else if(adminSess){
     showScreen('screen-admin');
     swAdmin('leagues');
