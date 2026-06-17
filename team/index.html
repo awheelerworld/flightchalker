@@ -215,7 +215,7 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
 <body>
 
 <header>
-  <a href="#" onclick="localStorage.clear();window.location.href='https://flightchalker.co.uk';return false;" style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:12px">
+  <a href="#" onclick="localStorage.removeItem('mld_session');localStorage.removeItem('mld_admin');window.location.href='https://flightchalker.co.uk/?logout=1';return false;" style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:12px">
     <div class="di">
       <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="18" cy="18" r="17" stroke="#4a7c59" stroke-width="1.5"/>
