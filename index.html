@@ -12,7 +12,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzE0MTgxNCIvPgogIDxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YTdjNTkiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNGE3YzU5IiBzdHJva2Utd2lkdGg9IjEiLz4KICA8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI0IiBmaWxsPSIjZThjODQwIi8+Cjwvc3ZnPg==">
-<title>Flight Chalker — League Platform v17</title>
+<title>Flight Chalker — League Platform v19</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -741,6 +741,23 @@ html{scroll-behavior:smooth}
     <div class="ca"><button class="btnd" onclick="doConfirm()">Confirm</button><button class="btns" onclick="closeConfirm()">Cancel</button></div>
   </div>
 </div>
+<!-- Walkover Modal -->
+<div class="co2" id="walkover-modal">
+  <div class="cb" style="max-width:400px">
+    <h3 style="color:var(--amber)">Fixture Result</h3>
+    <p id="wo-title" style="color:var(--text);font-size:.95rem;font-weight:600;margin-bottom:1.25rem"></p>
+    <input type="hidden" id="wo-fixture-id">
+    <input type="hidden" id="wo-opp">
+    <div style="display:flex;flex-direction:column;gap:.6rem;margin-bottom:1.25rem">
+      <button class="btnp" onclick="confirmWalkover('Walkover — we won',1,0)" style="background:#1a3a1e;border:1px solid var(--green);color:var(--gl)">🏆 Walkover — We Won</button>
+      <button class="btnp" onclick="confirmWalkover('Walkover — we lost',0,1)" style="background:#3a1a1a;border:1px solid var(--red);color:#ff8080">❌ Walkover — We Lost</button>
+      <button class="btnp" onclick="confirmWalkover('Match cancelled',0,0)" style="background:var(--s3);border:1px solid var(--border);color:var(--amber)">⚠ Match Cancelled</button>
+      <button class="btnp" onclick="confirmWalkover('Match postponed',0,0)" style="background:var(--s3);border:1px solid var(--border);color:var(--dim)">📅 Match Postponed</button>
+    </div>
+    <button class="btns" onclick="closeWalkoverModal()" style="width:100%">Cancel</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 <footer style="text-align:center;padding:1.5rem 1rem 2rem;font-size:.7rem;color:#4a5a4a;letter-spacing:.08em;font-family:Barlow,sans-serif">powered by awheelerworld · flightchalker.co.uk</footer>
 <script>
@@ -1362,7 +1379,7 @@ async function renderFixtures(){
         +'<div class="fx-venue">'+venue+'</div>'
         +'<div class="'+dcls+'">'+dlbl+'</div>'
         +'<span class="fx-status '+(f.played?'played':'upcoming')+'">'+(f.played?'Played':'Upcoming')+'</span>'
-        +(!f.played?'<button class="hb" onclick="loadFixtureToMatch(&quot;'+f.fixture_date+'&quot;,&quot;'+esc(oppName)+'&quot;,&quot;'+venue.toLowerCase()+'&quot;)">Record</button>':'')
+        +(!f.played?'<button class="hb" onclick="loadFixtureToMatch(&quot;'+f.fixture_date+'&quot;,&quot;'+esc(oppName)+'&quot;,&quot;'+venue.toLowerCase()+'&quot;)">Record</button> <button class="hb" style="border-color:#6a5200;color:var(--amber)" onclick="markWalkover(&quot;'+f.id+'&quot;,&quot;'+esc(oppName)+'&quot;)">Walkover / Cancel</button>':'')
         +'</div>';
     }).join('');
   }catch(e){el.innerHTML='<div class="nh">Error: '+esc(e.message)+'</div>';}
@@ -1372,6 +1389,44 @@ function loadFixtureToMatch(date,opp,venue){
   document.getElementById('mopp').value=opp;
   document.getElementById('mvenue').value=venue;
   updateBar();sw('match');toast('Loaded: vs '+opp);
+}
+
+function markWalkover(fixtureId,oppName){
+  // Show modal
+  var mo=document.getElementById('walkover-modal');
+  document.getElementById('wo-title').textContent='vs '+oppName;
+  document.getElementById('wo-fixture-id').value=fixtureId;
+  document.getElementById('wo-opp').value=oppName;
+  mo.classList.add('open');
+}
+
+async function confirmWalkover(reason,wins,losses){
+  var fixtureId=document.getElementById('wo-fixture-id').value;
+  var oppName=document.getElementById('wo-opp').value;
+  closeWalkoverModal();
+  try{
+    var date=new Date().toISOString().split('T')[0];
+    await sb('team_matches',{method:'POST',prefer:'return=minimal',
+      body:JSON.stringify({
+        team_id:currentTeam.id,
+        match_date:date,
+        opponent:oppName,
+        venue:'home',
+        wins:wins,
+        losses:losses,
+        eighties:0,
+        season:(currentLeague.current_season||1),
+        data:{singles:[],doubles:[],team4:null,note:reason}
+      })
+    });
+    await sbPatch('league_fixtures','id=eq.'+fixtureId,{played:true});
+    toast(reason+' recorded');
+    renderFixtures();
+  }catch(e){toast('Error: '+e.message,true);}
+}
+
+function closeWalkoverModal(){
+  document.getElementById('walkover-modal').classList.remove('open');
 }
 
 // ── View match ────────────────────────────────────────────────────────────────
