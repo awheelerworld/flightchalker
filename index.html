@@ -12,7 +12,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzE0MTgxNCIvPgogIDxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YTdjNTkiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNGE3YzU5IiBzdHJva2Utd2lkdGg9IjEiLz4KICA8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI0IiBmaWxsPSIjZThjODQwIi8+Cjwvc3ZnPg==">
-<title>Flight Chalker — League Platform v19</title>
+<title>Flight Chalker — League Platform v20</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -1291,7 +1291,8 @@ async function renderHistory(){
         +'<div class="hv" onclick="viewMatch('+i+')">'+esc(m.opponent)+' <span style="color:var(--dim);font-weight:400;font-size:.8rem">('+m.venue+')</span></div>'
         +'<div class="hsc '+(won?'won':(draw?'':'lost'))+'">'+m.wins+'–'+m.losses+'</div>'
         +'<div class="h8">⬡ '+m.eighties+'</div>'
-        +'<div class="ha"><button class="hb" onclick="openEdit('+i+')">Edit</button>'
+        +'<div class="ha"><button class="hb" onclick="viewMatch('+i+')">View</button>'
+        +'<button class="hb" onclick="openEdit('+i+')">Edit</button>'
         +'<button class="hb del" onclick="askDel(&quot;'+m.id+'&quot;,&quot;'+esc(m.opponent)+'&quot;)">Delete</button>'
         +'<button class="hb" onclick="downloadPDF('+i+')">PDF</button></div></div>';
     }).join('');
