@@ -253,6 +253,11 @@ async function loadLeagues(){
         +'</div>'
         +'<div class="st" id="est-'+l.id+'"></div>'
         +'</div>'
+        +'<div style="margin-top:.4rem"><button class="btn-admin" style="font-size:.72rem;padding:3px 10px;background:#1a2a1e;border-color:var(--green)" onclick="toggleTeams(&quot;'+l.id+'&quot;)">👥 Manage Teams</button></div>'
+        +'<div class="edit-panel" id="teams-panel-'+l.id+'" style="border-color:var(--green);margin-top:.4rem">'
+        +'<h3 style="color:var(--gl)">Registered Teams</h3>'
+        +'<div id="teams-list-'+l.id+'"><div class="lh">Loading…</div></div>'
+        +'</div>'
         +'</div>';
     }).join('');
   }catch(e){el.innerHTML='<div class="nh">Error: '+esc(e.message)+'</div>';}
@@ -398,6 +403,50 @@ async function deleteFixture(id){
     await sb('league_fixtures?id=eq.'+id,{method:'DELETE'});
     toast('Fixture deleted');
     loadFixtureList();
+  }catch(e){toast('Error: '+e.message,true);}
+}
+
+async function toggleTeams(leagueId){
+  var panel=document.getElementById('teams-panel-'+leagueId);
+  if(!panel)return;
+  panel.classList.toggle('open');
+  if(panel.classList.contains('open')){
+    await loadTeamList(leagueId);
+  }
+}
+
+async function loadTeamList(leagueId){
+  var el=document.getElementById('teams-list-'+leagueId);
+  if(!el)return;
+  el.innerHTML='<div class="lh"><span class="spin"></span> Loading…</div>';
+  try{
+    var teams=await sb('teams?league_id=eq.'+leagueId+'&order=team_name.asc&select=*');
+    if(!teams||!teams.length){el.innerHTML='<div class="nh">No teams registered yet.</div>';return;}
+    el.innerHTML=teams.map(function(t){
+      return '<div style="display:flex;align-items:center;gap:.75rem;padding:.5rem .75rem;background:var(--bg);border:1px solid var(--border);border-radius:5px;margin-bottom:.4rem;flex-wrap:wrap">'
+        +'<div style="flex:1;font-weight:600;font-size:.9rem">'+esc(t.team_name)+'</div>'
+        +'<div style="font-size:.78rem;color:var(--dim)">PIN: '+t.pin+'</div>'
+        +'<button onclick="deleteTeam(&quot;'+t.id+'&quot;,&quot;'+esc(t.team_name)+'&quot;,&quot;'+leagueId+'&quot;)" style="background:none;border:1px solid #5c2020;border-radius:4px;color:#ff8080;font-size:.72rem;padding:2px 8px;cursor:pointer">Remove</button>'
+        +'</div>';
+    }).join('');
+  }catch(e){el.innerHTML='<div class="nh">Error: '+esc(e.message)+'</div>';}
+}
+
+async function deleteTeam(teamId,teamName,leagueId){
+  if(!confirm('Remove '+teamName+' from this league? This will also delete all their players and match history. This cannot be undone.'))return;
+  try{
+    // Delete team players first
+    await sb('team_players?team_id=eq.'+teamId,{method:'DELETE'});
+    // Delete team matches
+    await sb('team_matches?team_id=eq.'+teamId,{method:'DELETE'});
+    // Delete team fixtures
+    await sb('league_fixtures?home_team_id=eq.'+teamId,{method:'DELETE'});
+    await sb('league_fixtures?away_team_id=eq.'+teamId,{method:'DELETE'});
+    // Delete team
+    await sb('teams?id=eq.'+teamId,{method:'DELETE'});
+    toast(teamName+' removed');
+    loadTeamList(leagueId);
+    loadLeagues();
   }catch(e){toast('Error: '+e.message,true);}
 }
 
