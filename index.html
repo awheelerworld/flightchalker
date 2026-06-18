@@ -12,7 +12,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzE0MTgxNCIvPgogIDxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YTdjNTkiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNGE3YzU5IiBzdHJva2Utd2lkdGg9IjEiLz4KICA8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI0IiBmaWxsPSIjZThjODQwIi8+Cjwvc3ZnPg==">
-<title>Flight Chalker — League Platform v16</title>
+<title>Flight Chalker — League Platform v17</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -1362,7 +1362,7 @@ async function renderFixtures(){
         +'<div class="fx-venue">'+venue+'</div>'
         +'<div class="'+dcls+'">'+dlbl+'</div>'
         +'<span class="fx-status '+(f.played?'played':'upcoming')+'">'+(f.played?'Played':'Upcoming')+'</span>'
-        +(!isPast&&!f.played?'<button class="hb" onclick="loadFixtureToMatch(&quot;'+f.fixture_date+'&quot;,&quot;'+esc(oppName)+'&quot;,&quot;'+venue.toLowerCase()+'&quot;)">Record</button>':'')
+        +(!f.played?'<button class="hb" onclick="loadFixtureToMatch(&quot;'+f.fixture_date+'&quot;,&quot;'+esc(oppName)+'&quot;,&quot;'+venue.toLowerCase()+'&quot;)">Record</button>':'')
         +'</div>';
     }).join('');
   }catch(e){el.innerHTML='<div class="nh">Error: '+esc(e.message)+'</div>';}
