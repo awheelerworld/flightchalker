@@ -85,11 +85,50 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
   <div class="tabs">
     <button class="tab active" onclick="showTab('leagues')">Leagues</button>
     <button class="tab" onclick="showTab('create')">Create League</button>
+    <button class="tab" onclick="showTab('fixtures')">Fixtures</button>
   </div>
 
   <!-- LEAGUES PANEL -->
   <div id="panel-leagues" class="panel active">
     <div id="leagues-list"><div class="lh"><span class="spin"></span> Loading leagues…</div></div>
+  </div>
+
+  <!-- FIXTURES PANEL -->
+  <div id="panel-fixtures" class="panel">
+    <div class="card">
+      <h2>Add Fixture</h2>
+      <div class="grid">
+        <div class="field"><label>League</label>
+          <select id="fx-league" onchange="loadFixtureTeams()">
+            <option value="">— Select league —</option>
+          </select>
+        </div>
+        <div class="field"><label>Season</label>
+          <input type="number" id="fx-season" value="1" min="1">
+        </div>
+        <div class="field"><label>Date</label>
+          <input type="date" id="fx-date">
+        </div>
+        <div class="field"><label>Home Team</label>
+          <select id="fx-home"><option value="">— Select —</option></select>
+        </div>
+        <div class="field"><label>Away Team</label>
+          <select id="fx-away"><option value="">— Select —</option></select>
+        </div>
+      </div>
+      <button class="btn-admin" onclick="addFixture()"><span id="fx-spin" style="display:none" class="spin blue"></span>Add Fixture</button>
+      <div class="st" id="fx-status"></div>
+    </div>
+    <div class="card" style="margin-top:1rem">
+      <h2>Existing Fixtures</h2>
+      <div class="field" style="margin-bottom:1rem">
+        <label>Filter by League</label>
+        <select id="fx-filter-league" onchange="loadFixtureList()">
+          <option value="">— All leagues —</option>
+        </select>
+      </div>
+      <div id="fixture-list"><div class="nh">Select a league to view fixtures</div></div>
+    </div>
   </div>
 
   <!-- CREATE LEAGUE PANEL -->
@@ -151,11 +190,24 @@ async function sbPatch(table,filter,body){
 
 function showTab(name){
   document.querySelectorAll('.tab').forEach(function(t,i){
-    t.classList.toggle('active',['leagues','create'][i]===name);
+    t.classList.toggle('active',['leagues','create','fixtures'][i]===name);
   });
   document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
   document.getElementById('panel-'+name).classList.add('active');
   if(name==='leagues')loadLeagues();
+  if(name==='fixtures')populateFixtureLeagueDropdowns();
+}
+
+async function populateFixtureLeagueDropdowns(){
+  try{
+    var leagues=await sb('leagues?order=name.asc&select=id,name');
+    var addSel=document.getElementById('fx-league');
+    var filterSel=document.getElementById('fx-filter-league');
+    var opts='<option value="">— Select league —</option>'+leagues.map(function(l){return '<option value="'+l.id+'">'+esc(l.name)+'</option>';}).join('');
+    var fopts='<option value="">— All leagues —</option>'+leagues.map(function(l){return '<option value="'+l.id+'">'+esc(l.name)+'</option>';}).join('');
+    addSel.innerHTML=opts;
+    filterSel.innerHTML=fopts;
+  }catch(e){toast('Error loading leagues: '+e.message,true);}
 }
 
 async function loadLeagues(){
@@ -269,6 +321,82 @@ async function createLeague(){
     document.getElementById('cl-pw').value='';
   }catch(e){st.textContent='Error: '+e.message;st.className='st err';}
   sp.style.display='none';
+}
+
+// ── Fixtures ──────────────────────────────────────────────────────────────────
+async function loadFixtureTeams(){
+  var leagueId=document.getElementById('fx-league').value;
+  var home=document.getElementById('fx-home');
+  var away=document.getElementById('fx-away');
+  home.innerHTML='<option value="">— Select —</option>';
+  away.innerHTML='<option value="">— Select —</option>';
+  if(!leagueId)return;
+  try{
+    var teams=await sb('teams?league_id=eq.'+leagueId+'&order=team_name.asc&select=id,team_name');
+    teams.forEach(function(t){
+      home.innerHTML+='<option value="'+t.id+'">'+esc(t.team_name)+'</option>';
+      away.innerHTML+='<option value="'+t.id+'">'+esc(t.team_name)+'</option>';
+    });
+  }catch(e){toast('Error loading teams: '+e.message,true);}
+}
+
+async function addFixture(){
+  var leagueId=document.getElementById('fx-league').value;
+  var date=document.getElementById('fx-date').value;
+  var homeId=document.getElementById('fx-home').value;
+  var awayId=document.getElementById('fx-away').value;
+  var season=parseInt(document.getElementById('fx-season').value)||1;
+  var st=document.getElementById('fx-status');
+  var sp=document.getElementById('fx-spin');
+  if(!leagueId||!date||!homeId||!awayId){st.textContent='Please fill in all fields.';st.className='st err';return;}
+  if(homeId===awayId){st.textContent='Home and away teams must be different.';st.className='st err';return;}
+  sp.style.display='inline-block';st.textContent='';
+  try{
+    await sb('league_fixtures',{
+      method:'POST',prefer:'return=minimal',
+      body:JSON.stringify({league_id:leagueId,home_team_id:homeId,away_team_id:awayId,fixture_date:date,season:season,played:false})
+    });
+    st.textContent='✓ Fixture added!';st.className='st ok';
+    document.getElementById('fx-home').value='';
+    document.getElementById('fx-away').value='';
+    document.getElementById('fx-date').value='';
+    loadFixtureList();
+  }catch(e){st.textContent='Error: '+e.message;st.className='st err';}
+  sp.style.display='none';
+}
+
+async function loadFixtureList(){
+  var leagueId=document.getElementById('fx-filter-league').value;
+  var el=document.getElementById('fixture-list');
+  if(!leagueId){el.innerHTML='<div class="nh">Select a league to view fixtures</div>';return;}
+  el.innerHTML='<div class="lh"><span class="spin"></span> Loading…</div>';
+  try{
+    var fixtures=await sb('league_fixtures?league_id=eq.'+leagueId+'&order=fixture_date.asc&select=*');
+    var teams=await sb('teams?league_id=eq.'+leagueId+'&select=id,team_name');
+    var teamMap={};teams.forEach(function(t){teamMap[t.id]=t.team_name;});
+    if(!fixtures||!fixtures.length){el.innerHTML='<div class="nh">No fixtures yet for this league.</div>';return;}
+    el.innerHTML=fixtures.map(function(f){
+      var d=new Date(f.fixture_date+'T00:00:00');
+      var fmt=d.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+      var statusStyle=f.played?'background:#1a2a1e;color:var(--gl);border:1px solid var(--green)':'background:var(--s3);color:var(--dim);border:1px solid var(--border)';
+      var statusText=f.played?'Played':'Upcoming';
+      return '<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem .75rem;background:var(--bg);border:1px solid var(--border);border-radius:5px;margin-bottom:.4rem;flex-wrap:wrap">'
+        +'<div style="font-size:.8rem;color:var(--dim);min-width:120px">'+fmt+'</div>'
+        +'<div style="flex:1;font-size:.9rem;font-weight:600">'+esc(teamMap[f.home_team_id]||'?')+' <span style="color:var(--dim);font-weight:400">vs</span> '+esc(teamMap[f.away_team_id]||'?')+'</div>'
+        +'<div style="font-size:.75rem;padding:2px 8px;border-radius:3px;'+statusStyle+'">'+statusText+'</div>'
+        +'<button onclick="deleteFixture(&quot;'+f.id+'&quot;)" style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--dim);font-size:.72rem;padding:2px 8px;cursor:pointer">Delete</button>'
+        +'</div>';
+    }).join('');
+  }catch(e){el.innerHTML='<div class="nh">Error: '+esc(e.message)+'</div>';}
+}
+
+async function deleteFixture(id){
+  if(!confirm('Delete this fixture?'))return;
+  try{
+    await sb('league_fixtures?id=eq.'+id,{method:'DELETE'});
+    toast('Fixture deleted');
+    loadFixtureList();
+  }catch(e){toast('Error: '+e.message,true);}
 }
 
 function toast(msg,isErr){
