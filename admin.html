@@ -175,7 +175,9 @@ async function sb(path,opts){
   });
   if(!res.ok){var e=await res.json().catch(function(){return {};});throw new Error(e.message||'HTTP '+res.status);}
   if(res.status===204)return null;
-  return res.json();
+  var text=await res.text();
+  if(!text||!text.trim())return null;
+  try{return JSON.parse(text);}catch(e){return null;}
 }
 
 async function sbPatch(table,filter,body){
