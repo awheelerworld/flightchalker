@@ -12,7 +12,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzE0MTgxNCIvPgogIDxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YTdjNTkiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNGE3YzU5IiBzdHJva2Utd2lkdGg9IjEiLz4KICA8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI0IiBmaWxsPSIjZThjODQwIi8+Cjwvc3ZnPg==">
-<title>Flight Chalker — League Platform v20</title>
+<title>Flight Chalker — League Platform v21</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -1248,12 +1248,33 @@ async function saveMatch(){
   var rec={team_id:currentTeam.id,match_date:date,opponent:opp,venue:document.getElementById('mvenue').value,wins:mw,losses:ml,eighties:total8(),season:(currentLeague.current_season||1),data:{singles:JSON.parse(JSON.stringify(md.singles)),doubles:JSON.parse(JSON.stringify(md.doubles)),team4:md.team4?JSON.parse(JSON.stringify(md.team4)):null}};
   document.getElementById('savespin').style.display='inline-block';
   try{
-    await sb('team_matches',{method:'POST',prefer:'return=minimal',body:JSON.stringify(rec)});
-    // Mark fixture as played if it exists
+    // Check for existing result for same team/opponent/date to prevent duplicates
+    var existing=await sb('team_matches?team_id=eq.'+currentTeam.id+'&match_date=eq.'+date+'&opponent=eq.'+encodeURIComponent(opp)+'&select=id');
+    if(existing&&existing.length){
+      // Update existing record instead of creating a new one
+      await sbPatch('team_matches','id=eq.'+existing[0].id,rec);
+      toast('Match result updated!');
+    } else {
+      // Create new record
+      await sb('team_matches',{method:'POST',prefer:'return=minimal',body:JSON.stringify(rec)});
+      toast('Match saved and submitted!');
+    }
+    // Mark fixture as played - check both home and away
     try{
-      await sbPatch('league_fixtures','league_id=eq.'+currentLeague.id+'&home_team_id=eq.'+currentTeam.id+'&away_team_id=in.('+leagueTeams.filter(t=>t.team_name===opp).map(t=>t.id).join(',')+')'+'&fixture_date=eq.'+date,{played:true});
+      var oppTeam=leagueTeams.find(function(t){return t.team_name===opp;});
+      if(oppTeam){
+        // Try as home team first, then as away team
+        var fx=await sb('league_fixtures?league_id=eq.'+currentLeague.id+'&fixture_date=eq.'+date+'&select=id,home_team_id,away_team_id');
+        if(fx&&fx.length){
+          var match=fx.find(function(f){
+            return (f.home_team_id===currentTeam.id&&f.away_team_id===oppTeam.id)||
+                   (f.away_team_id===currentTeam.id&&f.home_team_id===oppTeam.id);
+          });
+          if(match)await sbPatch('league_fixtures','id=eq.'+match.id,{played:true});
+        }
+      }
     }catch(e){}
-    toast('Match saved and submitted!');clearMatch();sw('table');
+    clearMatch();sw('history');
   }catch(e){toast('Save failed: '+e.message,true);}
   document.getElementById('savespin').style.display='none';
 }
