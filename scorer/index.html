@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎯 Play Darts — Flight Chalker</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#141814;--s2:#1e251e;--s3:#2e382e;
+  --green:#4a7c59;--gl:#5a9469;--amber:#e8c840;--red:#c0392b;
+  --text:#e0d8c8;--dim:#8a9080;--border:#3a4a3a;
+}
+html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh}
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap');
+
+/* ── Screens ── */
+.screen{display:none;min-height:100vh}
+.screen.active{display:block}
+
+/* ── Header ── */
+.hdr{background:var(--s2);border-bottom:2px solid var(--green);padding:0 1rem;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100}
+.hdr-logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.1rem;letter-spacing:.05em;text-transform:uppercase}
+.hdr-logo span{color:var(--amber)}
+.hdr-sub{font-family:'Barlow Condensed',sans-serif;font-size:.65rem;color:var(--green);letter-spacing:.08em;text-transform:uppercase}
+.hbtn{background:none;border:1px solid var(--border);border-radius:4px;color:var(--dim);font-family:'Barlow Condensed',sans-serif;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;cursor:pointer}
+.hbtn:hover{border-color:var(--red);color:#ff8080}
+
+/* ── Setup screen ── */
+.setup-wrap{max-width:500px;margin:0 auto;padding:2rem 1rem}
+.setup-title{font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:900;text-transform:uppercase;color:var(--amber);margin-bottom:.25rem}
+.setup-sub{font-size:.85rem;color:var(--dim);margin-bottom:2rem}
+.setup-section{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:1.25rem;margin-bottom:1rem}
+.setup-section h3{font-family:'Barlow Condensed',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--green);margin-bottom:1rem}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:.75rem}
+.field label{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--dim)}
+.field input,.field select{background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.95rem;padding:.5rem .75rem}
+.field input:focus,.field select:focus{outline:none;border-color:var(--green)}
+.player-names{display:flex;flex-direction:column;gap:.5rem}
+.player-name-row{display:flex;align-items:center;gap:.5rem}
+.player-name-row label{font-family:'Barlow Condensed',sans-serif;font-size:.85rem;color:var(--dim);min-width:60px}
+.player-name-row input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.9rem;padding:.45rem .75rem}
+.player-name-row input:focus{outline:none;border-color:var(--green)}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:.5rem 0}
+.toggle-label{font-size:.88rem;color:var(--text)}
+.toggle-sub{font-size:.75rem;color:var(--dim);margin-top:2px}
+.toggle{width:44px;height:24px;background:var(--border);border:none;border-radius:12px;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--green)}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;background:white;border-radius:50%;transition:left .2s}
+.toggle.on::after{left:23px}
+.score-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem}
+.score-btn{background:var(--s3);border:2px solid var(--border);border-radius:8px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;padding:.65rem;cursor:pointer;transition:all .15s}
+.score-btn.sel{background:#1a2a1e;border-color:var(--green);color:var(--gl)}
+.score-btn:hover{border-color:var(--green)}
+.btn-start{background:var(--green);border:none;border-radius:8px;color:white;font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.85rem 2rem;cursor:pointer;width:100%;margin-top:1rem;transition:background .15s}
+.btn-start:hover{background:var(--gl)}
+
+/* ── Game screen ── */
+.game-wrap{max-width:600px;margin:0 auto;padding:1rem}
+
+/* Player cards */
+.players-row{display:grid;gap:.5rem;margin-bottom:1rem}
+.player-card{background:var(--s2);border:2px solid var(--border);border-radius:8px;padding:.75rem 1rem;transition:all .2s;position:relative}
+.player-card.active-player{border-color:var(--amber);background:#2a2a10}
+.player-card.winner{border-color:var(--green);background:#1a2a1e}
+.pc-name{font-family:'Barlow Condensed',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:.25rem}
+.pc-score{font-family:'Barlow Condensed',sans-serif;font-size:3rem;font-weight:900;line-height:1;color:var(--text)}
+.pc-score.finishing{color:var(--amber)}
+.pc-score.danger{color:var(--red)}
+.pc-legs{font-family:'Barlow Condensed',sans-serif;font-size:.8rem;color:var(--dim);margin-top:.25rem}
+.pc-turn{position:absolute;top:.5rem;right:.75rem;font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--amber)}
+.pc-checkout{font-size:.75rem;color:var(--amber);margin-top:.25rem;font-family:'Barlow Condensed',sans-serif}
+
+/* Input area */
+.throw-area{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-bottom:1rem}
+.throw-title{font-family:'Barlow Condensed',sans-serif;font-size:.72rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);margin-bottom:.75rem}
+.throw-darts{display:flex;gap:.5rem;margin-bottom:.75rem}
+.dart-chip{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:.4rem;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;min-height:42px;display:flex;align-items:center;justify-content:center;color:var(--dim)}
+.dart-chip.has-value{border-color:var(--green);color:var(--amber)}
+.dart-chip.bust{border-color:var(--red);color:var(--red)}
+.throw-input-row{display:flex;gap:.5rem;margin-bottom:.75rem}
+.throw-input{flex:1;background:var(--bg);border:2px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:1.5rem;font-weight:700;padding:.5rem .75rem;text-align:center}
+.throw-input:focus{outline:none;border-color:var(--amber)}
+.throw-add{background:var(--green);border:none;border-radius:6px;color:white;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.5rem 1.25rem;cursor:pointer}
+.throw-add:hover{background:var(--gl)}
+
+/* Numpad */
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem;margin-bottom:.75rem}
+.np-btn{background:var(--s3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:700;padding:.6rem;cursor:pointer;transition:all .12s;text-align:center}
+.np-btn:hover{background:var(--green);border-color:var(--green);color:white}
+.np-btn.special{color:var(--amber);border-color:#6a5200}
+.np-btn.del-btn{color:var(--red);border-color:#5c2020}
+
+/* Action buttons */
+.action-row{display:flex;gap:.5rem}
+.btn-bust{background:#2a0a0a;border:1px solid var(--red);border-radius:6px;color:#ff8080;font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.55rem 1.25rem;cursor:pointer;flex:1}
+.btn-bust:hover{background:#3a1010}
+.btn-next{background:var(--green);border:none;border-radius:6px;color:white;font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.55rem 1.5rem;cursor:pointer;flex:2}
+.btn-next:hover{background:var(--gl)}
+.btn-undo{background:var(--s3);border:1px solid var(--border);border-radius:6px;color:var(--dim);font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.55rem 1rem;cursor:pointer}
+.btn-undo:hover{border-color:var(--amber);color:var(--amber)}
+
+/* Checkout display */
+.checkout-box{background:#2a2000;border:1px solid #6a5200;border-radius:8px;padding:.75rem 1rem;margin-bottom:1rem}
+.checkout-title{font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--amber);margin-bottom:.4rem}
+.checkout-route{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;color:var(--text)}
+.checkout-note{font-size:.75rem;color:var(--dim);margin-top:.25rem}
+
+/* Win screen */
+.win-wrap{text-align:center;padding:3rem 1rem;max-width:400px;margin:0 auto}
+.win-emoji{font-size:4rem;margin-bottom:1rem}
+.win-title{font-family:'Barlow Condensed',sans-serif;font-size:2.5rem;font-weight:900;text-transform:uppercase;color:var(--amber);margin-bottom:.5rem}
+.win-name{font-size:1.25rem;font-weight:600;margin-bottom.5rem}
+.win-legs{font-family:'Barlow Condensed',sans-serif;font-size:1rem;color:var(--dim);margin-bottom:2rem}
+.btn-again{background:var(--green);border:none;border-radius:8px;color:white;font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.85rem 2rem;cursor:pointer;width:100%;margin-bottom:.75rem}
+.btn-again:hover{background:var(--gl)}
+.btn-new{background:transparent;border:2px solid var(--border);border-radius:8px;color:var(--dim);font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.75rem 2rem;cursor:pointer;width:100%}
+.btn-new:hover{border-color:var(--green);color:var(--text)}
+
+/* Leg history */
+.leg-history{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:.75rem 1rem;margin-bottom:1rem}
+.lh-title{font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:.5rem}
+.lh-row{display:flex;gap:.5rem;font-family:'Barlow Condensed',sans-serif;font-size:.85rem;padding:2px 0}
+.lh-player{flex:1;color:var(--dim)}
+.lh-score{color:var(--amber)}
+.lh-winner{color:var(--gl);font-weight:700}
+
+/* Toast */
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1rem;padding:.6rem 1.5rem;border-radius:6px;transition:transform .3s;z-index:999;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.err{background:var(--red)}
+.toast.bust-toast{background:var(--red);font-size:1.2rem}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════ SETUP SCREEN ══════════════════ -->
+<div id="screen-setup" class="screen active">
+  <div class="hdr">
+    <div>
+      <div class="hdr-logo">Flight <span>Chalker</span></div>
+      <div class="hdr-sub">Darts Scorer</div>
+    </div>
+    <a href="https://flightchalker.co.uk" style="text-decoration:none"><button class="hbtn">← Home</button></a>
+  </div>
+  <div class="setup-wrap">
+    <div class="setup-title">🎯 Play Darts</div>
+    <div class="setup-sub">Set up your game and start throwing</div>
+
+    <div class="setup-section">
+      <h3>Starting Score</h3>
+      <div class="score-btns">
+        <button class="score-btn sel" onclick="selectScore(301)">301</button>
+        <button class="score-btn sel2" onclick="selectScore(501)">501</button>
+        <button class="score-btn" onclick="selectScore(701)">701</button>
+        <button class="score-btn" onclick="selectScore(1001)">1001</button>
+        <button class="score-btn" onclick="selectScore(0)">Custom</button>
+      </div>
+      <div id="custom-score-wrap" style="display:none;margin-top:.75rem">
+        <div class="field">
+          <label>Custom Starting Score</label>
+          <input type="number" id="custom-score" placeholder="e.g. 601" min="101" max="9999">
+        </div>
+      </div>
+    </div>
+
+    <div class="setup-section">
+      <h3>Players</h3>
+      <div class="field">
+        <label>Number of Players</label>
+        <select id="num-players" onchange="updatePlayerNames()">
+          <option value="1">1 Player</option>
+          <option value="2" selected>2 Players</option>
+          <option value="3">3 Players</option>
+          <option value="4">4 Players</option>
+        </select>
+      </div>
+      <div class="player-names" id="player-names">
+        <div class="player-name-row"><label>Player 1</label><input type="text" placeholder="Player 1" value="Player 1"></div>
+        <div class="player-name-row"><label>Player 2</label><input type="text" placeholder="Player 2" value="Player 2"></div>
+      </div>
+    </div>
+
+    <div class="setup-section">
+      <h3>Game Rules</h3>
+      <div class="field">
+        <label>Best Of (Legs)</label>
+        <select id="best-of">
+          <option value="1">1 Leg</option>
+          <option value="3" selected>Best of 3</option>
+          <option value="5">Best of 5</option>
+          <option value="7">Best of 7</option>
+          <option value="9">Best of 9</option>
+        </select>
+      </div>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Double to finish</div>
+          <div class="toggle-sub">Must hit a double to win the leg</div>
+        </div>
+        <button class="toggle on" id="double-finish-toggle" onclick="toggleDoubleFinish()"></button>
+      </div>
+    </div>
+
+    <button class="btn-start" onclick="startGame()">Start Game 🎯</button>
+  </div>
+</div>
+
+<!-- ══════════════════ GAME SCREEN ══════════════════ -->
+<div id="screen-game" class="screen">
+  <div class="hdr">
+    <div>
+      <div class="hdr-logo">Flight <span>Chalker</span></div>
+      <div class="hdr-sub" id="game-sub">Leg 1</div>
+    </div>
+    <div style="display:flex;gap:.5rem">
+      <button class="hbtn" onclick="undoThrow()">↩ Undo</button>
+      <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button>
+    </div>
+  </div>
+  <div class="game-wrap">
+    <div class="players-row" id="players-row"></div>
+    <div id="checkout-box" style="display:none" class="checkout-box">
+      <div class="checkout-title">🎯 Checkout</div>
+      <div class="checkout-route" id="checkout-route"></div>
+      <div class="checkout-note" id="checkout-note"></div>
+    </div>
+    <div class="throw-area">
+      <div class="throw-title" id="throw-title">Player 1's turn — enter 3-dart total</div>
+      <input type="number" id="score-input" class="throw-input" placeholder="0" min="0" max="180" readonly
+        style="width:100%;text-align:center;font-size:2.5rem;margin-bottom:.75rem;background:var(--bg);border:2px solid var(--border);border-radius:8px;color:var(--text);padding:.75rem;font-family:'Barlow Condensed',sans-serif;font-weight:900">
+      <div class="numpad" id="numpad"></div>
+      <div class="action-row">
+        <button class="btn-undo" onclick="undoLast()">↩ Undo</button>
+        <button class="btn-bust" onclick="markBust()">BUST</button>
+        <button class="btn-next" onclick="submitScore()">Submit →</button>
+      </div>
+    </div>
+
+    <!-- Double check modal -->
+    <div id="double-check" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;align-items:center;justify-content:center;padding:1rem">
+      <div style="background:var(--s2);border:1px solid var(--green);border-radius:12px;padding:1.5rem;max-width:340px;width:100%;text-align:center">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.5rem;font-weight:900;color:var(--amber);margin-bottom:.5rem">🎯 Checkout!</div>
+        <div style="font-size:.95rem;color:var(--text);margin-bottom:1.25rem">Score of <strong id="double-check-score"></strong> — did you finish on a double?</div>
+        <div style="display:flex;gap:.75rem">
+          <button onclick="confirmDouble(true)" style="flex:1;background:#1a2a1e;border:2px solid var(--green);border-radius:8px;color:var(--gl);font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;padding:.65rem;cursor:pointer">✓ Yes, double!</button>
+          <button onclick="confirmDouble(false)" style="flex:1;background:#2a1010;border:2px solid var(--red);border-radius:8px;color:#ff8080;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;padding:.65rem;cursor:pointer">✗ No, bust</button>
+        </div>
+      </div>
+    </div>
+    <div class="leg-history" id="leg-history" style="display:none">
+      <div class="lh-title">Leg History</div>
+      <div id="leg-history-rows"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ WIN SCREEN ══════════════════ -->
+<div id="screen-win" class="screen">
+  <div class="hdr">
+    <div>
+      <div class="hdr-logo">Flight <span>Chalker</span></div>
+      <div class="hdr-sub">Game Over</div>
+    </div>
+    <a href="https://flightchalker.co.uk" style="text-decoration:none"><button class="hbtn">← Home</button></a>
+  </div>
+  <div class="win-wrap">
+    <div class="win-emoji">🏆</div>
+    <div class="win-title" id="win-title">Winner!</div>
+    <div class="win-name" id="win-name"></div>
+    <div class="win-legs" id="win-legs"></div>
+    <button class="btn-again" onclick="playAgain()">Play Again 🎯</button>
+    <button class="btn-new" onclick="showScreen('screen-setup')">New Game Setup</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Checkout table ─────────────────────────────────────────────────────────────
+const CHECKOUTS={
+  170:'T20 T20 Bull',167:'T20 T19 Bull',164:'T20 T18 Bull',161:'T20 T17 Bull',
+  160:'T20 T20 D20',158:'T20 T20 D19',157:'T20 T19 D20',156:'T20 T20 D18',
+  155:'T20 T19 D19',154:'T20 T18 D20',153:'T20 T19 D18',152:'T20 T20 D16',
+  151:'T20 T17 D20',150:'T20 T18 D18',149:'T20 T19 D16',148:'T20 T16 D20',
+  147:'T20 T17 D18',146:'T20 T18 D16',145:'T20 T15 D20',144:'T20 T20 D12',
+  143:'T20 T17 D16',142:'T20 T14 D20',141:'T20 T19 D12',140:'T20 T16 D16',
+  139:'T20 T13 D20',138:'T20 T18 D12',137:'T20 T19 D10',136:'T20 T20 D8',
+  135:'T20 T17 D12',134:'T20 T14 D16',133:'T20 T19 D8',132:'T20 T16 D12',
+  131:'T20 T13 D16',130:'T20 T18 D8',129:'T19 T16 D12',128:'T18 T14 D16',
+  127:'T20 T17 D8',126:'T19 T19 D6',125:'T20 T15 D10',124:'T20 T14 D11',
+  123:'T19 T16 D9',122:'T18 T18 D7',121:'T20 T11 D14',120:'T20 S20 D20',
+  119:'T19 T12 D13',118:'T20 S18 D20',117:'T20 S17 D20',116:'T20 S16 D20',
+  115:'T20 S15 D20',114:'T20 S14 D20',113:'T20 S13 D20',112:'T20 S12 D20',
+  111:'T20 S11 D20',110:'T20 S10 D20',109:'T20 S9 D20',108:'T20 S8 D20',
+  107:'T19 S10 D20',106:'T20 S6 D20',105:'T20 S5 D20',104:'T20 S4 D20',
+  103:'T20 S3 D20',102:'T20 S2 D20',101:'T20 S1 D20',100:'T20 D20',
+  99:'T19 S10 D16',98:'T20 D19',97:'T19 D20',96:'T20 D18',95:'T19 D19',
+  94:'T18 D20',93:'T19 D18',92:'T20 D16',91:'T17 D20',90:'T18 D18',
+  89:'T19 D16',88:'T20 D14',87:'T17 D18',86:'T18 D16',85:'T15 D20',
+  84:'T20 D12',83:'T17 D16',82:'T14 D20',81:'T19 D12',80:'T16 D16',
+  79:'T13 D20',78:'T18 D12',77:'T19 D10',76:'T20 D8',75:'T17 D12',
+  74:'T14 D16',73:'T19 D8',72:'T16 D12',71:'T13 D16',70:'T18 D8',
+  69:'T19 D6',68:'T20 D4',67:'T17 D8',66:'T10 D18',65:'T19 D4',
+  64:'T16 D8',63:'T17 D6',62:'T10 D16',61:'T15 D8',60:'S20 D20',
+  59:'S19 D20',58:'S18 D20',57:'S17 D20',56:'T16 D4',55:'S15 D20',
+  54:'S14 D20',53:'S13 D20',52:'S12 D20',51:'S11 D20',50:'S10 D20',
+  49:'S9 D20',48:'S16 D16',47:'S15 D16',46:'S14 D16',45:'S13 D16',
+  44:'S12 D16',43:'S11 D16',42:'S10 D16',41:'S9 D16',40:'D20',
+  38:'D19',36:'D18',34:'D17',32:'D16',30:'D15',28:'D14',26:'D13',
+  24:'D12',22:'D11',20:'D10',18:'D9',16:'D8',14:'D7',12:'D6',
+  10:'D5',8:'D4',6:'D3',4:'D2',2:'D1'
+};
+
+// ── Game state ─────────────────────────────────────────────────────────────────
+var gs={};
+var selectedScore=501;
+var doubleFinishOn=true;
+
+// ── Setup ──────────────────────────────────────────────────────────────────────
+function selectScore(val){
+  selectedScore=val;
+  document.querySelectorAll('.score-btn').forEach(function(b){b.classList.remove('sel');});
+  event.target.classList.add('sel');
+  document.getElementById('custom-score-wrap').style.display=val===0?'block':'none';
+}
+
+function toggleDoubleFinish(){
+  doubleFinishOn=!doubleFinishOn;
+  document.getElementById('double-finish-toggle').classList.toggle('on',doubleFinishOn);
+}
+
+function updatePlayerNames(){
+  var n=parseInt(document.getElementById('num-players').value);
+  var wrap=document.getElementById('player-names');
+  var existing=Array.from(wrap.querySelectorAll('input')).map(function(i){return i.value;});
+  wrap.innerHTML='';
+  for(var i=0;i<n;i++){
+    var row=document.createElement('div');
+    row.className='player-name-row';
+    row.innerHTML='<label>Player '+(i+1)+'</label><input type="text" value="'+(existing[i]||'Player '+(i+1))+'">';
+    wrap.appendChild(row);
+  }
+}
+
+function startGame(){
+  var score=selectedScore===0?parseInt(document.getElementById('custom-score').value):selectedScore;
+  if(!score||score<101){toast('Please enter a valid starting score',true);return;}
+  var names=Array.from(document.getElementById('player-names').querySelectorAll('input')).map(function(i){return i.value.trim()||'Player';});
+  var bestOf=parseInt(document.getElementById('best-of').value);
+  gs={
+    startScore:score,
+    players:names,
+    scores:names.map(function(){return score;}),
+    legs:names.map(function(){return 0;}),
+    currentPlayer:0,
+    currentLeg:1,
+    bestOf:bestOf,
+    legsToWin:Math.ceil(bestOf/2),
+    doubleFinish:doubleFinishOn,
+    history:[],
+    legHistory:[],
+    inputVal:''
+  };
+  showScreen('screen-game');
+  buildNumpad();
+  renderGame();
+}
+
+// ── Screen switching ───────────────────────────────────────────────────────────
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+  if(id==='screen-game'){
+    setTimeout(function(){
+      var inp=document.getElementById('score-input');
+      if(inp)inp.focus();
+    },100);
+  }
+}
+
+// ── Numpad ─────────────────────────────────────────────────────────────────────
+function buildNumpad(){
+  var np=document.getElementById('numpad');
+  var nums=[7,8,9,4,5,6,1,2,3,'CLR',0,'⌫'];
+  np.innerHTML=nums.map(function(n){
+    var cls='np-btn'+(n==='CLR'?' special':n==='⌫'?' del-btn':'');
+    return '<button class="'+cls+'" onclick="numpadPress(&quot;'+n+'&quot;)" ontouchstart="">'+n+'</button>';
+  }).join('');
+}
+
+function numpadPress(val){
+  var inp=document.getElementById('score-input');
+  if(val==='⌫'){
+    gs.inputVal=gs.inputVal.slice(0,-1);
+  } else if(val==='CLR'){
+    gs.inputVal='';
+  } else {
+    if(gs.inputVal.length>=3)return;
+    gs.inputVal+=String(val);
+  }
+  inp.value=gs.inputVal;
+  updateInputDisplay();
+}
+
+function updateInputDisplay(){
+  var val=parseInt(gs.inputVal)||0;
+  var remaining=gs.scores[gs.currentPlayer];
+  var newScore=remaining-val;
+  var inp=document.getElementById('score-input');
+  if(gs.inputVal===''){
+    inp.style.borderColor='var(--border)';
+    inp.style.color='var(--text)';
+    return;
+  }
+  if(val>180||newScore<0||(gs.doubleFinish&&newScore===1)){
+    inp.style.borderColor='var(--red)';
+    inp.style.color='#ff8080';
+  } else if(newScore===0){
+    inp.style.borderColor='var(--green)';
+    inp.style.color='var(--gl)';
+  } else {
+    inp.style.borderColor='var(--amber)';
+    inp.style.color='var(--text)';
+  }
+}
+
+// ── Submit score ───────────────────────────────────────────────────────────────
+function submitScore(){
+  var val=parseInt(gs.inputVal);
+  if(isNaN(val)||val<0||val>180){toast('Enter a valid score (0-180)',true);return;}
+  var remaining=gs.scores[gs.currentPlayer];
+  var newScore=remaining-val;
+
+  if(newScore<0||(gs.doubleFinish&&newScore===1)){
+    // Bust
+    toast('BUST! Score unchanged',true);
+    gs.inputVal='';
+    document.getElementById('score-input').value='';
+    document.getElementById('score-input').style.borderColor='var(--border)';
+    document.getElementById('score-input').style.color='var(--text)';
+    advancePlayer();
+    return;
+  }
+
+  if(newScore===0){
+    // Check double finish
+    if(gs.doubleFinish){
+      // Ask if finished on double
+      showDoubleCheck(val,remaining);
+      return;
+    }
+    // Win the leg
+    recordScore(val,remaining);
+    legWon();
+    return;
+  }
+
+  recordScore(val,remaining);
+  advancePlayer();
+}
+
+function showDoubleCheck(val,remaining){
+  // Show confirm dialog for double finish
+  document.getElementById('double-check-score').textContent=val;
+  document.getElementById('double-check').style.display='flex';
+}
+
+function confirmDouble(wasDouble){
+  document.getElementById('double-check').style.display='none';
+  var val=parseInt(gs.inputVal);
+  var remaining=gs.scores[gs.currentPlayer];
+  if(wasDouble){
+    recordScore(val,remaining);
+    legWon();
+  } else {
+    toast('Not a double — BUST! Score unchanged',true);
+    gs.inputVal='';
+    document.getElementById('score-input').value='';
+    advancePlayer();
+  }
+}
+
+function recordScore(val,remaining){
+  gs.history.push({player:gs.currentPlayer,prevScore:remaining,scored:val});
+  gs.scores[gs.currentPlayer]-=val;
+  gs.inputVal='';
+  var inp=document.getElementById('score-input');
+  if(inp){inp.value='';inp.style.borderColor='var(--border)';inp.style.color='var(--text)';}
+}
+
+function advancePlayer(){
+  gs.currentPlayer=(gs.currentPlayer+1)%gs.players.length;
+  renderGame();
+  setTimeout(function(){
+    var inp=document.getElementById('score-input');
+    if(inp)inp.focus();
+  },50);
+}
+
+function markBust(){
+  toast('BUST! Score unchanged',true);
+  gs.inputVal='';
+  var inp=document.getElementById('score-input');
+  if(inp){inp.value='';inp.style.borderColor='var(--border)';inp.style.color='var(--text)';}
+  advancePlayer();
+}
+
+function undoLast(){
+  if(!gs.history.length){toast('Nothing to undo',true);return;}
+  var last=gs.history.pop();
+  gs.scores[last.player]=last.prevScore;
+  gs.currentPlayer=last.player;
+  gs.inputVal='';
+  var inp=document.getElementById('score-input');
+  if(inp){inp.value='';inp.style.borderColor='var(--border)';inp.style.color='var(--text)';}
+  renderGame();
+  toast('Undone');
+}
+
+// ── Leg won ────────────────────────────────────────────────────────────────────
+function legWon(){
+  var winner=gs.currentPlayer;
+  gs.legs[winner]++;
+  gs.legHistory.push({leg:gs.currentLeg,winner:winner,scores:gs.legs.slice()});
+  toast(gs.players[winner]+' wins leg '+gs.currentLeg+'! 🎉');
+  if(gs.legs[winner]>=gs.legsToWin){
+    setTimeout(function(){showWin(winner);},900);
+    return;
+  }
+  // Reset for new leg
+  setTimeout(function(){
+    gs.currentLeg++;
+    gs.scores=gs.players.map(function(){return gs.startScore;});
+    gs.currentPlayer=0;
+    gs.history=[];
+    gs.inputVal='';
+    renderGame();
+    setTimeout(function(){
+      var inp=document.getElementById('score-input');
+      if(inp)inp.focus();
+    },50);
+  },900);
+}
+
+function showWin(winner){
+  document.getElementById('win-title').textContent=gs.players[winner]+' Wins! 🏆';
+  document.getElementById('win-legs').textContent=
+    'Final: '+gs.players.map(function(p,i){return p+' '+gs.legs[i];}).join(' — ');
+  showScreen('screen-win');
+}
+
+function playAgain(){
+  gs.scores=gs.players.map(function(){return gs.startScore;});
+  gs.legs=gs.players.map(function(){return 0;});
+  gs.currentPlayer=0;
+  gs.currentLeg=1;
+  gs.history=[];
+  gs.legHistory=[];
+  gs.inputVal='';
+  showScreen('screen-game');
+  renderGame();
+}
+
+// ── Render ─────────────────────────────────────────────────────────────────────
+function renderGame(){
+  document.getElementById('game-sub').textContent='Leg '+gs.currentLeg+' of '+gs.bestOf;
+  // Player cards
+  var row=document.getElementById('players-row');
+  var cols=gs.players.length<=2?gs.players.length:2;
+  row.style.gridTemplateColumns='repeat('+cols+',1fr)';
+  row.innerHTML=gs.players.map(function(name,i){
+    var score=gs.scores[i];
+    var isActive=i===gs.currentPlayer;
+    var scoreClass=score<=40?'danger':score<=170?'finishing':'';
+    var checkout=gs.doubleFinish&&score<=170&&CHECKOUTS[score]?
+      '<div class="pc-checkout">→ '+CHECKOUTS[score]+'</div>':'';
+    return '<div class="player-card'+(isActive?' active-player':'')+'">'
+      +(isActive?'<div class="pc-turn">🎯</div>':'')
+      +'<div class="pc-name">'+esc(name)+'</div>'
+      +'<div class="pc-score '+scoreClass+'">'+score+'</div>'
+      +'<div class="pc-legs">Legs: '+gs.legs[i]+'</div>'
+      +checkout
+      +'</div>';
+  }).join('');
+
+  // Throw title
+  document.getElementById('throw-title').textContent=gs.players[gs.currentPlayer]+"'s turn — enter 3-dart total";
+
+  // Checkout suggestion
+  var remaining=gs.scores[gs.currentPlayer];
+  var checkoutBox=document.getElementById('checkout-box');
+  if(gs.doubleFinish&&remaining<=170&&remaining>=2&&CHECKOUTS[remaining]){
+    checkoutBox.style.display='block';
+    document.getElementById('checkout-route').textContent=CHECKOUTS[remaining];
+    document.getElementById('checkout-note').textContent='Checkout available — must finish on a double';
+  } else {
+    checkoutBox.style.display='none';
+  }
+
+  // Leg history
+  if(gs.legHistory&&gs.legHistory.length){
+    document.getElementById('leg-history').style.display='block';
+    document.getElementById('leg-history-rows').innerHTML=gs.legHistory.map(function(leg){
+      return '<div class="lh-row"><span class="lh-player">Leg '+leg.leg+':</span>'
+        +gs.players.map(function(p,i){
+          return '<span class="'+(i===leg.winner?'lh-winner':'lh-score')+'">'+p+' '+leg.scores[i]+'</span>';
+        }).join(' ')+'</div>';
+    }).join('');
+  }
+}
+
+function toast(msg,isErr){
+  var t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast'+(isErr?' err':'')+' show';
+  setTimeout(function(){t.classList.remove('show');},2000);
+}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+</script>
+</body>
+</html>
