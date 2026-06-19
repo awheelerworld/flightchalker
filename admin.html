@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Flight Chalker — League Admin</title>
+<title>🎯 Flight Chalker — League Admin</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -70,6 +70,7 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
 .toast.show{transform:translateX(-50%) translateY(0)}
 .toast.err{background:var(--red)}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -86,6 +87,7 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
     <button class="tab active" onclick="showTab('leagues')">Leagues</button>
     <button class="tab" onclick="showTab('create')">Create League</button>
     <button class="tab" onclick="showTab('fixtures')">Fixtures</button>
+    <button class="tab" onclick="showTab('notices')">📢 Notices</button>
   </div>
 
   <!-- LEAGUES PANEL -->
@@ -96,7 +98,26 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
   <!-- FIXTURES PANEL -->
   <div id="panel-fixtures" class="panel">
     <div class="card">
-      <h2>Add Fixture</h2>
+      <h2>Import Fixture List</h2>
+      <p style="font-size:.82rem;color:var(--dim);margin-bottom:.75rem">Download the template, fill in your fixtures, then upload to bulk-import a full season.</p>
+      <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:center">
+        <button class="btn-admin" onclick="downloadFixtureTemplate()">⬇ Download Template</button>
+        <div style="flex:1;min-width:200px">
+          <input type="file" id="fixture-upload" accept=".xlsx,.xls,.csv" style="display:none" onchange="importFixtures(this)">
+          <button class="btn-admin" style="background:#1a2a1e;border-color:var(--green);color:var(--gl);width:100%" onclick="document.getElementById('fixture-upload').click()">⬆ Upload Fixture List</button>
+        </div>
+      </div>
+      <div style="margin-top:.75rem">
+        <label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--dim)">Import to League</label>
+        <select id="fx-import-league" style="background:var(--bg);border:1px solid var(--blue);border-radius:4px;color:var(--text);font-family:Barlow,sans-serif;font-size:.9rem;padding:.4rem .6rem;width:100%;margin-top:4px">
+          <option value="">— Select league —</option>
+        </select>
+      </div>
+      <div class="st" id="import-status" style="margin-top:.75rem"></div>
+    </div>
+
+    <div class="card">
+      <h2>Add Single Fixture</h2>
       <div class="grid">
         <div class="field"><label>League</label>
           <select id="fx-league" onchange="loadFixtureTeams()">
@@ -158,6 +179,35 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
       <div class="st" id="cl-status"></div>
     </div>
   </div>
+  <!-- NOTICES PANEL -->
+  <div id="panel-notices" class="panel">
+    <div class="card">
+      <h2>Post a Notice</h2>
+      <div class="field">
+        <label>League</label>
+        <select id="notice-league">
+          <option value="">— Select league —</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Message</label>
+        <textarea id="notice-msg" rows="4" placeholder="Type your notice here…" style="background:var(--bg);border:1px solid var(--blue);border-radius:4px;color:var(--text);font-family:Barlow,sans-serif;font-size:.9rem;padding:.5rem .75rem;width:100%;resize:vertical"></textarea>
+      </div>
+      <button class="btn-admin" onclick="postNotice()"><span id="notice-spin" style="display:none" class="spin blue"></span>Post Notice</button>
+      <div class="st" id="notice-status"></div>
+    </div>
+    <div class="card" style="margin-top:1rem">
+      <h2>Posted Notices</h2>
+      <div class="field">
+        <label>Filter by League</label>
+        <select id="notice-filter" onchange="loadNoticeList()">
+          <option value="">— Select league —</option>
+        </select>
+      </div>
+      <div id="notice-list"><div class="nh">Select a league to view notices</div></div>
+    </div>
+  </div>
+
 </main>
 
 <div class="toast" id="toast"></div>
@@ -192,23 +242,32 @@ async function sbPatch(table,filter,body){
 
 function showTab(name){
   document.querySelectorAll('.tab').forEach(function(t,i){
-    t.classList.toggle('active',['leagues','create','fixtures'][i]===name);
+    t.classList.toggle('active',['leagues','create','fixtures','notices'][i]===name);
   });
   document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
   document.getElementById('panel-'+name).classList.add('active');
   if(name==='leagues')loadLeagues();
   if(name==='fixtures')populateFixtureLeagueDropdowns();
+  if(name==='notices')populateNoticeDropdowns();
+}
+
+async function populateNoticeDropdowns(){
+  try{
+    var leagues=await sb('leagues?order=name.asc&select=id,name');
+    var opts='<option value="">— Select league —</option>'+leagues.map(function(l){return '<option value="'+l.id+'">'+esc(l.name)+'</option>';}).join('');
+    document.getElementById('notice-league').innerHTML=opts;
+    document.getElementById('notice-filter').innerHTML=opts;
+  }catch(e){toast('Error: '+e.message,true);}
 }
 
 async function populateFixtureLeagueDropdowns(){
   try{
     var leagues=await sb('leagues?order=name.asc&select=id,name');
-    var addSel=document.getElementById('fx-league');
-    var filterSel=document.getElementById('fx-filter-league');
     var opts='<option value="">— Select league —</option>'+leagues.map(function(l){return '<option value="'+l.id+'">'+esc(l.name)+'</option>';}).join('');
     var fopts='<option value="">— All leagues —</option>'+leagues.map(function(l){return '<option value="'+l.id+'">'+esc(l.name)+'</option>';}).join('');
-    addSel.innerHTML=opts;
-    filterSel.innerHTML=fopts;
+    document.getElementById('fx-league').innerHTML=opts;
+    document.getElementById('fx-filter-league').innerHTML=fopts;
+    document.getElementById('fx-import-league').innerHTML=opts;
   }catch(e){toast('Error loading leagues: '+e.message,true);}
 }
 
@@ -447,6 +506,165 @@ async function deleteTeam(teamId,teamName,leagueId){
     toast(teamName+' removed');
     loadTeamList(leagueId);
     loadLeagues();
+  }catch(e){toast('Error: '+e.message,true);}
+}
+
+function downloadFixtureTemplate(){
+  // Create a simple CSV template
+  var csv='Date (DD/MM/YYYY),Home Team,Away Team,Season\n';
+  csv+='05/01/2026,Team A,Team B,1\n';
+  csv+='05/01/2026,Team C,Team D,1\n';
+  csv+='12/01/2026,Team B,Team C,1\n';
+  var blob=new Blob([csv],{type:'text/csv'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='fixture-template.csv';
+  a.click();
+  toast('Template downloaded');
+}
+
+async function importFixtures(input){
+  var leagueId=document.getElementById('fx-import-league').value;
+  var st=document.getElementById('import-status');
+  if(!leagueId){st.textContent='Please select a league first.';st.className='st err';return;}
+  var file=input.files[0];
+  if(!file){return;}
+  st.textContent='Reading file…';st.className='st';
+
+  // Get teams for this league to match names
+  var teams=await sb('teams?league_id=eq.'+leagueId+'&select=id,team_name');
+  var teamMap={};
+  teams.forEach(function(t){teamMap[t.team_name.toLowerCase().trim()]=t.id;});
+
+  var fixtures=[];
+  var errors=[];
+
+  // Parse file
+  var reader=new FileReader();
+  reader.onload=async function(e){
+    try{
+      var rows=[];
+      if(file.name.endsWith('.csv')){
+        // Parse CSV
+        var lines=e.target.result.split('\n');
+        lines.slice(1).forEach(function(line,i){
+          if(!line.trim())return;
+          var cols=line.split(',').map(function(c){return c.trim().replace(/"/g,'');});
+          if(cols.length>=3)rows.push({date:cols[0],home:cols[1],away:cols[2],season:cols[3]||'1'});
+        });
+      } else {
+        // Parse Excel
+        var wb=XLSX.read(e.target.result,{type:'array'});
+        var ws=wb.Sheets[wb.SheetNames[0]];
+        var data=XLSX.utils.sheet_to_json(ws,{header:1});
+        data.slice(1).forEach(function(row){
+          if(!row[0])return;
+          var dateVal=row[0];
+          // Handle Excel date serial numbers
+          if(typeof dateVal==='number'){
+            var d=new Date(Math.round((dateVal-25569)*86400*1000));
+            dateVal=d.toLocaleDateString('en-GB');
+          }
+          rows.push({date:String(dateVal),home:String(row[1]||''),away:String(row[2]||''),season:String(row[3]||'1')});
+        });
+      }
+
+      // Process rows
+      var added=0,skipped=0;
+      for(var i=0;i<rows.length;i++){
+        var row=rows[i];
+        if(!row.home||!row.away)continue;
+        var homeId=teamMap[row.home.toLowerCase().trim()];
+        var awayId=teamMap[row.away.toLowerCase().trim()];
+        if(!homeId){errors.push('Row '+(i+2)+': Team "'+row.home+'" not found');skipped++;continue;}
+        if(!awayId){errors.push('Row '+(i+2)+': Team "'+row.away+'" not found');skipped++;continue;}
+        if(homeId===awayId){errors.push('Row '+(i+2)+': Home and away are the same team');skipped++;continue;}
+        // Parse date DD/MM/YYYY to YYYY-MM-DD
+        var parts=row.date.split('/');
+        var isoDate;
+        if(parts.length===3){
+          isoDate=parts[2].padStart(4,'20')+'-'+parts[1].padStart(2,'0')+'-'+parts[0].padStart(2,'0');
+        } else {
+          errors.push('Row '+(i+2)+': Invalid date format "'+row.date+'" — use DD/MM/YYYY');
+          skipped++;continue;
+        }
+        try{
+          await sb('league_fixtures',{method:'POST',prefer:'return=minimal',
+            body:JSON.stringify({league_id:leagueId,home_team_id:homeId,away_team_id:awayId,fixture_date:isoDate,season:parseInt(row.season)||1,played:false})
+          });
+          added++;
+        }catch(e){errors.push('Row '+(i+2)+': '+e.message);skipped++;}
+      }
+
+      var msg=added+' fixture'+(added!==1?'s':'')+' imported successfully';
+      if(skipped)msg+=', '+skipped+' skipped';
+      if(errors.length){msg+='\nErrors:\n'+errors.slice(0,5).join('\n');}
+      st.textContent=msg;
+      st.className=skipped?'st err':'st ok';
+      input.value='';
+      loadFixtureList();
+      toast(added+' fixtures imported');
+    }catch(e){
+      st.textContent='Error reading file: '+e.message;
+      st.className='st err';
+    }
+  };
+  if(file.name.endsWith('.csv')){
+    reader.readAsText(file);
+  } else {
+    reader.readAsArrayBuffer(file);
+  }
+}
+
+async function postNotice(){
+  var leagueId=document.getElementById('notice-league').value;
+  var msg=document.getElementById('notice-msg').value.trim();
+  var st=document.getElementById('notice-status');
+  var sp=document.getElementById('notice-spin');
+  if(!leagueId){st.textContent='Please select a league.';st.className='st err';return;}
+  if(!msg){st.textContent='Please enter a message.';st.className='st err';return;}
+  sp.style.display='inline-block';st.textContent='';
+  try{
+    await sb('league_notices',{method:'POST',prefer:'return=minimal',
+      body:JSON.stringify({league_id:leagueId,message:msg})
+    });
+    st.textContent='✓ Notice posted!';st.className='st ok';
+    document.getElementById('notice-msg').value='';
+    loadNoticeList();
+    toast('Notice posted');
+  }catch(e){st.textContent='Error: '+e.message;st.className='st err';}
+  sp.style.display='none';
+}
+
+async function loadNoticeList(){
+  var leagueId=document.getElementById('notice-filter').value;
+  var el=document.getElementById('notice-list');
+  if(!leagueId){el.innerHTML='<div class="nh">Select a league to view notices</div>';return;}
+  el.innerHTML='<div class="lh"><span class="spin"></span> Loading…</div>';
+  try{
+    var notices=await sb('league_notices?league_id=eq.'+leagueId+'&order=created_at.desc');
+    if(!notices||!notices.length){el.innerHTML='<div class="nh">No notices posted yet.</div>';return;}
+    el.innerHTML=notices.map(function(n){
+      var d=new Date(n.created_at);
+      var fmt=d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+      var time=d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+      return '<div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:.75rem 1rem;margin-bottom:.5rem">'
+        +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.4rem">'
+        +'<div style="font-size:.8rem;color:var(--dim)">'+fmt+' at '+time+'</div>'
+        +'<button onclick="deleteNotice(&quot;'+n.id+'&quot;)" style="background:none;border:1px solid #5c2020;border-radius:3px;color:#ff8080;font-size:.7rem;padding:1px 6px;cursor:pointer;flex-shrink:0">Delete</button>'
+        +'</div>'
+        +'<div style="font-size:.88rem;color:var(--text);white-space:pre-wrap">'+esc(n.message)+'</div>'
+        +'</div>';
+    }).join('');
+  }catch(e){el.innerHTML='<div class="nh">Error: '+esc(e.message)+'</div>';}
+}
+
+async function deleteNotice(id){
+  if(!confirm('Delete this notice?'))return;
+  try{
+    await sb('league_notices?id=eq.'+id,{method:'DELETE'});
+    toast('Notice deleted');
+    loadNoticeList();
   }catch(e){toast('Error: '+e.message,true);}
 }
 
