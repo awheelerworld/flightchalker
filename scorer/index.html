@@ -125,6 +125,41 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
 .lh-score{color:var(--amber)}
 .lh-winner{color:var(--gl);font-weight:700}
 
+/* Cricket scoreboard */
+.cricket-board{background:var(--s2);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:1rem}
+.cricket-header{display:grid;background:var(--s3);padding:.4rem .5rem;font-family:"Barlow Condensed",sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.cricket-row{display:grid;padding:.4rem .5rem;border-top:1px solid var(--border);align-items:center}
+.cricket-num{font-family:"Barlow Condensed",sans-serif;font-size:1rem;font-weight:700;color:var(--text);text-align:center}
+.cricket-num.closed-all{color:var(--dim)}
+.cricket-mark{font-size:1.1rem;text-align:center}
+.cricket-pts{font-family:"Barlow Condensed",sans-serif;font-size:1.1rem;font-weight:900;text-align:center;color:var(--amber)}
+.cricket-total{font-family:"Barlow Condensed",sans-serif;font-size:1.4rem;font-weight:900;color:var(--amber);text-align:center}
+/* Killer */
+.killer-card{background:var(--s2);border:2px solid var(--border);border-radius:8px;padding:.75rem;margin-bottom:.5rem;display:flex;align-items:center;gap:.75rem}
+.killer-card.active-player{border-color:var(--amber)}
+.killer-card.is-killer{border-color:var(--red)}
+.killer-card.eliminated{opacity:.4}
+.killer-name{flex:1;font-family:"Barlow Condensed",sans-serif;font-size:1rem;font-weight:700}
+.killer-double{font-family:"Barlow Condensed",sans-serif;font-size:.85rem;color:var(--amber)}
+.killer-lives{display:flex;gap:3px}
+.killer-life{font-size:1rem}
+.killer-badge{font-family:"Barlow Condensed",sans-serif;font-size:.7rem;font-weight:700;padding:2px 6px;border-radius:3px;background:#2a0a0a;color:var(--red);border:1px solid var(--red)}
+/* Shanghai */
+.shanghai-scores{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:.75rem;margin-bottom:1rem}
+.shanghai-round{font-family:"Barlow Condensed",sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--green);margin-bottom:.5rem}
+.shanghai-player-score{display:flex;justify-content:space-between;align-items:center;padding:.3rem 0;border-top:1px solid var(--border);font-size:.9rem}
+.shanghai-total{font-family:"Barlow Condensed",sans-serif;font-size:1.1rem;font-weight:900;color:var(--amber)}
+/* Halve-it */
+.halveit-table{background:var(--s2);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:1rem}
+.halveit-header{display:grid;background:var(--s3);padding:.4rem .5rem;font-family:"Barlow Condensed",sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);text-align:center}
+.halveit-row{display:grid;padding:.35rem .5rem;border-top:1px solid var(--border);text-align:center;font-size:.88rem}
+.halveit-current{background:#2a2000}
+.halveit-done{background:#1a1a1a}
+/* Throw chips */
+.throw-darts{display:flex;gap:.5rem;margin:.5rem 0}
+.dart-chip{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:.4rem;text-align:center;font-family:"Barlow Condensed",sans-serif;font-size:1.1rem;font-weight:700;min-height:42px;display:flex;align-items:center;justify-content:center;color:var(--dim)}
+.dart-chip.has-value{border-color:var(--green);color:var(--amber)}
+
 /* Toast */
 .toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1rem;padding:.6rem 1.5rem;border-radius:6px;transition:transform .3s;z-index:999;pointer-events:none}
 .toast.show{transform:translateX(-50%) translateY(0)}
@@ -148,6 +183,19 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
     <div class="setup-sub">Set up your game and start throwing</div>
 
     <div class="setup-section">
+      <h3>Game Mode</h3>
+      <div class="score-btns" id="mode-btns">
+        <button class="score-btn sel" onclick="selectMode('x01')">X01</button>
+        <button class="score-btn" onclick="selectMode('cricket')">Cricket</button>
+        <button class="score-btn" onclick="selectMode('killer')">Killer</button>
+        <button class="score-btn" onclick="selectMode('shanghai')">Shanghai</button>
+        <button class="score-btn" onclick="selectMode('halveit')">Halve-It</button>
+      </div>
+      <div id="mode-desc" style="font-size:.8rem;color:var(--dim);margin-top:.6rem;line-height:1.4">Count down from your starting score. Double to finish.</div>
+    </div>
+
+    <div id="x01-options">
+    <div class="setup-section">
       <h3>Starting Score</h3>
       <div class="score-btns">
         <button class="score-btn sel" onclick="selectScore(301)">301</button>
@@ -164,6 +212,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
       </div>
     </div>
 
+    </div><!-- end x01-options -->
     <div class="setup-section">
       <h3>Players</h3>
       <div class="field">
@@ -251,6 +300,103 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
     <div class="leg-history" id="leg-history" style="display:none">
       <div class="lh-title">Leg History</div>
       <div id="leg-history-rows"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ CRICKET SCREEN ══════════════════ -->
+<div id="screen-cricket" class="screen">
+  <div class="hdr">
+    <div><div class="hdr-logo">Flight <span>Chalker</span></div><div class="hdr-sub">Cricket</div></div>
+    <div style="display:flex;gap:.5rem">
+      <button class="hbtn" onclick="undoLast()">↩ Undo</button>
+      <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button>
+    </div>
+  </div>
+  <div class="game-wrap">
+    <div id="cricket-scoreboard"></div>
+    <div class="throw-area">
+      <div class="throw-title" id="cricket-turn-title">Player 1's turn</div>
+      <div style="margin-bottom:.6rem;font-size:.8rem;color:var(--dim)">Enter each dart — tap the number you hit</div>
+      <div id="cricket-numpad" style="display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;margin-bottom:.6rem"></div>
+      <div class="action-row">
+        <button class="btn-undo" onclick="cricketMiss()">Miss</button>
+        <button class="btn-next" onclick="cricketNextTurn()">Next Turn →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ KILLER SCREEN ══════════════════ -->
+<div id="screen-killer" class="screen">
+  <div class="hdr">
+    <div><div class="hdr-logo">Flight <span>Chalker</span></div><div class="hdr-sub">Killer</div></div>
+    <div style="display:flex;gap:.5rem">
+      <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button>
+    </div>
+  </div>
+  <div class="game-wrap">
+    <div id="killer-players"></div>
+    <div class="throw-area">
+      <div class="throw-title" id="killer-turn-title">Player 1's turn</div>
+      <div id="killer-instruction" style="font-size:.82rem;color:var(--amber);margin-bottom:.6rem"></div>
+      <input type="number" id="killer-input" class="display-input" placeholder="Score" min="1" max="20" readonly style="margin-bottom:.6rem">
+      <div id="killer-numpad" style="display:grid;grid-template-columns:repeat(5,1fr);gap:.35rem;margin-bottom:.6rem"></div>
+      <div class="action-row">
+        <button class="btn-bust" onclick="killerMiss()">Miss / Other</button>
+        <button class="btn-next" onclick="killerNextTurn()">Next Turn →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ SHANGHAI SCREEN ══════════════════ -->
+<div id="screen-shanghai" class="screen">
+  <div class="hdr">
+    <div><div class="hdr-logo">Flight <span>Chalker</span></div><div class="hdr-sub">Shanghai</div></div>
+    <div style="display:flex;gap:.5rem">
+      <button class="hbtn" onclick="undoLast()">↩ Undo</button>
+      <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button>
+    </div>
+  </div>
+  <div class="game-wrap">
+    <div id="shanghai-scores"></div>
+    <div class="throw-area">
+      <div class="throw-title" id="shanghai-turn-title">Player 1's turn</div>
+      <div id="shanghai-target-label" style="font-family:'Barlow Condensed',sans-serif;font-size:1rem;color:var(--amber);margin-bottom:.6rem"></div>
+      <div class="throw-darts" id="shanghai-darts">
+        <div class="dart-chip" id="sh-dart-0">—</div>
+        <div class="dart-chip" id="sh-dart-1">—</div>
+        <div class="dart-chip" id="sh-dart-2">—</div>
+      </div>
+      <div id="shanghai-numpad" style="display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;margin-bottom:.6rem;margin-top:.6rem"></div>
+      <div class="action-row">
+        <button class="btn-undo" onclick="shanghaiMiss()">Miss (0)</button>
+        <button class="btn-next" id="sh-next-btn" onclick="shanghaiNextTurn()" disabled>Next Turn →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ HALVE-IT SCREEN ══════════════════ -->
+<div id="screen-halveit" class="screen">
+  <div class="hdr">
+    <div><div class="hdr-logo">Flight <span>Chalker</span></div><div class="hdr-sub">Halve-It</div></div>
+    <div style="display:flex;gap:.5rem">
+      <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button>
+    </div>
+  </div>
+  <div class="game-wrap">
+    <div id="halveit-scores"></div>
+    <div class="throw-area">
+      <div class="throw-title" id="halveit-turn-title">Player 1's turn</div>
+      <div id="halveit-target-label" style="font-family:'Barlow Condensed',sans-serif;font-size:1rem;color:var(--amber);margin-bottom:.6rem"></div>
+      <input type="number" id="halveit-input" class="display-input" placeholder="0" readonly style="margin-bottom:.6rem">
+      <div id="halveit-numpad" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.35rem;margin-bottom:.6rem"></div>
+      <div class="action-row">
+        <button class="btn-bust" onclick="halveitScore(0)">Missed All (Halve!)</button>
+        <button class="btn-next" onclick="halveitSubmit()">Submit →</button>
+      </div>
     </div>
   </div>
 </div>
@@ -618,6 +764,290 @@ function toast(msg,isErr){
   setTimeout(function(){t.classList.remove('show');},2000);
 }
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// ── MODE SELECTION ─────────────────────────────────────────────────────────────
+var selectedMode='x01';
+var modeDescs={
+  x01:'Count down from your starting score. Must finish on a double.',
+  cricket:'Close 15-20 and Bull by hitting each 3 times. Score points on numbers you closed.',
+  killer:'Hit your own double to become a Killer. Take lives from opponents by hitting their doubles. 3 lives each.',
+  shanghai:'7 rounds targeting numbers 1-7. Hit single, double AND treble in one turn for an instant win!',
+  halveit:'Score points each round by hitting the target. Miss all 3 darts and your score is halved!'
+};
+
+function selectMode(mode){
+  selectedMode=mode;
+  document.querySelectorAll('#mode-btns .score-btn').forEach(function(b){b.classList.remove('sel');});
+  event.target.classList.add('sel');
+  document.getElementById('mode-desc').textContent=modeDescs[mode];
+  document.getElementById('x01-options').style.display=mode==='x01'?'block':'none';
+}
+
+var _origStart=startGame;
+startGame=function(){
+  if(selectedMode==='x01'){_origStart();}
+  else if(selectedMode==='cricket'){startCricket();}
+  else if(selectedMode==='killer'){startKiller();}
+  else if(selectedMode==='shanghai'){startShanghai();}
+  else if(selectedMode==='halveit'){startHalveIt();}
+};
+
+// ── CRICKET ────────────────────────────────────────────────────────────────────
+var cricket={};
+var cNums=[20,19,18,17,16,15,25];
+
+function startCricket(){
+  var names=Array.from(document.getElementById('player-names').querySelectorAll('input')).map(function(i){return i.value.trim()||'Player';});
+  cricket={players:names,marks:names.map(function(){return{20:0,19:0,18:0,17:0,16:0,15:0,25:0};}),points:names.map(function(){return 0;}),currentPlayer:0,dartsThrown:0};
+  showScreen('screen-cricket');
+  document.getElementById('cricket-numpad').innerHTML=[20,19,18,17,16,15,'Bull','Miss'].map(function(n){
+    var val=n==='Bull'?25:n==='Miss'?0:n;
+    return '<button class="np'+(n==='Miss'?' dl':'')+'" onclick="cricketDart('+val+')">'+n+'</button>';
+  }).join('');
+  renderCricket();
+}
+
+function cricketDart(num){
+  var cr=cricket,p=cr.currentPlayer;
+  if(num===0){cr.dartsThrown++;if(cr.dartsThrown>=3){cricketNext();return;}toast('Miss');renderCricket();return;}
+  if(!cNums.includes(num))return;
+  cr.dartsThrown++;
+  if(cr.marks[p][num]<3){
+    cr.marks[p][num]++;
+    toast(num+(cr.marks[p][num]===3?' closed!':cr.marks[p][num]===1?' /':' X'));
+  } else {
+    var canScore=cr.players.some(function(_,i){return i!==p&&cr.marks[i][num]<3;});
+    if(canScore){cr.points[p]+=num;toast('+'+num+' pts!');}
+  }
+  if(cr.dartsThrown>=3){cricketNext();return;}
+  renderCricket();
+}
+
+function cricketMiss(){cricketDart(0);}
+
+function cricketNext(){
+  var cr=cricket;cr.dartsThrown=0;
+  for(var p=0;p<cr.players.length;p++){
+    if(cNums.every(function(n){return cr.marks[p][n]>=3;})&&cr.points[p]>=Math.max.apply(null,cr.points)){
+      showWinByName(cr.players[p]);return;
+    }
+  }
+  cr.currentPlayer=(cr.currentPlayer+1)%cr.players.length;
+  renderCricket();
+}
+
+function renderCricket(){
+  var cr=cricket,cols='1fr '+'repeat('+cr.players.length+',1fr)';
+  var h='<div class="cricket-board"><div class="cricket-header" style="grid-template-columns:'+cols+'"><div>NUM</div>';
+  cr.players.forEach(function(p,i){
+    h+='<div style="text-align:center;color:'+(i===cr.currentPlayer?'var(--amber)':'var(--dim)')+'">'+esc(p)+'</div>';
+  });
+  h+='</div>';
+  cNums.forEach(function(n){
+    var ac=cr.players.every(function(_,i){return cr.marks[i][n]>=3;});
+    h+='<div class="cricket-row" style="grid-template-columns:'+cols+'"><div class="cricket-num'+(ac?' closed-all':'')+'">'+(n===25?'Bull':n)+'</div>';
+    cr.players.forEach(function(_,i){
+      var m=cr.marks[i][n];
+      var mark=m===0?'':m===1?'/':m===2?'X':'●';
+      h+='<div class="cricket-mark" style="color:'+(m>=3?'var(--gl)':'var(--text)')+'">'+mark+'</div>';
+    });
+    h+='</div>';
+  });
+  h+='<div class="cricket-row" style="grid-template-columns:'+cols+';background:var(--s3)"><div style="font-size:.7rem;color:var(--dim);text-align:center">PTS</div>';
+  cr.points.forEach(function(pts){h+='<div class="cricket-pts">'+pts+'</div>';});
+  h+='</div></div>';
+  document.getElementById('cricket-scoreboard').innerHTML=h;
+  document.getElementById('cricket-turn-title').textContent=cr.players[cr.currentPlayer]+"'s turn — dart "+(cr.dartsThrown+1)+" of 3";
+}
+
+function startKiller(){
+  var names=Array.from(document.getElementById('player-names').querySelectorAll('input')).map(function(i){return i.value.trim()||'Player';});
+  var nums=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20].sort(function(){return Math.random()-.5;}).slice(0,names.length);
+  killer={players:names,doubles:nums,lives:names.map(function(){return 3;}),isKiller:names.map(function(){return false;}),currentPlayer:0,dartsThrown:0};
+  showScreen('screen-killer');
+  document.getElementById('killer-numpad').innerHTML=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20].map(function(n){
+    return '<button class="np" onclick="killerDart('+n+')">'+n+'</button>';
+  }).join('');
+  renderKiller();
+}
+
+function killerDart(num){
+  var k=killer,p=k.currentPlayer;
+  if(!k.isKiller[p]){
+    if(num===k.doubles[p]){k.isKiller[p]=true;toast(k.players[p]+' is a KILLER! 🔪');k.dartsThrown=3;}
+    else{k.dartsThrown++;toast('Need D'+k.doubles[p]);}
+  } else {
+    var t=k.doubles.indexOf(num);
+    if(t!==-1&&t!==p&&k.lives[t]>0){
+      k.lives[t]--;toast(k.players[t]+' -1 life!',true);
+      if(k.lives[t]<=0){if(k.lives.filter(function(l){return l>0;}).length===1){showWinByName(k.players[p]);return;}}
+    } else if(t===p){k.lives[p]--;k.isKiller[p]=false;toast('Own double! -1 life 😬',true);}
+    k.dartsThrown++;
+  }
+  if(k.dartsThrown>=3){killerNextTurn();return;}
+  renderKiller();
+}
+
+function killerMiss(){killer.dartsThrown++;if(killer.dartsThrown>=3){killerNextTurn();return;}toast('Miss');renderKiller();}
+
+function killerNextTurn(){
+  killer.dartsThrown=0;
+  do{killer.currentPlayer=(killer.currentPlayer+1)%killer.players.length;}
+  while(killer.lives[killer.currentPlayer]<=0);
+  renderKiller();
+}
+
+function renderKiller(){
+  var k=killer,p=k.currentPlayer;
+  document.getElementById('killer-players').innerHTML=k.players.map(function(name,i){
+    var lives='';for(var l=0;l<3;l++){lives+='<span>'+(l<k.lives[i]?'❤️':'🖤')+'</span>';}
+    return '<div class="killer-card'+(i===p?' active-player':'')+(k.isKiller[i]?' is-killer':'')+(k.lives[i]<=0?' eliminated':'')+'">'
+      +'<div><div class="killer-name">'+esc(name)+'</div><div class="killer-double">D'+k.doubles[i]+'</div></div>'
+      +'<div class="killer-lives">'+lives+'</div>'+(k.isKiller[i]?'<div class="killer-badge">KILLER</div>':'')+'</div>';
+  }).join('');
+  document.getElementById('killer-turn-title').textContent=k.players[p]+"'s turn — dart "+(k.dartsThrown+1)+" of 3";
+  document.getElementById('killer-instruction').textContent=k.isKiller[p]?'Hit opponents doubles to take their lives!':'Hit your double D'+k.doubles[p]+' to become a Killer!';
+}
+
+// ── SHANGHAI ───────────────────────────────────────────────────────────────────
+var shanghai={};
+
+function startShanghai(){
+  var names=Array.from(document.getElementById('player-names').querySelectorAll('input')).map(function(i){return i.value.trim()||'Player';});
+  shanghai={players:names,scores:names.map(function(){return 0;}),currentPlayer:0,currentRound:1,currentDarts:[]};
+  showScreen('screen-shanghai');
+  renderShanghai();
+}
+
+function renderShanghaiNumpad(){
+  var n=shanghai.currentRound;
+  document.getElementById('shanghai-numpad').innerHTML=[
+    {l:'Miss',v:0,m:0},{l:'S'+n,v:n,m:1},{l:'D'+n,v:n*2,m:2},{l:'T'+n,v:n*3,m:3}
+  ].map(function(b){
+    return '<button class="np'+(b.m===0?' dl':b.m===3?' sp':'')+'" onclick="shanghaiDart('+b.v+','+b.m+')">'+b.l+'</button>';
+  }).join('');
+}
+
+function shanghaiDart(val,mult){
+  var sh=shanghai;
+  if(sh.currentDarts.length>=3)return;
+  sh.currentDarts.push({val:val,mult:mult});
+  for(var d=0;d<3;d++){
+    var chip=document.getElementById('sh-dart-'+d);
+    if(d<sh.currentDarts.length){
+      var dart=sh.currentDarts[d];var n=sh.currentRound;
+      chip.textContent=dart.mult===0?'Miss':(dart.mult===1?'S':dart.mult===2?'D':'T')+n;
+      chip.className='dart-chip has-value';
+    } else {chip.textContent='—';chip.className='dart-chip';}
+  }
+  if(sh.currentDarts.length===3){
+    var mults=sh.currentDarts.map(function(d){return d.mult;});
+    if(mults.includes(1)&&mults.includes(2)&&mults.includes(3)){
+      toast('SHANGHAI! Instant win! 🎯');
+      setTimeout(function(){showWinByName(sh.players[sh.currentPlayer]);},800);
+      return;
+    }
+    document.getElementById('sh-next-btn').disabled=false;
+  }
+}
+
+function shanghaiMiss(){shanghaiDart(0,0);}
+
+function shanghaiNextTurn(){
+  var sh=shanghai;
+  sh.scores[sh.currentPlayer]+=sh.currentDarts.reduce(function(a,d){return a+d.val;},0);
+  sh.currentDarts=[];
+  document.getElementById('sh-next-btn').disabled=true;
+  for(var d=0;d<3;d++){var c=document.getElementById('sh-dart-'+d);c.textContent='—';c.className='dart-chip';}
+  sh.currentPlayer=(sh.currentPlayer+1)%sh.players.length;
+  if(sh.currentPlayer===0){
+    sh.currentRound++;
+    if(sh.currentRound>7){showWinByName(sh.players[sh.scores.indexOf(Math.max.apply(null,sh.scores))]);return;}
+  }
+  renderShanghai();
+}
+
+function renderShanghai(){
+  var sh=shanghai,n=sh.currentRound;
+  document.getElementById('shanghai-turn-title').textContent=sh.players[sh.currentPlayer]+"'s turn";
+  document.getElementById('shanghai-target-label').textContent='Round '+n+' — Target: '+n+' (S='+n+' D='+(n*2)+' T='+(n*3)+')';
+  var h='<div class="shanghai-scores"><div class="shanghai-round">Scores</div>';
+  sh.players.forEach(function(p,i){
+    h+='<div class="shanghai-player-score"><span style="color:'+(i===sh.currentPlayer?'var(--amber)':'var(--text)')+'">'+esc(p)+'</span><span class="shanghai-total">'+sh.scores[i]+'</span></div>';
+  });
+  h+='</div>';
+  document.getElementById('shanghai-scores').innerHTML=h;
+  renderShanghaiNumpad();
+}
+
+// ── HALVE-IT ───────────────────────────────────────────────────────────────────
+var halveit={};
+var hiTargets=[20,16,'D7',14,'T10',17,'D Bull'];
+var hiValues=[20,16,14,14,30,17,50];
+
+function startHalveIt(){
+  var names=Array.from(document.getElementById('player-names').querySelectorAll('input')).map(function(i){return i.value.trim()||'Player';});
+  halveit={players:names,scores:names.map(function(){return 0;}),currentPlayer:0,currentRound:0,inputVal:''};
+  showScreen('screen-halveit');
+  document.getElementById('halveit-numpad').innerHTML=[7,8,9,4,5,6,1,2,3,'CLR',0,'X'].map(function(n){
+    return '<button class="np'+(n==='CLR'?' sp':n==='X'?' dl':'')+'" onclick="halveitNumpad(&quot;'+n+'&quot;)">'+n+'</button>';
+  }).join('');
+  renderHalveIt();
+}
+
+function halveitNumpad(v){
+  var inp=document.getElementById('halveit-input');
+  if(v==='X'){halveit.inputVal=halveit.inputVal.slice(0,-1);}
+  else if(v==='CLR'){halveit.inputVal='';}
+  else{if(halveit.inputVal.length>=3)return;halveit.inputVal+=String(v);}
+  inp.value=halveit.inputVal;
+}
+
+function halveitScore(s){halveit.inputVal=String(s);document.getElementById('halveit-input').value=s;halveitSubmit();}
+
+function halveitSubmit(){
+  var hv=halveit,p=hv.currentPlayer,scored=parseInt(hv.inputVal)||0;
+  if(scored===0){hv.scores[p]=Math.floor(hv.scores[p]/2);toast('Missed! Score halved!',true);}
+  else{hv.scores[p]+=scored;toast('+'+scored+' points!');}
+  hv.inputVal='';document.getElementById('halveit-input').value='';
+  hv.currentPlayer=(hv.currentPlayer+1)%hv.players.length;
+  if(hv.currentPlayer===0){
+    hv.currentRound++;
+    if(hv.currentRound>=hiTargets.length){showWinByName(hv.players[hv.scores.indexOf(Math.max.apply(null,hv.scores))]);return;}
+  }
+  renderHalveIt();
+}
+
+function renderHalveIt(){
+  var hv=halveit,cols='1fr '+'repeat('+hv.players.length+',1fr)';
+  document.getElementById('halveit-turn-title').textContent=hv.players[hv.currentPlayer]+"'s turn";
+  document.getElementById('halveit-target-label').textContent='Round '+(hv.currentRound+1)+' — Target: '+hiTargets[hv.currentRound]+' (miss all = halved!)';
+  var h='<div class="halveit-table"><div class="halveit-header" style="grid-template-columns:'+cols+'"><div>Round</div>';
+  hv.players.forEach(function(p,i){
+    h+='<div style="color:'+(i===hv.currentPlayer?'var(--amber)':'var(--dim)')+'">'+esc(p)+'</div>';
+  });
+  h+='</div>';
+  hiTargets.forEach(function(t,ri){
+    var cls='halveit-row'+(ri===hv.currentRound?' halveit-current':ri<hv.currentRound?' halveit-done':'');
+    h+='<div class="'+cls+'" style="grid-template-columns:'+cols+'"><div>'+t+'</div>';
+    hv.players.forEach(function(_,i){
+      h+='<div style="font-weight:700;color:var(--amber)">'+(ri<=hv.currentRound?hv.scores[i]:'&mdash;')+'</div>';
+    });
+    h+='</div>';
+  });
+  h+='</div>';
+  document.getElementById('halveit-scores').innerHTML=h;
+}
+
+function showWinByName(name){
+  document.getElementById('win-title').textContent=name+' Wins! 🏆';
+  document.getElementById('win-name').textContent='';
+  document.getElementById('win-legs').textContent='';
+  showScreen('screen-win');
+}
+
+// Init
+if(document.getElementById('x01-options'))document.getElementById('x01-options').style.display='block';
 </script>
 </body>
 </html>
