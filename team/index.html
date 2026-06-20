@@ -315,240 +315,233 @@ const DEFAULTS=['Adam Pilgrim','Morgan Wills','Adam Wheeler','Lee Pilgrim','Andr
   const m=history[idx];
   const{jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-  const W=210,pad=16,innerW=W-pad*2;
+  const W=210,pad=14,innerW=W-pad*2;
   let y=pad;
-  const WIN_TXT=[168,255,184];
-  const LOSS_TXT=[255,170,170];
+  const GREEN=[74,124,89];
+  const AMBER=[232,200,64];
+  const WIN_COL=[168,255,184];
+  const LOSS_COL=[255,140,140];
+  const DIM=[138,144,128];
+  const TEXT=[224,216,200];
 
-  // ── Header bar ──
+  // ── Header ──────────────────────────────────────────────────────────────────
   doc.setFillColor(26,37,26);
-  doc.rect(0,0,W,22,'F');
-  doc.setTextColor(232,200,64);
+  doc.rect(0,0,W,20,'F');
   doc.setFont('helvetica','bold');
-  doc.setFontSize(18);
-  doc.text('FLIGHT CHALKER',pad,14);
-  doc.setTextColor(138,144,128);
+  doc.setFontSize(14);
+  doc.setTextColor(AMBER[0],AMBER[1],AMBER[2]);
+  doc.text('FLIGHT CHALKER',pad,13);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(7);
+  doc.setTextColor(DIM[0],DIM[1],DIM[2]);
+  doc.text('flightchalker.co.uk',W-pad,13,'right');
+  y=26;
+
+  // ── League & match title ────────────────────────────────────────────────────
+  const leagueName=(currentLeague&&currentLeague.name)||'';
+  const teamName=(currentTeam&&currentTeam.team_name)||'';
+  doc.setFont('helvetica','bold');
   doc.setFontSize(8);
-  doc.setFont('helvetica','normal');
-  doc.text('powered by awheelerworld',W-pad,14,'right');
-  y=30;
-
-  // ── Match title ──
+  doc.setTextColor(GREEN[0],GREEN[1],GREEN[2]);
+  doc.text(leagueName.toUpperCase(),pad,y);
+  y+=5;
+  doc.setFontSize(13);
+  doc.setTextColor(TEXT[0],TEXT[1],TEXT[2]);
+  doc.text((teamName+' vs '+m.opponent).toUpperCase(),pad,y);
+  y+=5;
   const matchDate=new Date(m.match_date+'T00:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  doc.setTextColor(224,216,200);
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(14);
-  doc.text(m.opponent.toUpperCase(),pad,y);
-  y+=6;
   doc.setFont('helvetica','normal');
-  doc.setFontSize(9);
-  doc.setTextColor(138,144,128);
-  doc.text(matchDate+' · '+m.venue.charAt(0).toUpperCase()+m.venue.slice(1),pad,y);
-  y+=10;
+  doc.setFontSize(8);
+  doc.setTextColor(DIM[0],DIM[1],DIM[2]);
+  doc.text(matchDate+' · '+(m.venue.charAt(0).toUpperCase()+m.venue.slice(1)),pad,y);
+  y+=8;
 
-  // ── Score summary box ──
+  // ── Score box ───────────────────────────────────────────────────────────────
   const won=m.wins>m.losses;
+  const boxH=18;
   doc.setFillColor(26,37,26);
-  doc.roundedRect(pad,y,innerW,18,2,2,'F');
-  // Legs won
+  doc.roundedRect(pad,y,innerW,boxH,2,2,'F');
+
+  // Legs won/lost
   doc.setFont('helvetica','bold');
-  doc.setFontSize(20);
-  doc.setTextColor(won?WIN_TXT[0]:LOSS_TXT[0],won?WIN_TXT[1]:LOSS_TXT[1],won?WIN_TXT[2]:LOSS_TXT[2]);
-  doc.text(String(m.wins),pad+10,y+12);
-  doc.setTextColor(138,144,128);
+  doc.setFontSize(22);
+  doc.setTextColor(won?WIN_COL[0]:LOSS_COL[0],won?WIN_COL[1]:LOSS_COL[1],won?WIN_COL[2]:LOSS_COL[2]);
+  doc.text(String(m.wins),pad+8,y+12);
+  doc.setTextColor(DIM[0],DIM[1],DIM[2]);
   doc.setFontSize(14);
-  doc.text('-',pad+22,y+12);
-  doc.setTextColor(!won?WIN_TXT[0]:LOSS_TXT[0],!won?WIN_TXT[1]:LOSS_TXT[1],!won?WIN_TXT[2]:LOSS_TXT[2]);
-  doc.setFontSize(20);
-  doc.text(String(m.losses),pad+28,y+12);
+  doc.text('–',pad+18,y+12);
+  doc.setFontSize(22);
+  doc.setTextColor(!won?WIN_COL[0]:LOSS_COL[0],!won?WIN_COL[1]:LOSS_COL[1],!won?WIN_COL[2]:LOSS_COL[2]);
+  doc.text(String(m.losses),pad+24,y+12);
   doc.setFont('helvetica','normal');
   doc.setFontSize(6);
-  doc.setTextColor(138,144,128);
-  doc.text('LEGS WON',pad+10,y+16.5);
-  doc.text('LEGS LOST',pad+28,y+16.5);
-  // 80+ scores
-  doc.setTextColor(232,200,64);
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(20);
-  doc.text(String(m.eighties),W/2,y+12,'center');
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(6);
-  doc.setTextColor(138,144,128);
-  doc.text('80+ SCORES',W/2,y+16.5,'center');
+  doc.setTextColor(DIM[0],DIM[1],DIM[2]);
+  doc.text('MATCHES WON',pad+8,y+16.5);
+  doc.text('MATCHES LOST',pad+24,y+16.5);
+
   // WIN/LOSS badge
-  doc.setFillColor(won?74:122,won?136:32,won?85:32);
-  doc.roundedRect(W-pad-24,y+4,22,10,2,2,'F');
+  doc.setFillColor(won?40:100,won?100:30,won?55:30);
+  doc.roundedRect(W-pad-26,y+4,24,10,2,2,'F');
   doc.setFont('helvetica','bold');
-  doc.setFontSize(9);
-  doc.setTextColor(won?WIN_TXT[0]:LOSS_TXT[0],won?WIN_TXT[1]:LOSS_TXT[1],won?WIN_TXT[2]:LOSS_TXT[2]);
-  doc.text(won?'WIN':'LOSS',W-pad-13,y+11,'center');
-  y+=24;
+  doc.setFontSize(10);
+  doc.setTextColor(won?WIN_COL[0]:LOSS_COL[0],won?WIN_COL[1]:LOSS_COL[1],won?WIN_COL[2]:LOSS_COL[2]);
+  doc.text(won?'WIN':'LOSS',W-pad-14,y+11,'center');
+  y+=boxH+6;
 
-  // ── Column definitions ──
-  // | Label | Player(s) | Legs | Result | High Scores (wrapping) |
-  const C_LABEL=pad;           // width 10
-  const C_NAME=pad+11;         // width 55
-  const C_LEGS=pad+67;         // width 18
-  const C_RESULT=pad+86;       // width 20
-  const C_SCORES=pad+107;      // rest = ~81mm
-  const SCORES_W=W-pad-C_SCORES; // available width for scores
-  const SCORE_CHIP_W=10;       // each score chip width
-  const SCORES_PER_ROW=Math.floor(SCORES_W/SCORE_CHIP_W);
-
+  // ── Match data ──────────────────────────────────────────────────────────────
   const mdata=m.data||{};
   const singles=mdata.singles||[];
   const doubles=mdata.doubles||[];
-  const team4=mdata.team4||{};
+  const team4=mdata.team4||null;
 
-  // ── Column header ──
-  function colHeaders(){
-    doc.setFillColor(20,24,20);
-    doc.rect(pad,y,innerW,6,'F');
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(6);
-    doc.setTextColor(138,144,128);
-    doc.text('MATCH',C_LABEL+1,y+4.2);
-    doc.text('PLAYER(S)',C_NAME,y+4.2);
-    doc.text('LEGS',C_LEGS,y+4.2);
-    doc.text('RESULT',C_RESULT,y+4.2);
-    doc.text('HIGH SCORES (80+)',C_SCORES,y+4.2);
-    y+=7;
-  }
+  // Column positions
+  // | Label | Player(s)          | Legs  | Result | High Scores        |
+  // | 14    | 14+12=26           | 26+55=81 | 81+14=95 | 95+20=115 → 196 |
+  const CL=pad;          // Label  col x
+  const CP=pad+12;       // Player col x  (width ~52)
+  const CG=pad+65;       // Legs   col x  (width ~12)
+  const CR=pad+80;       // Result col x  (width ~22)
+  const CS=pad+105;      // Scores col x  (width = W-pad-CS = ~91)
+  const SW=W-pad-CS;     // Score area width
+  const CHIP_W=11;       // Each score chip width
+  const PER_ROW=Math.floor(SW/CHIP_W);
 
-  // ── Section header ──
   function sectionHeader(title){
-    doc.setFillColor(74,124,89);
+    if(y>272){doc.addPage();y=14;}
+    doc.setFillColor(GREEN[0],GREEN[1],GREEN[2]);
     doc.rect(pad,y,innerW,7,'F');
-    doc.setTextColor(255,255,255);
     doc.setFont('helvetica','bold');
     doc.setFontSize(8);
-    doc.text(title.toUpperCase(),pad+3,y+5);
+    doc.setTextColor(255,255,255);
+    doc.text(title,pad+3,y+5);
     y+=8;
-    colHeaders();
+    // Column headers
+    doc.setFillColor(20,28,20);
+    doc.rect(pad,y,innerW,5.5,'F');
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(6);
+    doc.setTextColor(DIM[0],DIM[1],DIM[2]);
+    doc.text('MATCH',CL+1,y+4);
+    doc.text('PLAYER(S)',CP,y+4);
+    doc.text('LEGS',CG,y+4);
+    doc.text('RESULT',CR,y+4);
+    doc.text('HIGH SCORES (80+)',CS,y+4);
+    y+=6.5;
   }
 
-  // ── Match row with wrapping scores ──
-  function matchRow(label,names,result,scores,legs){
-    const isWin=result==='win',isLoss=result==='loss';
-    // Calculate how many score rows needed
-    const scoreRows=scores&&scores.length?Math.ceil(scores.length/SCORES_PER_ROW):0;
+  function drawRow(label,playerStr,legsStr,result,scores){
+    const isWin=result==='win';
+    const isLoss=result==='loss';
+    // Truncate player string
+    const maxPLen=52/2.2; // approx chars at 8pt
+    const pStr=playerStr.length>maxPLen?playerStr.substring(0,maxPLen-1)+'…':playerStr;
+    // Calculate rows needed for scores
+    const scoreRows=scores&&scores.length?Math.ceil(scores.length/PER_ROW):0;
     const extraRows=Math.max(0,scoreRows-1);
-    const baseH=12;
-    const rowH=baseH+(extraRows*5);
-
-    // Check page overflow
-    if(y+rowH>275){
-      doc.addPage();
-      y=20;
-      colHeaders();
-    }
-
+    const baseH=10;
+    const rowH=baseH+(extraRows*6);
+    if(y+rowH>278){doc.addPage();y=14;}
     // Row background
-    if(isWin){doc.setFillColor(26,42,30);}
-    else if(isLoss){doc.setFillColor(34,26,26);}
-    else{doc.setFillColor(30,37,30);}
+    if(isWin)doc.setFillColor(22,38,26);
+    else if(isLoss)doc.setFillColor(36,22,22);
+    else doc.setFillColor(26,30,26);
     doc.rect(pad,y,innerW,rowH,'F');
-
-    // Vertical dividers
-    doc.setDrawColor(50,60,50);
-    doc.setLineWidth(0.2);
-    doc.line(C_NAME-1,y,C_NAME-1,y+rowH);
-    doc.line(C_LEGS-1,y,C_LEGS-1,y+rowH);
-    doc.line(C_RESULT-1,y,C_RESULT-1,y+rowH);
-    doc.line(C_SCORES-1,y,C_SCORES-1,y+rowH);
-
-    const textY=y+7.5;
-
+    // Divider lines
+    doc.setDrawColor(45,58,45);
+    doc.setLineWidth(0.15);
+    [CP-1,CG-1,CR-1,CS-1].forEach(function(x){
+      doc.line(x,y,x,y+rowH);
+    });
+    const ty=y+6.5;
     // Label
     doc.setFont('helvetica','bold');
     doc.setFontSize(7);
-    doc.setTextColor(138,144,128);
-    doc.text(label,C_LABEL+2,textY);
-
-    // Player names - wrap if needed
+    doc.setTextColor(DIM[0],DIM[1],DIM[2]);
+    doc.text(label,CL+1,ty);
+    // Player
     doc.setFont('helvetica','normal');
     doc.setFontSize(8);
-    doc.setTextColor(224,216,200);
-    var nameStr=names.length>28?names.substring(0,26)+'…':names;
-    doc.text(nameStr,C_NAME,textY);
-
+    doc.setTextColor(TEXT[0],TEXT[1],TEXT[2]);
+    doc.text(pStr,CP,ty);
     // Legs
-    if(legs){
+    if(legsStr){
       doc.setFont('helvetica','bold');
       doc.setFontSize(8);
-      doc.setTextColor(224,216,200);
-      doc.text(legs,C_LEGS,textY);
+      doc.setTextColor(TEXT[0],TEXT[1],TEXT[2]);
+      doc.text(legsStr,CG,ty);
     }
-
     // Result badge
     if(isWin||isLoss){
-      doc.setFillColor(isWin?74:122,isWin?136:32,isWin?85:32);
-      doc.roundedRect(C_RESULT,y+3,16,6,1,1,'F');
+      doc.setFillColor(isWin?40:100,isWin?100:30,isWin?55:30);
+      doc.roundedRect(CR,y+2.5,18,6,1,1,'F');
       doc.setFont('helvetica','bold');
       doc.setFontSize(7);
-      doc.setTextColor(isWin?WIN_TXT[0]:LOSS_TXT[0],isWin?WIN_TXT[1]:LOSS_TXT[1],isWin?WIN_TXT[2]:LOSS_TXT[2]);
-      doc.text(isWin?'WIN':'LOSS',C_RESULT+8,y+7.5,'center');
+      doc.setTextColor(isWin?WIN_COL[0]:LOSS_COL[0],isWin?WIN_COL[1]:LOSS_COL[1],isWin?WIN_COL[2]:LOSS_COL[2]);
+      doc.text(isWin?'WIN':'LOSS',CR+9,y+7,'center');
     }
-
-    // Scores - wrap across multiple rows
+    // Score chips — wrap across rows
     if(scores&&scores.length){
       for(var row=0;row<scoreRows;row++){
-        var rowScores=scores.slice(row*SCORES_PER_ROW,(row+1)*SCORES_PER_ROW);
-        var sy=y+7.5+(row*5);
+        var rowScores=scores.slice(row*PER_ROW,(row+1)*PER_ROW);
+        var sy=y+5+(row*6);
         rowScores.forEach(function(v,ci){
-          var cx=C_SCORES+(ci*SCORE_CHIP_W);
-          // Chip background
-          if(v===180){doc.setFillColor(90,48,0);}
-          else{doc.setFillColor(58,46,0);}
-          doc.roundedRect(cx,sy-4.5,9,5.5,0.5,0.5,'F');
+          var cx=CS+(ci*CHIP_W);
+          doc.setFillColor(v>=180?80:v>=140?60:50,v>=180?40:38,v>=180?0:0);
+          doc.roundedRect(cx,sy-4,CHIP_W-1,5,0.5,0.5,'F');
           doc.setFont('helvetica','bold');
           doc.setFontSize(6.5);
-          doc.setTextColor(232,200,64);
-          doc.text(String(v),cx+4.5,sy,'center');
+          doc.setTextColor(AMBER[0],AMBER[1],AMBER[2]);
+          doc.text(String(v),cx+(CHIP_W-1)/2,sy,'center');
         });
       }
     }
-
-    y+=rowH+1;
+    y+=rowH+0.5;
   }
 
-  sectionHeader('Singles');
-  singles.forEach(function(s,i){
-    var legsStr=s.legsFor!==undefined?(s.legsFor+'-'+s.legsAgainst):'';
-    matchRow('S'+(i+1),s.player||'—',s.result,s.scores||[],legsStr);
-  });
-  y+=3;
+  // Singles
+  if(singles.length){
+    sectionHeader('SINGLES');
+    singles.forEach(function(s,i){
+      var legs=(s.legsFor!==undefined&&s.legsAgainst!==undefined)?s.legsFor+'-'+s.legsAgainst:'';
+      drawRow('S'+(i+1),s.player||'—',legs,s.result,s.scores||[]);
+    });
+    y+=2;
+  }
 
-  sectionHeader('Doubles');
-  doubles.forEach(function(d,i){
-    var names=(d.p1||'—')+' & '+(d.p2||'—');
-    var allScores=[].concat(d.scores1||[]).concat(d.scores2||[]);
-    var legsStr=d.legsFor!==undefined?(d.legsFor+'-'+d.legsAgainst):'';
-    matchRow('D'+(i+1),names,d.result,allScores,legsStr);
-  });
-  y+=3;
+  // Doubles
+  if(doubles.length){
+    sectionHeader('DOUBLES');
+    doubles.forEach(function(d,i){
+      var names=(d.p1||'—')+' & '+(d.p2||'—');
+      var allScores=[].concat(d.scores1||[]).concat(d.scores2||[]);
+      var legs=(d.legsFor!==undefined&&d.legsAgainst!==undefined)?d.legsFor+'-'+d.legsAgainst:'';
+      drawRow('D'+(i+1),names,legs,d.result,allScores);
+    });
+    y+=2;
+  }
 
+  // Team game
   if(team4&&team4.result!==undefined){
-    sectionHeader('The Gallon');
+    sectionHeader('TEAM GAME');
     var tNames=[team4.p1,team4.p2,team4.p3,team4.p4].filter(Boolean).join(', ')||'—';
     var tScores=(team4.scores||[]).reduce(function(a,b){return a.concat(b);},[]);
-    matchRow('4v4',tNames,team4.result,tScores,'');
-    y+=3;
+    drawRow('4v4',tNames,'',team4.result,tScores);
+    y+=2;
   }
 
-  // ── Footer ──
-  if(y+10>280){doc.addPage();y=20;}
-  doc.setDrawColor(74,124,89);
-  doc.setLineWidth(0.5);
+  // ── Footer ──────────────────────────────────────────────────────────────────
+  if(y+8>282){doc.addPage();y=14;}
+  doc.setDrawColor(GREEN[0],GREEN[1],GREEN[2]);
+  doc.setLineWidth(0.4);
   doc.line(pad,y,W-pad,y);
-  y+=5;
+  y+=4;
   doc.setFont('helvetica','normal');
   doc.setFontSize(7);
-  doc.setTextColor(138,144,128);
-  doc.text('Generated by Flight Chalker · flightchalker.co.uk/Team',W/2,y,'center');
+  doc.setTextColor(DIM[0],DIM[1],DIM[2]);
+  doc.text('Flight Chalker League Platform · flightchalker.co.uk',W/2,y,'center');
 
   const safeName=m.opponent.replace(/[^a-z0-9]/gi,'_').toLowerCase();
-  doc.save('flight-chalker-'+safeName+'-'+m.match_date+'.pdf');
+  doc.save('match-'+safeName+'-'+m.match_date+'.pdf');
 }async function loadFixtures(){try{const rows=await sb('_fx?order=fixture_date.asc');return rows||[];}catch(e){try{return JSON.parse(localStorage.getItem('dart_fixtures')||'[]');}catch(e2){return[];}}}async function addFixture(){const date=document.getElementById('fx-date').value;const opp=document.getElementById('fx-opp').value.trim();const venue=document.getElementById('fx-venue').value;if(!date){toast('Please set a date');return;}if(!opp){toast('Please enter opponent name');return;}const fixture={fixture_date:date,opponent:opp,venue};if(SB_URL&&SB_KEY){try{await sb('_fx',{method:'POST',prefer:'return=minimal',body:JSON.stringify(fixture)});}catch(e){const local=JSON.parse(localStorage.getItem('dart_fixtures')||'[]');local.push({...fixture,id:Date.now().toString()});local.sort((a,b)=>a.fixture_date.localeCompare(b.fixture_date));localStorage.setItem('dart_fixtures',JSON.stringify(local));toast(opp+' added(local only — see setup note)');document.getElementById('fx-opp').value='';renderFixtures();return;}}else{const local=JSON.parse(localStorage.getItem('dart_fixtures')||'[]');local.push({...fixture,id:Date.now().toString()});local.sort((a,b)=>a.fixture_date.localeCompare(b.fixture_date));localStorage.setItem('dart_fixtures',JSON.stringify(local));}document.getElementById('fx-opp').value='';toast(opp+' fixture added');renderFixtures();}async function deleteFixture(id){if(SB_URL&&SB_KEY){try{await sb('_fx?id=eq.'+id,{method:'DELETE'});}catch(e){let local=JSON.parse(localStorage.getItem('dart_fixtures')||'[]');local=local.filter(f=>f.id!==id);localStorage.setItem('dart_fixtures',JSON.stringify(local));}}else{let local=JSON.parse(localStorage.getItem('dart_fixtures')||'[]');local=local.filter(f=>String(f.id)!==String(id));localStorage.setItem('dart_fixtures',JSON.stringify(local));}toast('Fixture removed');renderFixtures();}function recordFixture(date,opp,venue){document.getElementById('mdate').value=date;document.getElementById('mopp').value=opp;document.getElementById('mvenue').value=venue;updateBar();sw('match');toast('Loaded:vs '+opp);}async function renderFixtures(){const el=document.getElementById('fxlist');if(!el)return;el.innerHTML='<div class="lh"><span class="spin"></span>Loading…</div>';const _fx=await loadFixtures();if(!_fx.length){el.innerHTML='<div class="nh">No _fx added yet.</div>';return;}const today=new Date();today.setHours(0,0,0,0);el.innerHTML=_fx.map(f=>{const d=new Date(f.fixture_date+'T00:00:00');const fmt=d.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});const diffDays=Math.round((d-today)/(1000*60*60*24));let daysLabel,daysClass;if(diffDays===0){daysLabel='Today!';daysClass='fx-days today';}else if(diffDays===1){daysLabel='Tomorrow';daysClass='fx-days';}else if(diffDays<0){daysLabel=Math.abs(diffDays)+'d ago';daysClass='fx-days past';}else{daysLabel='In '+diffDays+'d';daysClass='fx-days';}const isPast=diffDays<0;return '<div class="fx-entry'+(isPast?' past':'')+'">'+'<div class="fx-date">'+fmt+'</div>'+'<div class="fx-opp">'+esc(f.opponent)+'</div>'+'<div class="fx-venue">'+f.venue+'</div>'+'<div class="'+daysClass+'">'+daysLabel+'</div>'+'<div class="fx-actions">'+(isPast?'':'<button class="hb" onclick="recordFixture(&quot;'+f.fixture_date+'&quot;,&quot;'+esc(f.opponent)+'&quot;,&quot;'+f.venue+'&quot;)">Record Results</button>')+'<button class="hb del" onclick="deleteFx(&quot;'+f.id+'&quot;)">Delete</button>'+'</div>'+'</div>';}).join('');}function deleteFx(id){deleteFixture(id);}function toast(msg,isErr=false){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(isErr?' err':'')+' show';setTimeout(()=>t.classList.remove('show'),2500);}function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 </script>
