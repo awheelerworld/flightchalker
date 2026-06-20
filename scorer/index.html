@@ -424,6 +424,13 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
 
 <script>
 // ── Checkout table ─────────────────────────────────────────────────────────────
+// ── Access guard ──────────────────────────────────────────────────────────────
+(function(){
+  var hasAccess=localStorage.getItem('mld_access')==='1';
+  if(!hasAccess){
+    window.location.href='https://flightchalker.co.uk/?msg=login';
+  }
+})();
 const CHECKOUTS={
   170:'T20 T20 Bull',167:'T20 T19 Bull',164:'T20 T18 Bull',161:'T20 T17 Bull',
   160:'T20 T20 D20',158:'T20 T20 D19',157:'T20 T19 D20',156:'T20 T20 D18',
