@@ -12,7 +12,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzE0MTgxNCIvPgogIDxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YTdjNTkiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNGE3YzU5IiBzdHJva2Utd2lkdGg9IjEiLz4KICA8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI0IiBmaWxsPSIjZThjODQwIi8+Cjwvc3ZnPg==">
-<title>🎯 Flight Chalker — League Platform v28</title>
+<title>🎯 Flight Chalker — League Platform v29</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -423,6 +423,9 @@ html{scroll-behavior:smooth}
   <!-- Login section -->
   <div id="section-login" class="section-anchor" style="display:flex;justify-content:center;padding:2rem 1rem;border-top:1px solid var(--border);scroll-margin-top:0">
     <div class="auth-card">
+      <div id="login-access-notice" style="display:none;background:#2a1a00;border:1px solid var(--amber);border-radius:6px;padding:.75rem 1rem;margin-bottom:1rem;font-size:.85rem;color:var(--amber)">
+        🔒 Please log in with your team name and PIN to access Play Darts and Training Zone.
+      </div>
       <h2>Team Login</h2>
       <p>Enter your team name and PIN to access your league scorer.</p>
       <div class="afield"><label>Team Name</label><input type="text" id="login-team" placeholder="e.g. The Crown Arrows"></div>
@@ -827,6 +830,7 @@ function logout(){
   currentTeam=null;currentLeague=null;players=[];matchHistory=[];leagueFixtures=[];leagueTeams=[];
   localStorage.removeItem('mld_session');
   localStorage.removeItem('mld_admin');
+  localStorage.removeItem('mld_access');
   // Redirect to home with no session - prevents flash
   window.location.href='/';
 }
@@ -843,9 +847,22 @@ document.addEventListener('DOMContentLoaded',async function(){
 
   // Check for logout param FIRST before reading session
   var params=new URLSearchParams(window.location.search);
+  if(params.get('msg')==='login'){
+    window.history.replaceState({},'/','/');
+    showScreen('screen-landing');
+    setTimeout(function(){
+      var el=document.getElementById('section-login');
+      if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+      // Show a notice above the login form
+      var notice=document.getElementById('login-access-notice');
+      if(notice)notice.style.display='block';
+    },200);
+    return;
+  }
   if(params.get('logout')==='1'){
     localStorage.removeItem('mld_session');
     localStorage.removeItem('mld_admin');
+    localStorage.removeItem('mld_access');
     currentTeam=null;currentLeague=null;
     window.history.replaceState({},'','/');
     showScreen('screen-landing');
@@ -983,6 +1000,7 @@ async function loginTeam(){
     if(!leagueRows||!leagueRows.length){st.textContent='League not found.';st.className='ast err';sp.style.display='none';return;}
     currentTeam=team;currentTeam.score_threshold=team.score_threshold||80;currentLeague=leagueRows[0];
     localStorage.setItem('mld_session',JSON.stringify({team:currentTeam,league:currentLeague}));
+    localStorage.setItem('mld_access','1');
     await loadTeamData();
     showScreen('screen-app');
   }catch(e){st.textContent='Error: '+e.message;st.className='ast err';}
@@ -992,6 +1010,7 @@ async function loginTeam(){
 // ── Admin login ───────────────────────────────────────────────────────────────
 function adminLogin(){
   localStorage.setItem('mld_admin','1');
+  localStorage.setItem('mld_access','1');
   localStorage.removeItem('mld_session');
   currentTeam=null;currentLeague=null;
   showScreen('screen-admin');
