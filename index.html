@@ -12,7 +12,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzE0MTgxNCIvPgogIDxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YTdjNTkiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNGE3YzU5IiBzdHJva2Utd2lkdGg9IjEiLz4KICA8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI0IiBmaWxsPSIjZThjODQwIi8+Cjwvc3ZnPg==">
-<title>🎯 Flight Chalker — League Platform v31</title>
+<title>🎯 Flight Chalker — League Platform v32</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -760,6 +760,7 @@ html{scroll-behavior:smooth}
     <p id="wo-title" style="color:var(--text);font-size:.95rem;font-weight:600;margin-bottom:1.25rem"></p>
     <input type="hidden" id="wo-fixture-id">
     <input type="hidden" id="wo-opp">
+    <input type="hidden" id="wo-date">
     <div style="display:flex;flex-direction:column;gap:.6rem;margin-bottom:1.25rem">
       <button class="btnp" onclick="confirmWalkover('Walkover — we won',1,0)" style="background:#1a3a1e;border:1px solid var(--green);color:var(--gl)">🏆 Walkover — We Won</button>
       <button class="btnp" onclick="confirmWalkover('Walkover — we lost',0,1)" style="background:#3a1a1a;border:1px solid var(--red);color:#ff8080">❌ Walkover — We Lost</button>
@@ -1447,7 +1448,7 @@ async function renderFixtures(){
           +' <button class="hb" onclick="editExistingResult(\''+f.fixture_date+'\',\''+esc(oppName)+'\',\''+venue.toLowerCase()+'\')">Edit</button>';
       } else {
         buttons='<button class="hb" onclick="loadFixtureToMatch(\''+f.fixture_date+'\',\''+esc(oppName)+'\',\''+venue.toLowerCase()+'\')">Record</button>'
-          +' <button class="hb" style="border-color:#6a5200;color:var(--amber)" onclick="markWalkover(\''+f.id+'\',\''+esc(oppName)+'\')">Walkover</button>';
+          +' <button class="hb" style="border-color:#6a5200;color:var(--amber)" onclick="markWalkover(\''+f.id+'\',\''+esc(oppName)+'\',\''+f.fixture_date+'\')">Walkover</button>';
       }
       return '<div class="fx-entry'+(diff===0?' today':'')+'"><div class="fx-date">'+fmt+'</div>'
         +'<div class="fx-teams">'+esc(currentTeam.team_name)+'<span class="vs">vs</span>'+esc(oppName)+'</div>'
@@ -1473,21 +1474,21 @@ function loadFixtureToMatch(date,opp,venue){
   updateBar();sw('match');toast('Loaded: vs '+opp);
 }
 
-function markWalkover(fixtureId,oppName){
-  // Show modal
+function markWalkover(fixtureId,oppName,fixtureDate){
   var mo=document.getElementById('walkover-modal');
   document.getElementById('wo-title').textContent='vs '+oppName;
   document.getElementById('wo-fixture-id').value=fixtureId;
   document.getElementById('wo-opp').value=oppName;
+  document.getElementById('wo-date').value=fixtureDate||new Date().toISOString().split('T')[0];
   mo.classList.add('open');
 }
 
 async function confirmWalkover(reason,wins,losses){
   var fixtureId=document.getElementById('wo-fixture-id').value;
   var oppName=document.getElementById('wo-opp').value;
+  var date=document.getElementById('wo-date').value||new Date().toISOString().split('T')[0];
   closeWalkoverModal();
   try{
-    var date=new Date().toISOString().split('T')[0];
     await sb('team_matches',{method:'POST',prefer:'return=minimal',
       body:JSON.stringify({
         team_id:currentTeam.id,
@@ -1504,6 +1505,7 @@ async function confirmWalkover(reason,wins,losses){
     await sbPatch('league_fixtures','id=eq.'+fixtureId,{played:true});
     toast(reason+' recorded');
     renderFixtures();
+    renderHistory();
   }catch(e){toast('Error: '+e.message,true);}
 }
 
