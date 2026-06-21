@@ -389,15 +389,9 @@ const DEFAULTS=['Adam Pilgrim','Morgan Wills','Adam Wheeler','Lee Pilgrim','Andr
   }
 
 function drawRow(label,player,legs,result,scores){
-  const isWin=result==='win',isLoss=result==='loss';
-  const CHIP=9;
-  var BX=W-pad-20;
-  var BW=18;
-  var SS=pad+64;
-  var SE=BX-12;
-  var CPR=Math.floor((SE-SS)/CHIP);
-  var sRows=scores&&scores.length?Math.ceil(scores.length/CPR):0;
-  var rH=Math.max(11,9+(sRows>1?(sRows-1)*6:0));
+  var isWin=result==='win',isLoss=result==='loss';
+  var hasScores=scores&&scores.length>0;
+  var rH=hasScores?18:11;
   if(y+rH>278){doc.addPage();y=14;}
   setF(isWin?[22,40,26]:isLoss?[40,20,20]:[26,32,26]);
   doc.rect(pad,y,W-pad*2,rH,'F');
@@ -407,33 +401,31 @@ function drawRow(label,player,legs,result,scores){
   doc.setFont('helvetica','bold');doc.setFontSize(7);setC(C.dim);
   doc.text(label,pad+1,ty);
   doc.setFont('helvetica','normal');doc.setFontSize(8);setC(C.text);
-  var mc=Math.floor(48/2.2);
+  var mc=Math.floor(55/2.2);
   var ps=player.length>mc?player.substring(0,mc-1)+'\u2026':player;
   doc.text(ps,pad+10,ty);
-  if(legs){doc.setFont('helvetica','bold');doc.setFontSize(8);setC(C.text);doc.text(legs,pad+52,ty);}
+  if(legs){doc.setFont('helvetica','bold');doc.setFontSize(8);setC(C.text);doc.text(legs,pad+68,ty);}
   if(isWin||isLoss){
     setF(isWin?C.win:C.loss);
-    doc.roundedRect(BX,y+2.5,BW,6,1,1,'F');
+    doc.roundedRect(pad+80,y+2.5,18,6,1,1,'F');
     doc.setFont('helvetica','bold');doc.setFontSize(7);
     setC(isWin?C.winTxt:C.lossTxt);
-    doc.text(isWin?'WIN':'LOSS',BX+BW/2,y+7,'center');
+    doc.text(isWin?'WIN':'LOSS',pad+89,y+7,'center');
   }
-  if(scores&&scores.length){
-    scores.forEach(function(v,i){
-      var r=Math.floor(i/CPR);
-      var c=i%CPR;
-      var cx=SS+(c*CHIP);
-      if(cx+CHIP>SE)return;
-      var cy=y+2+(r*6);
+  if(hasScores){
+    var cx=pad+10;
+    var cy=y+11;
+    scores.forEach(function(v){
       setF(v>=180?[90,50,0]:v>=140?[70,48,0]:[55,42,0]);
-      doc.roundedRect(cx,cy,CHIP-1,5,0.5,0.5,'F');
+      doc.roundedRect(cx,cy,9,5,0.5,0.5,'F');
       doc.setFont('helvetica','bold');doc.setFontSize(6.5);setC(C.amber);
-      doc.text(String(v),cx+(CHIP-1)/2,cy+3.8,'center');
+      doc.text(String(v),cx+4.5,cy+3.8,'center');
+      cx+=10;
+      if(cx>W-pad-12){cx=pad+10;cy+=6;}
     });
   }
   y+=rH+0.5;
 }
-
   // Singles
   if(singles.length){
     secHeader('SINGLES');
