@@ -403,18 +403,18 @@ const DEFAULTS=['Adam Pilgrim','Morgan Wills','Adam Wheeler','Lee Pilgrim','Andr
     // Legs
 if(legs){
       doc.setFont('helvetica','bold');doc.setFontSize(8);setC(C.text);
-      doc.text(legs,pad+50,ty);
+      doc.text(legs,pad+60,ty);
     }
     if(isWin||isLoss){
       setF(isWin?C.win:C.loss);
-      doc.roundedRect(pad+60,y+2,14,6,1,1,'F');
+      doc.roundedRect(pad+74,y+2,16,6,1,1,'F');
       doc.setFont('helvetica','bold');doc.setFontSize(7);
       setC(isWin?C.winTxt:C.lossTxt);
-      doc.text(isWin?'WIN':'LOSS',pad+67,y+6.5,'center');
+      doc.text(isWin?'WIN':'LOSS',pad+82,y+6.5,'center');
     }
     // Score chips
     if(scores&&scores.length){
-      const SX=pad+76;
+      const SX=pad+92;
       scores.forEach(function(v,i){
         const row=Math.floor(i/PER);
         const col=i%PER;
