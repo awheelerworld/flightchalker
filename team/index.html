@@ -402,13 +402,13 @@ function drawRow(label,player,legs,result,scores){
     }
     if(isWin||isLoss){
       setF(isWin?C.win:C.loss);
-      doc.roundedRect(W-pad-20,y+2.5,18,6,1,1,'F');
+      doc.roundedRect(W-pad-18,y+2.5,16,6,1,1,'F');
       doc.setFont('helvetica','bold');doc.setFontSize(7);
       setC(isWin?C.winTxt:C.lossTxt);
-      doc.text(isWin?'WIN':'LOSS',W-pad-11,y+7,'center');
+      doc.text(isWin?'WIN':'LOSS',W-pad-10,y+7,'center');
     }
     if(scores&&scores.length){
-      var SX=pad+64;
+      var SX=pad+62;
       var maxWidth=W-pad-22-SX;
       var chipsPerRow=Math.floor(maxWidth/CHIP);
       scores.forEach(function(v,i){
