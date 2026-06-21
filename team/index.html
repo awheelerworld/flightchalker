@@ -390,51 +390,54 @@ const DEFAULTS=['Adam Pilgrim','Morgan Wills','Adam Wheeler','Lee Pilgrim','Andr
 
   function drawRow(label,player,legs,result,scores){
     const isWin=result==='win',isLoss=result==='loss';
-    const CHIP=9,PER=8;
-    // Recalculate rows based on actual chips per row
-    var BADGE_X2=W-pad-22;
-    var chipsPerRow2=Math.floor((BADGE_X2-(pad+64))/CHIP);
-    const scoreRows=scores&&scores.length?Math.ceil(scores.length/chipsPerRow2):0;
-    const rH=Math.max(11,9+(scoreRows>1?(scoreRows-1)*6:0));
+    const CHIP=9;
+    // Badge is fixed at right edge
+    var BADGE_X=W-pad-20;  // badge starts here x=178
+    var BADGE_W=18;         // badge width
+    // Scores start after legs and must end before badge
+    var SCORES_START=pad+64;  // x=76
+    var SCORES_END=BADGE_X-2; // x=176, 2mm gap before badge
+    var SCORES_W=SCORES_END-SCORES_START; // 100mm available
+    var chipsPerRow=Math.floor(SCORES_W/CHIP); // 11 chips max
+    // Calculate row height based on how many score rows needed
+    var scoreRows=scores&&scores.length?Math.ceil(scores.length/chipsPerRow):0;
+    var rH=Math.max(11,9+(scoreRows>1?(scoreRows-1)*6:0));
     if(y+rH>278){doc.addPage();y=14;}
     // Row background
     setF(isWin?[22,40,26]:isLoss?[40,20,20]:[26,32,26]);
     doc.rect(pad,y,W-pad*2,rH,'F');
-    // Bottom border
     setD([45,60,45]);doc.setLineWidth(0.1);
     doc.line(pad,y+rH,W-pad,y+rH);
-    const ty=y+7;
-    // Label - far left
+    var ty=y+7;
+    // Label
     doc.setFont('helvetica','bold');doc.setFontSize(7);setC(C.dim);
     doc.text(label,pad+1,ty);
-    // Player name - truncated to 40mm
+    // Player name
     doc.setFont('helvetica','normal');doc.setFontSize(8);setC(C.text);
-    var maxChars=Math.floor(40/2.2);
+    var maxChars=Math.floor(48/2.2);
     var pStr=player.length>maxChars?player.substring(0,maxChars-1)+'…':player;
     doc.text(pStr,pad+10,ty);
-    // Legs - fixed position
+    // Legs
     if(legs){
       doc.setFont('helvetica','bold');doc.setFontSize(8);setC(C.text);
       doc.text(legs,pad+52,ty);
     }
-    // WIN/LOSS badge - fixed to RIGHT edge
+    // WIN/LOSS badge - draw FIRST at fixed right position
     if(isWin||isLoss){
       setF(isWin?C.win:C.loss);
-      doc.roundedRect(W-pad-20,y+2.5,18,6,1,1,'F');
+      doc.roundedRect(BADGE_X,y+2.5,BADGE_W,6,1,1,'F');
       doc.setFont('helvetica','bold');doc.setFontSize(7);
       setC(isWin?C.winTxt:C.lossTxt);
-      doc.text(isWin?'WIN':'LOSS',W-pad-11,y+7,'center');
+      doc.text(isWin?'WIN':'LOSS',BADGE_X+BADGE_W/2,y+7,'center');
     }
-    // Score chips - start after legs, stop before badge
-    // Available width: from pad+64 to W-pad-22 = 210-12-22-12-64 = 100mm
+    // Score chips - strictly within SCORES_START to SCORES_END
     if(scores&&scores.length){
-      var SX=pad+64;
-      var BADGE_X=W-pad-22;
-      var chipsPerRow=Math.floor((BADGE_X-SX)/CHIP);
       scores.forEach(function(v,i){
         var row=Math.floor(i/chipsPerRow);
         var col=i%chipsPerRow;
-        var cx=SX+(col*CHIP);
+        var cx=SCORES_START+(col*CHIP);
+        // Safety check - never draw past SCORES_END
+        if(cx+CHIP>SCORES_END)return;
         var cy=y+2+(row*6);
         setF(v>=180?[90,50,0]:v>=140?[70,48,0]:[55,42,0]);
         doc.roundedRect(cx,cy,CHIP-1,5,0.5,0.5,'F');
