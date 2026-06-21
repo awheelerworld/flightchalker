@@ -437,7 +437,38 @@ const DEFAULTS=['Adam Pilgrim','Morgan Wills','Adam Wheeler','Lee Pilgrim','Andr
       });
     }
     y+=rH+0.5;
+  }if(singles.length){
+    secHeader('SINGLES');
+    singles.forEach(function(s,i){
+      var legs=s.legsFor!==undefined?s.legsFor+'-'+s.legsAgainst:'';
+      drawRow('S'+(i+1),s.player||'\u2014',legs,s.result,s.scores||[]);
+    });
+    y+=3;
   }
+  if(doubles.length){
+    secHeader('DOUBLES');
+    doubles.forEach(function(d,i){
+      var names=(d.p1||'\u2014')+' & '+(d.p2||'\u2014');
+      var sc=[].concat(d.scores1||[]).concat(d.scores2||[]);
+      var legs=d.legsFor!==undefined?d.legsFor+'-'+d.legsAgainst:'';
+      drawRow('D'+(i+1),names,legs,d.result,sc);
+    });
+    y+=3;
+  }
+  if(team4&&(team4.result!==undefined)){
+    secHeader('TEAM GAME');
+    var tp=[team4.p1,team4.p2,team4.p3,team4.p4].filter(Boolean).join(', ')||'\u2014';
+    var ts=(team4.scores||[]).reduce(function(a,b){return a.concat(b);},[]);
+    drawRow('4v4',tp,'',team4.result,ts);
+    y+=3;
+  }
+  if(y+8>282){doc.addPage();y=14;}
+  setD(C.green);doc.setLineWidth(0.3);doc.line(pad,y,W-pad,y);y+=4;
+  doc.setFont('helvetica','normal');doc.setFontSize(7);setC(C.dim);
+  doc.text('Flight Chalker \u00b7 flightchalker.co.uk/Team',W/2,y,'center');
+  const safe=m.opponent.replace(/[^a-z0-9]/gi,'_').toLowerCase();
+  doc.save('match-'+safe+'-'+m.match_date+'.pdf');
+}
 
   // Singles
   if(singles.length){
