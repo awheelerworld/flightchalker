@@ -462,23 +462,50 @@ const DEFAULTS=['Adam Pilgrim','Morgan Wills','Adam Wheeler','Lee Pilgrim','Andr
   }
 
   // Team game
-  if(team4&&(team4.result!==undefined)){
-    secHeader('TEAM GAME');
-    var tp=[team4.p1,team4.p2,team4.p3,team4.p4].filter(Boolean).join(', ')||'—';
-    var ts=(team4.scores||[]).reduce(function(a,b){return a.concat(b);},[]);
-    drawRow('4v4',tp,'',team4.result,ts);
-    y+=3;
-  }
-
-  // Footer
-  if(y+8>282){doc.addPage();y=14;}
-  setD(C.green);doc.setLineWidth(0.3);doc.line(pad,y,W-pad,y);y+=4;
+ function downloadPDF(idx){
+  const m=history[idx];
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W=210,pad=12;
+  let y=10;
+  const C={bg:[26,37,26],dim:[100,120,100],text:[224,216,200],amber:[232,200,64],green:[74,124,89],win:[60,120,70],loss:[120,40,40],winTxt:[168,255,184],lossTxt:[255,140,140],white:[255,255,255]};
+  function setC(a){doc.setTextColor(a[0],a[1],a[2]);}
+  function setF(a){doc.setFillColor(a[0],a[1],a[2]);}
+  function setD(a){doc.setDrawColor(a[0],a[1],a[2]);}
+  setF(C.bg);doc.rect(0,0,W,18,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(13);setC(C.amber);
+  doc.text('FLIGHT CHALKER',pad,12);
   doc.setFont('helvetica','normal');doc.setFontSize(7);setC(C.dim);
-  doc.text('Flight Chalker · flightchalker.co.uk/Team',W/2,y,'center');
-
-  const safe=m.opponent.replace(/[^a-z0-9]/gi,'_').toLowerCase();
-  doc.save('match-'+safe+'-'+m.match_date+'.pdf');
-}async function loadFixtures(){try{const rows=await sb('_fx?order=fixture_date.asc');return rows||[];}catch(e){try{return JSON.parse(localStorage.getItem('dart_fixtures')||'[]');}catch(e2){return[];}}}async function addFixture(){const date=document.getElementById('fx-date').value;const opp=document.getElementById('fx-opp').value.trim();const venue=document.getElementById('fx-venue').value;if(!date){toast('Please set a date');return;}if(!opp){toast('Please enter opponent name');return;}const fixture={fixture_date:date,opponent:opp,venue};if(SB_URL&&SB_KEY){try{await sb('_fx',{method:'POST',prefer:'return=minimal',body:JSON.stringify(fixture)});}catch(e){const local=JSON.parse(localStorage.getItem('dart_fixtures')||'[]');local.push({...fixture,id:Date.now().toString()});local.sort((a,b)=>a.fixture_date.localeCompare(b.fixture_date));localStorage.setItem('dart_fixtures',JSON.stringify(local));toast(opp+' added(local only — see setup note)');document.getElementById('fx-opp').value='';renderFixtures();return;}}else{const local=JSON.parse(localStorage.getItem('dart_fixtures')||'[]');local.push({...fixture,id:Date.now().toString()});local.sort((a,b)=>a.fixture_date.localeCompare(b.fixture_date));localStorage.setItem('dart_fixtures',JSON.stringify(local));}document.getElementById('fx-opp').value='';toast(opp+' fixture added');renderFixtures();}async function deleteFixture(id){if(SB_URL&&SB_KEY){try{await sb('_fx?id=eq.'+id,{method:'DELETE'});}catch(e){let local=JSON.parse(localStorage.getItem('dart_fixtures')||'[]');local=local.filter(f=>f.id!==id);localStorage.setItem('dart_fixtures',JSON.stringify(local));}}else{let local=JSON.parse(localStorage.getItem('dart_fixtures')||'[]');local=local.filter(f=>String(f.id)!==String(id));localStorage.setItem('dart_fixtures',JSON.stringify(local));}toast('Fixture removed');renderFixtures();}function recordFixture(date,opp,venue){document.getElementById('mdate').value=date;document.getElementById('mopp').value=opp;document.getElementById('mvenue').value=venue;updateBar();sw('match');toast('Loaded:vs '+opp);}async function renderFixtures(){const el=document.getElementById('fxlist');if(!el)return;el.innerHTML='<div class="lh"><span class="spin"></span>Loading…</div>';const _fx=await loadFixtures();if(!_fx.length){el.innerHTML='<div class="nh">No _fx added yet.</div>';return;}const today=new Date();today.setHours(0,0,0,0);el.innerHTML=_fx.map(f=>{const d=new Date(f.fixture_date+'T00:00:00');const fmt=d.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});const diffDays=Math.round((d-today)/(1000*60*60*24));let daysLabel,daysClass;if(diffDays===0){daysLabel='Today!';daysClass='fx-days today';}else if(diffDays===1){daysLabel='Tomorrow';daysClass='fx-days';}else if(diffDays<0){daysLabel=Math.abs(diffDays)+'d ago';daysClass='fx-days past';}else{daysLabel='In '+diffDays+'d';daysClass='fx-days';}const isPast=diffDays<0;return '<div class="fx-entry'+(isPast?' past':'')+'">'+'<div class="fx-date">'+fmt+'</div>'+'<div class="fx-opp">'+esc(f.opponent)+'</div>'+'<div class="fx-venue">'+f.venue+'</div>'+'<div class="'+daysClass+'">'+daysLabel+'</div>'+'<div class="fx-actions">'+(isPast?'':'<button class="hb" onclick="recordFixture(&quot;'+f.fixture_date+'&quot;,&quot;'+esc(f.opponent)+'&quot;,&quot;'+f.venue+'&quot;)">Record Results</button>')+'<button class="hb del" onclick="deleteFx(&quot;'+f.id+'&quot;)">Delete</button>'+'</div>'+'</div>';}).join('');}function deleteFx(id){deleteFixture(id);}function toast(msg,isErr=false){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(isErr?' err':'')+' show';setTimeout(()=>t.classList.remove('show'),2500);}function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  doc.text('flightchalker.co.uk',W-pad,12,'right');
+  y=24;const league=(currentLeague&&currentLeague.name)||'';
+  const team=(currentTeam&&currentTeam.team_name)||'';
+  doc.setFont('helvetica','bold');doc.setFontSize(7);setC(C.green);
+  doc.text(league.toUpperCase(),pad,y);y+=5;
+  doc.setFont('helvetica','bold');doc.setFontSize(12);setC(C.text);
+  doc.text((team+' vs '+m.opponent).toUpperCase(),pad,y);y+=5;
+  const dt=new Date(m.match_date+'T00:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  doc.setFont('helvetica','normal');doc.setFontSize(8);setC(C.dim);
+  doc.text(dt+' \u00b7 '+(m.venue.charAt(0).toUpperCase()+m.venue.slice(1)),pad,y);y+=8;
+  const won=m.wins>m.losses;
+  setF(C.bg);doc.roundedRect(pad,y,W-pad*2,16,2,2,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(20);
+  setC(won?C.winTxt:C.lossTxt);doc.text(String(m.wins),pad+6,y+11);
+  setC(C.dim);doc.setFontSize(12);doc.text('-',pad+16,y+11);
+  setC(won?C.lossTxt:C.winTxt);doc.setFontSize(20);doc.text(String(m.losses),pad+22,y+11);
+  setF(won?C.win:C.loss);doc.roundedRect(W-pad-22,y+3,20,9,1,1,'F');
+  doc.setFont('helvetica','bold');doc.setFfunction secHeader(title){
+    if(y>272){doc.addPage();y=14;}
+    setF(C.green);doc.rect(pad,y,W-pad*2,6,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(8);setC(C.white);
+    doc.text(title,pad+2,y+4.3);y+=7;
+  }
+  function drawRow(label,player,legs,result,scores){
+    const isWin=result==='win',isLoss=result==='loss';
+    const CHIP=10,GAP=1,PER=Math.floor((W-pad*2-90)/CHIP);
+    const rows=scores&&scores.length?Math.ceil(scores.length/PER):0;
+    const rH=Math.max(10,8+(rows>1?(rows-1)*6:0));
+    if(y+rH>278){doc.addPage();y=14;}
+    setF(isWin?[22,40,26]:isLoss?[40,20,20]:[26,32,26]);async function loadFixtures(){try{const rows=await sb('_fx?order=fixture_date.asc');return rows||[];}catch(e){try{return JSON.parse(localStorage.getItem('dart_fixtures')||'[]');}catch(e2){return[];}}}async function addFixture(){const date=document.getElementById('fx-date').value;const opp=document.getElementById('fx-opp').value.trim();const venue=document.getElementById('fx-venue').value;if(!date){toast('Please set a date');return;}if(!opp){toast('Please enter opponent name');return;}const fixture={fixture_date:date,opponent:opp,venue};if(SB_URL&&SB_KEY){try{await sb('_fx',{method:'POST',prefer:'return=minimal',body:JSON.stringify(fixture)});}catch(e){const local=JSON.parse(localStorage.getItem('dart_fixtures')||'[]');local.push({...fixture,id:Date.now().toString()});local.sort((a,b)=>a.fixture_date.localeCompare(b.fixture_date));localStorage.setItem('dart_fixtures',JSON.stringify(local));toast(opp+' added(local only — see setup note)');document.getElementById('fx-opp').value='';renderFixtures();return;}}else{const local=JSON.parse(localStorage.getItem('dart_fixtures')||'[]');local.push({...fixture,id:Date.now().toString()});local.sort((a,b)=>a.fixture_date.localeCompare(b.fixture_date));localStorage.setItem('dart_fixtures',JSON.stringify(local));}document.getElementById('fx-opp').value='';toast(opp+' fixture added');renderFixtures();}async function deleteFixture(id){if(SB_URL&&SB_KEY){try{await sb('_fx?id=eq.'+id,{method:'DELETE'});}catch(e){let local=JSON.parse(localStorage.getItem('dart_fixtures')||'[]');local=local.filter(f=>f.id!==id);localStorage.setItem('dart_fixtures',JSON.stringify(local));}}else{let local=JSON.parse(localStorage.getItem('dart_fixtures')||'[]');local=local.filter(f=>String(f.id)!==String(id));localStorage.setItem('dart_fixtures',JSON.stringify(local));}toast('Fixture removed');renderFixtures();}function recordFixture(date,opp,venue){document.getElementById('mdate').value=date;document.getElementById('mopp').value=opp;document.getElementById('mvenue').value=venue;updateBar();sw('match');toast('Loaded:vs '+opp);}async function renderFixtures(){const el=document.getElementById('fxlist');if(!el)return;el.innerHTML='<div class="lh"><span class="spin"></span>Loading…</div>';const _fx=await loadFixtures();if(!_fx.length){el.innerHTML='<div class="nh">No _fx added yet.</div>';return;}const today=new Date();today.setHours(0,0,0,0);el.innerHTML=_fx.map(f=>{const d=new Date(f.fixture_date+'T00:00:00');const fmt=d.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});const diffDays=Math.round((d-today)/(1000*60*60*24));let daysLabel,daysClass;if(diffDays===0){daysLabel='Today!';daysClass='fx-days today';}else if(diffDays===1){daysLabel='Tomorrow';daysClass='fx-days';}else if(diffDays<0){daysLabel=Math.abs(diffDays)+'d ago';daysClass='fx-days past';}else{daysLabel='In '+diffDays+'d';daysClass='fx-days';}const isPast=diffDays<0;return '<div class="fx-entry'+(isPast?' past':'')+'">'+'<div class="fx-date">'+fmt+'</div>'+'<div class="fx-opp">'+esc(f.opponent)+'</div>'+'<div class="fx-venue">'+f.venue+'</div>'+'<div class="'+daysClass+'">'+daysLabel+'</div>'+'<div class="fx-actions">'+(isPast?'':'<button class="hb" onclick="recordFixture(&quot;'+f.fixture_date+'&quot;,&quot;'+esc(f.opponent)+'&quot;,&quot;'+f.venue+'&quot;)">Record Results</button>')+'<button class="hb del" onclick="deleteFx(&quot;'+f.id+'&quot;)">Delete</button>'+'</div>'+'</div>';}).join('');}function deleteFx(id){deleteFixture(id);}function toast(msg,isErr=false){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(isErr?' err':'')+' show';setTimeout(()=>t.classList.remove('show'),2500);}function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 </script>
 </body>
