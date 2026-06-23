@@ -12,7 +12,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzE0MTgxNCIvPgogIDxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YTdjNTkiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNGE3YzU5IiBzdHJva2Utd2lkdGg9IjEiLz4KICA8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI0IiBmaWxsPSIjZThjODQwIi8+Cjwvc3ZnPg==">
-<title>🎯 Flight Chalker — League Platform v37</title>
+<title>🎯 Flight Chalker — League Platform v38</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -620,6 +620,7 @@ html{scroll-behavior:smooth}
       <div id="match-rows-container"></div>
       <div class="ar">
         <div style="margin-bottom:.3rem"><span id="draft-status" style="display:none;font-size:.75rem"></span></div>
+      <button class="btns" onclick="saveMatchDraft()" style="border-color:var(--amber);color:var(--amber)"><span id="draftspin" style="display:none" class="spin"></span>💾 Save Draft</button>
       <button class="btnp" onclick="saveMatch()"><span id="savespin" style="display:none" class="spin"></span>Save & Submit</button>
         <button class="btns" onclick="clearMatch()">Clear</button>
         <button class="btn-email" onclick="emailResultsQuick()" style="font-size:.9rem;padding:.5rem 1.25rem">&#9993; Email Results</button>
@@ -1308,8 +1309,24 @@ function showDraftStatus(msg,color){
   setTimeout(function(){if(el)el.style.display='none';},4000);
 }
 
-function checkDraftRestore(){
+async function checkDraftRestore(){
+  // First check localStorage
   var draft=localStorage.getItem('dart_draft');
+  // Also check Supabase for a live draft from another user
+  if(!draft&&currentTeam&&currentTeam.id){
+    try{
+      var liveDrafts=await sb('team_matches?team_id=eq.'+currentTeam.id+'&draft=eq.true&order=created_at.desc&limit=1&select=*');
+      if(liveDrafts&&liveDrafts.length){
+        draft=JSON.stringify({
+          match_date:liveDrafts[0].match_date,
+          opponent:liveDrafts[0].opponent,
+          venue:liveDrafts[0].venue,
+          data:liveDrafts[0].data,
+          db_id:liveDrafts[0].id
+        });
+      }
+    }catch(e){}
+  }
   if(!draft)return;
   try{
     var d=JSON.parse(draft);
@@ -1317,8 +1334,10 @@ function checkDraftRestore(){
     var banner=document.getElementById('draft-banner');
     var msg=document.getElementById('draft-msg');
     if(banner&&msg){
-      msg.textContent='Unsaved draft: vs '+d.opponent+' on '+d.match_date+'. Restore?';
+      msg.textContent='Draft in progress: vs '+d.opponent+' on '+d.match_date+'. Restore?';
       banner.style.display='flex';
+      // Store for restore
+      localStorage.setItem('dart_draft',JSON.stringify(d));
     }
   }catch(e){localStorage.removeItem('dart_draft');}
 }
@@ -1361,6 +1380,54 @@ function dismissDraft(){
   if(banner)banner.style.display='none';
 }
 
+async function saveMatchDraft(){
+  var date=document.getElementById('mdate').value;
+  var opp=document.getElementById('mopp').value.trim();
+  if(!opp){toast('Please enter opponent name',true);return;}
+  if(!date){toast('Please set a date',true);return;}
+  var draft={
+    match_date:date,opponent:opp,
+    venue:document.getElementById('mvenue').value,
+    data:{
+      singles:JSON.parse(JSON.stringify(md.singles)),
+      doubles:JSON.parse(JSON.stringify(md.doubles)),
+      team4:JSON.parse(JSON.stringify(md.team4))
+    }
+  };
+  var sp=document.getElementById('draftspin');
+  if(sp)sp.style.display='inline-block';
+  try{
+    // Save to localStorage
+    localStorage.setItem('dart_draft',JSON.stringify(draft));
+    // Also save to Supabase as a live draft
+    if(currentTeam&&currentTeam.id){
+      var existing=await sb('team_matches?team_id=eq.'+currentTeam.id+'&match_date=eq.'+date+'&opponent=eq.'+encodeURIComponent(opp)+'&draft=eq.true&select=id');
+      var rec={
+        team_id:currentTeam.id,
+        match_date:date,
+        opponent:opp,
+        venue:draft.venue,
+        wins:0,losses:0,eighties:0,
+        draft:true,
+        season:(currentLeague.current_season||1),
+        data:draft.data
+      };
+      if(existing&&existing.length){
+        await sbPatch('team_matches','id=eq.'+existing[0].id,rec);
+      } else {
+        await sb('team_matches',{method:'POST',prefer:'return=minimal',body:JSON.stringify(rec)});
+      }
+    }
+    toast('Draft saved! Others can now add to this match.');
+    showDraftStatus('Draft saved — match in progress','var(--amber)');
+  }catch(e){
+    // localStorage save was successful even if Supabase failed
+    toast('Saved locally');
+    showDraftStatus('Saved locally','var(--amber)');
+  }
+  if(sp)sp.style.display='none';
+}
+
 async function saveMatch(){
   var date=document.getElementById('mdate').value;
   var opp=document.getElementById('mopp').value.trim();
@@ -1395,6 +1462,8 @@ async function saveMatch(){
       // Create new record
       await sb('team_matches',{method:'POST',prefer:'return=minimal',body:JSON.stringify(rec)});
       toast('Match saved and submitted!');localStorage.removeItem('dart_draft');
+    // Delete any live draft for this match
+    try{await sb('team_matches?team_id=eq.'+currentTeam.id+'&match_date=eq.'+date+'&opponent=eq.'+encodeURIComponent(opp)+'&draft=eq.true',{method:'DELETE'});}catch(e){}
     }
     // Mark fixture as played - check both home and away
     try{
