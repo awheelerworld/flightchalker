@@ -12,7 +12,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzE0MTgxNCIvPgogIDxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YTdjNTkiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNGE3YzU5IiBzdHJva2Utd2lkdGg9IjEiLz4KICA8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI0IiBmaWxsPSIjZThjODQwIi8+Cjwvc3ZnPg==">
-<title>🎯 Flight Chalker — League Platform v32</title>
+<title>🎯 Flight Chalker — League Platform v33</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -1609,43 +1609,130 @@ function downloadPDF(idx){
   var m=matchHistory[idx];
   var jsPDF=window.jspdf.jsPDF;
   var doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-  var W=210,pad=16,y=pad;
-  doc.setFillColor(10,21,37);doc.rect(0,0,W,22,'F');
-  doc.setTextColor(232,200,64);doc.setFont('helvetica','bold');doc.setFontSize(14);
-  doc.text('FLIGHT CHALKER — LEAGUE PLATFORM',pad,13);
-  doc.setTextColor(138,144,128);doc.setFont('helvetica','normal');doc.setFontSize(7);
-  doc.text('flightchalker.co.uk',W-pad,18,'right');y=30;
-  doc.setTextColor(138,200,255);doc.setFont('helvetica','bold');doc.setFontSize(9);
-  doc.text((currentLeague?currentLeague.name:'').toUpperCase(),pad,y);y+=6;
-  doc.setTextColor(224,216,200);doc.setFontSize(14);doc.text(currentTeam.team_name.toUpperCase()+' vs '+m.opponent.toUpperCase(),pad,y);y+=6;
-  var matchDate=new Date(m.match_date+'T00:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(138,144,128);doc.text(matchDate+' · '+m.venue.charAt(0).toUpperCase()+m.venue.slice(1),pad,y);y+=10;
+  var W=210,pad=12;
+  var y=10;
+  var C={bg:[26,37,26],dim:[100,120,100],text:[224,216,200],amber:[232,200,64],
+    green:[74,124,89],win:[60,120,70],loss:[120,40,40],
+    winTxt:[168,255,184],lossTxt:[255,140,140],white:[255,255,255]};
+  function setC(a){doc.setTextColor(a[0],a[1],a[2]);}
+  function setF(a){doc.setFillColor(a[0],a[1],a[2]);}
+  function setD(a){doc.setDrawColor(a[0],a[1],a[2]);}
+
+  // Header
+  setF(C.bg);doc.rect(0,0,W,18,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(13);setC(C.amber);
+  doc.text('FLIGHT CHALKER',pad,12);
+  doc.setFont('helvetica','normal');doc.setFontSize(7);setC(C.dim);
+  doc.text('flightchalker.co.uk',W-pad,12,'right');
+  y=24;
+
+  // League & match title
+  var league=(currentLeague&&currentLeague.name)||'';
+  var team=(currentTeam&&currentTeam.team_name)||'';
+  doc.setFont('helvetica','bold');doc.setFontSize(7);setC(C.green);
+  doc.text(league.toUpperCase(),pad,y);y+=5;
+  doc.setFont('helvetica','bold');doc.setFontSize(12);setC(C.text);
+  doc.text((team+' vs '+m.opponent).toUpperCase(),pad,y);y+=5;
+  var dt=new Date(m.match_date+'T00:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  doc.setFont('helvetica','normal');doc.setFontSize(8);setC(C.dim);
+  doc.text(dt+' · '+(m.venue.charAt(0).toUpperCase()+m.venue.slice(1)),pad,y);y+=8;
+
+  // Score box
   var won=m.wins>m.losses;
-  doc.setFillColor(26,37,26);doc.roundedRect(pad,y,W-pad*2,14,2,2,'F');
-  doc.setFont('helvetica','bold');doc.setFontSize(16);
-  doc.setTextColor(won?168:255,won?255:170,won?184:170);doc.text(String(m.wins),pad+8,y+10);
-  doc.setTextColor(138,144,128);doc.setFontSize(12);doc.text('–',pad+18,y+10);
-  doc.setTextColor(won?255:168,won?170:255,won?170:184);doc.setFontSize(16);doc.text(String(m.losses),pad+24,y+10);
-  doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(232,200,64);doc.text(won?'WIN':'LOSS',W-pad-5,y+10,'right');y+=20;
-  var mdata=m.data||{};var singles=mdata.singles||[];var doubles=mdata.doubles||[];var team4=mdata.team4||{};
-  function sHdr(t){doc.setFillColor(74,124,89);doc.rect(pad,y,W-pad*2,6,'F');doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(7);doc.text(t.toUpperCase(),pad+3,y+4.2);y+=8;}
-  function mRow(lbl,names,result,scores,legs){
-    var rh=10;var isW=result==='win',isL=result==='loss';
-    doc.setFillColor(isW?26:isL?34:30,isW?42:isL?26:37,isW?30:isL?26:30);
-    doc.rect(pad,y,W-pad*2,rh,'F');
-    doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(138,144,128);doc.text(lbl,pad+2,y+6.5);
-    doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(224,216,200);doc.text(names,pad+14,y+6.5);
-    if(legs){doc.setFontSize(7);doc.setTextColor(138,144,128);doc.text(legs,pad+80,y+6.5);}
-    if(isW||isL){var bx=W-pad-30;doc.setFillColor(isW?74:122,isW?136:32,isW?85:32);doc.roundedRect(bx,y+2,14,6,1,1,'F');doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(isW?168:255,isW?255:170,isW?184:170);doc.text(isW?'WIN':'LOSS',bx+7,y+6.5,'center');}
-    if(scores&&scores.length){doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(232,200,64);doc.text(scores.join('  '),W-pad-14,y+6.5,'right');}
-    y+=rh+1;
+  setF(C.bg);doc.roundedRect(pad,y,W-pad*2,16,2,2,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(20);
+  setC(won?C.winTxt:C.lossTxt);doc.text(String(m.wins),pad+6,y+11);
+  setC(C.dim);doc.setFontSize(12);doc.text('-',pad+16,y+11);
+  setC(won?C.lossTxt:C.winTxt);doc.setFontSize(20);doc.text(String(m.losses),pad+22,y+11);
+  setF(won?C.win:C.loss);doc.roundedRect(W-pad-22,y+3,20,9,1,1,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(9);
+  setC(won?C.winTxt:C.lossTxt);doc.text(won?'WIN':'LOSS',W-pad-12,y+9.5,'center');
+  y+=22;
+
+  var mdata=m.data||{};
+  var singles=mdata.singles||[];
+  var doubles=mdata.doubles||[];
+  var team4=mdata.team4||null;
+
+  function secHeader(title){
+    if(y>272){doc.addPage();y=14;}
+    setF(C.green);doc.rect(pad,y,W-pad*2,6,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(8);setC(C.white);
+    doc.text(title,pad+2,y+4.3);y+=7;
+    setF([20,28,20]);doc.rect(pad,y,W-pad*2,5,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(6);setC(C.dim);
+    doc.text('MATCH',pad+1,y+3.5);
+    doc.text('PLAYER(S)',pad+10,y+3.5);
+    doc.text('LEGS',pad+72,y+3.5);
+    doc.text('RESULT',W-pad-22,y+3.5);
+    y+=6;
   }
-  sHdr('Singles');singles.forEach(function(s,i){var legs=s.legsFor!==undefined?(s.legsFor+'-'+s.legsAgainst):null;mRow('S'+(i+1),s.player||'—',s.result,s.scores||[],legs);});y+=3;
-  if(doubles.length){sHdr('Doubles');doubles.forEach(function(d,i){var legs=d.legsFor!==undefined?(d.legsFor+'-'+d.legsAgainst):null;mRow('D'+(i+1),(d.p1||'—')+' & '+(d.p2||'—'),d.result,[].concat(d.scores1||[],d.scores2||[]),legs);});y+=3;}
-  if(team4&&team4.result!==undefined){sHdr('Team Game');var tN=[];for(var pi=1;pi<=6;pi++){if(team4['p'+pi])tN.push(team4['p'+pi]);}mRow('Team',tN.join(', '),team4.result,(team4.scores||[]).flat(),null);y+=3;}
-  doc.setDrawColor(74,124,89);doc.setLineWidth(.5);doc.line(pad,y,W-pad,y);y+=5;
-  doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(138,144,128);
-  doc.text('Flight Chalker League Platform · flightchalker.co.uk',W/2,y,'center');
+
+  function drawRow(label,player,legs,result,scores){
+    var isWin=result==='win',isLoss=result==='loss';
+    var s180=scores?scores.filter(function(v){return v===180;}).length:0;
+    var rH=10;
+    if(y+rH>278){doc.addPage();y=14;}
+    setF(isWin?[22,40,26]:isLoss?[40,20,20]:[26,32,26]);
+    doc.rect(pad,y,W-pad*2,rH,'F');
+    setD([45,60,45]);doc.setLineWidth(0.1);
+    doc.line(pad,y+rH,W-pad,y+rH);
+    var ty=y+6.5;
+    doc.setFont('helvetica','bold');doc.setFontSize(7);setC(C.dim);
+    doc.text(label,pad+1,ty);
+    doc.setFont('helvetica','normal');doc.setFontSize(8);setC(C.text);
+    var mc=Math.floor(58/2.2);
+    var ps=player.length>mc?player.substring(0,mc-1)+'…':player;
+    doc.text(ps,pad+10,ty);
+    if(legs){
+      doc.setFont('helvetica','bold');doc.setFontSize(8);setC(C.text);
+      doc.text(legs,pad+72,ty);
+    }
+    if(s180>0){
+      doc.setFont('helvetica','bold');doc.setFontSize(7);setC(C.amber);
+      doc.text('★ 180'+(s180>1?' x'+s180:''),pad+84,ty);
+    }
+    if(isWin||isLoss){
+      setF(isWin?C.win:C.loss);
+      doc.roundedRect(W-pad-20,y+2,18,6,1,1,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(7);
+      setC(isWin?C.winTxt:C.lossTxt);
+      doc.text(isWin?'WIN':'LOSS',W-pad-11,y+6.5,'center');
+    }
+    y+=rH+0.5;
+  }
+
+  if(singles.length){
+    secHeader('SINGLES');
+    singles.forEach(function(s,i){
+      var legs=s.legsFor!==undefined?s.legsFor+'-'+s.legsAgainst:'';
+      drawRow('S'+(i+1),s.player||'—',legs,s.result,s.scores||[]);
+    });
+    y+=3;
+  }
+  if(doubles.length){
+    secHeader('DOUBLES');
+    doubles.forEach(function(d,i){
+      var names=(d.p1||'—')+' & '+(d.p2||'—');
+      var sc=[].concat(d.scores1||[]).concat(d.scores2||[]);
+      var legs=d.legsFor!==undefined?d.legsFor+'-'+d.legsAgainst:'';
+      drawRow('D'+(i+1),names,legs,d.result,sc);
+    });
+    y+=3;
+  }
+  if(team4&&team4.result!==undefined){
+    secHeader('TEAM GAME');
+    var tp=[team4.p1,team4.p2,team4.p3,team4.p4].filter(Boolean).join(', ')||'—';
+    var ts=(team4.scores||[]).reduce(function(a,b){return a.concat(b);},[]);
+    drawRow('4v4',tp,'',team4.result,ts);
+    y+=3;
+  }
+
+  if(y+8>282){doc.addPage();y=14;}
+  setD(C.green);doc.setLineWidth(0.3);doc.line(pad,y,W-pad,y);y+=4;
+  doc.setFont('helvetica','normal');doc.setFontSize(7);setC(C.dim);
+  doc.text('Flight Chalker · flightchalker.co.uk',W/2,y,'center');
+
   var safe=m.opponent.replace(/[^a-z0-9]/gi,'_').toLowerCase();
   doc.save('match-'+safe+'-'+m.match_date+'.pdf');
 }
