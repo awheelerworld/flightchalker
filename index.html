@@ -12,7 +12,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzE0MTgxNCIvPgogIDxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YTdjNTkiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNGE3YzU5IiBzdHJva2Utd2lkdGg9IjEiLz4KICA8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI0IiBmaWxsPSIjZThjODQwIi8+Cjwvc3ZnPg==">
-<title>🎯 Flight Chalker — League Platform v38</title>
+<title>🎯 Flight Chalker — League Platform v39</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -1347,6 +1347,7 @@ function restoreDraft(){
   if(!draft)return;
   try{
     var d=JSON.parse(draft);
+    // Set match details
     var mopp=document.getElementById('mopp');
     var mdate=document.getElementById('mdate');
     var mvenue=document.getElementById('mvenue');
@@ -1354,24 +1355,89 @@ function restoreDraft(){
     if(mdate)mdate.value=d.match_date||'';
     if(mvenue)mvenue.value=d.venue||'home';
     if(d.data){
+      // Load data into md FIRST
       if(d.data.singles&&d.data.singles.length===6)md.singles=d.data.singles;
       if(d.data.doubles&&d.data.doubles.length===3)md.doubles=d.data.doubles;
       if(d.data.team4)md.team4=d.data.team4;
+      // Build rows from scratch - this creates the DOM elements
       buildRows();
-      // Restore display values
+      // Now restore each single's display state
       md.singles.forEach(function(s,i){
-        if(s.result)styleRow('s-'+i,s.result);
-        adjLegs('sf',i,0,0);
+        // Set player dropdown
+        var sel=document.querySelector('#s-'+i+' .ps');
+        if(sel&&s.player)sel.value=s.player;
+        // Set legs for/against directly
+        var lfEl=document.getElementById('lf-sf'+i);
+        var laEl=document.getElementById('la-sf'+i);
+        if(lfEl)lfEl.textContent=s.legsFor||0;
+        if(laEl)laEl.textContent=s.legsAgainst||0;
+        // Set result badge and row style
+        if(s.result){
+          var badge=document.getElementById('rb-sf'+i);
+          if(badge){
+            badge.textContent=s.result==='win'?'W':'L';
+            badge.className='res-badge '+(s.result==='win'?'win':'loss');
+          }
+          styleRow('s-'+i,s.result);
+        }
+        // Redraw score chips
+        if(s.scores&&s.scores.length){
+          redrawChips('s'+i,s.scores);
+        }
       });
-      md.doubles.forEach(function(d2,i){
-        if(d2.result)styleRow('d-'+i,d2.result);
-        adjLegs('df',i,0,0);
+      // Restore doubles
+      md.doubles.forEach(function(db,i){
+        var row=document.getElementById('d-'+i);
+        if(row){
+          var sels=row.querySelectorAll('.ps');
+          if(sels[0]&&db.p1)sels[0].value=db.p1;
+          if(sels[1]&&db.p2)sels[1].value=db.p2;
+        }
+        var lfEl=document.getElementById('lf-df'+i);
+        var laEl=document.getElementById('la-df'+i);
+        if(lfEl)lfEl.textContent=db.legsFor||0;
+        if(laEl)laEl.textContent=db.legsAgainst||0;
+        if(db.result){
+          var badge=document.getElementById('rb-df'+i);
+          if(badge){
+            badge.textContent=db.result==='win'?'W':'L';
+            badge.className='res-badge '+(db.result==='win'?'win':'loss');
+          }
+          styleRow('d-'+i,db.result);
+        }
+        if(db.scores1&&db.scores1.length)redrawChips('d'+i+'p1',db.scores1);
+        if(db.scores2&&db.scores2.length)redrawChips('d'+i+'p2',db.scores2);
       });
+      // Restore team4
+      var t4=md.team4;
+      if(t4){
+        var t4row=document.getElementById('t4');
+        if(t4row){
+          var t4sels=t4row.querySelectorAll('.ps');
+          ['p1','p2','p3','p4'].forEach(function(k,i){
+            if(t4sels[i]&&t4[k])t4sels[i].value=t4[k];
+          });
+        }
+        if(t4.result){
+          styleWL('tw',t4.result);
+          styleRow('t4',t4.result);
+        }
+        if(t4.scores){
+          t4.scores.forEach(function(sc,pi){
+            if(sc&&sc.length)redrawChips('t0p'+(pi+1),sc);
+          });
+        }
+      }
     }
     dismissDraft();
     updateBar();
+    refreshDropdowns();
     toast('Draft restored!');
-  }catch(e){toast('Could not restore draft',true);}
+    sw('match');
+  }catch(e){
+    console.error('Restore error:',e);
+    toast('Could not restore draft',true);
+  }
 }
 
 function dismissDraft(){
