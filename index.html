@@ -12,7 +12,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzE0MTgxNCIvPgogIDxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YTdjNTkiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNGE3YzU5IiBzdHJva2Utd2lkdGg9IjEiLz4KICA8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI0IiBmaWxsPSIjZThjODQwIi8+Cjwvc3ZnPg==">
-<title>🎯 Flight Chalker — League Platform v33</title>
+<title>🎯 Flight Chalker — League Platform v36</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -583,7 +583,13 @@ html{scroll-behavior:smooth}
 
     <!-- RECORD MATCH -->
     <div id="tab-match" class="tc active">
-      <div class="card"><h2>Match Details</h2>
+      <!-- Draft restore banner -->
+<div id="draft-banner" style="display:none;background:#1a2a1e;border:1px solid var(--green);border-radius:6px;padding:.6rem 1rem;margin-bottom:.75rem;align-items:center;gap:.75rem;flex-wrap:wrap">
+  <span id="draft-msg" style="flex:1;font-size:.85rem;color:var(--text)"></span>
+  <button class="btnp" style="font-size:.8rem;padding:.35rem .9rem" onclick="restoreDraft()">Restore</button>
+  <button class="btns" style="font-size:.8rem;padding:.35rem .75rem" onclick="dismissDraft()">Dismiss</button>
+</div>
+<div class="card"><h2>Match Details</h2>
         <div class="frow" style="display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end">
           <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:140px">
             <label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--dim)">Date</label>
@@ -613,7 +619,8 @@ html{scroll-behavior:smooth}
       </div>
       <div id="match-rows-container"></div>
       <div class="ar">
-        <button class="btnp" onclick="saveMatch()"><span id="savespin" style="display:none" class="spin"></span>Save & Submit</button>
+        <div style="margin-bottom:.3rem"><span id="draft-status" style="display:none;font-size:.75rem"></span></div>
+      <button class="btnp" onclick="saveMatch()"><span id="savespin" style="display:none" class="spin"></span>Save & Submit</button>
         <button class="btns" onclick="clearMatch()">Clear</button>
         <button class="btn-email" onclick="emailResultsQuick()" style="font-size:.9rem;padding:.5rem 1.25rem">&#9993; Email Results</button>
       </div>
@@ -880,6 +887,7 @@ document.addEventListener('DOMContentLoaded',async function(){
       currentTeam=d.team;currentLeague=d.league;
       await loadTeamData();
       showScreen('screen-app');
+      setTimeout(checkDraftRestore,800);
     }catch(e){localStorage.removeItem('mld_session');showScreen('screen-landing');}
   } else if(adminSess){
     showScreen('screen-admin');
@@ -1265,6 +1273,94 @@ document.addEventListener('DOMContentLoaded',function(){
 });
 
 // ── Save match ────────────────────────────────────────────────────────────────
+// ── Auto-save draft ────────────────────────────────────────────────────────────
+var draftTimer=null;
+
+function scheduleDraftSave(){
+  if(draftTimer)clearTimeout(draftTimer);
+  draftTimer=setTimeout(saveDraft,30000);
+}
+
+async function saveDraft(){
+  var opp=document.getElementById('mopp')?document.getElementById('mopp').value.trim():'';
+  var date=document.getElementById('mdate')?document.getElementById('mdate').value:'';
+  if(!opp||!date)return;
+  var draft={
+    match_date:date,opponent:opp,
+    venue:document.getElementById('mvenue')?document.getElementById('mvenue').value:'home',
+    data:{
+      singles:JSON.parse(JSON.stringify(md.singles)),
+      doubles:JSON.parse(JSON.stringify(md.doubles)),
+      team4:JSON.parse(JSON.stringify(md.team4))
+    }
+  };
+  try{
+    localStorage.setItem('dart_draft',JSON.stringify(draft));
+    var now=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    showDraftStatus('Draft saved at '+now,'var(--gl)');
+  }catch(e){showDraftStatus('Draft save failed','var(--red)');}
+}
+
+function showDraftStatus(msg,color){
+  var el=document.getElementById('draft-status');
+  if(!el)return;
+  el.textContent=msg;el.style.color=color;el.style.display='block';
+  setTimeout(function(){if(el)el.style.display='none';},4000);
+}
+
+function checkDraftRestore(){
+  var draft=localStorage.getItem('dart_draft');
+  if(!draft)return;
+  try{
+    var d=JSON.parse(draft);
+    if(!d.opponent)return;
+    var banner=document.getElementById('draft-banner');
+    var msg=document.getElementById('draft-msg');
+    if(banner&&msg){
+      msg.textContent='Unsaved draft: vs '+d.opponent+' on '+d.match_date+'. Restore?';
+      banner.style.display='flex';
+    }
+  }catch(e){localStorage.removeItem('dart_draft');}
+}
+
+function restoreDraft(){
+  var draft=localStorage.getItem('dart_draft');
+  if(!draft)return;
+  try{
+    var d=JSON.parse(draft);
+    var mopp=document.getElementById('mopp');
+    var mdate=document.getElementById('mdate');
+    var mvenue=document.getElementById('mvenue');
+    if(mopp)mopp.value=d.opponent||'';
+    if(mdate)mdate.value=d.match_date||'';
+    if(mvenue)mvenue.value=d.venue||'home';
+    if(d.data){
+      if(d.data.singles&&d.data.singles.length===6)md.singles=d.data.singles;
+      if(d.data.doubles&&d.data.doubles.length===3)md.doubles=d.data.doubles;
+      if(d.data.team4)md.team4=d.data.team4;
+      buildRows();
+      // Restore display values
+      md.singles.forEach(function(s,i){
+        if(s.result)styleRow('s-'+i,s.result);
+        adjLegs('sf',i,0,0);
+      });
+      md.doubles.forEach(function(d2,i){
+        if(d2.result)styleRow('d-'+i,d2.result);
+        adjLegs('df',i,0,0);
+      });
+    }
+    dismissDraft();
+    updateBar();
+    toast('Draft restored!');
+  }catch(e){toast('Could not restore draft',true);}
+}
+
+function dismissDraft(){
+  localStorage.removeItem('dart_draft');
+  var banner=document.getElementById('draft-banner');
+  if(banner)banner.style.display='none';
+}
+
 async function saveMatch(){
   var date=document.getElementById('mdate').value;
   var opp=document.getElementById('mopp').value.trim();
@@ -1298,7 +1394,7 @@ async function saveMatch(){
     } else {
       // Create new record
       await sb('team_matches',{method:'POST',prefer:'return=minimal',body:JSON.stringify(rec)});
-      toast('Match saved and submitted!');
+      toast('Match saved and submitted!');localStorage.removeItem('dart_draft');
     }
     // Mark fixture as played - check both home and away
     try{
@@ -1542,15 +1638,51 @@ function openEdit(idx){
   h+='<div style="min-width:90px"><label style="font-size:.72rem;color:var(--dim);display:block;margin-bottom:3px">Venue</label><select id="ev" style="background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:.3rem .5rem;font-size:.85rem;font-family:Barlow,sans-serif"><option value="home" '+(editSt.venue==='home'?'selected':'')+'>Home</option><option value="away" '+(editSt.venue==='away'?'selected':'')+'>Away</option></select></div>';
   h+='</div></div>';
   h+='<div class="ms"><div class="mst">Singles</div>';
-  (editSt.data.singles||[]).forEach(function(x,i){h+='<div class="er"><span class="erl">S'+(i+1)+'</span><select class="esel" onchange="editSt.data.singles['+i+'].player=this.value">'+eOpts(x.player)+'</select>'+ewlH('es'+i,x.result)+eswH('es'+i,x.scores||[])+'</div>';});
-  if((editSt.data.doubles||[]).length){h+='</div><div class="ms"><div class="mst">Doubles</div>';editSt.data.doubles.forEach(function(x,i){h+='<div class="er"><span class="erl">D'+(i+1)+'</span><select class="esel" onchange="editSt.data.doubles['+i+'].p1=this.value">'+eOpts(x.p1)+'</select><select class="esel" onchange="editSt.data.doubles['+i+'].p2=this.value">'+eOpts(x.p2)+'</select>'+ewlH('ed'+i,x.result)+'<div style="display:flex;gap:4px;flex-wrap:wrap"><div><div style="font-size:.6rem;color:var(--amber);opacity:.7">P1</div>'+eswH('ed'+i+'p1',x.scores1||[])+'</div><div><div style="font-size:.6rem;color:var(--amber);opacity:.7">P2</div>'+eswH('ed'+i+'p2',x.scores2||[])+'</div></div></div>';});}
+  (editSt.data.singles||[]).forEach(function(x,i){h+='<div class="er"><span class="erl">S'+(i+1)+'</span><select class="esel" onchange="editSt.data.singles['+i+'].player=this.value">'+eOpts(x.player)+'</select>'+ewlH('es'+i,x.result,x.legsFor,x.legsAgainst)+eswH('es'+i,x.scores||[])+'</div>';});
+  if((editSt.data.doubles||[]).length){h+='</div><div class="ms"><div class="mst">Doubles</div>';editSt.data.doubles.forEach(function(x,i){h+='<div class="er"><span class="erl">D'+(i+1)+'</span><select class="esel" onchange="editSt.data.doubles['+i+'].p1=this.value">'+eOpts(x.p1)+'</select><select class="esel" onchange="editSt.data.doubles['+i+'].p2=this.value">'+eOpts(x.p2)+'</select>'+ewlH('ed'+i,x.result,x.legsFor,x.legsAgainst)+'<div style="display:flex;gap:4px;flex-wrap:wrap"><div><div style="font-size:.6rem;color:var(--amber);opacity:.7">P1</div>'+eswH('ed'+i+'p1',x.scores1||[])+'</div><div><div style="font-size:.6rem;color:var(--amber);opacity:.7">P2</div>'+eswH('ed'+i+'p2',x.scores2||[])+'</div></div></div>';});}
   h+='</div>';
   if(editSt.data.team4){var t=editSt.data.team4;h+='<div class="ms"><div class="mst">Team Game</div><div class="er"><span class="erl">Team</span>';for(var pi=1;pi<=6;pi++){if(t['p'+pi]!==undefined)h+='<select class="esel" onchange="editSt.data.team4.p'+pi+'=this.value">'+eOpts(t['p'+pi])+'</select>';}h+=ewlH('et0',t.result)+'</div></div>';}
   h+='<div class="mf"><button class="btnp" onclick="saveEdit()"><span class="spin" id="espin" style="display:none"></span>Save</button><button class="mc" onclick="closeMo()">Cancel</button></div>';
   document.getElementById('mbody').innerHTML=h;document.getElementById('modal').classList.add('open');
 }
 function eOpts(sel){return '<option value="">— Select —</option>'+players.map(function(p){return '<option value="'+esc(p)+'" '+(p===sel?'selected':'')+'>'+esc(p)+'</option>';}).join('');}
-function ewlH(key,r){return '<div class="ewl"><button class="ewb '+(r==='win'?'aw':'')+'" id="eww-'+key+'" onclick="setEWL(&quot;'+key+'&quot;,&quot;win&quot;)">W</button><button class="ewb '+(r==='loss'?'al':'')+'" id="ewl2-'+key+'" onclick="setEWL(&quot;'+key+'&quot;,&quot;loss&quot;)">L</button></div>';}
+function ewlH(key,r,lf,la){
+  var lFor=lf!==undefined?lf:0;
+  var lAgainst=la!==undefined?la:0;
+  return '<div class="ewl">'
+    +'<button class="ewb '+(r==='win'?'aw':'')+'" id="eww-'+key+'" onclick="setEWL(&quot;'+key+'&quot;,&quot;win&quot;)">W</button>'
+    +'<button class="ewb '+(r==='loss'?'al':'')+'" id="ewl-'+key+'" onclick="setEWL(&quot;'+key+'&quot;,&quot;loss&quot;)">L</button>'
+    +'</div>'
+    +'<div style="display:flex;align-items:center;gap:3px;margin-left:4px">'
+    +'<span style="font-size:.6rem;color:var(--dim)">Legs</span>'
+    +'<button class="ls-btn" onclick="adjELegs(&quot;'+key+'&quot;,&quot;f&quot;,-1)">-</button>'
+    +'<span id="elf-'+key+'" style="font-size:.9rem;font-weight:900;min-width:16px;text-align:center">'+lFor+'</span>'
+    +'<button class="ls-btn" onclick="adjELegs(&quot;'+key+'&quot;,&quot;f&quot;,1)">+</button>'
+    +'<span style="color:var(--dim);margin:0 2px">–</span>'
+    +'<button class="ls-btn" onclick="adjELegs(&quot;'+key+'&quot;,&quot;a&quot;,-1)">-</button>'
+    +'<span id="ela-'+key+'" style="font-size:.9rem;font-weight:900;min-width:16px;text-align:center">'+lAgainst+'</span>'
+    +'<button class="ls-btn" onclick="adjELegs(&quot;'+key+'&quot;,&quot;a&quot;,1)">+</button>'
+    +'</div>';
+}
+
+function adjELegs(key,side,delta){
+  var isSingle=/^es\d$/.test(key);
+  var isDouble=/^ed\d$/.test(key);
+  var obj=null;
+  if(isSingle)obj=editSt.data.singles[parseInt(key[2])];
+  else if(isDouble)obj=editSt.data.doubles[parseInt(key[2])];
+  if(!obj)return;
+  if(side==='f')obj.legsFor=Math.max(0,Math.min(5,(obj.legsFor||0)+delta));
+  else obj.legsAgainst=Math.max(0,Math.min(5,(obj.legsAgainst||0)+delta));
+  if(obj.legsFor>obj.legsAgainst)obj.result='win';
+  else if(obj.legsAgainst>obj.legsFor)obj.result='loss';
+  else obj.result=null;
+  var fEl=document.getElementById('elf-'+key);
+  var aEl=document.getElementById('ela-'+key);
+  if(fEl)fEl.textContent=obj.legsFor;
+  if(aEl)aEl.textContent=obj.legsAgainst;
+  setEWL(key,obj.result||'');
+}
 function setEWL(key,r){var w=document.getElementById('eww-'+key);var l=document.getElementById('ewl2-'+key);if(w)w.className='ewb'+(r==='win'?' aw':'');if(l)l.className='ewb'+(r==='loss'?' al':'');if(/^es\d/.test(key))editSt.data.singles[parseInt(key.slice(2))].result=r;else if(/^ed\d/.test(key))editSt.data.doubles[parseInt(key.slice(2))].result=r;else if(/^et0$/.test(key))editSt.data.team4.result=r;}
 function eswH(key,scores){var chips=scores.map(function(v,i){return '<span class="ech'+(v===180?' max180':'')+'">'+( v===180?'&#9733; 180':v)+'<button class="ecx" onclick="rmES(&quot;'+key+'&quot;,'+i+')">×</button></span>';}).join('');return '<div class="esw"><div class="escc" id="ec-'+key+'">'+chips+'</div><div class="esir"><input class="esi" id="ei-'+key+'" type="number" min="80" max="180" placeholder="80+" onkeydown="if(event.key===\'Enter\'){event.preventDefault();addES(&quot;'+key+'&quot;);}"><button class="eab" onclick="addES(&quot;'+key+'&quot;)">+</button></div></div>';}
 function getEArr(key){if(/^es\d+$/.test(key))return editSt.data.singles[parseInt(key.slice(2))].scores;if(/^ed\d+p1$/.test(key))return editSt.data.doubles[parseInt(key.slice(2,-2))].scores1;if(/^ed\d+p2$/.test(key))return editSt.data.doubles[parseInt(key.slice(2,-2))].scores2;if(/^et0p\d+$/.test(key)){var pi=parseInt(key.slice(4))-1;if(!editSt.data.team4.scores[pi])editSt.data.team4.scores[pi]=[];return editSt.data.team4.scores[pi];}return null;}
@@ -1690,7 +1822,7 @@ function downloadPDF(idx){
     }
     if(s180>0){
       doc.setFont('helvetica','bold');doc.setFontSize(7);setC(C.amber);
-      doc.text('★ 180'+(s180>1?' x'+s180:''),pad+84,ty);
+      doc.text('180'+(s180>1?' x'+s180:''),pad+84,ty);
     }
     if(isWin||isLoss){
       setF(isWin?C.win:C.loss);
