@@ -1344,9 +1344,12 @@ async function checkDraftRestore(){
 
 function restoreDraft(){
   var draft=localStorage.getItem('dart_draft');
+  console.log('Draft raw:', draft);
   if(!draft)return;
   try{
     var d=JSON.parse(draft);
+    console.log('Draft parsed:', JSON.stringify(d,null,2));
+    console.log('Singles:', d.data&&d.data.singles);
     // Set match details
     var mopp=document.getElementById('mopp');
     var mdate=document.getElementById('mdate');
