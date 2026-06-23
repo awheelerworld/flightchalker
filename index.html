@@ -12,7 +12,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzE0MTgxNCIvPgogIDxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YTdjNTkiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNGE3YzU5IiBzdHJva2Utd2lkdGg9IjEiLz4KICA8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI0IiBmaWxsPSIjZThjODQwIi8+Cjwvc3ZnPg==">
-<title>🎯 Flight Chalker — League Platform v39</title>
+<title>🎯 Flight Chalker — League Platform v40</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -1463,33 +1463,13 @@ async function saveMatchDraft(){
   var sp=document.getElementById('draftspin');
   if(sp)sp.style.display='inline-block';
   try{
-    // Save to localStorage
     localStorage.setItem('dart_draft',JSON.stringify(draft));
-    // Also save to Supabase as a live draft
-    if(currentTeam&&currentTeam.id){
-      var existing=await sb('team_matches?team_id=eq.'+currentTeam.id+'&match_date=eq.'+date+'&opponent=eq.'+encodeURIComponent(opp)+'&draft=eq.true&select=id');
-      var rec={
-        team_id:currentTeam.id,
-        match_date:date,
-        opponent:opp,
-        venue:draft.venue,
-        wins:0,losses:0,eighties:0,
-        draft:true,
-        season:(currentLeague.current_season||1),
-        data:draft.data
-      };
-      if(existing&&existing.length){
-        await sbPatch('team_matches','id=eq.'+existing[0].id,rec);
-      } else {
-        await sb('team_matches',{method:'POST',prefer:'return=minimal',body:JSON.stringify(rec)});
-      }
-    }
-    toast('Draft saved! Others can now add to this match.');
-    showDraftStatus('Draft saved — match in progress','var(--amber)');
+    localStorage.setItem('dart_draft_time',new Date().toISOString());
+    var now=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    toast('Draft saved at '+now);
+    showDraftStatus('Draft saved at '+now,'var(--amber)');
   }catch(e){
-    // localStorage save was successful even if Supabase failed
-    toast('Saved locally');
-    showDraftStatus('Saved locally','var(--amber)');
+    toast('Could not save draft',true);
   }
   if(sp)sp.style.display='none';
 }
