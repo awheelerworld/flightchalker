@@ -8,12 +8,29 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+  <meta name="description" content="Flight Chalker is a free online darts league platform. Record match results, track player stats, manage fixtures and download match reports.">
+  <meta name="keywords" content="darts league, darts scoring, darts results, league platform, darts statistics, match recording">
+  <meta name="author" content="awheelerworld">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://flightchalker.co.uk">
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Flight Chalker — Darts League Platform">
+  <meta property="og:description" content="Record match results, track player stats and manage your darts league online. Free platform for Monday league darts.">
+  <meta property="og:url" content="https://flightchalker.co.uk">
+  <meta property="og:image" content="https://flightchalker.co.uk/og-image.png">
+  <meta property="og:site_name" content="Flight Chalker">
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Flight Chalker — Darts League Platform">
+  <meta name="twitter:description" content="Record match results, track player stats and manage your darts league online. Free platform for Monday league darts.">
+  <meta name="twitter:image" content="https://flightchalker.co.uk/og-image.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzE0MTgxNCIvPgogIDxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YTdjNTkiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNGE3YzU5IiBzdHJva2Utd2lkdGg9IjEiLz4KICA8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI0IiBmaWxsPSIjZThjODQwIi8+Cjwvc3ZnPg==">
-<title>🎯 Flight Chalker — League Platform v42</title>
+<title>🎯 Flight Chalker — League Platform v43</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -126,10 +143,14 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
 .mg{margin-bottom:1.75rem}
 
 /* ── Match rows ── */
-.mr{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.6rem .75rem;margin-bottom:.5rem;display:flex;flex-wrap:wrap;gap:.5rem;align-items:flex-start}
-.mn{font-family:'Barlow Condensed',sans-serif;font-size:.75rem;font-weight:700;color:var(--dim);min-width:28px;padding-top:6px}
+.mr{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.75rem;margin-bottom:.6rem;display:flex;flex-direction:column;gap:.5rem}
+.mr-header{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.mr-players{display:flex;flex-wrap:wrap;gap:.5rem;flex:1}
+.mr-legs{display:flex;align-items:center;gap:.4rem;padding:.4rem .5rem;background:var(--bg);border-radius:4px;border:1px solid var(--border)}
+.mr-scores{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center}
+.mn{font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:900;color:var(--amber);min-width:28px;letter-spacing:.05em}
 .mm{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;flex:1}
-.ps{background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.85rem;padding:.3rem .5rem;min-width:120px;max-width:160px;flex:1;cursor:pointer}
+.ps{background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.9rem;padding:.45rem .5rem;min-width:130px;flex:1;cursor:pointer}
 .ps:focus{outline:none;border-color:var(--green)}
 .ps option{background:#1a1a1a}.ps option:disabled{color:#555}
 .wlt{display:flex;border-radius:4px;overflow:hidden;border:1px solid var(--border);flex-shrink:0}
@@ -142,9 +163,9 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
 .legs-score{display:flex;align-items:center;gap:4px;flex-shrink:0}
 .ls-label{font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);white-space:nowrap}
 .ls-ctrl{display:flex;align-items:center;gap:2px}
-.ls-btn{width:20px;height:20px;background:var(--s3);border:1px solid var(--border);border-radius:3px;color:var(--dim);font-size:.9rem;font-weight:700;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif}
+.ls-btn{width:32px;height:32px;background:var(--s3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:1.1rem;font-weight:700;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif}
 .ls-btn:hover{color:var(--text);border-color:var(--green)}
-.ls-val{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:900;min-width:14px;text-align:center;color:var(--text)}
+.ls-val{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:900;min-width:22px;text-align:center;color:var(--text)}
 .ls-val.winning{color:var(--gl)}.ls-val.losing{color:var(--red)}
 .res-badge{font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:900;letter-spacing:.06em;padding:3px 8px;border-radius:4px;min-width:32px;text-align:center;flex-shrink:0}
 .res-badge.win{background:var(--wb);color:#a8ffb8}
@@ -155,10 +176,10 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
 .e8e{display:flex;flex-direction:column;gap:3px;flex-shrink:0}
 .e8er{display:flex;align-items:center;gap:4px}
 .e8l{font-size:.6rem;text-transform:uppercase;letter-spacing:.1em;color:var(--amber);opacity:.7;white-space:nowrap}
-.si2{width:46px;background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;padding:2px 4px;text-align:center}
+.si2{width:60px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;padding:6px 4px;text-align:center}
 .si2:focus{outline:none;border-color:var(--amber)}
 .si2::placeholder{color:var(--dim);opacity:.4;font-size:.75rem}
-.sab{width:20px;height:20px;background:var(--s3);border:1px solid var(--border);border-radius:3px;color:var(--amber);font-size:1.1rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sab{width:36px;height:36px;background:var(--s3);border:1px solid var(--border);border-radius:6px;color:var(--amber);font-size:1.3rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .sab:hover{background:var(--amber);color:var(--bg)}
 .schips{display:flex;flex-wrap:wrap;gap:3px}
 .sc{background:#3a2e00;border:1px solid #6a5200;border-radius:3px;color:var(--amber);font-family:'Barlow Condensed',sans-serif;font-size:.82rem;font-weight:700;padding:1px 5px;display:flex;align-items:center;gap:3px}
@@ -352,7 +373,51 @@ html{scroll-behavior:smooth}
 .scorer-val{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:900;color:var(--amber)}
 .pin-reveal-box{background:var(--s3);border:1px solid var(--border);border-radius:8px;padding:1.25rem;text-align:center;margin:1rem 0}
 .pin-reveal-num{font-family:'Barlow Condensed',sans-serif;font-size:2.5rem;font-weight:900;letter-spacing:.3em;color:var(--amber)}
+
+/* ── Responsive breakpoints ─────────────────────────────────── */
+@media(max-width:600px){
+  main{padding:1rem .75rem 5rem}
+  .tabs{gap:0;overflow-x:auto}
+  .tab{font-size:.75rem;padding:.6rem .75rem;white-space:nowrap}
+  .card{padding:1rem .75rem}
+  .mr{padding:.6rem .6rem}
+  .ps{font-size:.85rem;min-width:0;width:100%}
+  .legs-score{flex-wrap:wrap;gap:6px;width:100%}
+  .e8e{width:100%}
+  .e8er{gap:6px}
+  .si2{width:70px;font-size:1.1rem;padding:8px 4px}
+  .sab{width:40px;height:40px;font-size:1.4rem}
+  .ls-btn{width:36px;height:36px;font-size:1.2rem}
+  .schips{gap:4px}
+  .sc{font-size:.9rem;padding:3px 8px}
+  .scorebar{flex-wrap:wrap;gap:.75rem}
+  .sbig{font-size:2.5rem}
+  .he{gap:.4rem}
+  .hd{min-width:70px;font-size:.75rem}
+  .hsc{font-size:1.1rem}
+  .ha{flex-wrap:wrap}
+  .hb{font-size:.65rem;padding:3px 6px}
+  .row{flex-direction:column}
+  .field{min-width:0;width:100%}
+}
+@media(min-width:768px){
+  .mr{flex-direction:row;align-items:flex-start;flex-wrap:wrap}
+  .mr-players{flex:1}
+  main{padding:1.5rem 1.5rem 4rem}
+}
+@media(min-width:1024px){
+  main{max-width:960px}
+  .mg{display:grid;grid-template-columns:1fr}
+}
 </style>
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-WQRGJRFF1Q"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-WQRGJRFF1Q');
+</script>
 </head>
 <body>
 
@@ -1178,10 +1243,17 @@ function mkSingle(i){
 }
 function mkDouble(i){
   var r=document.createElement('div');r.className='mr';r.id='d-'+i;
-  r.innerHTML='<div class="mn">D'+(i+1)+'</div><div class="mm">'
+  r.innerHTML='<div class="mn">D'+(i+1)+'</div>'
+    +'<div style="display:flex;gap:.5rem;flex-wrap:wrap;flex:1">'
     +'<select class="ps" onchange="md.doubles['+i+'].p1=this.value;refreshDropdowns()">'+playerOpts()+'</select>'
     +'<select class="ps" onchange="md.doubles['+i+'].p2=this.value;refreshDropdowns()">'+playerOpts()+'</select>'
-    +legsWidget('df',i)+e8w('d'+i+'p1','P1 80+')+e8w('d'+i+'p2','P2 80+')+'</div>';
+    +'</div>'
+    +'<div style="display:flex;flex-wrap:wrap;gap:.5rem;align-items:center">'
+    +legsWidget('df',i)
+    +'</div>'
+    +'<div style="display:flex;flex-wrap:wrap;gap:.5rem">'
+    +e8w('d'+i+'p1','P1 80+')+e8w('d'+i+'p2','P2 80+')
+    +'</div>';
   return r;
 }
 function mkTeam(numPlayers){
@@ -1191,8 +1263,17 @@ function mkTeam(numPlayers){
   var w8='';
   for(var pi=1;pi<=numPlayers;pi++)w8+=e8w('t0p'+pi,'P'+pi+' 80+');
   var tgName=numPlayers===4?'4v4':numPlayers+'v'+numPlayers;
-  r.innerHTML='<div class="mn" style="font-size:.65rem">'+tgName+'</div><div class="mm">'+selects
-    +'<div class="wlt"><button class="wb2" id="tw-w" onclick="setRes(&quot;t&quot;,0,&quot;win&quot;)">W</button><button class="wb2" id="tw-l" onclick="setRes(&quot;t&quot;,0,&quot;loss&quot;)">L</button></div>'+w8+'</div>';
+  r.innerHTML=
+    '<div class="mn" style="font-size:.65rem">'+tgName+'</div>'
+    // Row 1: player selects
+    +'<div style="display:flex;gap:.5rem;flex-wrap:wrap;width:100%">'+selects+'</div>'
+    // Row 2: win/loss
+    +'<div style="display:flex;align-items:center;gap:.5rem">'
+    +'<span style="font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--dim)">Result</span>'
+    +'<div class="wlt"><button class="wb2" id="tw-w" onclick="setRes(&quot;t&quot;,0,&quot;win&quot;)">W</button><button class="wb2" id="tw-l" onclick="setRes(&quot;t&quot;,0,&quot;loss&quot;)">L</button></div>'
+    +'</div>'
+    // Row 3: scores per player in 2-col grid
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;width:100%">'+w8+'</div>';
   return r;
 }
 
