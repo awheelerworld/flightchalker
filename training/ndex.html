@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzE0MTgxNCIvPgogIDxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YTdjNTkiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNGE3YzU5IiBzdHJva2Utd2lkdGg9IjEiLz4KICA8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI0IiBmaWxsPSIjZThjODQwIi8+Cjwvc3ZnPg==">
+  <meta name="description" content="Improve your darts game with Flight Chalker Training Zone. Checkout practice, around the clock, doubles training and more.">
+  <meta name="keywords" content="darts training, darts practice, checkout practice, darts drills, improve darts">
+  <meta name="author" content="awheelerworld">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://flightchalker.co.uk/training">
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Darts Training Zone — Flight Chalker">
+  <meta property="og:description" content="Practice your darts with checkout challenges, around the clock, doubles training and more.">
+  <meta property="og:url" content="https://flightchalker.co.uk/training">
+  <meta property="og:image" content="https://flightchalker.co.uk/og-image.png">
+  <meta property="og:site_name" content="Flight Chalker">
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Darts Training Zone — Flight Chalker">
+  <meta name="twitter:description" content="Practice your darts with checkout challenges, around the clock, doubles training and more.">
+  <meta name="twitter:image" content="https://flightchalker.co.uk/og-image.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎯 Training Zone — Flight Chalker</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#141814;--s2:#1e251e;--s3:#2e382e;
+  --green:#4a7c59;--gl:#5a9469;--amber:#e8c840;--red:#c0392b;
+  --blue:#2a5a8c;--text:#e0d8c8;--dim:#8a9080;--border:#3a4a3a;
+}
+html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh}
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap');
+
+.screen{display:none;min-height:100vh}.screen.active{display:block}
+.hdr{background:var(--s2);border-bottom:2px solid var(--green);padding:0 1rem;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100}
+.hdr-logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.1rem;letter-spacing:.05em;text-transform:uppercase}
+.hdr-logo span{color:var(--amber)}
+.hdr-sub{font-family:'Barlow Condensed',sans-serif;font-size:.65rem;color:var(--green);letter-spacing:.08em;text-transform:uppercase}
+.hbtn{background:none;border:1px solid var(--border);border-radius:4px;color:var(--dim);font-family:'Barlow Condensed',sans-serif;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;cursor:pointer}
+.hbtn:hover{border-color:var(--green);color:var(--text)}
+
+/* Menu */
+.menu-wrap{max-width:600px;margin:0 auto;padding:1.5rem 1rem}
+.menu-title{font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:900;text-transform:uppercase;color:var(--amber);margin-bottom:.25rem}
+.menu-sub{font-size:.85rem;color:var(--dim);margin-bottom:1.5rem}
+.game-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:.75rem}
+.game-card{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:1.25rem;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;gap:.4rem}
+.game-card:hover{border-color:var(--green);background:#1a251a}
+.game-card-icon{font-size:2rem;margin-bottom:.25rem}
+.game-card-name{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--amber)}
+.game-card-desc{font-size:.82rem;color:var(--dim);line-height:1.4}
+.game-card-tag{font-family:'Barlow Condensed',sans-serif;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:3px;background:#1a2a1e;color:var(--gl);border:1px solid var(--green);align-self:flex-start;margin-top:.25rem}
+
+/* Game screens */
+.game-wrap{max-width:500px;margin:0 auto;padding:1rem 1rem 3rem}
+.game-title{font-family:'Barlow Condensed',sans-serif;font-size:1.5rem;font-weight:900;text-transform:uppercase;letter-spacing:.05em;color:var(--amber);margin-bottom:.25rem}
+.game-sub{font-size:.82rem;color:var(--dim);margin-bottom:1.25rem}
+
+/* Target display */
+.target-box{background:var(--s2);border:2px solid var(--border);border-radius:12px;padding:1.5rem;text-align:center;margin-bottom:1rem}
+.target-label{font-family:'Barlow Condensed',sans-serif;font-size:.72rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);margin-bottom:.5rem}
+.target-score{font-family:'Barlow Condensed',sans-serif;font-size:5rem;font-weight:900;line-height:1;color:var(--amber)}
+.target-route{font-size:.85rem;color:var(--gl);margin-top:.4rem}
+.target-info{font-size:.78rem;color:var(--dim);margin-top:.25rem}
+
+/* Stats bar */
+.stats-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:1rem}
+.stat-box{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:.6rem;text-align:center}
+.stat-val{font-family:'Barlow Condensed',sans-serif;font-size:1.5rem;font-weight:900;line-height:1}
+.stat-val.g{color:var(--gl)}.stat-val.r{color:var(--red)}.stat-val.a{color:var(--amber)}
+.stat-lbl{font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-top:2px}
+
+/* Input */
+.input-area{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-bottom:1rem}
+.input-label{font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:.6rem}
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:.35rem;margin-bottom:.6rem}
+.np{background:var(--s3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:700;padding:.55rem;cursor:pointer;text-align:center;transition:all .12s;-webkit-tap-highlight-color:transparent}
+.np:hover,.np:active{background:var(--green);border-color:var(--green);color:white}
+.np.sp{color:var(--amber);border-color:#6a5200}
+.np.dl{color:var(--red);border-color:#5c2020}
+.display-input{width:100%;text-align:center;background:var(--bg);border:2px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:900;padding:.5rem;margin-bottom:.6rem}
+.display-input.ok{border-color:var(--green);color:var(--gl)}
+.display-input.bust{border-color:var(--red);color:var(--red)}
+
+/* Buttons */
+.btn-row{display:flex;gap:.5rem;margin-bottom:.75rem}
+.btn-hit{background:var(--green);border:none;border-radius:6px;color:white;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.65rem 1.25rem;cursor:pointer;flex:2}
+.btn-hit:hover{background:var(--gl)}
+.btn-miss{background:#2a0a0a;border:1px solid var(--red);border-radius:6px;color:#ff8080;font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.65rem 1rem;cursor:pointer;flex:1}
+.btn-miss:hover{background:#3a1010}
+.btn-next{background:#1a2a3a;border:1px solid var(--blue);border-radius:6px;color:#8ac4ff;font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.65rem 1.25rem;cursor:pointer;width:100%}
+.btn-next:hover{background:#1a3a5c}
+.btn-back{background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--dim);font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:.5rem 1rem;cursor:pointer}
+.btn-back:hover{border-color:var(--green);color:var(--text)}
+
+/* Around the clock */
+.atc-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.4rem;margin-bottom:1rem}
+.atc-num{background:var(--s3);border:1px solid var(--border);border-radius:6px;padding:.5rem;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;color:var(--dim);transition:all .2s}
+.atc-num.done{background:#1a2a1e;border-color:var(--green);color:var(--gl)}
+.atc-num.current{background:#2a2000;border-color:var(--amber);color:var(--amber);box-shadow:0 0 8px rgba(232,200,64,.3)}
+.atc-num.bull{grid-column:span 2}
+
+/* Bob's 27 */
+.bobs-score{font-family:'Barlow Condensed',sans-serif;font-size:4rem;font-weight:900;text-align:center;padding:1rem;color:var(--amber)}
+.bobs-score.low{color:var(--red)}
+.doubles-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.4rem;margin-bottom:1rem}
+.dbl-btn{background:var(--s3);border:1px solid var(--border);border-radius:6px;padding:.5rem;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;color:var(--dim);cursor:pointer;transition:all .15s}
+.dbl-btn.current{background:#2a2000;border-color:var(--amber);color:var(--amber)}
+.dbl-btn.done{background:#1a2a1e;border-color:var(--green);color:var(--gl)}
+.dbl-btn.failed{background:#2a1010;border-color:var(--red);color:#ff8080}
+
+/* History */
+.history-list{max-height:150px;overflow-y:auto;display:flex;flex-direction:column;gap:.3rem}
+.history-item{display:flex;justify-content:space-between;font-size:.8rem;padding:.3rem .5rem;background:var(--bg);border-radius:4px}
+.history-hit{color:var(--gl)}.history-miss{color:var(--red)}
+
+/* Result screen */
+.result-wrap{text-align:center;padding:2rem 1rem}
+.result-icon{font-size:3.5rem;margin-bottom:.75rem}
+.result-title{font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:900;text-transform:uppercase;color:var(--amber);margin-bottom:.5rem}
+.result-stat{font-size:1rem;color:var(--dim);margin-bottom:1.5rem}
+.btn-again{background:var(--green);border:none;border-radius:8px;color:white;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.75rem 2rem;cursor:pointer;width:100%;margin-bottom:.75rem}
+.btn-again:hover{background:var(--gl)}
+.btn-menu{background:transparent;border:2px solid var(--border);border-radius:8px;color:var(--dim);font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.65rem 2rem;cursor:pointer;width:100%}
+.btn-menu:hover{border-color:var(--green);color:var(--text)}
+
+.setup-section{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-bottom:.75rem}
+.setup-section h3{font-family:"Barlow Condensed",sans-serif;font-size:.72rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--green);margin-bottom:.75rem}
+.score-btns{display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:.4rem}
+.score-btn{background:var(--s3);border:2px solid var(--border);border-radius:6px;color:var(--text);font-family:"Barlow Condensed",sans-serif;font-size:.95rem;font-weight:700;padding:.5rem .25rem;cursor:pointer;transition:all .15s;line-height:1.3}
+.score-btn.sel{background:#1a2a1e;border-color:var(--green);color:var(--gl)}
+.score-btn:hover{border-color:var(--green)}
+.btn-start{background:var(--green);border:none;border-radius:8px;color:white;font-family:"Barlow Condensed",sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.85rem 2rem;cursor:pointer;width:100%;margin-top:.5rem}
+.btn-start:hover{background:var(--gl)}
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1rem;padding:.6rem 1.5rem;border-radius:6px;transition:transform .3s;z-index:999;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.err{background:var(--red)}
+</style>
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-WQRGJRFF1Q"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-WQRGJRFF1Q');
+</script>
+</head>
+<body>
+
+<!-- ══ HEADER (shared) ══ -->
+<div class="hdr">
+  <div>
+    <div class="hdr-logo">Flight <span>Chalker</span></div>
+    <div class="hdr-sub" id="hdr-sub">Training Zone</div>
+  </div>
+  <div style="display:flex;gap:.5rem">
+    <button class="hbtn" id="btn-back-menu" onclick="showMenu()" style="display:none">← Games</button>
+    <a href="https://flightchalker.co.uk" style="text-decoration:none"><button class="hbtn">🏠 Home</button></a>
+  </div>
+</div>
+
+<!-- ══════════ MENU ══════════ -->
+<div id="screen-menu" class="screen active">
+  <div class="menu-wrap">
+    <div class="menu-title">🎯 Training Zone</div>
+    <div class="menu-sub">Sharpen your game with targeted practice drills</div>
+    <div class="game-cards">
+      <div class="game-card" onclick="startGame('checkout')">
+        <div class="game-card-icon">🎯</div>
+        <div class="game-card-name">Checkout Randomiser</div>
+        <div class="game-card-desc">Random checkout targets between 2 and 170. Practice your finishing with suggested routes.</div>
+        <div class="game-card-tag">Finishing</div>
+      </div>
+      <div class="game-card" onclick="startGame('atc')">
+        <div class="game-card-icon">🕐</div>
+        <div class="game-card-name">Around the Clock</div>
+        <div class="game-card-desc">Hit 1 through 20 in order, then the bullseye. Count your darts and beat your best.</div>
+        <div class="game-card-tag">Accuracy</div>
+      </div>
+      <div class="game-card" onclick="startGame('bobs')">
+        <div class="game-card-icon">⚡</div>
+        <div class="game-card-name">Bob's 27</div>
+        <div class="game-card-desc">Start with 27 points. Hit each double to score, miss and lose that amount. Survive all 20!</div>
+        <div class="game-card-tag">Doubles</div>
+      </div>
+      <div class="game-card" onclick="startGame('doubles')">
+        <div class="game-card-icon">🎪</div>
+        <div class="game-card-name">Doubles Practice</div>
+        <div class="game-card-desc">Focus on a specific double or cycle through all 20. Track your hit rate per session.</div>
+        <div class="game-card-tag">Doubles</div>
+      </div>
+      <div class="game-card" onclick="startGame('trebles')">
+        <div class="game-card-icon">🏹</div>
+        <div class="game-card-name">Trebles Practice</div>
+        <div class="game-card-desc">Drill your treble accuracy on any segment. Essential for big scoring.</div>
+        <div class="game-card-tag">Scoring</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ CHECKOUT RANDOMISER ══════════ -->
+<div id="screen-checkout-setup" class="screen">
+  <div class="game-wrap">
+    <div class="game-title">🎯 Checkout Challenge</div>
+    <div class="game-sub">Progressive checkout practice — level up as you improve</div>
+    <div class="setup-section">
+      <h3>Starting Level</h3>
+      <div class="score-btns">
+        <button class="score-btn sel" id="co-lvl-1" onclick="coSelectLevel(1)">Level 1<br><small style="font-size:.65rem;font-weight:400">Singles (D1–D20)</small></button>
+        <button class="score-btn" id="co-lvl-2" onclick="coSelectLevel(2)">Level 2<br><small style="font-size:.65rem;font-weight:400">Two darts (41–99)</small></button>
+        <button class="score-btn" id="co-lvl-3" onclick="coSelectLevel(3)">Level 3<br><small style="font-size:.65rem;font-weight:400">Three darts (100–170)</small></button>
+      </div>
+    </div>
+    <div class="setup-section">
+      <h3>Hits Required to Level Up</h3>
+      <div class="score-btns">
+        <button class="score-btn" id="co-req-1" onclick="coSelectReq(1)">1 Hit</button>
+        <button class="score-btn sel" id="co-req-3" onclick="coSelectReq(3)">3 Hits</button>
+        <button class="score-btn" id="co-req-5" onclick="coSelectReq(5)">5 Hits</button>
+        <button class="score-btn" id="co-req-10" onclick="coSelectReq(10)">10 Hits</button>
+      </div>
+    </div>
+    <div class="setup-section">
+      <h3>Count Type</h3>
+      <div class="score-btns">
+        <button class="score-btn sel" id="co-type-streak" onclick="coSelectType('streak')">Consecutive<br><small style="font-size:.65rem;font-weight:400">Must be in a row</small></button>
+        <button class="score-btn" id="co-type-total" onclick="coSelectType('total')">Total<br><small style="font-size:.65rem;font-weight:400">Any hits at this level</small></button>
+      </div>
+    </div>
+    <button class="btn-start" onclick="coStartGame()">Start Challenge 🎯</button>
+  </div>
+</div>
+
+<div id="screen-checkout" class="screen">
+  <div class="game-wrap">
+    <div class="game-title">Checkout Challenge</div>
+    <div style="background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:.75rem 1rem;margin-bottom:.75rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
+      <div>
+        <div style="font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)">Current Level</div>
+        <div id="co-level-display" style="font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:900;color:var(--amber)">Level 1</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)">Progress to next level</div>
+        <div id="co-progress" style="font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:900;color:var(--gl)">0 / 3</div>
+      </div>
+    </div>
+    <div style="background:var(--s3);border-radius:4px;height:8px;margin-bottom:.75rem;overflow:hidden">
+      <div id="co-progress-bar" style="height:100%;background:var(--green);border-radius:4px;transition:width .3s;width:0%"></div>
+    </div>
+    <div class="stats-bar">
+      <div class="stat-box"><div class="stat-val g" id="co-hits">0</div><div class="stat-lbl">Hits</div></div>
+      <div class="stat-box"><div class="stat-val r" id="co-misses">0</div><div class="stat-lbl">Misses</div></div>
+      <div class="stat-box"><div class="stat-val a" id="co-pct">—</div><div class="stat-lbl">Hit %</div></div>
+    </div>
+    <div class="target-box">
+      <div class="target-label">Checkout Target</div>
+      <div class="target-score" id="co-target">—</div>
+      <div class="target-route" id="co-route"></div>
+      <div class="target-info" id="co-info"></div>
+    </div>
+    <div class="input-area">
+      <div class="input-label">Did you hit it?</div>
+      <div class="btn-row">
+        <button class="btn-hit" onclick="coResult(true)">✓ Hit!</button>
+        <button class="btn-miss" onclick="coResult(false)">✗ Miss</button>
+      </div>
+      <button class="btn-next" onclick="coNext()">Skip →</button>
+    </div>
+    <div class="history-list" id="co-history"></div>
+  </div>
+</div>
+
+<!-- ══════════ AROUND THE CLOCK ══════════ -->
+<div id="screen-atc" class="screen">
+  <div class="game-wrap">
+    <div class="game-title">Around the Clock</div>
+    <div class="game-sub">Hit 1–20 in order, then Bull. Count every dart.</div>
+    <div class="stats-bar">
+      <div class="stat-box"><div class="stat-val a" id="atc-darts">0</div><div class="stat-lbl">Darts</div></div>
+      <div class="stat-box"><div class="stat-val g" id="atc-current-num">1</div><div class="stat-lbl">Target</div></div>
+      <div class="stat-box"><div class="stat-val" id="atc-best">—</div><div class="stat-lbl">Best</div></div>
+    </div>
+    <div class="atc-grid" id="atc-grid"></div>
+    <div class="input-area">
+      <div class="input-label">Did you hit <span id="atc-target-label">1</span>?</div>
+      <div class="btn-row">
+        <button class="btn-hit" onclick="atcHit()">✓ Hit!</button>
+        <button class="btn-miss" onclick="atcMiss()">✗ Miss (+1 dart)</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ BOB'S 27 ══════════ -->
+<div id="screen-bobs" class="screen">
+  <div class="game-wrap">
+    <div class="game-title">Bob's 27</div>
+    <div class="game-sub">Hit the double to score × 2pts value. Miss and lose that value.</div>
+    <div class="bobs-score" id="bobs-score">27</div>
+    <div class="target-box" style="margin-bottom:.75rem">
+      <div class="target-label">Current Double</div>
+      <div class="target-score" id="bobs-target">D1</div>
+      <div class="target-info" id="bobs-info">Hit = +2pts · Miss = -2pts</div>
+    </div>
+    <div class="doubles-grid" id="bobs-grid"></div>
+    <div class="input-area">
+      <div class="btn-row">
+        <button class="btn-hit" onclick="bobsResult(true)">✓ Hit Double!</button>
+        <button class="btn-miss" onclick="bobsResult(false)">✗ Missed</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ DOUBLES PRACTICE ══════════ -->
+<div id="screen-doubles" class="screen">
+  <div class="game-wrap">
+    <div class="game-title">Doubles Practice</div>
+    <div class="game-sub">3 darts at each double. Track your accuracy.</div>
+    <div class="stats-bar">
+      <div class="stat-box"><div class="stat-val g" id="dp-hits">0</div><div class="stat-lbl">Hits</div></div>
+      <div class="stat-box"><div class="stat-val r" id="dp-throws">0</div><div class="stat-lbl">Throws</div></div>
+      <div class="stat-box"><div class="stat-val a" id="dp-pct">—</div><div class="stat-lbl">Hit %</div></div>
+    </div>
+    <div class="target-box">
+      <div class="target-label">Target Double</div>
+      <div class="target-score" id="dp-target">D20</div>
+      <div class="target-info" id="dp-info">Dart 1 of 3</div>
+    </div>
+    <div class="doubles-grid" id="dp-select-grid"></div>
+    <div class="input-area">
+      <div class="btn-row">
+        <button class="btn-hit" onclick="dpResult(true)">✓ Hit!</button>
+        <button class="btn-miss" onclick="dpResult(false)">✗ Miss</button>
+      </div>
+      <button class="btn-next" onclick="dpNextDouble()">Next Double →</button>
+    </div>
+    <div class="history-list" id="dp-history"></div>
+  </div>
+</div>
+
+<!-- ══════════ TREBLES PRACTICE ══════════ -->
+<div id="screen-trebles" class="screen">
+  <div class="game-wrap">
+    <div class="game-title">Trebles Practice</div>
+    <div class="game-sub">3 darts at each treble. Build your scoring power.</div>
+    <div class="stats-bar">
+      <div class="stat-box"><div class="stat-val g" id="tp-hits">0</div><div class="stat-lbl">Hits</div></div>
+      <div class="stat-box"><div class="stat-val r" id="tp-throws">0</div><div class="stat-lbl">Throws</div></div>
+      <div class="stat-box"><div class="stat-val a" id="tp-pct">—</div><div class="stat-lbl">Hit %</div></div>
+    </div>
+    <div class="target-box">
+      <div class="target-label">Target Treble</div>
+      <div class="target-score" id="tp-target">T20</div>
+      <div class="target-info" id="tp-info">Dart 1 of 3</div>
+    </div>
+    <div class="doubles-grid" id="tp-select-grid"></div>
+    <div class="input-area">
+      <div class="btn-row">
+        <button class="btn-hit" onclick="tpResult(true)">✓ Hit!</button>
+        <button class="btn-miss" onclick="tpResult(false)">✗ Miss</button>
+      </div>
+      <button class="btn-next" onclick="tpNextTreble()">Next Treble →</button>
+    </div>
+    <div class="history-list" id="tp-history"></div>
+  </div>
+</div>
+
+<!-- ══════════ RESULT ══════════ -->
+<div id="screen-result" class="screen">
+  <div class="game-wrap">
+    <div class="result-wrap">
+      <div class="result-icon" id="res-icon">🏆</div>
+      <div class="result-title" id="res-title">Game Over</div>
+      <div class="result-stat" id="res-stat"></div>
+      <div id="res-stats-grid" class="stats-bar" style="margin-bottom:1.5rem"></div>
+      <button class="btn-again" id="btn-play-again" onclick="playAgain()">Play Again 🎯</button>
+      <button class="btn-menu" onclick="showMenu()">← Back to Training Zone</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Checkout table ─────────────────────────────────────────────────────────────
+// ── Access guard ──────────────────────────────────────────────────────────────
+(function(){
+  var hasAccess=localStorage.getItem('mld_access')==='1';
+  if(!hasAccess){
+    window.location.href='https://flightchalker.co.uk/?msg=login';
+  }
+})();
+const CO={
+  170:'T20 T20 Bull',167:'T20 T19 Bull',164:'T20 T18 Bull',161:'T20 T17 Bull',
+  160:'T20 T20 D20',158:'T20 T20 D19',157:'T20 T19 D20',156:'T20 T20 D18',
+  155:'T20 T19 D19',154:'T20 T18 D20',153:'T20 T19 D18',152:'T20 T20 D16',
+  150:'T20 T18 D18',148:'T20 T16 D20',147:'T20 T17 D18',146:'T20 T18 D16',
+  145:'T20 T15 D20',144:'T20 T20 D12',143:'T20 T17 D16',142:'T20 T14 D20',
+  141:'T20 T19 D12',140:'T20 T16 D16',138:'T20 T18 D12',136:'T20 T20 D8',
+  135:'T20 T17 D12',134:'T20 T14 D16',133:'T20 T19 D8',132:'T20 T16 D12',
+  130:'T20 T18 D8',128:'T18 T14 D16',127:'T20 T17 D8',126:'T19 T19 D6',
+  125:'T20 T15 D10',124:'T20 T14 D11',122:'T18 T18 D7',121:'T20 T11 D14',
+  120:'T20 S20 D20',118:'T20 S18 D20',117:'T20 S17 D20',116:'T20 S16 D20',
+  115:'T20 S15 D20',114:'T20 S14 D20',113:'T20 S13 D20',112:'T20 S12 D20',
+  110:'T20 S10 D20',108:'T20 S8 D20',107:'T19 S10 D20',106:'T20 S6 D20',
+  105:'T20 S5 D20',104:'T20 S4 D20',103:'T20 S3 D20',102:'T20 S2 D20',
+  101:'T20 S1 D20',100:'T20 D20',99:'T19 S10 D16',98:'T20 D19',97:'T19 D20',
+  96:'T20 D18',95:'T19 D19',94:'T18 D20',93:'T19 D18',92:'T20 D16',
+  91:'T17 D20',90:'T18 D18',89:'T19 D16',88:'T20 D14',87:'T17 D18',
+  86:'T18 D16',85:'T15 D20',84:'T20 D12',83:'T17 D16',82:'T14 D20',
+  81:'T19 D12',80:'T16 D16',79:'T13 D20',78:'T18 D12',77:'T19 D10',
+  76:'T20 D8',75:'T17 D12',74:'T14 D16',73:'T19 D8',72:'T16 D12',
+  71:'T13 D16',70:'T18 D8',69:'T19 D6',68:'T20 D4',67:'T17 D8',
+  66:'T10 D18',65:'T19 D4',64:'T16 D8',63:'T17 D6',62:'T10 D16',
+  61:'T15 D8',60:'S20 D20',59:'S19 D20',58:'S18 D20',57:'S17 D20',
+  56:'T16 D4',55:'S15 D20',54:'S14 D20',53:'S13 D20',52:'S12 D20',
+  50:'Bull',49:'S9 D20',48:'S16 D16',47:'S15 D16',46:'S14 D16',
+  45:'S13 D16',44:'S12 D16',43:'S11 D16',42:'S10 D16',41:'S9 D16',
+  40:'D20',38:'D19',36:'D18',34:'D17',32:'D16',30:'D15',28:'D14',
+  26:'D13',24:'D12',22:'D11',20:'D10',18:'D9',16:'D8',14:'D7',
+  12:'D6',10:'D5',8:'D4',6:'D3',4:'D2',2:'D1'
+};
+
+var currentGame='';
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+  document.getElementById('btn-back-menu').style.display=id==='screen-menu'?'none':'block';
+}
+
+function showMenu(){showScreen('screen-menu');document.getElementById('hdr-sub').textContent='Training Zone';}
+
+function startGame(game){
+  currentGame=game;
+  if(game==='checkout'){initCheckout();}
+  else if(game==='atc'){initATC();}
+  else if(game==='bobs'){initBobs();}
+  else if(game==='doubles'){initDoubles();}
+  else if(game==='trebles'){initTrebles();}
+}
+
+function playAgain(){startGame(currentGame);}
+
+// ── CHECKOUT RANDOMISER ────────────────────────────────────────────────────────
+var co={hits:0,misses:0,target:0,history:[]};
+var coTargets=Object.keys(CO).map(Number).filter(function(n){return n>=2&&n<=170;});
+
+// Checkout setup state
+var coSetup={level:1,required:3,type:'streak'};
+
+function coSelectLevel(l){
+  coSetup.level=l;
+  [1,2,3].forEach(function(n){
+    var el=document.getElementById('co-lvl-'+n);
+    if(el)el.classList.toggle('sel',n===l);
+  });
+}
+function coSelectReq(n){
+  coSetup.required=n;
+  [1,3,5,10].forEach(function(r){
+    var el=document.getElementById('co-req-'+r);
+    if(el)el.classList.toggle('sel',r===n);
+  });
+}
+function coSelectType(t){
+  coSetup.type=t;
+  ['streak','total'].forEach(function(s){
+    var el=document.getElementById('co-type-'+s);
+    if(el)el.classList.toggle('sel',s===t);
+  });
+}
+
+function initCheckout(){
+  document.getElementById('hdr-sub').textContent='Checkout Challenge';
+  showScreen('screen-checkout-setup');
+}
+
+function coStartGame(){
+  co={
+    hits:0,misses:0,target:0,history:[],
+    level:coSetup.level,
+    required:coSetup.required,
+    type:coSetup.type,
+    progress:0  // hits at current level
+  };
+  showScreen('screen-checkout');
+  coUpdateLevelDisplay();
+  coNext();
+}
+
+// Targets by level
+var coLevel1=[2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40]; // doubles only
+var coLevel2=Object.keys(CO).map(Number).filter(function(n){return n>=41&&n<=99;});
+var coLevel3=Object.keys(CO).map(Number).filter(function(n){return n>=100&&n<=170;});
+
+function coLevelTargets(){
+  if(co.level===1)return coLevel1;
+  if(co.level===2)return coLevel2;
+  return coLevel3;
+}
+
+function coLevelName(l){
+  if(l===1)return 'Level 1 — Singles (D1–D20)';
+  if(l===2)return 'Level 2 — Two Darts';
+  return 'Level 3 — Three Darts';
+}
+
+function coUpdateLevelDisplay(){
+  var el=document.getElementById('co-level-display');
+  if(el)el.textContent=coLevelName(co.level);
+  var prog=document.getElementById('co-progress');
+  if(prog)prog.textContent=co.progress+' / '+co.required;
+  var bar=document.getElementById('co-progress-bar');
+  if(bar)bar.style.width=Math.round(co.progress/co.required*100)+'%';
+}
+
+function coNext(){
+  var targets=coLevelTargets();
+  co.target=targets[Math.floor(Math.random()*targets.length)];
+  document.getElementById('co-target').textContent=co.target;
+  document.getElementById('co-route').textContent=CO[co.target]||'D'+(co.target/2);
+  var darts=co.level===1?1:co.level===2?2:3;
+  document.getElementById('co-info').textContent=darts+' dart'+(darts!==1?'s':'')+' — must finish on a double';
+  coUpdateStats();
+}
+
+function coResult(hit){
+  co.history.unshift({target:co.target,hit:hit,level:co.level});
+  if(hit){
+    co.hits++;
+    co.progress++;
+    toast('Hit! 🎯');
+    // Check level up
+    if(co.progress>=co.required){
+      if(co.level<3){
+        co.level++;
+        co.progress=0;
+        setTimeout(function(){
+          toast('Level Up! Now on '+coLevelName(co.level)+' 🏆');
+          coUpdateLevelDisplay();
+        },400);
+      } else {
+        toast('Level 3 maintained! 🏆');
+        co.progress=co.required; // stay at max
+      }
+    }
+  } else {
+    co.misses++;
+    // Drop level on miss
+    if(co.type==='streak'){
+      co.progress=0; // reset streak
+      if(co.level>1){
+        co.level--;
+        co.progress=0;
+        setTimeout(function(){
+          toast('Dropped to '+coLevelName(co.level),true);
+          coUpdateLevelDisplay();
+        },400);
+      } else {
+        toast('Miss — keep practising!',true);
+      }
+    } else {
+      // total type — just reset progress on level drop
+      if(co.level>1){
+        co.level--;
+        co.progress=0;
+        setTimeout(function(){
+          toast('Dropped to '+coLevelName(co.level),true);
+          coUpdateLevelDisplay();
+        },400);
+      } else {
+        toast('Miss — keep practising!',true);
+      }
+    }
+  }
+  coUpdateStats();
+  coUpdateLevelDisplay();
+  coUpdateHistory();
+  setTimeout(coNext,800);
+}
+
+function coUpdateStats(){
+  document.getElementById('co-hits').textContent=co.hits;
+  document.getElementById('co-misses').textContent=co.misses;
+  var total=co.hits+co.misses;
+  document.getElementById('co-pct').textContent=total?Math.round(co.hits/total*100)+'%':'—';
+}
+
+function coUpdateHistory(){
+  document.getElementById('co-history').innerHTML=co.history.slice(0,8).map(function(h){
+    var lvlLabel='L'+h.level;
+    return '<div class="history-item">'
+      +'<span style="color:var(--dim);font-size:.75rem;min-width:20px">'+lvlLabel+'</span>'
+      +'<span>'+(h.hit?'✓':'✗')+' '+h.target+'</span>'
+      +'<span class="'+(h.hit?'history-hit':'history-miss')+'">'+(h.hit?'HIT':'MISS')+'</span>'
+      +'</div>';
+  }).join('');
+}
+
+// ── AROUND THE CLOCK ───────────────────────────────────────────────────────────
+var atc={current:1,darts:0,missed:[],best:null};
+
+function initATC(){
+  atc={current:1,darts:0,missed:[],best:localStorage.getItem('atc-best')||null};
+  document.getElementById('hdr-sub').textContent='Around the Clock';
+  document.getElementById('atc-best').textContent=atc.best||'—';
+  showScreen('screen-atc');
+  buildATCGrid();
+  atcUpdateDisplay();
+}
+
+function buildATCGrid(){
+  var nums=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,'Bull'];
+  document.getElementById('atc-grid').innerHTML=nums.map(function(n){
+    var cls='atc-num'+(n==='Bull'?' bull':'');
+    return '<div class="'+cls+'" id="atc-'+n+'">'+n+'</div>';
+  }).join('');
+}
+
+function atcUpdateDisplay(){
+  var target=atc.current<=20?atc.current:'Bull';
+  document.getElementById('atc-current-num').textContent=target;
+  document.getElementById('atc-target-label').textContent=target;
+  document.getElementById('atc-darts').textContent=atc.darts;
+  // Update grid
+  for(var i=1;i<=20;i++){
+    var el=document.getElementById('atc-'+i);
+    if(el){el.className='atc-num'+(i<atc.current?' done':i===atc.current?' current':'');}
+  }
+  var bull=document.getElementById('atc-Bull');
+  if(bull){bull.className='atc-num bull'+(atc.current>20?' done':atc.current===21?' current':'');}
+}
+
+function atcHit(){
+  atc.darts++;
+  if(atc.current<=20){atc.current++;}
+  else{
+    // Finished!
+    if(!atc.best||atc.darts<parseInt(atc.best)){
+      atc.best=atc.darts;
+      localStorage.setItem('atc-best',atc.darts);
+    }
+    showResult('Around the Clock Complete! 🕐','You hit 1–20 and Bull in <strong>'+atc.darts+' darts</strong>!'+(atc.best==atc.darts?' 🏆 New best!':''),
+      [{val:atc.darts,lbl:'Darts Used',cls:'a'},{val:atc.best||atc.darts,lbl:'Personal Best',cls:'g'}]);
+    return;
+  }
+  toast('Hit! 🎯');
+  atcUpdateDisplay();
+}
+
+function atcMiss(){
+  atc.darts++;
+  toast('Miss',true);
+  atcUpdateDisplay();
+}
+
+// ── BOB'S 27 ───────────────────────────────────────────────────────────────────
+var bobs={score:27,current:1,history:[]};
+
+function initBobs(){
+  bobs={score:27,current:1,history:[]};
+  document.getElementById('hdr-sub').textContent="Bob's 27";
+  showScreen('screen-bobs');
+  buildBobsGrid();
+  bobsUpdateDisplay();
+}
+
+function buildBobsGrid(){
+  var nums=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20];
+  document.getElementById('bobs-grid').innerHTML=nums.map(function(n){
+    return '<div class="dbl-btn" id="bobs-d'+n+'">D'+n+'</div>';
+  }).join('');
+}
+
+function bobsUpdateDisplay(){
+  document.getElementById('bobs-score').textContent=bobs.score;
+  document.getElementById('bobs-score').className='bobs-score'+(bobs.score<10?' low':'');
+  document.getElementById('bobs-target').textContent='D'+bobs.current;
+  document.getElementById('bobs-info').textContent='Hit = +'+(bobs.current*2)+'pts · Miss = -'+(bobs.current*2)+'pts';
+  for(var i=1;i<=20;i++){
+    var el=document.getElementById('bobs-d'+i);
+    if(!el)continue;
+    var found=bobs.history.find(function(h){return h.double===i;});
+    if(found){el.className='dbl-btn '+(found.hit?'done':'failed');}
+    else if(i===bobs.current){el.className='dbl-btn current';}
+    else{el.className='dbl-btn';}
+  }
+}
+
+function bobsResult(hit){
+  var val=bobs.current*2;
+  bobs.history.push({double:bobs.current,hit:hit});
+  if(hit){bobs.score+=val;toast('Hit D'+bobs.current+'! +'+val+'pts 🎯');}
+  else{bobs.score-=val;toast('Miss — -'+val+'pts',true);}
+  if(bobs.score<=0){
+    showResult("Busted Out! 💥","You ran out of points on D"+bobs.current,
+      [{val:bobs.current,lbl:'Reached Double',cls:'a'},{val:bobs.history.filter(function(h){return h.hit;}).length,lbl:'Doubles Hit',cls:'g'}]);
+    return;
+  }
+  bobs.current++;
+  if(bobs.current>20){
+    showResult("Bob's 27 Complete! 🏆",'Final score: <strong>'+bobs.score+' points</strong>',
+      [{val:bobs.score,lbl:'Final Score',cls:'a'},{val:bobs.history.filter(function(h){return h.hit;}).length,lbl:'Doubles Hit',cls:'g'},{val:bobs.history.filter(function(h){return !h.hit;}).length,lbl:'Missed',cls:'r'}]);
+    return;
+  }
+  bobsUpdateDisplay();
+}
+
+// ── DOUBLES PRACTICE ───────────────────────────────────────────────────────────
+var dp={target:20,dart:1,hits:0,throws:0,history:[]};
+
+function initDoubles(){
+  dp={target:20,dart:1,hits:0,throws:0,history:[]};
+  document.getElementById('hdr-sub').textContent='Doubles Practice';
+  showScreen('screen-doubles');
+  buildDPGrid();
+  dpUpdateDisplay();
+}
+
+function buildDPGrid(){
+  var nums=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,'Bull'];
+  document.getElementById('dp-select-grid').innerHTML=nums.map(function(n){
+    return '<div class="dbl-btn'+(n===20?' current':'')+'" onclick="dpSelectDouble('+(n==='Bull'?25:n)+')" id="dp-sel-'+n+'">D'+(n==='Bull'?'Bull':n)+'</div>';
+  }).join('');
+}
+
+function dpSelectDouble(n){
+  dp.target=n;dp.dart=1;
+  document.querySelectorAll('#dp-select-grid .dbl-btn').forEach(function(b){b.className='dbl-btn';});
+  var id='dp-sel-'+(n===25?'Bull':n);
+  var el=document.getElementById(id);
+  if(el)el.className='dbl-btn current';
+  dpUpdateDisplay();
+}
+
+function dpUpdateDisplay(){
+  document.getElementById('dp-target').textContent='D'+(dp.target===25?'Bull':dp.target);
+  document.getElementById('dp-info').textContent='Dart '+dp.dart+' of 3';
+  document.getElementById('dp-hits').textContent=dp.hits;
+  document.getElementById('dp-throws').textContent=dp.throws;
+  document.getElementById('dp-pct').textContent=dp.throws?Math.round(dp.hits/dp.throws*100)+'%':'—';
+}
+
+function dpResult(hit){
+  dp.throws++;
+  dp.history.unshift({target:'D'+(dp.target===25?'Bull':dp.target),hit:hit,dart:dp.dart});
+  if(hit){dp.hits++;toast('Hit! 🎯');}
+  else{toast('Miss',true);}
+  dp.dart=dp.dart>=3?1:dp.dart+1;
+  dpUpdateDisplay();
+  dpUpdateHistory();
+}
+
+function dpNextDouble(){
+  var n=dp.target===25?1:(dp.target>=20?1:dp.target+1);
+  dpSelectDouble(n===21?25:n);
+}
+
+function dpUpdateHistory(){
+  document.getElementById('dp-history').innerHTML=dp.history.slice(0,6).map(function(h){
+    return '<div class="history-item"><span>'+h.target+' dart '+h.dart+'</span>'
+      +'<span class="'+(h.hit?'history-hit':'history-miss')+'">'+(h.hit?'HIT':'MISS')+'</span></div>';
+  }).join('');
+}
+
+// ── TREBLES PRACTICE ───────────────────────────────────────────────────────────
+var tp={target:20,dart:1,hits:0,throws:0,history:[]};
+
+function initTrebles(){
+  tp={target:20,dart:1,hits:0,throws:0,history:[]};
+  document.getElementById('hdr-sub').textContent='Trebles Practice';
+  showScreen('screen-trebles');
+  buildTPGrid();
+  tpUpdateDisplay();
+}
+
+function buildTPGrid(){
+  var nums=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20];
+  document.getElementById('tp-select-grid').innerHTML=nums.map(function(n){
+    return '<div class="dbl-btn'+(n===20?' current':'')+'" onclick="tpSelectTreble('+n+')" id="tp-sel-'+n+'">T'+n+'</div>';
+  }).join('');
+}
+
+function tpSelectTreble(n){
+  tp.target=n;tp.dart=1;
+  document.querySelectorAll('#tp-select-grid .dbl-btn').forEach(function(b){b.className='dbl-btn';});
+  var el=document.getElementById('tp-sel-'+n);
+  if(el)el.className='dbl-btn current';
+  tpUpdateDisplay();
+}
+
+function tpUpdateDisplay(){
+  document.getElementById('tp-target').textContent='T'+tp.target;
+  document.getElementById('tp-info').textContent='Dart '+tp.dart+' of 3';
+  document.getElementById('tp-hits').textContent=tp.hits;
+  document.getElementById('tp-throws').textContent=tp.throws;
+  document.getElementById('tp-pct').textContent=tp.throws?Math.round(tp.hits/tp.throws*100)+'%':'—';
+}
+
+function tpResult(hit){
+  tp.throws++;
+  tp.history.unshift({target:'T'+tp.target,hit:hit,dart:tp.dart});
+  if(hit){tp.hits++;toast('Hit! 🎯');}
+  else{toast('Miss',true);}
+  tp.dart=tp.dart>=3?1:tp.dart+1;
+  tpUpdateDisplay();
+  tpUpdateHistory();
+}
+
+function tpNextTreble(){
+  var n=tp.target>=20?1:tp.target+1;
+  tpSelectTreble(n);
+}
+
+function tpUpdateHistory(){
+  document.getElementById('tp-history').innerHTML=tp.history.slice(0,6).map(function(h){
+    return '<div class="history-item"><span>'+h.target+' dart '+h.dart+'</span>'
+      +'<span class="'+(h.hit?'history-hit':'history-miss')+'">'+(h.hit?'HIT':'MISS')+'</span></div>';
+  }).join('');
+}
+
+// ── RESULT ─────────────────────────────────────────────────────────────────────
+function showResult(title,stat,stats){
+  document.getElementById('res-title').textContent=title;
+  document.getElementById('res-stat').innerHTML=stat||'';
+  var grid=document.getElementById('res-stats-grid');
+  if(stats&&stats.length){
+    grid.style.display='grid';
+    grid.innerHTML=stats.map(function(s){
+      return '<div class="stat-box"><div class="stat-val '+s.cls+'">'+s.val+'</div><div class="stat-lbl">'+s.lbl+'</div></div>';
+    }).join('');
+  } else {grid.style.display='none';}
+  showScreen('screen-result');
+}
+
+function toast(msg,isErr){
+  var t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast'+(isErr?' err':'')+' show';
+  setTimeout(function(){t.classList.remove('show');},1800);
+}
+</script>
+</body>
+</html>
