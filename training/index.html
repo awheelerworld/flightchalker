@@ -2,6 +2,24 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzE0MTgxNCIvPgogIDxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YTdjNTkiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNGE3YzU5IiBzdHJva2Utd2lkdGg9IjEiLz4KICA8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI0IiBmaWxsPSIjZThjODQwIi8+Cjwvc3ZnPg==">
+  <meta name="description" content="Improve your darts game with Flight Chalker Training Zone. Checkout practice, around the clock, doubles training and more.">
+  <meta name="keywords" content="darts training, darts practice, checkout practice, darts drills, improve darts">
+  <meta name="author" content="awheelerworld">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://flightchalker.co.uk/training">
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Darts Training Zone — Flight Chalker">
+  <meta property="og:description" content="Practice your darts with checkout challenges, around the clock, doubles training and more.">
+  <meta property="og:url" content="https://flightchalker.co.uk/training">
+  <meta property="og:image" content="https://flightchalker.co.uk/og-image.png">
+  <meta property="og:site_name" content="Flight Chalker">
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Darts Training Zone — Flight Chalker">
+  <meta name="twitter:description" content="Practice your darts with checkout challenges, around the clock, doubles training and more.">
+  <meta name="twitter:image" content="https://flightchalker.co.uk/og-image.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🎯 Training Zone — Flight Chalker</title>
 <style>
@@ -119,6 +137,15 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
 .toast.show{transform:translateX(-50%) translateY(0)}
 .toast.err{background:var(--red)}
 </style>
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-WQRGJRFF1Q"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-WQRGJRFF1Q');
+</script>
+<script src="https://unpkg.com/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
 </head>
 <body>
 
@@ -400,6 +427,50 @@ const CO={
 
 var currentGame='';
 
+
+// ── Flight Chalker Player Session Module ──────────────────────────────────
+var fcUser=null,fcSessionStart=null;
+async function fcInit(){
+  try{
+    if(!window.Clerk){
+      var s=document.createElement('script');
+      s.src='https://unpkg.com/@clerk/clerk-js@latest/dist/clerk.browser.js';
+      document.head.appendChild(s);
+      await new Promise(function(r){s.onload=r;});
+    }
+    var clerk=new window.Clerk('pk_test_dGhhbmtmdWwtb3dsLTg3LmNsZXJrLmFjY291bnRzLmRldiQ');
+    await clerk.load();
+    window.Clerk=clerk;
+    if(clerk.user){fcUser=clerk.user;console.log('FC Player:',fcUser.username||fcUser.id);}
+  }catch(e){console.log('FC: guest mode');}
+}
+function fcBegin(gameType){
+  fcSessionStart=Date.now();
+  if(typeof gtag!=='undefined')gtag('event','game_start',{game_type:gameType,logged_in:!!fcUser});
+}
+function fcEnd(gameType,result){
+  if(!fcUser)return;
+  var dur=fcSessionStart?Math.round((Date.now()-fcSessionStart)/1000):0;
+  var n=parseInt(localStorage.getItem('fc_game_sessions')||'0')+1;
+  localStorage.setItem('fc_game_sessions',n);
+  if(result.best&&result.best>(parseInt(localStorage.getItem('fc_best_score')||'0')))
+    localStorage.setItem('fc_best_score',result.best);
+  if(result.s180){
+    var cur=parseInt(localStorage.getItem('fc_180s')||'0');
+    localStorage.setItem('fc_180s',cur+result.s180);
+  }
+  if(typeof gtag!=='undefined')gtag('event','game_complete',{game_type:gameType,duration:dur,username:fcUser.username||fcUser.id});
+}
+function fcTrain(gameType,score,meta){
+  if(!fcUser)return;
+  var n=parseInt(localStorage.getItem('fc_training_sessions')||'0')+1;
+  localStorage.setItem('fc_training_sessions',n);
+  if(score&&score>(parseInt(localStorage.getItem('fc_best_score')||'0')))
+    localStorage.setItem('fc_best_score',score);
+  if(typeof gtag!=='undefined')gtag('event','training_complete',{game_type:gameType,score:score,username:fcUser.username||fcUser.id});
+}
+// ──────────────────────────────────────────────────────────────────────────
+
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   document.getElementById(id).classList.add('active');
@@ -503,7 +574,7 @@ function coNext(){
   coUpdateStats();
 }
 
-function coResult(hit){
+function coResult(hit){if(hit)fcTrain('checkout',co.target,{level:co.level,hits:co.hits});
   co.history.unshift({target:co.target,hit:hit,level:co.level});
   if(hit){
     co.hits++;
@@ -610,7 +681,7 @@ function atcUpdateDisplay(){
   if(bull){bull.className='atc-num bull'+(atc.current>20?' done':atc.current===21?' current':'');}
 }
 
-function atcHit(){
+function atcHit(){if(atc.current>20)fcTrain('atc',atc.darts,{darts:atc.darts});
   atc.darts++;
   if(atc.current<=20){atc.current++;}
   else{
@@ -666,7 +737,7 @@ function bobsUpdateDisplay(){
   }
 }
 
-function bobsResult(hit){
+function bobsResult(hit){if(bobs.round>27)fcTrain('bobs27',bobs.score,{score:bobs.score});
   var val=bobs.current*2;
   bobs.history.push({double:bobs.current,hit:hit});
   if(hit){bobs.score+=val;toast('Hit D'+bobs.current+'! +'+val+'pts 🎯');}
