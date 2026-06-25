@@ -1,1 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Flight Chalker</title>
+<meta name="description" content="Your Flight Chalker player dashboard. Access the scorer, training zone and view your stats.">
+<meta name="robots" content="noindex, nofollow">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-WQRGJRFF1Q"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-WQRGJRFF1Q');</script>
+<script src="https://unpkg.com/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#141814;--surface:#1e251e;--s2:#252e25;--s3:#2e382e;--green:#4a7c59;--gl:#5a9469;--amber:#e8c840;--red:#c0392b;--text:#e0d8c8;--dim:#8a9080;--border:#3a4a3a}
+body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh}
 
+/* Header */
+header{background:var(--surface);border-bottom:2px solid var(--green);padding:0 1.25rem;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100}
+.logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.2rem;letter-spacing:.05em;text-transform:uppercase;text-decoration:none;color:var(--text)}
+.logo span{color:var(--amber)}
+.hright{display:flex;align-items:center;gap:.75rem}
+.username-badge{font-family:'Barlow Condensed',sans-serif;font-size:.85rem;color:var(--amber);font-weight:700}
+.btn-signout{background:none;border:1px solid var(--border);border-radius:4px;color:var(--dim);font-family:'Barlow Condensed',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;cursor:pointer}
+.btn-signout:hover{border-color:var(--red);color:#ff8080}
+
+main{max-width:900px;margin:0 auto;padding:1.5rem 1rem 4rem}
+
+/* Welcome banner */
+.welcome{background:linear-gradient(135deg,#1e3a28,#141814);border:1px solid var(--green);border-radius:12px;padding:1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+.welcome-text h2{font-family:'Barlow Condensed',sans-serif;font-size:1.5rem;font-weight:900;color:var(--text)}
+.welcome-text h2 span{color:var(--amber)}
+.welcome-text p{font-size:.82rem;color:var(--dim);margin-top:.25rem}
+.free-badge{background:#1a2a1e;border:1px solid var(--green);border-radius:20px;padding:.3rem .9rem;font-family:'Barlow Condensed',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gl)}
+
+/* Section headers */
+.sec-title{font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--green);margin-bottom:.75rem}
+
+/* Game cards */
+.game-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem}
+.game-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.25rem;text-decoration:none;color:var(--text);transition:border-color .15s;display:flex;flex-direction:column;gap:.5rem}
+.game-card:hover{border-color:var(--green)}
+.game-card .icon{font-size:1.8rem}
+.game-card h3{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:900;text-transform:uppercase;letter-spacing:.05em}
+.game-card p{font-size:.78rem;color:var(--dim);line-height:1.4}
+.game-card .go{font-family:'Barlow Condensed',sans-serif;font-size:.78rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--green);margin-top:.25rem}
+
+/* Stats grid */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.75rem;margin-bottom:1.5rem}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem;text-align:center}
+.stat-card .val{font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:900;color:var(--amber);line-height:1}
+.stat-card .lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-top:4px}
+
+/* Team section */
+.team-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.25rem;margin-bottom:1rem}
+.team-card h3{font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.75rem}
+.team-item{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.6rem 0;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.team-item:last-child{border-bottom:none}
+.team-name{font-weight:600;font-size:.9rem}
+.team-league{font-size:.75rem;color:var(--dim)}
+.status-badge{font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 10px;border-radius:10px}
+.status-badge.approved{background:#1a3a22;color:var(--gl);border:1px solid var(--green)}
+.status-badge.pending{background:#2a2a10;color:var(--amber);border:1px solid #6a6200}
+.status-badge.rejected{background:#2a1010;color:#ff8080;border:1px solid var(--red)}
+
+/* Join team form */
+.join-form{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.75rem}
+.join-form input{flex:1;min-width:150px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.9rem;padding:.5rem .75rem}
+.join-form input:focus{outline:none;border-color:var(--green)}
+.join-form button{background:var(--green);border:none;border-radius:6px;color:white;font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.5rem 1.25rem;cursor:pointer}
+
+/* Profile section */
+.profile-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.25rem;margin-bottom:1rem}
+.profile-row{display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--border);font-size:.88rem;flex-wrap:wrap;gap:.5rem}
+.profile-row:last-child{border-bottom:none}
+.profile-row .label{color:var(--dim);font-size:.78rem;text-transform:uppercase;letter-spacing:.08em}
+.toggle{position:relative;display:inline-block;width:40px;height:22px}
+.toggle input{opacity:0;width:0;height:0}
+.slider{position:absolute;cursor:pointer;inset:0;background:var(--s3);border-radius:22px;transition:.3s}
+.slider::before{content:'';position:absolute;width:16px;height:16px;left:3px;bottom:3px;background:var(--dim);border-radius:50%;transition:.3s}
+input:checked+.slider{background:var(--green)}
+input:checked+.slider::before{transform:translateX(18px);background:white}
+
+.btn-profile-link{background:none;border:1px solid var(--border);border-radius:6px;color:var(--gl);font-family:'Barlow Condensed',sans-serif;font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 12px;cursor:pointer;text-decoration:none;display:inline-block}
+.btn-profile-link:hover{border-color:var(--green)}
+
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1rem;padding:.6rem 1.5rem;border-radius:6px;transition:transform .3s;z-index:999}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.err{background:var(--red)}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle;margin-right:4px}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+.loading{text-align:center;padding:3rem;color:var(--dim);font-size:.9rem}
+
+@media(max-width:500px){
+  .game-grid{grid-template-columns:1fr}
+  .welcome{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <a href="/" class="logo">Flight <span>Chalker</span></a>
+  <div class="hright">
+    <span class="username-badge" id="username-display"></span>
+    <button class="btn-signout" onclick="signOut()">Sign Out</button>
+  </div>
+</header>
+
+<main id="main-content" style="display:none">
+
+  <!-- Welcome -->
+  <div class="welcome">
+    <div class="welcome-text">
+      <h2>Welcome back, <span id="welcome-name">Player</span>! 🎯</h2>
+      <p>Ready to throw some darts?</p>
+    </div>
+    <div class="free-badge">✓ Free Member</div>
+  </div>
+
+  <!-- Quick access -->
+  <div class="sec-title">Quick Access</div>
+  <div class="game-grid">
+    <a href="/scorer" class="game-card">
+      <div class="icon">🎯</div>
+      <h3>Play Darts</h3>
+      <p>501, 301, Cricket, Killer and more game modes.</p>
+      <div class="go">Play now →</div>
+    </a>
+    <a href="/training" class="game-card">
+      <div class="icon">🏹</div>
+      <h3>Training Zone</h3>
+      <p>Checkout practice, around the clock, doubles training.</p>
+      <div class="go">Train now →</div>
+    </a>
+  </div>
+
+  <!-- Stats -->
+  <div class="sec-title">Your Stats</div>
+  <div class="stats-grid" id="stats-grid">
+    <div class="stat-card"><div class="val" id="stat-sessions">—</div><div class="lbl">Games Played</div></div>
+    <div class="stat-card"><div class="val" id="stat-training">—</div><div class="lbl">Training Sessions</div></div>
+    <div class="stat-card"><div class="val" id="stat-best">—</div><div class="lbl">Best Score</div></div>
+    <div class="stat-card"><div class="val" id="stat-180s">—</div><div class="lbl">180s Hit</div></div>
+  </div>
+
+  <!-- Team memberships -->
+  <div class="sec-title">My Teams</div>
+  <div class="team-card">
+    <h3>League Teams</h3>
+    <div id="teams-list"><div class="loading"><span class="spin"></span> Loading...</div></div>
+    <div style="margin-top:1rem">
+      <div style="font-size:.78rem;color:var(--dim);margin-bottom:.5rem">Have a team join code? Enter it below to request to join a team.</div>
+      <div class="join-form">
+        <input type="text" id="join-code" placeholder="Enter team join code" maxlength="20">
+        <button onclick="requestJoinTeam()">Request to Join</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile -->
+  <div class="sec-title">Profile Settings</div>
+  <div class="profile-card">
+    <div class="profile-row">
+      <span class="label">Username</span>
+      <span id="profile-username" style="font-weight:600;font-family:'Barlow Condensed',sans-serif;font-size:1rem;color:var(--amber)"></span>
+    </div>
+    <div class="profile-row">
+      <span class="label">Email</span>
+      <span id="profile-email" style="font-size:.85rem"></span>
+    </div>
+    <div class="profile-row">
+      <span class="label">Public Leaderboards</span>
+      <label class="toggle">
+        <input type="checkbox" id="leaderboard-toggle" onchange="updateLeaderboardPref(this.checked)" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="profile-row">
+      <span class="label">Public Profile</span>
+      <a href="#" id="profile-link" class="btn-profile-link" target="_blank">View Profile →</a>
+    </div>
+    <div class="profile-row">
+      <span class="label">Member Since</span>
+      <span id="profile-since" style="font-size:.85rem;color:var(--dim)"></span>
+    </div>
+  </div>
+
+</main>
+
+<div id="loading-screen" class="loading" style="padding:4rem">
+  <span class="spin"></span> Loading your dashboard...
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CLERK_KEY = 'pk_test_dGhhbmtmdWwtb3dsLTg3LmNsZXJrLmFjY291bnRzLmRldiQ';
+const NEON_URL = 'https://ep-shiny-mouse-abtjiaqk.eu-west-2.aws.neon.tech';
+
+function toast(msg, isErr=false){
+  var t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast'+(isErr?' err':'')+' show';
+  setTimeout(function(){t.classList.remove('show');},3000);
+}
+
+async function signOut(){
+  try{
+    await window.Clerk.signOut();
+    window.location.href='/';
+  }catch(e){window.location.href='/';}
+}
+
+async function loadDashboard(user){
+  // Set username display
+  var username = user.username || user.firstName || user.emailAddresses[0].emailAddress.split('@')[0];
+  document.getElementById('username-display').textContent = '@'+username;
+  document.getElementById('welcome-name').textContent = username;
+  document.getElementById('profile-username').textContent = '@'+username;
+  document.getElementById('profile-email').textContent = user.emailAddresses[0]?.emailAddress || '';
+  document.getElementById('profile-link').href = '/player/'+username;
+
+  // Member since
+  var since = new Date(user.createdAt).toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+  document.getElementById('profile-since').textContent = since;
+
+  // Load stats from localStorage for now (will connect to Neon later)
+  var sessions = parseInt(localStorage.getItem('fc_game_sessions')||'0');
+  var training = parseInt(localStorage.getItem('fc_training_sessions')||'0');
+  var best = localStorage.getItem('fc_best_score')||'—';
+  var s180 = parseInt(localStorage.getItem('fc_180s')||'0');
+  document.getElementById('stat-sessions').textContent = sessions||'—';
+  document.getElementById('stat-training').textContent = training||'—';
+  document.getElementById('stat-best').textContent = best;
+  document.getElementById('stat-180s').textContent = s180||'—';
+
+  // Load team memberships
+  loadTeams(user);
+
+  // Leaderboard preference
+  var optIn = localStorage.getItem('fc_leaderboard_opt');
+  document.getElementById('leaderboard-toggle').checked = optIn !== '0';
+
+  // Show dashboard
+  document.getElementById('loading-screen').style.display = 'none';
+  document.getElementById('main-content').style.display = 'block';
+}
+
+function loadTeams(user){
+  var el = document.getElementById('teams-list');
+  // Check localStorage for any pending/approved memberships
+  var memberships = JSON.parse(localStorage.getItem('fc_memberships')||'[]');
+  if(!memberships.length){
+    el.innerHTML = '<div style="font-size:.85rem;color:var(--dim);padding:.5rem 0">You are not currently linked to any league teams.</div>';
+    return;
+  }
+  el.innerHTML = memberships.map(function(m){
+    return '<div class="team-item">'
+      +'<div><div class="team-name">'+m.team_name+'</div><div class="team-league">'+m.league_name+'</div></div>'
+      +'<span class="status-badge '+m.status+'">'+m.status+'</span>'
+      +'</div>';
+  }).join('');
+}
+
+async function requestJoinTeam(){
+  var code = document.getElementById('join-code').value.trim().toUpperCase();
+  if(!code){toast('Please enter a join code',true);return;}
+  // Store the request locally for now
+  var memberships = JSON.parse(localStorage.getItem('fc_memberships')||'[]');
+  var existing = memberships.find(function(m){return m.code===code;});
+  if(existing){toast('Already requested to join this team',true);return;}
+  memberships.push({code:code,team_name:'Team ('+code+')',league_name:'Pending verification',status:'pending'});
+  localStorage.setItem('fc_memberships',JSON.stringify(memberships));
+  document.getElementById('join-code').value = '';
+  toast('Join request sent!');
+  loadTeams(window.currentUser);
+}
+
+function updateLeaderboardPref(checked){
+  localStorage.setItem('fc_leaderboard_opt', checked?'1':'0');
+  toast(checked?'Added to leaderboards':'Removed from leaderboards');
+}
+
+// Init
+window.addEventListener('load', async function(){
+  try{
+    const clerk = new window.Clerk(CLERK_KEY);
+    await clerk.load();
+    window.Clerk = clerk;
+    if(!clerk.user){
+      // Not logged in - redirect to login
+      window.location.href = '/login?redirect=/dashboard';
+      return;
+    }
+    window.currentUser = clerk.user;
+    await loadDashboard(clerk.user);
+  }catch(e){
+    console.error('Dashboard error:',e);
+    document.getElementById('loading-screen').innerHTML = '<div style="color:var(--red)">Error loading dashboard. <a href="/" style="color:var(--gl)">Go home</a></div>';
+  }
+});
+</script>
+</body>
+</html>
