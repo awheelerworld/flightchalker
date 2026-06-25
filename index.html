@@ -30,7 +30,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzE0MTgxNCIvPgogIDxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YTdjNTkiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNGE3YzU5IiBzdHJva2Utd2lkdGg9IjEiLz4KICA8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI0IiBmaWxsPSIjZThjODQwIi8+Cjwvc3ZnPg==">
-<title>🎯 Flight Chalker — League Platform v44</title>
+<title>🎯 Flight Chalker — League Platform v45</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -668,6 +668,7 @@ html{scroll-behavior:smooth}
       <button class="tab" onclick="sw('history')">History</button>
       <button class="tab" onclick="sw('players')">Players</button>
       <button class="tab" onclick="sw('stats')">Stats</button>
+      <button class="tab" id="squad-tab" onclick="sw('squad')" style="display:none">Squad <span id="squad-badge" style="display:none;background:var(--red);color:white;border-radius:10px;padding:1px 6px;font-size:.7rem;margin-left:3px">0</span></button>
     </div>
 
     <!-- RECORD MATCH -->
@@ -751,6 +752,30 @@ html{scroll-behavior:smooth}
         <label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--dim)">Player</label>
         <select id="spsel" onchange="renderStats()" style="background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:Barlow,sans-serif;font-size:.9rem;padding:.4rem .75rem"><option value="">— Select player —</option></select>
       </div>
+
+    <!-- SQUAD MANAGEMENT -->
+    <div id="tab-squad" class="tc">
+      <div class="card">
+        <h2>Squad Management</h2>
+        <p style="font-size:.82rem;color:var(--dim);margin-bottom:1rem">Manage player join requests and your current squad.</p>
+
+        <!-- Pending requests -->
+        <div style="margin-bottom:1.5rem">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);margin-bottom:.75rem">Pending Join Requests</div>
+          <div id="squad-pending">
+            <div style="font-size:.85rem;color:var(--dim);padding:.5rem 0">No pending requests.</div>
+          </div>
+        </div>
+
+        <!-- Current squad -->
+        <div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--green);margin-bottom:.75rem">Current Squad</div>
+          <div id="squad-members">
+            <div style="font-size:.85rem;color:var(--dim);padding:.5rem 0">Loading squad...</div>
+          </div>
+        </div>
+      </div>
+    </div>
       <div id="scontent"><div class="nh">Select a player to see their stats.</div></div>
     </div>
   </main>
@@ -979,6 +1004,7 @@ document.addEventListener('DOMContentLoaded',async function(){
       await loadTeamData();
       showScreen('screen-app');
       setTimeout(checkDraftRestore,800);
+      setTimeout(renderSquad,1000);
       var wname=currentTeam&&currentTeam.team_name?currentTeam.team_name:'';
       if(wname)setTimeout(function(){toast('Welcome back, '+wname+' 🎯');},600);
     }catch(e){localStorage.removeItem('mld_session');showScreen('screen-landing');}
@@ -2136,12 +2162,87 @@ function downloadPDF(idx){
 }
 
 // ── Tabs ──────────────────────────────────────────────────────────────────────
+function renderSquad(){
+  if(!currentTeam)return;
+  var key='fc_requests_'+currentTeam.id;
+  var requests=JSON.parse(localStorage.getItem(key)||'[]');
+  var pending=requests.filter(function(r){return r.status==='pending';});
+  var approved=requests.filter(function(r){return r.status==='approved';});
+  var badge=document.getElementById('squad-badge');
+  var tab=document.getElementById('squad-tab');
+  if(badge){badge.textContent=pending.length;badge.style.display=pending.length?'inline':'none';}
+  if(tab)tab.style.display='block';
+  var pendingEl=document.getElementById('squad-pending');
+  if(pendingEl){
+    if(!pending.length){
+      pendingEl.innerHTML='<div style="font-size:.85rem;color:var(--dim);padding:.5rem 0">No pending requests.</div>';
+    } else {
+      var html='';
+      pending.forEach(function(r,i){
+        html+='<div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.75rem 1rem;margin-bottom:.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">'
+          +'<div><div style="font-weight:600;font-size:.9rem">@'+r.username+'</div>'
+          +'<div style="font-size:.75rem;color:var(--dim)">Requested '+new Date(r.requested_at).toLocaleDateString('en-GB')+'</div></div>'
+          +'<div style="display:flex;gap:.4rem">'
+          +'<button class="btnp" style="font-size:.8rem;padding:4px 12px" onclick="squadApprove('+JSON.stringify(r.username)+')">Approve</button>'
+          +'<button class="btns" style="font-size:.8rem;padding:4px 12px;border-color:var(--red);color:#ff8080" onclick="squadReject('+JSON.stringify(r.username)+')">Reject</button>'
+          +'</div></div>';
+      });
+      pendingEl.innerHTML=html;
+    }
+  }
+  var membersEl=document.getElementById('squad-members');
+  if(membersEl){
+    if(!approved.length){
+      membersEl.innerHTML='<div style="font-size:.85rem;color:var(--dim);padding:.5rem 0">No squad members yet.</div>';
+    } else {
+      var html2='';
+      approved.forEach(function(r){
+        html2+='<div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.75rem 1rem;margin-bottom:.4rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">'
+          +'<div><div style="font-weight:600;font-size:.9rem">@'+r.username+'</div>'
+          +'<div style="font-size:.75rem;color:var(--gl)">Active member</div></div>'
+          +'<button class="btns" style="font-size:.75rem;padding:4px 10px" onclick="squadRemove('+JSON.stringify(r.username)+')">Remove</button>'
+          +'</div>';
+      });
+      membersEl.innerHTML=html2;
+    }
+  }
+}
+
+function squadApprove(username){if(username&&username.dataset)username=username.dataset.u;
+  var key='fc_requests_'+currentTeam.id;
+  var requests=JSON.parse(localStorage.getItem(key)||'[]');
+  requests=requests.map(function(r){return r.username===username?{...r,status:'approved'}:r;});
+  localStorage.setItem(key,JSON.stringify(requests));
+  toast('@'+username+' approved!');
+  renderSquad();
+}
+
+function squadReject(username){
+  var key='fc_requests_'+currentTeam.id;
+  var requests=JSON.parse(localStorage.getItem(key)||'[]');
+  requests=requests.map(function(r){return r.username===username?{...r,status:'rejected'}:r;});
+  localStorage.setItem(key,JSON.stringify(requests));
+  toast('@'+username+' rejected');
+  renderSquad();
+}
+
+function squadRemove(username){
+  if(!confirm('Remove @'+username+' from the squad?'))return;
+  var key='fc_requests_'+currentTeam.id;
+  var requests=JSON.parse(localStorage.getItem(key)||'[]');
+  requests=requests.filter(function(r){return r.username!==username;});
+  localStorage.setItem(key,JSON.stringify(requests));
+  toast('@'+username+' removed from squad');
+  renderSquad();
+}
+
 function sw(name){
   var names=['match','fixtures','table','history','players','stats'];
   document.querySelectorAll('#screen-app .tab').forEach(function(t,i){t.classList.toggle('active',names[i]===name);});
   document.querySelectorAll('#screen-app .tc').forEach(function(c){c.classList.remove('active');});
   document.getElementById('tab-'+name).classList.add('active');
   if(name==='history')renderHistory();
+    if(name==='squad')renderSquad();
   if(name==='table')renderLeagueTable();
   if(name==='fixtures')renderFixtures();
   if(name==='stats'){if(!matchHistory.length)renderHistory().then(renderStats);else renderStats();}
