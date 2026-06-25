@@ -30,7 +30,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzE0MTgxNCIvPgogIDxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YTdjNTkiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNGE3YzU5IiBzdHJva2Utd2lkdGg9IjEiLz4KICA8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI0IiBmaWxsPSIjZThjODQwIi8+Cjwvc3ZnPg==">
-<title>🎯 Flight Chalker — League Platform v43</title>
+<title>🎯 Flight Chalker — League Platform v44</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -375,6 +375,9 @@ html{scroll-behavior:smooth}
 .pin-reveal-num{font-family:'Barlow Condensed',sans-serif;font-size:2.5rem;font-weight:900;letter-spacing:.3em;color:var(--amber)}
 
 /* ── Responsive breakpoints ─────────────────────────────────── */
+@media(max-width:500px){
+  .landing-two-col{grid-template-columns:1fr !important;}
+}
 @media(max-width:600px){
   main{padding:1rem .75rem 5rem}
   .tabs{gap:0;overflow-x:auto}
@@ -425,9 +428,10 @@ html{scroll-behavior:smooth}
 <div id="screen-landing" class="screen active">
 
   <div id="top"></div>
-  <!-- Hero section -->
-  <div style="background:radial-gradient(ellipse at 60% 30%,#1e3a28 0%,var(--bg) 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2.5rem 2rem 2rem;text-align:center;min-height:60vh">
-    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:45px;height:45px;margin-bottom:.75rem">
+
+  <!-- Hero -->
+  <div style="background:radial-gradient(ellipse at 60% 30%,#1e3a28 0%,var(--bg) 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem 1.5rem 2rem;text-align:center">
+    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:52px;height:52px;margin-bottom:1rem">
       <circle cx="50" cy="50" r="48" stroke="#4a7c59" stroke-width="3"/>
       <circle cx="50" cy="50" r="36" stroke="#4a7c59" stroke-width="2"/>
       <circle cx="50" cy="50" r="24" stroke="#4a7c59" stroke-width="2"/>
@@ -437,18 +441,37 @@ html{scroll-behavior:smooth}
       <polygon points="54,46 77,22 84,30" fill="#e8c840"/>
     </svg>
     <div class="landing-title">Flight <span>Chalker</span></div>
-    <div class="landing-sub">Monday League Darts</div>
-    <div class="landing-sub2">League Platform</div>
-    <div class="landing-btns">
-      <button class="btn-land-s" style="border-color:var(--amber);color:var(--amber)" onclick="goTo('public');loadPublicLeagues()">&#127350; View League Table</button>
-      <a href="#section-login" class="btn-land-p" style="text-decoration:none;display:block;text-align:center">Team Login</a>
-      <a href="#section-register" class="btn-land-s" style="text-decoration:none;display:block;text-align:center">New Team? Register Here</a>
-      <div style="height:.25rem"></div>
-      <a href="/scorer" class="btn-land-s" style="text-decoration:none;display:block;text-align:center;border-color:var(--amber);color:var(--amber)">🎯 Play Darts<span style="font-size:.65rem;opacity:.7;display:block;margin-top:1px">Team login required</span></a>
-      <a href="/training" class="btn-land-s" style="text-decoration:none;display:block;text-align:center;border-color:var(--gl);color:var(--gl)">🏹 Training Zone<span style="font-size:.65rem;opacity:.7;display:block;margin-top:1px">Team login required</span></a>
-      <a href="/admin" class="btn-land-admin" style="text-decoration:none;display:block;text-align:center">⚙ League Admin</a>
+    <div class="landing-sub">Your darts. Your league. Your rules.</div>
+    <div class="landing-sub2" style="margin-bottom:2rem">Make your scores take flight!</div>
+    <button class="btn-land-s" style="border-color:var(--amber);color:var(--amber);max-width:300px;width:100%" onclick="goTo('public');loadPublicLeagues()">&#127350; View League Table</button>
+  </div>
+
+  <!-- Two column cards -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;max-width:700px;margin:0 auto;padding:1.5rem 1rem">
+
+    <!-- Player card -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.5rem;display:flex;flex-direction:column;gap:.75rem">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--green)">Individual Player</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;font-weight:900;color:var(--text);line-height:1.1">Play Darts &amp; Train</div>
+      <div style="font-size:.8rem;color:var(--dim);line-height:1.5">Free account. Access the scorer, training zone and personal leaderboards.</div>
+      <a href="/join" style="display:block;text-align:center;background:var(--green);border-radius:6px;color:white;font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.65rem 1rem;text-decoration:none">🎯 Join Free</a>
+      <a href="/login" style="display:block;text-align:center;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--dim);font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.65rem 1rem;text-decoration:none">Sign In</a>
     </div>
-    <div style="margin-top:2rem;color:var(--dim);font-size:.8rem;letter-spacing:.06em">↓ scroll down to get started</div>
+
+    <!-- Team card -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.5rem;display:flex;flex-direction:column;gap:.75rem">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--amber)">League Team</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;font-weight:900;color:var(--text);line-height:1.1">Record Match Results</div>
+      <div style="font-size:.8rem;color:var(--dim);line-height:1.5">Log in as a team to record results, view fixtures and download match reports.</div>
+      <a href="#section-login" style="display:block;text-align:center;background:var(--amber);border-radius:6px;color:var(--bg);font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.65rem 1rem;text-decoration:none">Team Login</a>
+      <a href="#section-register" style="display:block;text-align:center;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--dim);font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.65rem 1rem;text-decoration:none">Register Team</a>
+    </div>
+
+  </div>
+
+  <!-- League admin link -->
+  <div style="text-align:center;padding:.5rem 1rem 2rem">
+    <a href="/admin" style="font-size:.78rem;color:var(--dim);text-decoration:none;letter-spacing:.08em;text-transform:uppercase">⚙ League Admin</a>
   </div>
 
   <!-- Register section -->
