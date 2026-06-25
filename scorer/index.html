@@ -192,6 +192,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
   gtag('js', new Date());
   gtag('config', 'G-WQRGJRFF1Q');
 </script>
+<script src="https://unpkg.com/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
 </head>
 <body>
 
@@ -523,6 +524,7 @@ function updatePlayerNames(){
 }
 
 function startGame(){
+  fcBegin('501');
   var score=selectedScore===0?parseInt(document.getElementById('custom-score').value):selectedScore;
   if(!score||score<101){toast('Please enter a valid starting score',true);return;}
   var names=Array.from(document.getElementById('player-names').querySelectorAll('input')).map(function(i){return i.value.trim()||'Player';});
@@ -724,6 +726,10 @@ function legWon(){
 }
 
 function showWin(winner){
+  // Save session
+  var best=Math.max.apply(null,gs.history.map(function(h){return h.score||0;}).concat([0]));
+  var s180=gs.history.filter(function(h){return h.score===180;}).length;
+  fcEnd(gs.mode,{winner:gs.players[winner],best:best,s180:s180,legs:gs.legs.slice()});
   document.getElementById('win-title').textContent=gs.players[winner]+' Wins! 🏆';
   document.getElementById('win-legs').textContent=
     'Final: '+gs.players.map(function(p,i){return p+' '+gs.legs[i];}).join(' — ');
@@ -796,6 +802,50 @@ function toast(msg,isErr){
   t.className='toast'+(isErr?' err':'')+' show';
   setTimeout(function(){t.classList.remove('show');},2000);
 }
+
+// ── Flight Chalker Player Session Module ──────────────────────────────────
+var fcUser=null,fcSessionStart=null;
+async function fcInit(){
+  try{
+    if(!window.Clerk){
+      var s=document.createElement('script');
+      s.src='https://unpkg.com/@clerk/clerk-js@latest/dist/clerk.browser.js';
+      document.head.appendChild(s);
+      await new Promise(function(r){s.onload=r;});
+    }
+    var clerk=new window.Clerk('pk_test_dGhhbmtmdWwtb3dsLTg3LmNsZXJrLmFjY291bnRzLmRldiQ');
+    await clerk.load();
+    window.Clerk=clerk;
+    if(clerk.user){fcUser=clerk.user;console.log('FC Player:',fcUser.username||fcUser.id);}
+  }catch(e){console.log('FC: guest mode');}
+}
+function fcBegin(gameType){
+  fcSessionStart=Date.now();
+  if(typeof gtag!=='undefined')gtag('event','game_start',{game_type:gameType,logged_in:!!fcUser});
+}
+function fcEnd(gameType,result){
+  if(!fcUser)return;
+  var dur=fcSessionStart?Math.round((Date.now()-fcSessionStart)/1000):0;
+  var n=parseInt(localStorage.getItem('fc_game_sessions')||'0')+1;
+  localStorage.setItem('fc_game_sessions',n);
+  if(result.best&&result.best>(parseInt(localStorage.getItem('fc_best_score')||'0')))
+    localStorage.setItem('fc_best_score',result.best);
+  if(result.s180){
+    var cur=parseInt(localStorage.getItem('fc_180s')||'0');
+    localStorage.setItem('fc_180s',cur+result.s180);
+  }
+  if(typeof gtag!=='undefined')gtag('event','game_complete',{game_type:gameType,duration:dur,username:fcUser.username||fcUser.id});
+}
+function fcTrain(gameType,score,meta){
+  if(!fcUser)return;
+  var n=parseInt(localStorage.getItem('fc_training_sessions')||'0')+1;
+  localStorage.setItem('fc_training_sessions',n);
+  if(score&&score>(parseInt(localStorage.getItem('fc_best_score')||'0')))
+    localStorage.setItem('fc_best_score',score);
+  if(typeof gtag!=='undefined')gtag('event','training_complete',{game_type:gameType,score:score,username:fcUser.username||fcUser.id});
+}
+// ──────────────────────────────────────────────────────────────────────────
+
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 // ── MODE SELECTION ─────────────────────────────────────────────────────────────
