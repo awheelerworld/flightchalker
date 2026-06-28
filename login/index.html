@@ -100,7 +100,7 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-
 <div class="toast" id="toast"></div>
 
 <script>
-const CLERK_KEY = 'pk_test_dGhhbmtmdWwtb3dsLTg3LmNsZXJrLmFjY291bnRzLmRldiQ';
+const CLERK_KEY = 'pk_live_Y2xlcmsuZmxpZ2h0Y2hhbGtlci5jby51ayQ';
 
 function toast(msg,isErr=false){
   var t=document.getElementById('toast');
@@ -112,7 +112,7 @@ async function signInWithGoogle(){
   try{
     await window.Clerk.authenticateWithRedirect({
       strategy:'oauth_google',
-      redirectUrl:'/player-setup',
+      redirectUrl:'/dashboard',
       redirectUrlComplete:'/dashboard'
     });
   }catch(e){toast('Google sign in failed',true);}
