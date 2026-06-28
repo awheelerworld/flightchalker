@@ -158,12 +158,35 @@ input:checked+.slider::before{transform:translateX(18px);background:white}
   <div class="team-card">
     <h3>League Teams</h3>
     <div id="teams-list"><div class="loading"><span class="spin"></span> Loading...</div></div>
-    <div style="margin-top:1rem">
-      <div style="font-size:.78rem;color:var(--dim);margin-bottom:.5rem">Have a team join code? Enter it below to request to join a team.</div>
+    <div style="margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);margin-bottom:.5rem">Join a Team</div>
+      <div style="font-size:.8rem;color:var(--dim);margin-bottom:.5rem;line-height:1.5">Enter your team join code to request to join, or link your account to existing match records.</div>
       <div class="join-form">
-        <input type="text" id="join-code" placeholder="Enter team join code" maxlength="20">
+        <input type="text" id="join-code" placeholder="Team join code">
         <button onclick="requestJoinTeam()">Request to Join</button>
       </div>
+    </div>
+
+    <!-- Self-service account linking -->
+    <div style="margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--amber);margin-bottom:.5rem">Link to Existing Match Records</div>
+      <div style="font-size:.8rem;color:var(--dim);margin-bottom:.75rem;line-height:1.5">
+        If your captain has been recording your match scores before you created an account, link your account to claim your history. You'll need your team join code and the name used in match records.
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.5rem">
+        <input type="text" id="link-team-code" placeholder="Team join code" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.9rem;padding:.5rem .75rem">
+        <div id="link-player-list" style="display:none">
+          <div style="font-size:.78rem;color:var(--dim);margin-bottom:.35rem">Select your name from the team's player list:</div>
+          <select id="link-name-sel" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.9rem;padding:.5rem .75rem;margin-bottom:.5rem">
+            <option value="">— Select your name —</option>
+          </select>
+          <div style="font-size:.78rem;color:var(--dim);margin-bottom:.35rem">Confirm your email address (must match what your captain registered):</div>
+          <input type="email" id="link-email-confirm" placeholder="Your email address" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.9rem;padding:.5rem .75rem;margin-bottom:.5rem">
+          <button onclick="selfLinkAccount()" style="width:100%;background:var(--amber);border:none;border-radius:6px;color:var(--bg);font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.55rem;cursor:pointer">Link My Account</button>
+        </div>
+        <button id="find-team-btn" onclick="findTeamPlayers()" style="background:var(--s3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.5rem;cursor:pointer">Find My Team →</button>
+      </div>
+      <div id="link-result" style="margin-top:.5rem;font-size:.8rem"></div>
     </div>
   </div>
 
@@ -212,6 +235,108 @@ function toast(msg, isErr=false){
   t.textContent=msg;
   t.className='toast'+(isErr?' err':'')+' show';
   setTimeout(function(){t.classList.remove('show');},3000);
+}
+
+async function findTeamPlayers(){
+  var code=document.getElementById('link-team-code').value.trim().toUpperCase();
+  var resultEl=document.getElementById('link-result');
+  if(!code){resultEl.textContent='Please enter your team join code';resultEl.style.color='var(--red)';return;}
+  var btn=document.getElementById('find-team-btn');
+  btn.textContent='Searching...';btn.disabled=true;
+  try{
+    // Look up team by join code in Supabase leagues project
+    var res=await fetch('https://xkovqamknwyjzlgijcel.supabase.co/rest/v1/teams?join_code=eq.'+code+'&select=id,team_name,league_id',{
+      headers:{
+        'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhrb3ZxYW1rbnd5anpsZ2lqY2VsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwNzM5NzQsImV4cCI6MjA2MjY0OTk3NH0.Ypm_JGBQQMz3OeHMgbdkJFzTZaHpv8MXGajCAHH-0Q0',
+        'Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhrb3ZxYW1rbnd5anpsZ2lqY2VsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwNzM5NzQsImV4cCI6MjA2MjY0OTk3NH0.Ypm_JGBQQMz3OeHMgbdkJFzTZaHpv8MXGajCAHH-0Q0'
+      }
+    });
+    var teams=await res.json();
+    if(!teams||!teams.length){
+      resultEl.textContent='Team not found. Please check your join code.';
+      resultEl.style.color='var(--red)';
+      btn.textContent='Find My Team →';btn.disabled=false;
+      return;
+    }
+    var team=teams[0];
+    // Get players for this team from team app Supabase
+    var res2=await fetch('https://jiihvnrhnqylwcdwxcpav.supabase.co/rest/v1/players?team_id=eq.'+team.id+'&select=name,email&order=name.asc',{
+      headers:{
+        'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppaSVudnJobnF5bHdjZHd4Y3BhdiIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzgxMjI4ODk1LCJleHAiOjIwOTY4MDQ4OTV9.qBRA4uwAUp7Oi1_j1Azid-2ZK3xL8xt7QHDaAneqO9M',
+        'Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppaSVudnJobnF5bHdjZHd4Y3BhdiIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzgxMjI4ODk1LCJleHAiOjIwOTY4MDQ4OTV9.qBRA4uwAUp7Oi1_j1Azid-2ZK3xL8xt7QHDaAneqO9M'
+      }
+    });
+    var teamPlayers=await res2.json();
+    if(!teamPlayers||!teamPlayers.length){
+      resultEl.textContent='No players found for this team yet.';
+      resultEl.style.color='var(--dim)';
+      btn.textContent='Find My Team →';btn.disabled=false;
+      return;
+    }
+    // Populate dropdown
+    var sel=document.getElementById('link-name-sel');
+    sel.innerHTML='<option value="">— Select your name —</option>'
+      +teamPlayers.map(function(p){
+        return '<option value="'+p.name+'" data-email="'+(p.email||'')+'">'
+          +p.name+(p.email?' ✉':'')
+          +'</option>';
+      }).join('');
+    // Store team info
+    localStorage.setItem('fc_link_team',JSON.stringify({id:team.id,name:team.team_name,code:code}));
+    document.getElementById('link-player-list').style.display='block';
+    document.getElementById('find-team-btn').style.display='none';
+    resultEl.textContent='Found '+team.team_name+' — select your name below.';
+    resultEl.style.color='var(--gl)';
+  }catch(e){
+    resultEl.textContent='Error finding team: '+e.message;
+    resultEl.style.color='var(--red)';
+    btn.textContent='Find My Team →';btn.disabled=false;
+  }
+}
+
+async function selfLinkAccount(){
+  var sel=document.getElementById('link-name-sel');
+  var selectedName=sel.value;
+  var selectedOpt=sel.options[sel.selectedIndex];
+  var storedEmail=selectedOpt?selectedOpt.getAttribute('data-email'):'';
+  var enteredEmail=document.getElementById('link-email-confirm').value.trim().toLowerCase();
+  var resultEl=document.getElementById('link-result');
+  if(!selectedName){resultEl.textContent='Please select your name';resultEl.style.color='var(--red)';return;}
+  // Verify email matches if one was stored
+  if(storedEmail&&enteredEmail!==storedEmail){
+    resultEl.textContent='Email does not match our records. Please check with your captain.';
+    resultEl.style.color='var(--red)';
+    return;
+  }
+  // If no email stored, check against their Clerk email
+  var clerkEmail=window.currentUser&&window.currentUser.emailAddresses[0]?window.currentUser.emailAddresses[0].emailAddress.toLowerCase():'';
+  if(!storedEmail&&enteredEmail!==clerkEmail){
+    resultEl.textContent='Email must match your registered account email.';
+    resultEl.style.color='var(--red)';
+    return;
+  }
+  // Save link
+  var teamData=JSON.parse(localStorage.getItem('fc_link_team')||'{}');
+  var links=JSON.parse(localStorage.getItem('fc_memberships')||'[]');
+  var existing=links.find(function(l){return l.team_id===teamData.id;});
+  if(existing){
+    resultEl.textContent='Already linked to this team!';
+    resultEl.style.color='var(--dim)';
+    return;
+  }
+  links.push({
+    team_id:teamData.id,
+    team_name:teamData.name,
+    league_name:'Linked via join code',
+    player_name:selectedName,
+    status:'approved',
+    linked_at:new Date().toISOString()
+  });
+  localStorage.setItem('fc_memberships',JSON.stringify(links));
+  resultEl.textContent='Success! Your account is now linked to '+selectedName+' in '+teamData.name+'. Your match history will appear on your profile.';
+  resultEl.style.color='var(--gl)';
+  document.getElementById('link-player-list').style.display='none';
+  loadTeams(window.currentUser);
 }
 
 async function signOut(){
