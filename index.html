@@ -30,7 +30,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzE0MTgxNCIvPgogIDxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YTdjNTkiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNGE3YzU5IiBzdHJva2Utd2lkdGg9IjEiLz4KICA8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI0IiBmaWxsPSIjZThjODQwIi8+Cjwvc3ZnPg==">
-<title>🎯 Flight Chalker — League Platform v45</title>
+<title>🎯 Flight Chalker — League Platform v46</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -740,7 +740,8 @@ html{scroll-behavior:smooth}
       <div class="pp"><h2>Squad</h2>
         <div class="pchips" id="pchips"></div>
         <div class="apr2">
-          <input type="text" id="npname" placeholder="Player name" onkeydown="if(event.key==='Enter')addPlayer()">
+          <input type="text" id="npname" placeholder="Player name" style="flex:1.5">
+          <input type="email" id="npemail" placeholder="Player email (optional)" style="flex:2">
           <button class="btna" onclick="addPlayer()">Add</button>
         </div>
       </div>
@@ -773,6 +774,20 @@ html{scroll-behavior:smooth}
           <div id="squad-members">
             <div style="font-size:.85rem;color:var(--dim);padding:.5rem 0">Loading squad...</div>
           </div>
+        </div>
+
+        <!-- Link player accounts -->
+        <div style="margin-top:1.5rem">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-bottom:.5rem">Link Player Accounts</div>
+          <p style="font-size:.8rem;color:var(--dim);margin-bottom:.75rem;line-height:1.5">Select a player from your squad and enter their Flight Chalker username to link their individual account to their match history.</p>
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+            <select id="link-player-sel" style="flex:1;min-width:130px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.85rem;padding:.4rem .5rem">
+              <option value="">— Select player —</option>
+            </select>
+            <input type="text" id="link-username" placeholder="Their @username" style="flex:1;min-width:130px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.85rem;padding:.4rem .5rem">
+            <button class="btna" onclick="captainLinkPlayer()">Link Account</button>
+          </div>
+          <div id="link-result" style="margin-top:.5rem;font-size:.8rem"></div>
         </div>
       </div>
     </div>
@@ -1173,7 +1188,14 @@ function populateOpponentDropdown(){
 // ── Players ───────────────────────────────────────────────────────────────────
 function renderPChips(){
   document.getElementById('pchips').innerHTML=players.map(function(p,i){
-    return '<div class="pchip">'+esc(p)
+    var name=p.name||p;
+    var email=p.email||null;
+    var linked=p.linked||false;
+    var emailBadge=email
+      ?'<span title="Email: '+esc(email)+'" style="font-size:.65rem;color:'+(linked?'var(--gl)':'var(--amber)')+';">'+(linked?'✓':'✉')+' linked</span>'
+      :'<span style="font-size:.65rem;color:var(--dim)">no email</span>';
+    return '<div class="pchip">'+esc(name)
+      +emailBadge
       +'<button class="pr2" onclick="editPlayer('+i+')" title="Edit" style="font-size:.75rem;opacity:.7">✎</button>'
       +'<button class="pr2" onclick="removePlayer('+i+')" title="Remove">×</button>'
       +'</div>';
@@ -1184,10 +1206,20 @@ function populateStatSel(){
   sel.innerHTML='<option value="">— Select player —</option>'+players.map(function(p){return '<option value="'+esc(p)+'" '+(p===cur?'selected':'')+'>'+esc(p)+'</option>';}).join('');
 }
 async function addPlayer(){
-  const inp=document.getElementById('npname');const name=inp.value.trim();
-  if(!name)return;if(players.includes(name)){toast('Player already exists');return;}
-  try{await sb('team_players',{method:'POST',prefer:'return=minimal',body:JSON.stringify({team_id:currentTeam.id,name})});}catch(e){toast('Error: '+e.message,true);return;}
-  players.push(name);inp.value='';renderPChips();buildRows();populateStatSel();toast(name+' added');
+  var inp=document.getElementById('npname');
+  var einp=document.getElementById('npemail');
+  var name=inp.value.trim();
+  var email=einp?einp.value.trim().toLowerCase():'';
+  if(!name)return;
+  if(players.find(function(p){return p.name===name;})){toast('Player already exists');return;}
+  try{
+    await sb('team_players',{method:'POST',prefer:'return=minimal',
+      body:JSON.stringify({team_id:currentTeam.id,name:name,email:email||null})});
+  }catch(e){toast('Error: '+e.message,true);return;}
+  players.push({name:name,email:email||null});
+  inp.value='';if(einp)einp.value='';
+  renderPChips();buildRows();populateStatSel();
+  toast(name+' added'+(email?' — email saved for account linking':''));
 }
 async function removePlayer(idx){
   const name=players[idx];
@@ -1389,6 +1421,7 @@ function styleRow(id,r){
   var el=document.getElementById(id);if(!el)return;
   el.classList.remove('rw','rl');if(r==='win')el.classList.add('rw');if(r==='loss')el.classList.add('rl');
 }
+function pName(p){return p&&p.name?p.name:p;}
 function updateBar(){
   var mw=0,lf=0,la=0;
   md.singles.forEach(function(m){if(m.result==='win')mw++;lf+=(m.legsFor||0);la+=(m.legsAgainst||0);});
@@ -2208,6 +2241,37 @@ function renderSquad(){
   }
 }
 
+async function captainLinkPlayer(){
+  var playerSel=document.getElementById('link-player-sel');
+  var playerName=playerSel?playerSel.value:'';
+  var username=document.getElementById('link-username').value.trim().replace('@','');
+  var resultEl=document.getElementById('link-result');
+  if(!playerName){resultEl.textContent='Please select a player';resultEl.style.color='var(--red)';return;}
+  if(!username){resultEl.textContent='Please enter their username';resultEl.style.color='var(--red)';return;}
+  // Find the player's email
+  var playerObj=players.find(function(p){return (p.name||p)===playerName;});
+  var playerEmail=playerObj&&playerObj.email?playerObj.email:null;
+  // Store the link in localStorage (captain side)
+  var links=JSON.parse(localStorage.getItem('fc_player_links_'+currentTeam.id)||'{}');
+  links[playerName]={username:username,email:playerEmail,linked_at:new Date().toISOString()};
+  localStorage.setItem('fc_player_links_'+currentTeam.id,JSON.stringify(links));
+  resultEl.textContent='@'+username+' linked to '+playerName+'! Their match history will now appear on their profile.';
+  resultEl.style.color='var(--gl)';
+  document.getElementById('link-username').value='';
+  playerSel.value='';
+  toast('@'+username+' linked to '+playerName);
+}
+
+function populateLinkSelector(){
+  var sel=document.getElementById('link-player-sel');
+  if(!sel)return;
+  sel.innerHTML='<option value="">— Select player —</option>'
+    +players.map(function(p){
+      var name=p.name||p;
+      return '<option value="'+esc(name)+'">'+esc(name)+'</option>';
+    }).join('');
+}
+
 function squadApprove(username){if(username&&username.dataset)username=username.dataset.u;
   var key='fc_requests_'+currentTeam.id;
   var requests=JSON.parse(localStorage.getItem(key)||'[]');
@@ -2242,7 +2306,7 @@ function sw(name){
   document.querySelectorAll('#screen-app .tc').forEach(function(c){c.classList.remove('active');});
   document.getElementById('tab-'+name).classList.add('active');
   if(name==='history')renderHistory();
-    if(name==='squad')renderSquad();
+    if(name==='squad'){renderSquad();populateLinkSelector();}
   if(name==='table')renderLeagueTable();
   if(name==='fixtures')renderFixtures();
   if(name==='stats'){if(!matchHistory.length)renderHistory().then(renderStats);else renderStats();}
