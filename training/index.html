@@ -438,7 +438,7 @@ async function fcInit(){
       document.head.appendChild(s);
       await new Promise(function(r){s.onload=r;});
     }
-    var clerk=new window.Clerk('pk_test_dGhhbmtmdWwtb3dsLTg3LmNsZXJrLmFjY291bnRzLmRldiQ');
+    var clerk=new window.Clerk('pk_live_Y2xlcmsuZmxpZ2h0Y2hhbGtlci5jby51ayQ');
     await clerk.load();
     window.Clerk=clerk;
     if(clerk.user){fcUser=clerk.user;console.log('FC Player:',fcUser.username||fcUser.id);}
