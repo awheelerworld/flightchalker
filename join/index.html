@@ -139,7 +139,7 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-
 <div class="toast" id="toast"></div>
 
 <script>
-const CLERK_KEY = 'pk_test_dGhhbmtmdWwtb3dsLTg3LmNsZXJrLmFjY291bnRzLmRldiQ';
+const CLERK_KEY = 'pk_live_Y2xlcmsuZmxpZ2h0Y2hhbGtlci5jby51ayQ';
 
 // Set max date of birth to 18 years ago
 var maxDob = new Date();
@@ -178,17 +178,20 @@ function isOver18(dob){
 }
 
 async function signInWithGoogle(){
-  toast('Redirecting to Google...');
   try{
-    const clerk=window.Clerk;
-    if(!clerk){toast('Loading... please try again',true);return;}
-    await clerk.load();
-    await clerk.authenticateWithRedirect({
+    if(!window.Clerk||!window.Clerk.loaded){
+      toast('Still loading, please try again in a moment',true);
+      return;
+    }
+    await window.Clerk.authenticateWithRedirect({
       strategy:'oauth_google',
-      redirectUrl:'/player-setup',
-      redirectUrlComplete:'/dashboard'
+      redirectUrl:'https://flightchalker.co.uk/dashboard',
+      redirectUrlComplete:'https://flightchalker.co.uk/dashboard'
     });
-  }catch(e){toast('Google sign in failed: '+e.message,true);}
+  }catch(e){
+    console.error('Google OAuth error:',e);
+    toast('Google sign in failed: '+(e.errors?e.errors[0].message:e.message),true);
+  }
 }
 
 async function registerWithEmail(){
