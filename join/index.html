@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzE0MTgxNCIvPgogIDxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YTdjNTkiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNGE3YzU5IiBzdHJva2Utd2lkdGg9IjEiLz4KICA8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI0IiBmaWxsPSIjZThjODQwIi8+Cjwvc3ZnPg==">
   <meta name="description" content="Create your free Flight Chalker account. Access the darts scorer, training zone and leaderboards.">
   <meta name="author" content="awheelerworld">
   <meta name="robots" content="index, follow">
@@ -250,13 +251,18 @@ async function registerWithEmail(){
 
 // Init Clerk
 window.addEventListener('load',async function(){
+  var btn=document.getElementById('google-btn');
   try{
     const clerk=new window.Clerk(CLERK_KEY);
     await clerk.load();
     window.Clerk=clerk;
-    // If already signed in redirect to dashboard
+    window.Clerk.loaded=true;
+    if(btn){btn.disabled=false;btn.style.opacity='1';}
     if(clerk.user){window.location.href='/dashboard';}
-  }catch(e){console.error('Clerk init:',e);}
+  }catch(e){
+    console.error('Clerk init:',e);
+    if(btn){btn.disabled=false;btn.style.opacity='1';}
+  }
 });
 </script>
 </body>
