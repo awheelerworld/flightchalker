@@ -39,6 +39,8 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-
 .btn-google{display:flex;align-items:center;justify-content:center;gap:.75rem;width:100%;background:white;border:none;border-radius:8px;color:#333;font-family:'Barlow',sans-serif;font-size:.95rem;font-weight:600;padding:.75rem;cursor:pointer;margin-bottom:1rem;transition:opacity .15s}
 .btn-google:hover{opacity:.9}
 .btn-google svg{width:20px;height:20px;flex-shrink:0}
+.google-status{display:none;font-size:.75rem;color:var(--red);background:rgba(192,57,43,.1);border:1px solid var(--red);border-radius:6px;padding:.5rem .75rem;margin:-.5rem 0 1rem;line-height:1.4;cursor:pointer;text-align:center}
+.google-status:active{opacity:.8}
 .divider{display:flex;align-items:center;gap:.75rem;margin-bottom:1rem}
 .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
 .divider span{font-size:.75rem;color:var(--dim);white-space:nowrap}
@@ -93,6 +95,7 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-
     </svg>
     Continue with Google
   </button>
+  <div class="google-status" id="google-status"></div>
 
   <div class="divider"><span>or register with email</span></div>
 
@@ -178,18 +181,17 @@ function isOver18(dob){
   return age>=18;
 }
 
+var clerkInitError = null;
+
 async function signInWithGoogle(){
   var btn=document.getElementById('google-btn');
+  if(!window.Clerk||!window.Clerk.loaded){
+    // Clerk never successfully finished loading - don't pretend it might.
+    // Surface the real reason instead of a generic "still loading" message.
+    toast(clerkInitError?('Sign-in unavailable: '+clerkInitError):'Still loading, please wait a moment',true);
+    return;
+  }
   try{
-    if(!window.Clerk||!window.Clerk.loaded){
-      // Try waiting a bit more
-      toast('Connecting to Google, please wait...');
-      await new Promise(function(r){setTimeout(r,2000);});
-      if(!window.Clerk||!window.Clerk.loaded){
-        toast('Still loading, please refresh the page and try again',true);
-        return;
-      }
-    }
     if(btn){btn.disabled=true;btn.style.opacity='.6';}
     await window.Clerk.authenticateWithRedirect({
       strategy:'oauth_google',
@@ -250,20 +252,35 @@ async function registerWithEmail(){
 }
 
 // Init Clerk
-window.addEventListener('load',async function(){
+async function initClerk(){
   var btn=document.getElementById('google-btn');
+  var statusEl=document.getElementById('google-status');
+  if(statusEl){statusEl.style.display='none';statusEl.onclick=null;}
   try{
+    if(!window.Clerk){
+      throw new Error('Clerk script failed to load (check network / ad-blocker)');
+    }
     const clerk=new window.Clerk(CLERK_KEY);
     await clerk.load();
     window.Clerk=clerk;
     window.Clerk.loaded=true;
+    clerkInitError=null;
     if(btn){btn.disabled=false;btn.style.opacity='1';}
     if(clerk.user){window.location.href='/dashboard';}
   }catch(e){
-    console.error('Clerk init:',e);
-    if(btn){btn.disabled=false;btn.style.opacity='1';}
+    console.error('Clerk init failed:',e);
+    clerkInitError = (e && e.message) ? e.message : 'Unknown error';
+    // IMPORTANT: keep the button disabled here. Re-enabling it after a failed
+    // init is what caused the misleading "Still loading" error on click.
+    if(btn){btn.disabled=true;btn.style.opacity='.6';}
+    if(statusEl){
+      statusEl.textContent='Google sign-in unavailable: '+clerkInitError+' (tap to retry)';
+      statusEl.style.display='block';
+      statusEl.onclick=initClerk;
+    }
   }
-});
+}
+window.addEventListener('load',initClerk);
 </script>
 </body>
 </html>
