@@ -507,14 +507,130 @@ async function loadTeamList(leagueId){
   try{
     var teams=await sb('teams?league_id=eq.'+leagueId+'&order=team_name.asc&select=*');
     if(!teams||!teams.length){el.innerHTML='<div class="nh">No teams registered yet.</div>';return;}
+
+    var teamIds=teams.map(function(t){return t.id;});
+    var pending=await sb('team_memberships?team_id=in.('+teamIds.join(',')+')&status=eq.pending&select=id,team_id,user_id');
+    var pendingUserIds=pending.map(function(p){return p.user_id;});
+
+    var changeRequests=await sb('captain_change_requests?team_id=in.('+teamIds.join(',')+')&status=eq.pending&select=id,team_id,requested_by,proposed_captain_id');
+    var changeUserIds=[];
+    changeRequests.forEach(function(c){changeUserIds.push(c.requested_by,c.proposed_captain_id);});
+
+    var allUserIds=pendingUserIds.concat(changeUserIds).filter(function(v,i,a){return a.indexOf(v)===i;});
+    var userMap={};
+    if(allUserIds.length){
+      var users=await sb('users?id=in.('+allUserIds.join(',')+')&select=id,username,email');
+      users.forEach(function(u){userMap[u.id]=u.username||u.email;});
+    }
+    var captainIds=teams.filter(function(t){return t.captain_user_id;}).map(function(t){return t.captain_user_id;});
+    var captainMap={};
+    if(captainIds.length){
+      var cUsers=await sb('users?id=in.('+captainIds.join(',')+')&select=id,username,email');
+      cUsers.forEach(function(u){captainMap[u.id]=u.username||u.email;});
+    }
+
     el.innerHTML=teams.map(function(t){
-      return '<div style="display:flex;align-items:center;gap:.75rem;padding:.5rem .75rem;background:var(--bg);border:1px solid var(--border);border-radius:5px;margin-bottom:.4rem;flex-wrap:wrap">'
-        +'<div style="flex:1;font-weight:600;font-size:.9rem">'+esc(t.team_name)+'</div>'
-        +'<div style="font-size:.78rem;color:var(--dim)">PIN: '+t.pin+'</div>'
-        +'<button onclick="deleteTeam(&quot;'+t.id+'&quot;,&quot;'+esc(t.team_name)+'&quot;,&quot;'+leagueId+'&quot;)" style="background:none;border:1px solid #5c2020;border-radius:4px;color:#ff8080;font-size:.72rem;padding:2px 8px;cursor:pointer">Remove</button>'
+      var captainLabel = t.captain_user_id ? (captainMap[t.captain_user_id]||'Set') : 'Not yet claimed';
+      var teamPending = pending.filter(function(p){return p.team_id===t.id;});
+      var requestsHtml = teamPending.length ? teamPending.map(function(p){
+        var name = userMap[p.user_id]||'Player';
+        return '<div style="display:flex;align-items:center;gap:.5rem;padding:.3rem 0;font-size:.78rem;flex-wrap:wrap">'
+          +'<span style="flex:1">'+esc(name)+'</span>'
+          +'<button onclick="approveMembership(&quot;'+p.id+'&quot;,&quot;'+leagueId+'&quot;)" style="background:none;border:1px solid var(--green);border-radius:4px;color:var(--gl);font-size:.7rem;padding:2px 6px;cursor:pointer">Approve</button>'
+          +'<button onclick="rejectMembership(&quot;'+p.id+'&quot;,&quot;'+leagueId+'&quot;)" style="background:none;border:1px solid #5c2020;border-radius:4px;color:#ff8080;font-size:.7rem;padding:2px 6px;cursor:pointer">Reject</button>'
+          +'</div>';
+      }).join('') : '';
+
+      var teamChangeReqs = changeRequests.filter(function(c){return c.team_id===t.id;});
+      var changeReqHtml = teamChangeReqs.length ? teamChangeReqs.map(function(c){
+        var reqName = userMap[c.requested_by]||'A player';
+        var propName = userMap[c.proposed_captain_id]||'Player';
+        return '<div style="display:flex;align-items:center;gap:.5rem;padding:.3rem 0;font-size:.78rem;flex-wrap:wrap">'
+          +'<span style="flex:1">'+esc(reqName)+' proposes <strong>'+esc(propName)+'</strong> as new captain</span>'
+          +'<button onclick="approveCaptainChange(&quot;'+c.id+'&quot;,&quot;'+t.id+'&quot;,&quot;'+c.proposed_captain_id+'&quot;,&quot;'+leagueId+'&quot;)" style="background:none;border:1px solid var(--amber);border-radius:4px;color:var(--amber);font-size:.7rem;padding:2px 6px;cursor:pointer">Approve</button>'
+          +'<button onclick="rejectCaptainChange(&quot;'+c.id+'&quot;,&quot;'+leagueId+'&quot;)" style="background:none;border:1px solid #5c2020;border-radius:4px;color:#ff8080;font-size:.7rem;padding:2px 6px;cursor:pointer">Reject</button>'
+          +'</div>';
+      }).join('') : '';
+
+      return '<div style="padding:.5rem .75rem;background:var(--bg);border:1px solid var(--border);border-radius:5px;margin-bottom:.4rem">'
+        +'<div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">'
+          +'<div style="flex:1;font-weight:600;font-size:.9rem">'+esc(t.team_name)+'</div>'
+          +'<div style="font-size:.78rem;color:var(--dim)">PIN: '+t.pin+'</div>'
+          +'<button onclick="deleteTeam(&quot;'+t.id+'&quot;,&quot;'+esc(t.team_name)+'&quot;,&quot;'+leagueId+'&quot;)" style="background:none;border:1px solid #5c2020;border-radius:4px;color:#ff8080;font-size:.72rem;padding:2px 8px;cursor:pointer">Remove</button>'
+        +'</div>'
+        +'<div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-top:.4rem;padding-top:.4rem;border-top:1px solid var(--border)">'
+          +'<div style="font-size:.78rem;color:var(--dim)">Captain: <span style="color:var(--gl)">'+esc(captainLabel)+'</span></div>'
+          +'<div style="font-size:.78rem;color:var(--dim);margin-left:auto">Captain code:</div>'
+          +'<span style="font-family:monospace;font-size:.85rem;color:var(--amber);background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:2px 8px">'+(t.captain_code||'—')+'</span>'
+          +'<button onclick="generateCaptainCode(&quot;'+t.id+'&quot;,&quot;'+leagueId+'&quot;)" style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--dim);font-size:.7rem;padding:2px 8px;cursor:pointer">'+(t.captain_code?'Regenerate':'Generate')+'</button>'
+          + (t.captain_user_id ? '<button onclick="clearCaptain(&quot;'+t.id+'&quot;,&quot;'+leagueId+'&quot;)" style="background:none;border:1px solid #5c2020;border-radius:4px;color:#ff8080;font-size:.7rem;padding:2px 8px;cursor:pointer">Clear Captain</button>' : '')
+        +'</div>'
+        + (requestsHtml ? '<div style="margin-top:.4rem;padding-top:.4rem;border-top:1px solid var(--border)"><div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin-bottom:.2rem">Join Requests</div>'+requestsHtml+'</div>' : '')
+        + (changeReqHtml ? '<div style="margin-top:.4rem;padding-top:.4rem;border-top:1px solid var(--border)"><div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--amber);margin-bottom:.2rem">Captain Change Requests</div>'+changeReqHtml+'</div>' : '')
         +'</div>';
     }).join('');
   }catch(e){el.innerHTML='<div class="nh">Error: '+esc(e.message)+'</div>';}
+}
+
+function randomCode(len){
+  var chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no ambiguous chars (0/O, 1/I)
+  var out='';
+  for(var i=0;i<len;i++) out+=chars[Math.floor(Math.random()*chars.length)];
+  return out;
+}
+
+async function generateCaptainCode(teamId,leagueId){
+  var code=randomCode(6);
+  try{
+    await sbPatch('teams','id=eq.'+teamId,{captain_code:code});
+    toast('Captain code generated: '+code);
+    loadTeamList(leagueId);
+  }catch(e){toast('Error: '+e.message,true);}
+}
+
+async function clearCaptain(teamId,leagueId){
+  if(!confirm('Remove the current captain from this team? They can be re-assigned later with a new captain code.'))return;
+  try{
+    await sbPatch('teams','id=eq.'+teamId,{captain_user_id:null});
+    toast('Captain cleared');
+    loadTeamList(leagueId);
+  }catch(e){toast('Error: '+e.message,true);}
+}
+
+async function approveMembership(membershipId,leagueId){
+  try{
+    await sbPatch('team_memberships','id=eq.'+membershipId,{status:'approved'});
+    toast('Request approved!');
+    loadTeamList(leagueId);
+  }catch(e){toast('Error: '+e.message,true);}
+}
+
+async function rejectMembership(membershipId,leagueId){
+  if(!confirm('Reject this join request?'))return;
+  try{
+    await sbPatch('team_memberships','id=eq.'+membershipId,{status:'rejected'});
+    toast('Request rejected');
+    loadTeamList(leagueId);
+  }catch(e){toast('Error: '+e.message,true);}
+}
+
+async function approveCaptainChange(requestId,teamId,proposedCaptainId,leagueId){
+  if(!confirm('Change this team\'s captain? The previous captain will lose captain access.'))return;
+  try{
+    await sbPatch('teams','id=eq.'+teamId,{captain_user_id:proposedCaptainId});
+    await sbPatch('captain_change_requests','id=eq.'+requestId,{status:'approved'});
+    toast('Captain changed!');
+    loadTeamList(leagueId);
+  }catch(e){toast('Error: '+e.message,true);}
+}
+
+async function rejectCaptainChange(requestId,leagueId){
+  if(!confirm('Reject this captain change request?'))return;
+  try{
+    await sbPatch('captain_change_requests','id=eq.'+requestId,{status:'rejected'});
+    toast('Request rejected');
+    loadTeamList(leagueId);
+  }catch(e){toast('Error: '+e.message,true);}
 }
 
 async function deleteTeam(teamId,teamName,leagueId){
