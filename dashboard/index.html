@@ -1,4 +1,4 @@
-<!-- VERSION: v7-sb-rename-fix -->
+<!-- VERSION: v12-captain-change-request -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -64,6 +64,20 @@ main{max-width:900px;margin:0 auto;padding:1.5rem 1rem 4rem}
 /* Team section */
 .team-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.25rem;margin-bottom:1rem}
 .team-card h3{font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.75rem}
+.captain-team-row{border:1px solid var(--border);border-radius:8px;padding:.9rem;margin-bottom:.75rem}
+.captain-team-row:last-child{margin-bottom:0}
+.captain-team-name{font-weight:700;font-size:.92rem;margin-bottom:.5rem}
+.join-code-display{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.join-code-value{font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;font-weight:900;letter-spacing:.15em;color:var(--amber);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:.35rem .75rem}
+.code-btn{background:var(--s3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.78rem;font-weight:600;padding:.4rem .7rem;cursor:pointer;transition:background .15s}
+.code-btn:hover{background:var(--green)}
+.role-badge{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);background:var(--s3);border-radius:10px;padding:2px 8px;margin-left:.4rem}
+.vc-section{margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--border)}
+.vc-list{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.5rem}
+.vc-chip{font-size:.78rem;background:var(--s3);border:1px solid var(--border);border-radius:14px;padding:.25rem .6rem .25rem .8rem;display:flex;align-items:center;gap:.4rem}
+.vc-chip button{background:none;border:none;color:var(--red);cursor:pointer;font-size:.85rem;padding:0;line-height:1}
+.vc-add-row{display:flex;gap:.4rem}
+.vc-add-row input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.82rem;padding:.4rem .6rem}
 .team-item{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.6rem 0;border-bottom:1px solid var(--border);flex-wrap:wrap}
 .team-item:last-child{border-bottom:none}
 .team-name{font-weight:600;font-size:.9rem}
@@ -72,6 +86,19 @@ main{max-width:900px;margin:0 auto;padding:1.5rem 1rem 4rem}
 .status-badge.approved{background:#1a3a22;color:var(--gl);border:1px solid var(--green)}
 .status-badge.pending{background:#2a2a10;color:var(--amber);border:1px solid #6a6200}
 .status-badge.rejected{background:#2a1010;color:#ff8080;border:1px solid var(--red)}
+.link-btn{background:none;border:none;color:var(--gl);font-size:.72rem;text-decoration:underline;cursor:pointer;padding:0;margin-left:.5rem}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:1000;padding:1rem}
+.modal-overlay.show{display:flex}
+.modal-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.5rem;width:100%;max-width:380px}
+.modal-box h4{font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:900;text-transform:uppercase;letter-spacing:.05em;color:var(--amber);margin-bottom:.5rem}
+.modal-box p{font-size:.8rem;color:var(--dim);margin-bottom:1rem;line-height:1.5}
+.member-option{display:flex;align-items:center;gap:.5rem;padding:.5rem;border:1px solid var(--border);border-radius:6px;margin-bottom:.4rem;cursor:pointer}
+.member-option:hover{border-color:var(--green)}
+.member-option input{accent-color:var(--green)}
+.modal-actions{display:flex;gap:.5rem;margin-top:1rem}
+.modal-actions button{flex:1;padding:.5rem;border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:.85rem;cursor:pointer;border:none}
+.modal-actions .cancel{background:var(--s3);color:var(--text)}
+.modal-actions .confirm{background:var(--green);color:white}
 
 /* Join team form */
 .join-form{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.75rem}
@@ -157,6 +184,11 @@ input:checked+.slider::before{transform:translateX(18px);background:white}
 
   <!-- Team memberships -->
   <div class="sec-title">My Teams</div>
+  <div class="team-card" id="captain-teams-card" style="display:none">
+    <h3>My Teams (Captain)</h3>
+    <div id="captain-teams-list"></div>
+  </div>
+
   <div class="team-card">
     <h3>League Teams</h3>
     <div id="teams-list"><div class="loading"><span class="spin"></span> Loading...</div></div>
@@ -166,6 +198,16 @@ input:checked+.slider::before{transform:translateX(18px);background:white}
       <div class="join-form">
         <input type="text" id="join-code" placeholder="Team join code">
         <button onclick="requestJoinTeam()">Request to Join</button>
+      </div>
+    </div>
+
+    <!-- Captain code - instant, no approval needed -->
+    <div style="margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--amber);margin-bottom:.5rem">Have a Captain Code?</div>
+      <div style="font-size:.8rem;color:var(--dim);margin-bottom:.5rem;line-height:1.5">If your league admin has given you a captain code, enter it here to take charge of your team's join code and squad.</div>
+      <div class="join-form">
+        <input type="text" id="captain-code" placeholder="Captain code">
+        <button onclick="claimCaptaincy()">Claim Captaincy</button>
       </div>
     </div>
 
@@ -227,6 +269,18 @@ input:checked+.slider::before{transform:translateX(18px);background:white}
 </div>
 
 <div class="toast" id="toast"></div>
+
+<div class="modal-overlay" id="captain-change-modal">
+  <div class="modal-box">
+    <h4>Request Change of Captain</h4>
+    <p>Choose who you'd like to propose as the new captain. Your league admin will review and approve the change.</p>
+    <div id="captain-change-members">Loading squad...</div>
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeCaptainChangeModal()">Cancel</button>
+      <button class="confirm" onclick="submitCaptainChangeRequest()">Submit Request</button>
+    </div>
+  </div>
+</div>
 
 <script>
 const sb = window.supabase.createClient(
@@ -377,6 +431,15 @@ async function loadDashboard(user){
   // Load team memberships
   loadTeams(user);
 
+  // If the player arrived via a captain's shared invite link (/join?code=XXX),
+  // pre-fill the join code so they don't have to type it in.
+  var pendingCode = localStorage.getItem('fc_pending_join_code');
+  if(pendingCode){
+    var codeInput = document.getElementById('join-code');
+    if(codeInput) codeInput.value = pendingCode;
+    localStorage.removeItem('fc_pending_join_code');
+  }
+
   // Leaderboard preference
   var optIn = localStorage.getItem('fc_leaderboard_opt');
   document.getElementById('leaderboard-toggle').checked = optIn !== '0';
@@ -386,34 +449,307 @@ async function loadDashboard(user){
   document.getElementById('main-content').style.display = 'block';
 }
 
-function loadTeams(user){
-  var el = document.getElementById('teams-list');
-  // Check localStorage for any pending/approved memberships
-  var memberships = JSON.parse(localStorage.getItem('fc_memberships')||'[]');
-  if(!memberships.length){
-    el.innerHTML = '<div style="font-size:.85rem;color:var(--dim);padding:.5rem 0">You are not currently linked to any league teams.</div>';
-    return;
+// Shows join codes for any teams this user captains, with copy + share.
+// ASSUMPTION: team_memberships has a 'role' column with value 'captain'.
+// If your actual column/value differs, this is the one place to change it.
+// Shows join codes for any teams this user captains OR vice-captains, with
+// copy + share. Only the primary captain gets add/remove vice-captain controls.
+// ASSUMPTION: public.users has 'email' and 'username' columns for lookup -
+// adjust the lookup query below if yours differ.
+var captainTeamsData = [];
+
+async function loadCaptainTeams(user){
+  var card=document.getElementById('captain-teams-card');
+  var listEl=document.getElementById('captain-teams-list');
+  try{
+    var { data:ownedTeams, error:ownErr } = await sb
+      .from('teams').select('id, team_name, join_code, captain_user_id')
+      .eq('captain_user_id', user.id);
+    if(ownErr) throw ownErr;
+
+    var { data:viceRows, error:viceErr } = await sb
+      .from('team_vice_captains').select('team_id')
+      .eq('user_id', user.id);
+    if(viceErr) throw viceErr;
+
+    var viceTeamIds = (viceRows||[]).map(function(r){return r.team_id;});
+    var viceTeams = [];
+    if(viceTeamIds.length){
+      var { data:vt, error:vtErr } = await sb
+        .from('teams').select('id, team_name, join_code, captain_user_id')
+        .in('id', viceTeamIds);
+      if(vtErr) throw vtErr;
+      viceTeams = vt||[];
+    }
+
+    // Merge, tagging each with the viewer's role on that team
+    var byId = {};
+    (ownedTeams||[]).forEach(function(t){ byId[t.id] = Object.assign({},t,{myRole:'captain'}); });
+    viceTeams.forEach(function(t){ if(!byId[t.id]) byId[t.id] = Object.assign({},t,{myRole:'vice_captain'}); });
+    captainTeamsData = Object.values(byId);
+
+    if(!captainTeamsData.length){ card.style.display='none'; return; }
+    card.style.display='block';
+    await renderCaptainTeams();
+  }catch(e){
+    console.error('loadCaptainTeams error:',e);
+    card.style.display='none';
   }
-  el.innerHTML = memberships.map(function(m){
-    return '<div class="team-item">'
-      +'<div><div class="team-name">'+m.team_name+'</div><div class="team-league">'+m.league_name+'</div></div>'
-      +'<span class="status-badge '+m.status+'">'+m.status+'</span>'
+}
+
+async function renderCaptainTeams(){
+  var listEl=document.getElementById('captain-teams-list');
+  var rowsHtml = await Promise.all(captainTeamsData.map(async function(t){
+    var safeCode = (t.join_code||'').replace(/"/g,'&quot;');
+    var safeName = (t.team_name||'').replace(/"/g,'&quot;');
+    var roleLabel = t.myRole==='captain' ? 'Captain' : 'Vice Captain';
+
+    var vcHtml = '';
+    if(t.myRole==='captain'){
+      var { data:vcRows } = await sb
+        .from('team_vice_captains').select('user_id').eq('team_id', t.id);
+      var vcUserIds = (vcRows||[]).map(function(r){return r.user_id;});
+      var vcNames = [];
+      if(vcUserIds.length){
+        var { data:vcUsers } = await sb.from('users').select('id, username, email').in('id', vcUserIds);
+        vcNames = vcUsers||[];
+      }
+      vcHtml = '<div class="vc-section">'
+        +'<div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:.4rem">Vice Captains</div>'
+        +'<div class="vc-list">'
+          + (vcNames.length ? vcNames.map(function(u){
+              return '<span class="vc-chip">'+(u.username||u.email||'Player')
+                +'<button onclick="removeViceCaptain(&quot;'+t.id+'&quot;,&quot;'+u.id+'&quot;)" title="Remove">×</button></span>';
+            }).join('') : '<span style="font-size:.78rem;color:var(--dim)">None yet</span>')
+        +'</div>'
+        +'<div class="vc-add-row">'
+          +'<input type="text" id="vc-input-'+t.id+'" placeholder="Email or username">'
+          +'<button class="code-btn" onclick="addViceCaptain(&quot;'+t.id+'&quot;)">Add</button>'
+        +'</div>'
       +'</div>';
-  }).join('');
+    }
+
+    return '<div class="captain-team-row">'
+      +'<div class="captain-team-name">'+(t.team_name||'Team')+'<span class="role-badge">'+roleLabel+'</span></div>'
+      +'<div class="join-code-display">'
+        +'<span class="join-code-value">'+(t.join_code||'—')+'</span>'
+        +'<button class="code-btn" onclick="copyJoinCode(&quot;'+safeCode+'&quot;)">Copy Code</button>'
+        +'<button class="code-btn" onclick="shareJoinCode(&quot;'+safeCode+'&quot;,&quot;'+safeName+'&quot;)">Share</button>'
+      +'</div>'
+      + vcHtml
+    +'</div>';
+  }));
+  listEl.innerHTML = rowsHtml.join('');
+}
+
+async function addViceCaptain(teamId){
+  var input = document.getElementById('vc-input-'+teamId);
+  var identifier = input.value.trim();
+  if(!identifier){ toast('Enter an email or username first',true); return; }
+  try{
+    var query = sb.from('users').select('id').limit(1);
+    query = identifier.includes('@') ? query.eq('email', identifier) : query.eq('username', identifier);
+    var { data:found, error:lookupErr } = await query.single();
+    if(lookupErr || !found){ toast('No player found with that email/username',true); return; }
+
+    var { error:insertErr } = await sb.from('team_vice_captains')
+      .insert({ team_id:teamId, user_id:found.id });
+    if(insertErr) throw insertErr;
+
+    toast('Vice captain added!');
+    input.value='';
+    var t = captainTeamsData.find(function(x){return x.id===teamId;});
+    await loadCaptainTeams(window.currentUser); // refresh from source of truth
+  }catch(e){
+    console.error('addViceCaptain error:',e);
+    toast('Could not add vice captain: '+e.message,true);
+  }
+}
+
+async function removeViceCaptain(teamId, userId){
+  if(!confirm('Remove this vice captain?')) return;
+  try{
+    var { error } = await sb.from('team_vice_captains')
+      .delete().eq('team_id', teamId).eq('user_id', userId);
+    if(error) throw error;
+    toast('Vice captain removed');
+    await loadCaptainTeams(window.currentUser);
+  }catch(e){
+    console.error('removeViceCaptain error:',e);
+    toast('Could not remove vice captain: '+e.message,true);
+  }
+}
+
+function copyJoinCode(code){
+  navigator.clipboard.writeText(code).then(function(){
+    toast('Join code copied!');
+  }).catch(function(){
+    toast('Could not copy - code is '+code,true);
+  });
+}
+
+function shareJoinCode(code, teamName){
+  var link='https://flightchalker.co.uk/join?code='+encodeURIComponent(code);
+  var text='Join '+(teamName||'my team')+' on Flight Chalker! Use code '+code+' or tap this link: '+link;
+  if(navigator.share){
+    navigator.share({ title:'Join '+(teamName||'my team')+' on Flight Chalker', text:text, url:link })
+      .catch(function(){ /* user cancelled share - ignore */ });
+  }else{
+    navigator.clipboard.writeText(text).then(function(){
+      toast('Invite link copied!');
+    }).catch(function(){
+      toast('Could not copy - link is '+link,true);
+    });
+  }
+}
+
+async function loadTeams(user){
+  var el = document.getElementById('teams-list');
+  try{
+    var { data:memberships, error } = await sb
+      .from('team_memberships')
+      .select('status, team_id')
+      .eq('user_id', user.id);
+    if(error) throw error;
+    if(!memberships || !memberships.length){
+      el.innerHTML = '<div style="font-size:.85rem;color:var(--dim);padding:.5rem 0">You are not currently linked to any league teams.</div>';
+      return;
+    }
+
+    var teamIds = memberships.map(function(m){return m.team_id;});
+    var { data:teams } = await sb.from('teams').select('id, team_name, league_id').in('id', teamIds);
+    var leagueIds = (teams||[]).map(function(t){return t.league_id;}).filter(Boolean);
+    var leagueMap = {};
+    if(leagueIds.length){
+      var { data:leagues } = await sb.from('leagues').select('id, name').in('id', leagueIds);
+      (leagues||[]).forEach(function(l){ leagueMap[l.id] = l.name; });
+    }
+    var teamMap = {};
+    (teams||[]).forEach(function(t){ teamMap[t.id] = t; });
+
+    el.innerHTML = memberships.map(function(m){
+      var t = teamMap[m.team_id] || {};
+      var leagueName = leagueMap[t.league_id] || '';
+      var changeLink = m.status==='approved'
+        ? '<button class="link-btn" onclick="openCaptainChangeModal(&quot;'+m.team_id+'&quot;)">Request change of captain</button>'
+        : '';
+      return '<div class="team-item">'
+        +'<div><div class="team-name">'+(t.team_name||'Team')+'</div><div class="team-league">'+leagueName+'</div></div>'
+        +'<span class="status-badge '+m.status+'">'+m.status+'</span>'+changeLink
+        +'</div>';
+    }).join('');
+  }catch(e){
+    console.error('loadTeams error:',e);
+    el.innerHTML = '<div style="font-size:.85rem;color:var(--red);padding:.5rem 0">Could not load teams.</div>';
+  }
 }
 
 async function requestJoinTeam(){
   var code = document.getElementById('join-code').value.trim().toUpperCase();
   if(!code){toast('Please enter a join code',true);return;}
-  // Store the request locally for now
-  var memberships = JSON.parse(localStorage.getItem('fc_memberships')||'[]');
-  var existing = memberships.find(function(m){return m.code===code;});
-  if(existing){toast('Already requested to join this team',true);return;}
-  memberships.push({code:code,team_name:'Team ('+code+')',league_name:'Pending verification',status:'pending'});
-  localStorage.setItem('fc_memberships',JSON.stringify(memberships));
-  document.getElementById('join-code').value = '';
-  toast('Join request sent!');
-  loadTeams(window.currentUser);
+  try{
+    var { data:team, error:teamErr } = await sb.from('teams').select('id, team_name').eq('join_code', code).single();
+    if(teamErr || !team){toast('No team found with that join code',true);return;}
+
+    var { error:insertErr } = await sb.from('team_memberships').insert({
+      team_id: team.id,
+      user_id: window.currentUser.id,
+      status: 'pending'
+    });
+    if(insertErr){
+      if(insertErr.code==='23505'){ toast('You already have a request for this team',true); return; }
+      throw insertErr;
+    }
+    document.getElementById('join-code').value = '';
+    toast('Join request sent to '+(team.team_name||'the team')+'!');
+    loadTeams(window.currentUser);
+  }catch(e){
+    console.error('requestJoinTeam error:',e);
+    toast('Could not send request: '+e.message,true);
+  }
+}
+
+// Instant, no-approval captaincy claim - the gatekeeping already happened
+// when the league admin chose who to send this code to.
+async function claimCaptaincy(){
+  var code = document.getElementById('captain-code').value.trim().toUpperCase();
+  if(!code){toast('Please enter a captain code',true);return;}
+  try{
+    var { data:team, error:teamErr } = await sb.from('teams')
+      .select('id, team_name, captain_user_id').eq('captain_code', code).single();
+    if(teamErr || !team){toast('No team found with that captain code',true);return;}
+    if(team.captain_user_id){
+      toast('This team already has a captain assigned. Contact your league admin if this seems wrong.',true);
+      return;
+    }
+    var { error:updateErr } = await sb.from('teams')
+      .update({ captain_user_id: window.currentUser.id }).eq('id', team.id);
+    if(updateErr) throw updateErr;
+
+    document.getElementById('captain-code').value = '';
+    toast('You are now captain of '+(team.team_name||'your team')+'! 🎯');
+    await loadCaptainTeams(window.currentUser);
+  }catch(e){
+    console.error('claimCaptaincy error:',e);
+    toast('Could not claim captaincy: '+e.message,true);
+  }
+}
+
+var captainChangeTeamId = null;
+
+async function openCaptainChangeModal(teamId){
+  captainChangeTeamId = teamId;
+  var modal = document.getElementById('captain-change-modal');
+  var membersEl = document.getElementById('captain-change-members');
+  membersEl.innerHTML = 'Loading squad...';
+  modal.classList.add('show');
+  try{
+    var { data:members, error } = await sb
+      .from('team_memberships').select('user_id')
+      .eq('team_id', teamId).eq('status', 'approved');
+    if(error) throw error;
+    var userIds = (members||[]).map(function(m){return m.user_id;})
+      .filter(function(id){return id !== window.currentUser.id;}); // don't propose yourself
+    if(!userIds.length){
+      membersEl.innerHTML = '<p style="color:var(--dim);font-size:.82rem">No other squad members found to propose.</p>';
+      return;
+    }
+    var { data:users, error:userErr } = await sb.from('users').select('id, username, email').in('id', userIds);
+    if(userErr) throw userErr;
+    membersEl.innerHTML = (users||[]).map(function(u,i){
+      var label = u.username || u.email || 'Player';
+      return '<label class="member-option">'
+        +'<input type="radio" name="proposed-captain" value="'+u.id+'"'+(i===0?' checked':'')+'>'
+        + label
+      +'</label>';
+    }).join('');
+  }catch(e){
+    console.error('openCaptainChangeModal error:',e);
+    membersEl.innerHTML = '<p style="color:var(--red);font-size:.82rem">Could not load squad members.</p>';
+  }
+}
+
+function closeCaptainChangeModal(){
+  document.getElementById('captain-change-modal').classList.remove('show');
+  captainChangeTeamId = null;
+}
+
+async function submitCaptainChangeRequest(){
+  var selected = document.querySelector('input[name="proposed-captain"]:checked');
+  if(!selected){toast('Please select a squad member',true);return;}
+  try{
+    var { error } = await sb.from('captain_change_requests').insert({
+      team_id: captainChangeTeamId,
+      requested_by: window.currentUser.id,
+      proposed_captain_id: selected.value
+    });
+    if(error) throw error;
+    toast('Change request sent to your league admin');
+    closeCaptainChangeModal();
+  }catch(e){
+    console.error('submitCaptainChangeRequest error:',e);
+    toast('Could not send request: '+e.message,true);
+  }
 }
 
 function updateLeaderboardPref(checked){
@@ -440,12 +776,13 @@ window.addEventListener('load', async function(){
     };
     window.currentUser = adaptedUser;
     await loadDashboard(adaptedUser);
+    await loadCaptainTeams(adaptedUser);
   }catch(e){
     console.error('Dashboard error:',e);
     document.getElementById('loading-screen').innerHTML = '<div style="color:var(--red)">Error loading dashboard. <a href="/" style="color:var(--gl)">Go home</a></div>';
   }
 });
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v7-sb-rename-fix</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v12-captain-change-request</div>
 </body>
 </html>
