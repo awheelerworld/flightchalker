@@ -1,3 +1,4 @@
+<!-- VERSION: v3-authredirect-fix -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,7 +21,7 @@
 <title>Player Login — Flight Chalker</title>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-WQRGJRFF1Q"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-WQRGJRFF1Q');</script>
-<script src="https://unpkg.com/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
+<script data-clerk-publishable-key="pk_live_Y2xlcmsuZmxpZ2h0Y2hhbGtlci5jby51ayQ" src="https://unpkg.com/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -111,12 +112,15 @@ function toast(msg,isErr=false){
 
 async function signInWithGoogle(){
   try{
-    await window.Clerk.authenticateWithRedirect({
+    await window.Clerk.client.signIn.authenticateWithRedirect({
       strategy:'oauth_google',
       redirectUrl:'/dashboard',
       redirectUrlComplete:'/dashboard'
     });
-  }catch(e){toast('Google sign in failed',true);}
+  }catch(e){
+    var msg=e.errors?e.errors[0].longMessage||e.errors[0].message:e.message;
+    toast('Google sign in failed: '+msg,true);
+  }
 }
 
 async function login(){
@@ -141,12 +145,14 @@ async function login(){
 
 window.addEventListener('load',async function(){
   try{
-    const clerk=new window.Clerk(CLERK_KEY);
-    await clerk.load();
-    window.Clerk=clerk;
-    if(clerk.user){window.location.href='/dashboard';}
+    if(!window.Clerk){
+      throw new Error('Clerk script failed to load (check network / ad-blocker)');
+    }
+    await window.Clerk.load();
+    if(window.Clerk.user){window.location.href='/dashboard';}
   }catch(e){console.error('Clerk:',e);}
 });
 </script>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v3-authredirect-fix</div>
 </body>
 </html>
