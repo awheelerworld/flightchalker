@@ -1,4 +1,4 @@
-<!-- VERSION: v6-supabase-auth -->
+<!-- VERSION: v7-sb-rename-fix -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -102,7 +102,7 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-
 <div class="toast" id="toast"></div>
 
 <script>
-const supabase = window.supabase.createClient(
+const sb = window.supabase.createClient(
   'https://xkovqamknwyjzlgijcel.supabase.co',
   'sb_publishable_1zeVlEGjUdGNwA-i8pktHg_nSjRXYEQ'
 );
@@ -115,7 +115,7 @@ function toast(msg,isErr=false){
 
 async function signInWithGoogle(){
   try{
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { error } = await sb.auth.signInWithOAuth({
       provider:'google',
       options:{ redirectTo:'https://flightchalker.co.uk/dashboard' }
     });
@@ -144,7 +144,7 @@ async function login(){
       if(lookupErr||!profile){ throw new Error('No account found with that username'); }
       email = profile.email;
     }
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await sb.auth.signInWithPassword({ email, password });
     if(error) throw error;
     toast('Welcome back! \uD83C\uDFAF');
     setTimeout(function(){window.location.href='/dashboard';},800);
@@ -157,11 +157,11 @@ async function login(){
 
 window.addEventListener('load',async function(){
   try{
-    const { data:{ session } } = await supabase.auth.getSession();
+    const { data:{ session } } = await sb.auth.getSession();
     if(session){window.location.href='/dashboard';}
   }catch(e){console.error('Supabase:',e);}
 });
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v6-supabase-auth</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v7-sb-rename-fix</div>
 </body>
 </html>
