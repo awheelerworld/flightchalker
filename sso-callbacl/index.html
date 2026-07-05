@@ -1,1 +1,49 @@
+<!-- VERSION: v5-sso-callback-page -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signing you in… — Flight Chalker</title>
+<script data-clerk-publishable-key="pk_live_Y2xlcmsuZmxpZ2h0Y2hhbGtlci5jby51ayQ" src="https://unpkg.com/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:#141814;color:#e0d8c8;font-family:'Barlow',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;text-align:center}
+.spin{width:32px;height:32px;border:3px solid rgba(224,216,200,.25);border-top-color:#4a7c59;border-radius:50%;animation:sp .8s linear infinite;margin-bottom:1rem}
+@keyframes sp{to{transform:rotate(360deg)}}
+.error{color:#c0392b;display:none}
+.error a{color:#5a9469;text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="spin" id="spinner"></div>
+<div id="msg">Signing you in…</div>
+<div class="error" id="err">Sign-in failed. <a href="/login">Try again</a></div>
 
+<script>
+window.addEventListener('load', async function(){
+  try{
+    if(!window.Clerk){
+      throw new Error('Clerk script failed to load');
+    }
+    await window.Clerk.load();
+    await window.Clerk.handleRedirectCallback({
+      signInForceRedirectUrl: '/dashboard',
+      signUpForceRedirectUrl: '/dashboard'
+    });
+    // handleRedirectCallback navigates on success. If we're still here after
+    // a moment, fall back to a manual redirect.
+    setTimeout(function(){
+      if(window.Clerk.user){window.location.href='/dashboard';}
+    },1500);
+  }catch(e){
+    console.error('SSO callback error:',e);
+    document.getElementById('spinner').style.display='none';
+    document.getElementById('msg').style.display='none';
+    document.getElementById('err').style.display='block';
+  }
+});
+</script>
+</body>
+</html>
