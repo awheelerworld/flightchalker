@@ -1,4 +1,4 @@
-<!-- VERSION: v5-sso-callback-page -->
+<!-- VERSION: v6-supabase-auth -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,7 +22,7 @@
 <meta name="description" content="Create your free Flight Chalker account. Access the darts scorer, training zone and leaderboards.">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-WQRGJRFF1Q"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-WQRGJRFF1Q');</script>
-<script data-clerk-publishable-key="pk_live_Y2xlcmsuZmxpZ2h0Y2hhbGtlci5jby51ayQ" src="https://unpkg.com/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -87,7 +87,7 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-
   </div>
 
   <!-- Google Sign In -->
-  <button class="btn-google" id="google-btn" onclick="signInWithGoogle()" disabled style="opacity:.6">
+  <button class="btn-google" id="google-btn" onclick="signInWithGoogle()">
     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
       <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
       <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -144,7 +144,10 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-
 <div class="toast" id="toast"></div>
 
 <script>
-const CLERK_KEY = 'pk_live_Y2xlcmsuZmxpZ2h0Y2hhbGtlci5jby51ayQ';
+const supabase = window.supabase.createClient(
+  'https://xkovqamknwyjzlgijcel.supabase.co',
+  'sb_publishable_1zeVlEGjUdGNwA-i8pktHg_nSjRXYEQ'
+);
 
 // Set max date of birth to 18 years ago
 var maxDob = new Date();
@@ -182,28 +185,20 @@ function isOver18(dob){
   return age>=18;
 }
 
-var clerkInitError = null;
-
 async function signInWithGoogle(){
   var btn=document.getElementById('google-btn');
-  if(!window.Clerk||!window.Clerk.loaded){
-    // Clerk never successfully finished loading - don't pretend it might.
-    // Surface the real reason instead of a generic "still loading" message.
-    toast(clerkInitError?('Sign-in unavailable: '+clerkInitError):'Still loading, please wait a moment',true);
-    return;
-  }
   try{
     if(btn){btn.disabled=true;btn.style.opacity='.6';}
-    await window.Clerk.client.signIn.authenticateWithRedirect({
-      strategy:'oauth_google',
-      redirectUrl:'https://flightchalker.co.uk/sso-callback',
-      redirectUrlComplete:'https://flightchalker.co.uk/dashboard'
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider:'google',
+      options:{ redirectTo:'https://flightchalker.co.uk/dashboard' }
     });
+    if(error) throw error;
+    // On success the browser is redirected away to Google - nothing else runs here.
   }catch(e){
     console.error('Google OAuth error:',e);
     if(btn){btn.disabled=false;btn.style.opacity='1';}
-    var msg=e.errors?e.errors[0].longMessage||e.errors[0].message:e.message;
-    toast('Google sign in failed: '+msg,true);
+    toast('Google sign in failed: '+e.message,true);
   }
 }
 
@@ -231,61 +226,49 @@ async function registerWithEmail(){
   btn.innerHTML='<span class="spin"></span>Creating account...';
 
   try{
-    if(!window.Clerk||!window.Clerk.loaded){
-      toast('Still starting up, please wait a moment and try again',true);
-      btn.disabled=false;
-      btn.innerHTML='Create Free Account';
-      return;
-    }
-    const clerk=window.Clerk;
-    const signUp=await clerk.client.signUp.create({
-      username:username,
-      emailAddress:email,
+    const { data, error } = await supabase.auth.signUp({
+      email:email,
       password:password,
+      options:{
+        data:{ username:username, date_of_birth:dob },
+        emailRedirectTo:'https://flightchalker.co.uk/dashboard'
+      }
     });
-    // Store leaderboard preference
+    if(error) throw error;
+
+    // Store leaderboard preference locally for now
     localStorage.setItem('fc_leaderboard_opt',leaderboard?'1':'0');
-    // Start email verification
-    await signUp.prepareEmailAddressVerification({strategy:'email_code'});
-    // Redirect to verify page
-    localStorage.setItem('fc_pending_signup',JSON.stringify({username,email,leaderboard}));
-    window.location.href='/verify-email';
+
+    // Best-effort: create a matching row in the public users/profile table.
+    // NOTE: adjust table/column names here if yours differ.
+    if(data.user){
+      try{
+        await supabase.from('users').insert({
+          id:data.user.id,
+          username:username,
+          email:email
+        });
+      }catch(profileErr){
+        console.error('Profile row insert failed (non-fatal):',profileErr);
+      }
+    }
+
+    toast('Account created! Check your email to confirm, then log in. \uD83C\uDFAF');
+    setTimeout(function(){window.location.href='/login';},2000);
   }catch(e){
-    toast(e.errors?e.errors[0].message:e.message,true);
+    toast(e.message,true);
     btn.disabled=false;
     btn.innerHTML='Create Free Account';
   }
 }
 
-// Init Clerk
-async function initClerk(){
-  var btn=document.getElementById('google-btn');
-  var statusEl=document.getElementById('google-status');
-  if(statusEl){statusEl.style.display='none';statusEl.onclick=null;}
+window.addEventListener('load',async function(){
   try{
-    if(!window.Clerk){
-      throw new Error('Clerk script failed to load (check network / ad-blocker)');
-    }
-    await window.Clerk.load();
-    window.Clerk.loaded=true;
-    clerkInitError=null;
-    if(btn){btn.disabled=false;btn.style.opacity='1';}
-    if(window.Clerk.user){window.location.href='/dashboard';}
-  }catch(e){
-    console.error('Clerk init failed:',e);
-    clerkInitError = (e && e.message) ? e.message : 'Unknown error';
-    // IMPORTANT: keep the button disabled here. Re-enabling it after a failed
-    // init is what caused the misleading "Still loading" error on click.
-    if(btn){btn.disabled=true;btn.style.opacity='.6';}
-    if(statusEl){
-      statusEl.textContent='Google sign-in unavailable: '+clerkInitError+' (tap to retry)';
-      statusEl.style.display='block';
-      statusEl.onclick=initClerk;
-    }
-  }
-}
-window.addEventListener('load',initClerk);
+    const { data:{ session } } = await supabase.auth.getSession();
+    if(session){window.location.href='/dashboard';}
+  }catch(e){console.error('Supabase init:',e);}
+});
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v5-sso-callback-page</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v6-supabase-auth</div>
 </body>
 </html>
