@@ -1,4 +1,4 @@
-<!-- VERSION: v7-sb-rename-fix -->
+<!-- VERSION: v8-captain-join-code -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -155,6 +155,12 @@ async function login(){
   }
 }
 
+(function(){
+  var params = new URLSearchParams(window.location.search);
+  var code = params.get('code');
+  if(code){ localStorage.setItem('fc_pending_join_code', code.toUpperCase()); }
+})();
+
 window.addEventListener('load',async function(){
   try{
     const { data:{ session } } = await sb.auth.getSession();
@@ -162,6 +168,6 @@ window.addEventListener('load',async function(){
   }catch(e){console.error('Supabase:',e);}
 });
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v7-sb-rename-fix</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v8-captain-join-code</div>
 </body>
 </html>
