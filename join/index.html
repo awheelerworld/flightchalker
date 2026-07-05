@@ -1,4 +1,4 @@
-<!-- VERSION: v3-authredirect-fix -->
+<!-- VERSION: v5-sso-callback-page -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -196,7 +196,7 @@ async function signInWithGoogle(){
     if(btn){btn.disabled=true;btn.style.opacity='.6';}
     await window.Clerk.client.signIn.authenticateWithRedirect({
       strategy:'oauth_google',
-      redirectUrl:'https://flightchalker.co.uk/dashboard',
+      redirectUrl:'https://flightchalker.co.uk/sso-callback',
       redirectUrlComplete:'https://flightchalker.co.uk/dashboard'
     });
   }catch(e){
@@ -286,6 +286,6 @@ async function initClerk(){
 }
 window.addEventListener('load',initClerk);
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v3-authredirect-fix</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v5-sso-callback-page</div>
 </body>
 </html>
