@@ -21,7 +21,7 @@
 <meta name="description" content="Create your free Flight Chalker account. Access the darts scorer, training zone and leaderboards.">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-WQRGJRFF1Q"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-WQRGJRFF1Q');</script>
-<script src="https://unpkg.com/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
+<script data-clerk-publishable-key="pk_live_Y2xlcmsuZmxpZ2h0Y2hhbGtlci5jby51ayQ" src="https://unpkg.com/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -230,8 +230,13 @@ async function registerWithEmail(){
   btn.innerHTML='<span class="spin"></span>Creating account...';
 
   try{
+    if(!window.Clerk||!window.Clerk.loaded){
+      toast('Still starting up, please wait a moment and try again',true);
+      btn.disabled=false;
+      btn.innerHTML='Create Free Account';
+      return;
+    }
     const clerk=window.Clerk;
-    await clerk.load();
     const signUp=await clerk.client.signUp.create({
       username:username,
       emailAddress:email,
@@ -260,13 +265,11 @@ async function initClerk(){
     if(!window.Clerk){
       throw new Error('Clerk script failed to load (check network / ad-blocker)');
     }
-    const clerk=new window.Clerk(CLERK_KEY);
-    await clerk.load();
-    window.Clerk=clerk;
+    await window.Clerk.load();
     window.Clerk.loaded=true;
     clerkInitError=null;
     if(btn){btn.disabled=false;btn.style.opacity='1';}
-    if(clerk.user){window.location.href='/dashboard';}
+    if(window.Clerk.user){window.location.href='/dashboard';}
   }catch(e){
     console.error('Clerk init failed:',e);
     clerkInitError = (e && e.message) ? e.message : 'Unknown error';
