@@ -1,4 +1,4 @@
-<!-- VERSION: v3-authredirect-fix -->
+<!-- VERSION: v4-handlecallback-fix -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -149,10 +149,15 @@ window.addEventListener('load',async function(){
       throw new Error('Clerk script failed to load (check network / ad-blocker)');
     }
     await window.Clerk.load();
+    try{
+      await window.Clerk.handleRedirectCallback({redirectUrlComplete:'/dashboard'});
+    }catch(cbErr){
+      // No pending redirect to handle - that's fine, ignore.
+    }
     if(window.Clerk.user){window.location.href='/dashboard';}
   }catch(e){console.error('Clerk:',e);}
 });
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v3-authredirect-fix</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v4-handlecallback-fix</div>
 </body>
 </html>
