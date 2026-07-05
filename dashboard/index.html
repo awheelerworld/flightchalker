@@ -1,4 +1,4 @@
-<!-- VERSION: v6-supabase-auth -->
+<!-- VERSION: v7-sb-rename-fix -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -229,7 +229,7 @@ input:checked+.slider::before{transform:translateX(18px);background:white}
 <div class="toast" id="toast"></div>
 
 <script>
-const supabase = window.supabase.createClient(
+const sb = window.supabase.createClient(
   'https://xkovqamknwyjzlgijcel.supabase.co',
   'sb_publishable_1zeVlEGjUdGNwA-i8pktHg_nSjRXYEQ'
 );
@@ -346,7 +346,7 @@ async function selfLinkAccount(){
 
 async function signOut(){
   try{
-    await supabase.auth.signOut();
+    await sb.auth.signOut();
     window.location.href='/';
   }catch(e){window.location.href='/';}
 }
@@ -424,7 +424,7 @@ function updateLeaderboardPref(checked){
 // Init
 window.addEventListener('load', async function(){
   try{
-    const { data:{ session } } = await supabase.auth.getSession();
+    const { data:{ session } } = await sb.auth.getSession();
     if(!session){
       window.location.href = '/login?redirect=/dashboard';
       return;
@@ -446,6 +446,6 @@ window.addEventListener('load', async function(){
   }
 });
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v6-supabase-auth</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v7-sb-rename-fix</div>
 </body>
 </html>
