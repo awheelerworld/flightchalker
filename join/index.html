@@ -1,4 +1,4 @@
-<!-- VERSION: v6-supabase-auth -->
+<!-- VERSION: v7-sb-rename-fix -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -144,7 +144,7 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-
 <div class="toast" id="toast"></div>
 
 <script>
-const supabase = window.supabase.createClient(
+const sb = window.supabase.createClient(
   'https://xkovqamknwyjzlgijcel.supabase.co',
   'sb_publishable_1zeVlEGjUdGNwA-i8pktHg_nSjRXYEQ'
 );
@@ -189,7 +189,7 @@ async function signInWithGoogle(){
   var btn=document.getElementById('google-btn');
   try{
     if(btn){btn.disabled=true;btn.style.opacity='.6';}
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { error } = await sb.auth.signInWithOAuth({
       provider:'google',
       options:{ redirectTo:'https://flightchalker.co.uk/dashboard' }
     });
@@ -226,7 +226,7 @@ async function registerWithEmail(){
   btn.innerHTML='<span class="spin"></span>Creating account...';
 
   try{
-    const { data, error } = await supabase.auth.signUp({
+    const { data, error } = await sb.auth.signUp({
       email:email,
       password:password,
       options:{
@@ -243,7 +243,7 @@ async function registerWithEmail(){
     // NOTE: adjust table/column names here if yours differ.
     if(data.user){
       try{
-        await supabase.from('users').insert({
+        await sb.from('users').insert({
           id:data.user.id,
           username:username,
           email:email
@@ -264,11 +264,11 @@ async function registerWithEmail(){
 
 window.addEventListener('load',async function(){
   try{
-    const { data:{ session } } = await supabase.auth.getSession();
+    const { data:{ session } } = await sb.auth.getSession();
     if(session){window.location.href='/dashboard';}
   }catch(e){console.error('Supabase init:',e);}
 });
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v6-supabase-auth</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v7-sb-rename-fix</div>
 </body>
 </html>
