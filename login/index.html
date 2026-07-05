@@ -1,4 +1,4 @@
-<!-- VERSION: v5-sso-callback-page -->
+<!-- VERSION: v6-supabase-auth -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -21,7 +21,7 @@
 <title>Player Login — Flight Chalker</title>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-WQRGJRFF1Q"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-WQRGJRFF1Q');</script>
-<script data-clerk-publishable-key="pk_live_Y2xlcmsuZmxpZ2h0Y2hhbGtlci5jby51ayQ" src="https://unpkg.com/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -102,7 +102,10 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-
 <div class="toast" id="toast"></div>
 
 <script>
-const CLERK_KEY = 'pk_live_Y2xlcmsuZmxpZ2h0Y2hhbGtlci5jby51ayQ';
+const supabase = window.supabase.createClient(
+  'https://xkovqamknwyjzlgijcel.supabase.co',
+  'sb_publishable_1zeVlEGjUdGNwA-i8pktHg_nSjRXYEQ'
+);
 
 function toast(msg,isErr=false){
   var t=document.getElementById('toast');
@@ -112,14 +115,13 @@ function toast(msg,isErr=false){
 
 async function signInWithGoogle(){
   try{
-    await window.Clerk.client.signIn.authenticateWithRedirect({
-      strategy:'oauth_google',
-      redirectUrl:'/sso-callback',
-      redirectUrlComplete:'/dashboard'
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider:'google',
+      options:{ redirectTo:'https://flightchalker.co.uk/dashboard' }
     });
+    if(error) throw error;
   }catch(e){
-    var msg=e.errors?e.errors[0].longMessage||e.errors[0].message:e.message;
-    toast('Google sign in failed: '+msg,true);
+    toast('Google sign in failed: '+e.message,true);
   }
 }
 
@@ -132,12 +134,22 @@ async function login(){
   var btn=document.getElementById('login-btn');
   btn.disabled=true;btn.innerHTML='<span class="spin"></span>Signing in...';
   try{
-    const signIn=await window.Clerk.client.signIn.create({identifier,password});
-    await window.Clerk.setActive({session:signIn.createdSessionId});
+    var email=identifier;
+    if(!identifier.includes('@')){
+      // Treat as username - look up the matching email first.
+      // NOTE: assumes a public.users table with username/email columns -
+      // adjust the table/column names below if yours differ.
+      var { data:profile, error:lookupErr } = await supabase
+        .from('users').select('email').eq('username', identifier).single();
+      if(lookupErr||!profile){ throw new Error('No account found with that username'); }
+      email = profile.email;
+    }
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if(error) throw error;
     toast('Welcome back! \uD83C\uDFAF');
     setTimeout(function(){window.location.href='/dashboard';},800);
   }catch(e){
-    errEl.textContent=e.errors?e.errors[0].longMessage||e.errors[0].message:'Sign in failed. Please check your details.';
+    errEl.textContent = e.message || 'Sign in failed. Please check your details.';
     errEl.style.display='block';
     btn.disabled=false;btn.innerHTML='Sign In';
   }
@@ -145,14 +157,11 @@ async function login(){
 
 window.addEventListener('load',async function(){
   try{
-    if(!window.Clerk){
-      throw new Error('Clerk script failed to load (check network / ad-blocker)');
-    }
-    await window.Clerk.load();
-    if(window.Clerk.user){window.location.href='/dashboard';}
-  }catch(e){console.error('Clerk:',e);}
+    const { data:{ session } } = await supabase.auth.getSession();
+    if(session){window.location.href='/dashboard';}
+  }catch(e){console.error('Supabase:',e);}
 });
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v5-sso-callback-page</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v6-supabase-auth</div>
 </body>
 </html>
