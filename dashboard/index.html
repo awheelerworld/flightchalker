@@ -1,4 +1,4 @@
-<!-- VERSION: v5-sso-callback-page -->
+<!-- VERSION: v6-supabase-auth -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,7 +18,7 @@
 <meta name="robots" content="noindex, nofollow">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-WQRGJRFF1Q"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-WQRGJRFF1Q');</script>
-<script data-clerk-publishable-key="pk_live_Y2xlcmsuZmxpZ2h0Y2hhbGtlci5jby51ayQ" src="https://unpkg.com/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -229,7 +229,10 @@ input:checked+.slider::before{transform:translateX(18px);background:white}
 <div class="toast" id="toast"></div>
 
 <script>
-const CLERK_KEY = 'pk_live_Y2xlcmsuZmxpZ2h0Y2hhbGtlci5jby51ayQ';
+const supabase = window.supabase.createClient(
+  'https://xkovqamknwyjzlgijcel.supabase.co',
+  'sb_publishable_1zeVlEGjUdGNwA-i8pktHg_nSjRXYEQ'
+);
 const NEON_URL = 'https://ep-shiny-mouse-abtjiaqk.eu-west-2.aws.neon.tech';
 
 function toast(msg, isErr=false){
@@ -310,7 +313,7 @@ async function selfLinkAccount(){
     resultEl.style.color='var(--red)';
     return;
   }
-  // If no email stored, check against their Clerk email
+  // If no email stored, check against their account email
   var clerkEmail=window.currentUser&&window.currentUser.emailAddresses[0]?window.currentUser.emailAddresses[0].emailAddress.toLowerCase():'';
   if(!storedEmail&&enteredEmail!==clerkEmail){
     resultEl.textContent='Email must match your registered account email.';
@@ -343,7 +346,7 @@ async function selfLinkAccount(){
 
 async function signOut(){
   try{
-    await window.Clerk.signOut();
+    await supabase.auth.signOut();
     window.location.href='/';
   }catch(e){window.location.href='/';}
 }
@@ -421,23 +424,28 @@ function updateLeaderboardPref(checked){
 // Init
 window.addEventListener('load', async function(){
   try{
-    if(!window.Clerk){
-      throw new Error('Clerk script failed to load (check network / ad-blocker)');
-    }
-    await window.Clerk.load();
-    if(!window.Clerk.user){
-      // Not logged in - redirect to login
+    const { data:{ session } } = await supabase.auth.getSession();
+    if(!session){
       window.location.href = '/login?redirect=/dashboard';
       return;
     }
-    window.currentUser = window.Clerk.user;
-    await loadDashboard(window.Clerk.user);
+    var su = session.user;
+    // Adapter: keeps the same shape loadDashboard/loadTeams already expect,
+    // so none of that logic needs to change.
+    var adaptedUser = {
+      id: su.id,
+      username: su.user_metadata&&su.user_metadata.username,
+      firstName: su.user_metadata&&su.user_metadata.firstName,
+      emailAddresses: [{ emailAddress: su.email }]
+    };
+    window.currentUser = adaptedUser;
+    await loadDashboard(adaptedUser);
   }catch(e){
     console.error('Dashboard error:',e);
     document.getElementById('loading-screen').innerHTML = '<div style="color:var(--red)">Error loading dashboard. <a href="/" style="color:var(--gl)">Go home</a></div>';
   }
 });
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v5-sso-callback-page</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v6-supabase-auth</div>
 </body>
 </html>
