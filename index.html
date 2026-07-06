@@ -1346,6 +1346,10 @@ function refreshDropdowns(){
 }
 
 function buildRows(){
+  buildRowsInner();
+  setTimeout(initCollapsibles, 50);
+}
+function buildRowsInner(){
   const c=document.getElementById('match-rows-container');c.innerHTML='';
   if(!currentLeague)return;
   const n=currentLeague.num_singles,d=currentLeague.num_doubles,t=currentLeague.team_game_players;
@@ -2418,16 +2422,32 @@ function squadRemove(username){
 
 function toggleSection(sectionId, labelEl){
   var rows = document.getElementById(sectionId);
-  var label = labelEl || rows.previousElementSibling;
   if(!rows) return;
-  var isCollapsed = rows.classList.contains('collapsed');
-  if(isCollapsed){
-    rows.classList.remove('collapsed');
-    if(label) label.classList.remove('collapsed');
-  } else {
-    rows.classList.add('collapsed');
-    if(label) label.classList.add('collapsed');
-  }
+  var label = labelEl || rows.previousElementSibling;
+  var isHidden = rows.style.display === 'none';
+  rows.style.display = isHidden ? '' : 'none';
+  var icon = label ? label.querySelector('.toggle-icon') : null;
+  if(icon) icon.style.transform = isHidden ? '' : 'rotate(-90deg)';
+}
+
+function initCollapsibles(){
+  // Add click handlers to all section labels after they're built
+  var ids = ['singles-rows','doubles-rows','team4-rows'];
+  ids.forEach(function(id){
+    var rows = document.getElementById(id);
+    if(!rows) return;
+    var label = rows.previousElementSibling;
+    if(!label || !label.classList.contains('slabel')) return;
+    // Add toggle icon if not present
+    if(!label.querySelector('.toggle-icon')){
+      var icon = document.createElement('span');
+      icon.className = 'toggle-icon';
+      icon.textContent = '▾';
+      label.appendChild(icon);
+    }
+    label.style.cursor = 'pointer';
+    label.onclick = function(){ toggleSection(id, label); };
+  });
 }
 
 function sw(name){
