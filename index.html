@@ -1362,8 +1362,8 @@ function buildRows(){
   if(d>0){
     md.doubles=Array.from({length:d},function(){return{p1:'',p2:'',legsFor:0,legsAgainst:0,result:null,scores1:[],scores2:[]};});
     const dEl=document.createElement('div');dEl.className='mg';
-    dEl.innerHTML='<div class="slabel">Doubles <span>'+d+' match'+(d!==1?'es':'')+' · best of '+currentLeague.best_of_doubles+' legs · '+(currentLeague.starting_score_doubles||currentLeague.starting_score||601)+'</span></div>';
-    const dRows=document.createElement('div');dRows.id='doubles-rows';
+    dEl.innerHTML='<div class="slabel" onclick="toggleSection(&quot;doubles-rows&quot;,this)">Doubles <span>'+d+' match'+(d!==1?'es':'')+' · best of '+currentLeague.best_of_doubles+' legs · '+(currentLeague.starting_score_doubles||currentLeague.starting_score||601)+'</span><span class="toggle-icon">▾</span></div>';
+    const dRows=document.createElement('div');dRows.id='doubles-rows';dRows.style.maxHeight='9999px';
     for(var i=0;i<d;i++)dRows.appendChild(mkDouble(i));
     dEl.appendChild(dRows);c.appendChild(dEl);
   } else {md.doubles=[];}
@@ -1374,7 +1374,7 @@ function buildRows(){
     md.team4={result:null,scores:Array.from({length:t},function(){return[];})};
     for(var pi=0;pi<t;pi++)md.team4['p'+(pi+1)]='';
     const tEl=document.createElement('div');tEl.className='mg';
-    tEl.innerHTML='<div class="slabel">'+tgName+' <span>1 match · '+t+' players · '+(currentLeague.starting_score_team||currentLeague.starting_score||1001)+'</span></div>';
+    tEl.innerHTML='<div class="slabel" onclick="toggleSection(&quot;team-rows&quot;,this)">'+tgName+' <span>1 match · '+t+' players · '+(currentLeague.starting_score_team||currentLeague.starting_score||1001)+'</span><span class="toggle-icon">▾</span></div>';
     const tRows=document.createElement('div');tRows.id='team4-rows';
     tRows.appendChild(mkTeam(t));
     tEl.appendChild(tRows);c.appendChild(tEl);
