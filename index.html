@@ -138,8 +138,12 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
 .e8t .lbl{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--dim)}
 
 /* ── Section labels ── */
-.slabel{font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--green);padding:.4rem 0;border-bottom:1px solid var(--border);margin-bottom:.75rem;display:flex;justify-content:space-between;align-items:center}
+.slabel{font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--green);padding:.4rem 0;border-bottom:1px solid var(--border);margin-bottom:.75rem;display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none}
 .slabel span{color:var(--dim);font-weight:400}
+.slabel .toggle-icon{font-size:1rem;color:var(--green);transition:transform .2s}
+.slabel.collapsed .toggle-icon{transform:rotate(-90deg)}
+.section-rows{transition:max-height .3s ease,opacity .3s ease;overflow:hidden}
+.section-rows.collapsed{max-height:0!important;opacity:0}
 .mg{margin-bottom:1.75rem}
 
 /* ── Match rows ── */
@@ -412,6 +416,8 @@ html{scroll-behavior:smooth}
   main{max-width:960px}
   .mg{display:grid;grid-template-columns:1fr}
 }
+.ob-dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:background .2s}
+.ob-dot.active{background:var(--green)}
 </style>
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-WQRGJRFF1Q"></script>
@@ -597,7 +603,11 @@ html{scroll-behavior:smooth}
     </div>
     <button class="btns" style="font-size:.8rem;padding:.35rem 1rem" onclick="goTo('public');loadPublicLeagues()">← All Leagues</button>
   </div>
-  <main>
+  <!-- Offline banner -->
+<div id="offline-banner" style="display:none;background:#2a1a00;border-bottom:2px solid var(--amber);padding:.5rem 1.25rem;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:700;letter-spacing:.08em;color:var(--amber)">
+  ⚠ You are offline — scores will be saved locally and synced when you reconnect
+</div>
+<main>
     <div class="tabs">
       <button class="tab active" onclick="swPublic('pub-table')">League Table</button>
       <button class="tab" onclick="swPublic('pub-fixtures')">Fixtures</button>
@@ -732,7 +742,19 @@ html{scroll-behavior:smooth}
 
     <!-- HISTORY -->
     <div id="tab-history" class="tc">
-      <div class="hs"><h2>Match History</h2><div id="hlist"></div></div>
+      <div class="hs">
+        <h2>Match History</h2>
+        <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap">
+          <input type="text" id="history-search" placeholder="Search opponent..." oninput="filterHistory()" style="flex:1;min-width:150px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.85rem;padding:.45rem .75rem">
+          <select id="history-result" onchange="filterHistory()" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.85rem;padding:.45rem .5rem">
+            <option value="">All results</option>
+            <option value="won">Wins only</option>
+            <option value="lost">Losses only</option>
+            <option value="draw">Draws only</option>
+          </select>
+        </div>
+        <div id="hlist"></div>
+      </div>
     </div>
 
     <!-- PLAYERS -->
@@ -919,6 +941,53 @@ html{scroll-behavior:smooth}
 </div>
 
 <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" style="display:none;position:fixed;bottom:5rem;right:1.25rem;background:var(--green);border:none;border-radius:50%;width:42px;height:42px;color:white;font-size:1.2rem;cursor:pointer;z-index:500;box-shadow:0 2px 8px rgba(0,0,0,.4)">&#8679;</button>
+<!-- Onboarding modal -->
+<div id="onboarding-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:400;align-items:center;justify-content:center;padding:1rem">
+  <div style="background:var(--surface);border:1px solid var(--green);border-radius:12px;padding:1.75rem;max-width:480px;width:100%;max-height:85vh;overflow-y:auto">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;font-weight:900;color:var(--amber);margin-bottom:.25rem">Welcome to Flight Chalker! 🎯</div>
+    <div style="font-size:.85rem;color:var(--dim);margin-bottom:1.5rem">Here's a quick guide to get you started</div>
+    <div id="onboarding-steps">
+      <div class="ob-step active" data-step="0">
+        <div style="font-size:2rem;margin-bottom:.5rem">📋</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;color:var(--text);margin-bottom:.4rem">Record Match</div>
+        <div style="font-size:.85rem;color:var(--dim);line-height:1.5">After each match, go to <strong style="color:var(--text)">Record Match</strong> and enter the results for each single, double and The Gallon. Hit <strong style="color:var(--text)">Save & Submit</strong> when done.</div>
+      </div>
+      <div class="ob-step" data-step="1" style="display:none">
+        <div style="font-size:2rem;margin-bottom:.5rem">📅</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;color:var(--text);margin-bottom:.4rem">Fixtures</div>
+        <div style="font-size:.85rem;color:var(--dim);line-height:1.5">View upcoming fixtures in the <strong style="color:var(--text)">Fixtures</strong> tab. Click <strong style="color:var(--text)">Record Results</strong> to load a fixture into the match form automatically.</div>
+      </div>
+      <div class="ob-step" data-step="2" style="display:none">
+        <div style="font-size:2rem;margin-bottom:.5rem">📊</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;color:var(--text);margin-bottom:.4rem">History & Stats</div>
+        <div style="font-size:.85rem;color:var(--dim);line-height:1.5">View past results in <strong style="color:var(--text)">History</strong>. Download match PDFs or edit results. Check individual player stats in the <strong style="color:var(--text)">Stats</strong> tab.</div>
+      </div>
+      <div class="ob-step" data-step="3" style="display:none">
+        <div style="font-size:2rem;margin-bottom:.5rem">👥</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;color:var(--text);margin-bottom:.4rem">Squad</div>
+        <div style="font-size:.85rem;color:var(--dim);line-height:1.5">Manage your players in the <strong style="color:var(--text)">Players</strong> tab. Share your team join code from the <strong style="color:var(--text)">Squad</strong> tab so players can link their accounts.</div>
+      </div>
+      <div class="ob-step" data-step="4" style="display:none">
+        <div style="font-size:2rem;margin-bottom:.5rem">💾</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;color:var(--text);margin-bottom:.4rem">Save Draft</div>
+        <div style="font-size:.85rem;color:var(--dim);line-height:1.5">Use <strong style="color:var(--text)">Save Draft</strong> during a match to save progress. Next time you log in, you'll be offered to restore where you left off.</div>
+      </div>
+    </div>
+    <!-- Progress dots -->
+    <div style="display:flex;justify-content:center;gap:.5rem;margin:1.25rem 0" id="ob-dots">
+      <div class="ob-dot active"></div>
+      <div class="ob-dot"></div>
+      <div class="ob-dot"></div>
+      <div class="ob-dot"></div>
+      <div class="ob-dot"></div>
+    </div>
+    <div style="display:flex;gap:.75rem;justify-content:space-between">
+      <button onclick="closeOnboarding()" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--dim);font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.5rem 1rem;cursor:pointer">Skip</button>
+      <button id="ob-next-btn" onclick="onboardingNext()" style="background:var(--green);border:none;border-radius:6px;color:white;font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.5rem 1.5rem;cursor:pointer">Next →</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 <footer style="text-align:center;padding:1.5rem 1rem 2rem;font-size:.7rem;color:#4a5a4a;letter-spacing:.08em;font-family:Barlow,sans-serif">powered by awheelerworld · flightchalker.co.uk</footer>
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
@@ -1030,6 +1099,7 @@ document.addEventListener('DOMContentLoaded',async function(){
       showScreen('screen-app');
       setTimeout(checkDraftRestore,800);
       setTimeout(renderSquad,1000);
+      setTimeout(showOnboarding,1500);
       var wname=currentTeam&&currentTeam.team_name?currentTeam.team_name:'';
       if(wname)setTimeout(function(){toast('Welcome back, '+wname+' 🎯');},600);
     }catch(e){localStorage.removeItem('mld_session');showScreen('screen-landing');}
@@ -1283,8 +1353,8 @@ function buildRows(){
   // Singles
   md.singles=Array.from({length:n},function(){return{player:'',legsFor:0,legsAgainst:0,result:null,scores:[]};});
   const sEl=document.createElement('div');sEl.className='mg';
-  sEl.innerHTML='<div class="slabel">Singles <span>'+n+' match'+(n!==1?'es':'')+' · best of '+currentLeague.best_of_singles+' legs · '+(currentLeague.starting_score||501)+'</span></div>';
-  const sRows=document.createElement('div');sRows.id='singles-rows';
+  sEl.innerHTML='<div class="slabel" onclick="toggleSection(\'singles-rows\',this)">Singles <span>'+n+' match'+(n!==1?'es':'')+' · best of '+currentLeague.best_of_singles+' legs · '+(currentLeague.starting_score||501)+'</span><span class="toggle-icon">▾</span></div>';
+  const sRows=document.createElement('div');sRows.id='singles-rows';sRows.style.maxHeight='9999px';
   for(var i=0;i<n;i++)sRows.appendChild(mkSingle(i));
   sEl.appendChild(sRows);c.appendChild(sEl);
 
@@ -1312,7 +1382,7 @@ function buildRows(){
 }
 
 function e8w(key,label){
-  return '<div class="e8e"><div class="e8er"><span class="e8l">'+label+'</span><input class="si2" id="inp-'+key+'" type="number" min="80" max="180" placeholder="80+" onkeydown="if(event.key===\'Enter\'){event.preventDefault();logScore(&quot;'+key+'&quot;);}"><button class="sab" onclick="logScore(&quot;'+key+'&quot;)">+</button></div><div class="schips" id="chips-'+key+'"></div></div>';
+  return '<div class="e8e"><div class="e8er"><span class="e8l">'+label+'</span><input class="si2" id="inp-'+key+'" type="number" min="80" max="180" placeholder="80+" inputmode="numeric" pattern="[0-9]*" onkeydown="if(event.key===\'Enter\'){event.preventDefault();logScore(&quot;'+key+'&quot;);}"><button class="sab" onclick="logScore(&quot;'+key+'&quot;)">+</button></div><div class="schips" id="chips-'+key+'"></div></div>';
 }
 function legsWidget(prefix,i){
   return '<div class="legs-score"><span class="ls-label">Legs</span>'
@@ -1761,6 +1831,26 @@ function emailResultsQuick(){
 }
 
 // ── History ───────────────────────────────────────────────────────────────────
+function filterHistory(){
+  var search = (document.getElementById('history-search')||{}).value||'';
+  var result = (document.getElementById('history-result')||{}).value||'';
+  search = search.toLowerCase();
+  var items = document.querySelectorAll('#hlist .he');
+  items.forEach(function(item){
+    var opp = item.querySelector('.hv')?item.querySelector('.hv').textContent.toLowerCase():'';
+    var score = item.querySelector('.hsc');
+    var isWon = score&&score.classList.contains('won');
+    var isLost = score&&score.classList.contains('lost');
+    var isDraw = score&&!isWon&&!isLost;
+    var matchSearch = !search || opp.includes(search);
+    var matchResult = !result
+      ||(result==='won'&&isWon)
+      ||(result==='lost'&&isLost)
+      ||(result==='draw'&&isDraw);
+    item.style.display = matchSearch&&matchResult?'':'none';
+  });
+}
+
 async function renderHistory(){
   var el=document.getElementById('hlist');
   el.innerHTML='<div class="lh"><span class="spin"></span> Loading…</div>';
@@ -2019,7 +2109,7 @@ function adjELegs(key,side,delta){
   setEWL(key,obj.result||'');
 }
 function setEWL(key,r){var w=document.getElementById('eww-'+key);var l=document.getElementById('ewl2-'+key);if(w)w.className='ewb'+(r==='win'?' aw':'');if(l)l.className='ewb'+(r==='loss'?' al':'');if(/^es\d/.test(key))editSt.data.singles[parseInt(key.slice(2))].result=r;else if(/^ed\d/.test(key))editSt.data.doubles[parseInt(key.slice(2))].result=r;else if(/^et0$/.test(key))editSt.data.team4.result=r;}
-function eswH(key,scores){var chips=scores.map(function(v,i){return '<span class="ech'+(v===180?' max180':'')+'">'+( v===180?'&#9733; 180':v)+'<button class="ecx" onclick="rmES(&quot;'+key+'&quot;,'+i+')">×</button></span>';}).join('');return '<div class="esw"><div class="escc" id="ec-'+key+'">'+chips+'</div><div class="esir"><input class="esi" id="ei-'+key+'" type="number" min="80" max="180" placeholder="80+" onkeydown="if(event.key===\'Enter\'){event.preventDefault();addES(&quot;'+key+'&quot;);}"><button class="eab" onclick="addES(&quot;'+key+'&quot;)">+</button></div></div>';}
+function eswH(key,scores){var chips=scores.map(function(v,i){return '<span class="ech'+(v===180?' max180':'')+'">'+( v===180?'&#9733; 180':v)+'<button class="ecx" onclick="rmES(&quot;'+key+'&quot;,'+i+')">×</button></span>';}).join('');return '<div class="esw"><div class="escc" id="ec-'+key+'">'+chips+'</div><div class="esir"><input class="esi" id="ei-'+key+'" type="number" min="80" max="180" placeholder="80+" inputmode="numeric" pattern="[0-9]*" onkeydown="if(event.key===\'Enter\'){event.preventDefault();addES(&quot;'+key+'&quot;);}"><button class="eab" onclick="addES(&quot;'+key+'&quot;)">+</button></div></div>';}
 function getEArr(key){if(/^es\d+$/.test(key))return editSt.data.singles[parseInt(key.slice(2))].scores;if(/^ed\d+p1$/.test(key))return editSt.data.doubles[parseInt(key.slice(2,-2))].scores1;if(/^ed\d+p2$/.test(key))return editSt.data.doubles[parseInt(key.slice(2,-2))].scores2;if(/^et0p\d+$/.test(key)){var pi=parseInt(key.slice(4))-1;if(!editSt.data.team4.scores[pi])editSt.data.team4.scores[pi]=[];return editSt.data.team4.scores[pi];}return null;}
 function addES(key){var inp=document.getElementById('ei-'+key);var val=parseInt(inp.value);var thresh=currentTeam&&currentTeam.score_threshold?currentTeam.score_threshold:80;if(isNaN(val)||val<thresh||val>180){toast('Enter '+thresh+'–180');inp.focus();return;}var arr=getEArr(key);if(!arr)return;arr.push(val);var el=document.getElementById('ec-'+key);if(el)el.innerHTML=arr.map(function(v,i){return '<span class="ech'+(v===180?' max180':'')+'">'+( v===180?'&#9733; 180':v)+'<button class="ecx" onclick="rmES(&quot;'+key+'&quot;,'+i+')">×</button></span>';}).join('');inp.value='';inp.focus();}
 function rmES(key,idx){var arr=getEArr(key);if(!arr)return;arr.splice(idx,1);var el=document.getElementById('ec-'+key);if(el)el.innerHTML=arr.map(function(v,i){return '<span class="ech'+(v===180?' max180':'')+'">'+( v===180?'&#9733; 180':v)+'<button class="ecx" onclick="rmES(&quot;'+key+'&quot;,'+i+')">×</button></span>';}).join('');}
@@ -2324,6 +2414,20 @@ function squadRemove(username){
   localStorage.setItem(key,JSON.stringify(requests));
   toast('@'+username+' removed from squad');
   renderSquad();
+}
+
+function toggleSection(sectionId, labelEl){
+  var rows = document.getElementById(sectionId);
+  var label = labelEl || rows.previousElementSibling;
+  if(!rows) return;
+  var isCollapsed = rows.classList.contains('collapsed');
+  if(isCollapsed){
+    rows.classList.remove('collapsed');
+    if(label) label.classList.remove('collapsed');
+  } else {
+    rows.classList.add('collapsed');
+    if(label) label.classList.add('collapsed');
+  }
 }
 
 function sw(name){
@@ -2701,6 +2805,63 @@ window.addEventListener('scroll',function(){
   var btn=document.getElementById('btt');
   if(btn)btn.style.display=window.scrollY>300?'block':'none';
 });
+// ── Onboarding ─────────────────────────────────────────────────────────────
+var currentObStep = 0;
+var totalObSteps = 5;
+
+function showOnboarding(){
+  if(localStorage.getItem('fc_onboarded'))return;
+  var modal = document.getElementById('onboarding-modal');
+  if(modal) modal.style.display='flex';
+}
+
+function closeOnboarding(){
+  var modal = document.getElementById('onboarding-modal');
+  if(modal) modal.style.display='none';
+  localStorage.setItem('fc_onboarded','1');
+}
+
+function onboardingNext(){
+  var steps = document.querySelectorAll('.ob-step');
+  var dots = document.querySelectorAll('.ob-dot');
+  var btn = document.getElementById('ob-next-btn');
+  steps[currentObStep].style.display='none';
+  dots[currentObStep].classList.remove('active');
+  currentObStep++;
+  if(currentObStep >= totalObSteps){
+    closeOnboarding();
+    return;
+  }
+  steps[currentObStep].style.display='block';
+  dots[currentObStep].classList.add('active');
+  if(currentObStep === totalObSteps-1){
+    btn.textContent='Done ✓';
+  }
+}
+// ───────────────────────────────────────────────────────────────────────────
+
+// ── Offline detection ──────────────────────────────────────────────────────
+window.addEventListener('online', function(){
+  var banner = document.getElementById('offline-banner');
+  if(banner) banner.style.display='none';
+  toast('Back online! Syncing...');
+  // Re-sync any pending saves
+  if(typeof renderHistory==='function') renderHistory();
+});
+window.addEventListener('offline', function(){
+  var banner = document.getElementById('offline-banner');
+  if(banner) banner.style.display='block';
+  toast('You are offline — scores saved locally', true);
+});
+// Check on load
+if(!navigator.onLine){
+  window.addEventListener('DOMContentLoaded', function(){
+    var banner = document.getElementById('offline-banner');
+    if(banner) banner.style.display='block';
+  });
+}
+// ───────────────────────────────────────────────────────────────────────────
+
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 </script>
 </body>
