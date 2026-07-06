@@ -30,7 +30,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzE0MTgxNCIvPgogIDxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YTdjNTkiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNGE3YzU5IiBzdHJva2Utd2lkdGg9IjEiLz4KICA8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI0IiBmaWxsPSIjZThjODQwIi8+Cjwvc3ZnPg==">
-<title>🎯 Flight Chalker — League Platform v47</title>
+<title>🎯 Flight Chalker — League Platform v46</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -760,6 +760,16 @@ html{scroll-behavior:smooth}
         <h2>Squad Management</h2>
         <p style="font-size:.82rem;color:var(--dim);margin-bottom:1rem">Manage player join requests and your current squad.</p>
 
+        <!-- Team join code -->
+        <div style="background:#1a2a1e;border:1px solid var(--green);border-radius:8px;padding:1rem;margin-bottom:1.25rem">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--green);margin-bottom:.5rem">Team Join Code</div>
+          <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
+            <div id="squad-join-code" style="font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:900;color:var(--amber);letter-spacing:.15em">Loading...</div>
+            <button onclick="copyJoinCode()" style="background:var(--s3);border:1px solid var(--border);border-radius:4px;color:var(--dim);font-family:'Barlow Condensed',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 12px;cursor:pointer">Copy Code</button>
+          </div>
+          <div style="font-size:.78rem;color:var(--dim);margin-top:.4rem">Share this code with players so they can link their Flight Chalker account to your team.</div>
+        </div>
+
         <!-- Pending requests -->
         <div style="margin-bottom:1.5rem">
           <div style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);margin-bottom:.75rem">Pending Join Requests</div>
@@ -1168,7 +1178,7 @@ async function loadTeamData(){
   document.getElementById('mdate').value=new Date().toISOString().split('T')[0];
   try{
     const rows=await sb('team_players?team_id=eq.'+currentTeam.id+'&order=name.asc');
-    players=rows.map(function(r){return {name:r.name, email:r.email||null};});
+    players=rows.map(r=>r.name);
   }catch(e){players=[];}
   // Load all teams in the league for opponent dropdown
   try{
@@ -1203,7 +1213,7 @@ function renderPChips(){
 }
 function populateStatSel(){
   const sel=document.getElementById('spsel');const cur=sel.value;
-  sel.innerHTML='<option value="">— Select player —</option>'+players.map(function(p){var n=p.name||p;return '<option value="'+esc(n)+'" '+(n===cur?'selected':'')+'>'+esc(n)+'</option>';}).join('');
+  sel.innerHTML='<option value="">— Select player —</option>'+players.map(function(p){return '<option value="'+esc(p)+'" '+(p===cur?'selected':'')+'>'+esc(p)+'</option>';}).join('');
 }
 async function addPlayer(){
   var inp=document.getElementById('npname');
@@ -1222,31 +1232,22 @@ async function addPlayer(){
   toast(name+' added'+(email?' — email saved for account linking':''));
 }
 async function removePlayer(idx){
-  const p=players[idx];
-  const name=p.name||p;
+  const name=players[idx];
   try{await sb('team_players?team_id=eq.'+currentTeam.id+'&name=eq.'+encodeURIComponent(name),{method:'DELETE'});}catch(e){toast('Error: '+e.message,true);return;}
   players.splice(idx,1);renderPChips();buildRows();populateStatSel();toast(name+' removed');
 }
 async function editPlayer(idx){
-  var p = players[idx];
-  var oldName = p.name||p;
-  var oldEmail = p.email||'';
-
+  var oldName=players[idx];
   var newName=prompt('Edit player name:',oldName);
   if(newName===null)return;
   newName=newName.trim();
   if(!newName){toast('Name cannot be empty',true);return;}
-  if(players.some(function(pl,i){return i!==idx&&(pl.name||pl)===newName;})){toast('Player already exists',true);return;}
-
-  var newEmail=prompt('Edit player email (leave blank to remove):',oldEmail);
-  if(newEmail===null)return; // cancelled - keep old email, still apply name change below
-  newEmail=newEmail.trim().toLowerCase();
-
+  if(players.includes(newName)&&newName!==oldName){toast('Player already exists',true);return;}
   try{
-    await sbPatch('team_players','team_id=eq.'+currentTeam.id+'&name=eq.'+encodeURIComponent(oldName),{name:newName,email:newEmail||null});
-    players[idx] = Object.assign({}, (typeof p==='object'?p:{}), {name:newName, email:newEmail||null});
+    await sbPatch('team_players','team_id=eq.'+currentTeam.id+'&name=eq.'+encodeURIComponent(oldName),{name:newName});
+    players[idx]=newName;
     renderPChips();buildRows();populateStatSel();
-    toast(oldName+' updated');
+    toast(oldName+' renamed to '+newName);
   }catch(e){toast('Error: '+e.message,true);}
 }
 
@@ -1254,9 +1255,8 @@ async function editPlayer(idx){
 function playerOpts(sel,used){
   used=used||[];
   return '<option value="">— Select —</option>'+players.map(function(p){
-    var n=p.name||p;
-    var taken=used.includes(n)&&n!==sel;
-    return '<option value="'+esc(n)+'" '+(n===sel?'selected ':'')+( taken?'disabled style="color:#555"':'')+'>'+esc(n)+(taken?' ✓':'')+'</option>';
+    var taken=used.includes(p)&&p!==sel;
+    return '<option value="'+esc(p)+'" '+(p===sel?'selected ':'')+( taken?'disabled style="color:#555"':'')+'>'+esc(p)+(taken?' ✓':'')+'</option>';
   }).join('');
 }
 function refreshDropdowns(){
@@ -1980,7 +1980,7 @@ function openEdit(idx){
   h+='<div class="mf"><button class="btnp" onclick="saveEdit()"><span class="spin" id="espin" style="display:none"></span>Save</button><button class="mc" onclick="closeMo()">Cancel</button></div>';
   document.getElementById('mbody').innerHTML=h;document.getElementById('modal').classList.add('open');
 }
-function eOpts(sel){return '<option value="">— Select —</option>'+players.map(function(p){var n=p.name||p;return '<option value="'+esc(n)+'" '+(n===sel?'selected':'')+'>'+esc(n)+'</option>';}).join('');}
+function eOpts(sel){return '<option value="">— Select —</option>'+players.map(function(p){return '<option value="'+esc(p)+'" '+(p===sel?'selected':'')+'>'+esc(p)+'</option>';}).join('');}
 function ewlH(key,r,lf,la){
   var lFor=lf!==undefined?lf:0;
   var lAgainst=la!==undefined?la:0;
@@ -2205,8 +2205,24 @@ function downloadPDF(idx){
 }
 
 // ── Tabs ──────────────────────────────────────────────────────────────────────
+function copyJoinCode(){
+  var code=currentTeam&&currentTeam.join_code?currentTeam.join_code:currentTeam&&currentTeam.id?currentTeam.id.substring(0,8).toUpperCase():'';
+  if(!code){toast('No join code available',true);return;}
+  navigator.clipboard.writeText(code).then(function(){
+    toast('Join code copied!');
+  }).catch(function(){
+    toast('Code: '+code);
+  });
+}
+
 function renderSquad(){
   if(!currentTeam)return;
+  // Show join code
+  var codeEl=document.getElementById('squad-join-code');
+  if(codeEl){
+    var code=currentTeam.join_code||currentTeam.id.substring(0,8).toUpperCase();
+    codeEl.textContent=code;
+  }
   var key='fc_requests_'+currentTeam.id;
   var requests=JSON.parse(localStorage.getItem(key)||'[]');
   var pending=requests.filter(function(r){return r.status==='pending';});
