@@ -2309,55 +2309,99 @@ function copyJoinCode(){
   });
 }
 
-function renderSquad(){
+function genJoinCode(){
+  var chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no ambiguous chars (0/O, 1/I)
+  var code='';
+  for(var i=0;i<6;i++)code+=chars[Math.floor(Math.random()*chars.length)];
+  return code;
+}
+
+async function renderSquad(){
   if(!currentTeam)return;
-  // Show join code
+  var tab=document.getElementById('squad-tab');
+  if(tab)tab.style.display='block';
+
+  // Show/generate join code. Falling back to a truncated UUID (as before)
+  // produces a code that doesn't exist anywhere in the teams.join_code
+  // column, so players entering it on /dashboard would never match a team.
+  // Instead, generate a real code once and persist it.
   var codeEl=document.getElementById('squad-join-code');
   if(codeEl){
-    var code=currentTeam.join_code||currentTeam.id.substring(0,8).toUpperCase();
-    codeEl.textContent=code;
+    if(!currentTeam.join_code){
+      var newCode=genJoinCode();
+      try{
+        await sbPatch('teams','id=eq.'+currentTeam.id,{join_code:newCode});
+        currentTeam.join_code=newCode;
+        var sess=JSON.parse(localStorage.getItem('mld_session')||'{}');
+        if(sess.team){sess.team.join_code=newCode;localStorage.setItem('mld_session',JSON.stringify(sess));}
+      }catch(e){
+        console.error('Could not generate join code:',e);
+        codeEl.textContent='Unavailable';
+        codeEl.title=e.message;
+      }
+    }
+    if(currentTeam.join_code)codeEl.textContent=currentTeam.join_code;
   }
-  var key='fc_requests_'+currentTeam.id;
-  var requests=JSON.parse(localStorage.getItem(key)||'[]');
-  var pending=requests.filter(function(r){return r.status==='pending';});
-  var approved=requests.filter(function(r){return r.status==='approved';});
+
+  // Pending/approved requests come from the real team_memberships table -
+  // the same table players' /dashboard "Request to Join" writes to.
+  // (Previously this read a per-device localStorage key that nothing on
+  // the player side ever wrote to, so it could never show real requests.)
   var badge=document.getElementById('squad-badge');
-  var tab=document.getElementById('squad-tab');
-  if(badge){badge.textContent=pending.length;badge.style.display=pending.length?'inline':'none';}
-  if(tab)tab.style.display='block';
   var pendingEl=document.getElementById('squad-pending');
-  if(pendingEl){
-    if(!pending.length){
-      pendingEl.innerHTML='<div style="font-size:.85rem;color:var(--dim);padding:.5rem 0">No pending requests.</div>';
-    } else {
-      var html='';
-      pending.forEach(function(r,i){
-        html+='<div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.75rem 1rem;margin-bottom:.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">'
-          +'<div><div style="font-weight:600;font-size:.9rem">@'+r.username+'</div>'
-          +'<div style="font-size:.75rem;color:var(--dim)">Requested '+new Date(r.requested_at).toLocaleDateString('en-GB')+'</div></div>'
-          +'<div style="display:flex;gap:.4rem">'
-          +'<button class="btnp" style="font-size:.8rem;padding:4px 12px" onclick="squadApprove('+JSON.stringify(r.username)+')">Approve</button>'
-          +'<button class="btns" style="font-size:.8rem;padding:4px 12px;border-color:var(--red);color:#ff8080" onclick="squadReject('+JSON.stringify(r.username)+')">Reject</button>'
-          +'</div></div>';
-      });
-      pendingEl.innerHTML=html;
-    }
-  }
   var membersEl=document.getElementById('squad-members');
-  if(membersEl){
-    if(!approved.length){
-      membersEl.innerHTML='<div style="font-size:.85rem;color:var(--dim);padding:.5rem 0">No squad members yet.</div>';
-    } else {
-      var html2='';
-      approved.forEach(function(r){
-        html2+='<div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.75rem 1rem;margin-bottom:.4rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">'
-          +'<div><div style="font-weight:600;font-size:.9rem">@'+r.username+'</div>'
-          +'<div style="font-size:.75rem;color:var(--gl)">Active member</div></div>'
-          +'<button class="btns" style="font-size:.75rem;padding:4px 10px" onclick="squadRemove('+JSON.stringify(r.username)+')">Remove</button>'
-          +'</div>';
-      });
-      membersEl.innerHTML=html2;
+  try{
+    var rows=await sb('team_memberships?team_id=eq.'+currentTeam.id+'&select=id,user_id,status,created_at&order=created_at.desc');
+    rows=rows||[];
+    var userIds=rows.map(function(r){return r.user_id;}).filter(Boolean);
+    var userMap={};
+    if(userIds.length){
+      var uq=userIds.map(function(id){return '"'+id+'"';}).join(',');
+      var users=await sb('users?id=in.('+uq+')&select=id,username,email');
+      (users||[]).forEach(function(u){userMap[u.id]=u;});
     }
+    var pending=rows.filter(function(r){return r.status==='pending';});
+    var approved=rows.filter(function(r){return r.status==='approved';});
+
+    if(badge){badge.textContent=pending.length;badge.style.display=pending.length?'inline':'none';}
+
+    if(pendingEl){
+      if(!pending.length){
+        pendingEl.innerHTML='<div style="font-size:.85rem;color:var(--dim);padding:.5rem 0">No pending requests.</div>';
+      }else{
+        pendingEl.innerHTML=pending.map(function(r){
+          var u=userMap[r.user_id]||{};
+          var label=u.username?'@'+esc(u.username):(u.email||'Unknown player');
+          return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.75rem 1rem;margin-bottom:.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">'
+            +'<div><div style="font-weight:600;font-size:.9rem">'+label+'</div>'
+            +'<div style="font-size:.75rem;color:var(--dim)">Requested '+new Date(r.created_at).toLocaleDateString('en-GB')+'</div></div>'
+            +'<div style="display:flex;gap:.4rem">'
+            +'<button class="btnp" style="font-size:.8rem;padding:4px 12px" onclick="squadApprove(&quot;'+r.id+'&quot;)">Approve</button>'
+            +'<button class="btns" style="font-size:.8rem;padding:4px 12px;border-color:var(--red);color:#ff8080" onclick="squadReject(&quot;'+r.id+'&quot;)">Reject</button>'
+            +'</div></div>';
+        }).join('');
+      }
+    }
+
+    if(membersEl){
+      if(!approved.length){
+        membersEl.innerHTML='<div style="font-size:.85rem;color:var(--dim);padding:.5rem 0">No squad members yet.</div>';
+      }else{
+        membersEl.innerHTML=approved.map(function(r){
+          var u=userMap[r.user_id]||{};
+          var label=u.username?'@'+esc(u.username):(u.email||'Unknown player');
+          return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.75rem 1rem;margin-bottom:.4rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">'
+            +'<div><div style="font-weight:600;font-size:.9rem">'+label+'</div>'
+            +'<div style="font-size:.75rem;color:var(--gl)">Active member</div></div>'
+            +'<button class="btns" style="font-size:.75rem;padding:4px 10px" onclick="squadRemove(&quot;'+r.id+'&quot;)">Remove</button>'
+            +'</div>';
+        }).join('');
+      }
+    }
+  }catch(e){
+    console.error('renderSquad membership load error:',e);
+    if(pendingEl)pendingEl.innerHTML='<div style="font-size:.85rem;color:var(--red);padding:.5rem 0">Could not load join requests: '+e.message+'</div>';
+    if(membersEl)membersEl.innerHTML='';
   }
 }
 
@@ -2392,32 +2436,38 @@ function populateLinkSelector(){
     }).join('');
 }
 
-function squadApprove(username){if(username&&username.dataset)username=username.dataset.u;
-  var key='fc_requests_'+currentTeam.id;
-  var requests=JSON.parse(localStorage.getItem(key)||'[]');
-  requests=requests.map(function(r){return r.username===username?{...r,status:'approved'}:r;});
-  localStorage.setItem(key,JSON.stringify(requests));
-  toast('@'+username+' approved!');
-  renderSquad();
+async function squadApprove(membershipId){
+  try{
+    await sbPatch('team_memberships','id=eq.'+membershipId,{status:'approved'});
+    toast('Player approved!');
+    renderSquad();
+  }catch(e){
+    console.error('squadApprove error:',e);
+    toast('Could not approve: '+e.message,true);
+  }
 }
 
-function squadReject(username){
-  var key='fc_requests_'+currentTeam.id;
-  var requests=JSON.parse(localStorage.getItem(key)||'[]');
-  requests=requests.map(function(r){return r.username===username?{...r,status:'rejected'}:r;});
-  localStorage.setItem(key,JSON.stringify(requests));
-  toast('@'+username+' rejected');
-  renderSquad();
+async function squadReject(membershipId){
+  try{
+    await sbPatch('team_memberships','id=eq.'+membershipId,{status:'rejected'});
+    toast('Request rejected');
+    renderSquad();
+  }catch(e){
+    console.error('squadReject error:',e);
+    toast('Could not reject: '+e.message,true);
+  }
 }
 
-function squadRemove(username){
-  if(!confirm('Remove @'+username+' from the squad?'))return;
-  var key='fc_requests_'+currentTeam.id;
-  var requests=JSON.parse(localStorage.getItem(key)||'[]');
-  requests=requests.filter(function(r){return r.username!==username;});
-  localStorage.setItem(key,JSON.stringify(requests));
-  toast('@'+username+' removed from squad');
-  renderSquad();
+async function squadRemove(membershipId){
+  if(!confirm('Remove this player from the squad?'))return;
+  try{
+    await sb('team_memberships?id=eq.'+membershipId,{method:'DELETE'});
+    toast('Player removed from squad');
+    renderSquad();
+  }catch(e){
+    console.error('squadRemove error:',e);
+    toast('Could not remove: '+e.message,true);
+  }
 }
 
 function toggleSection(sectionId, labelEl){
@@ -2884,5 +2934,6 @@ if(!navigator.onLine){
 
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 </script>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-squad-real-data</div>
 </body>
 </html>
