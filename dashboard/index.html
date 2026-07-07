@@ -1,4 +1,4 @@
-<!-- VERSION: v12-captain-change-request -->
+<!-- VERSION: v13-captain-teams-resilient -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -467,19 +467,26 @@ async function loadCaptainTeams(user){
       .eq('captain_user_id', user.id);
     if(ownErr) throw ownErr;
 
-    var { data:viceRows, error:viceErr } = await sb
-      .from('team_vice_captains').select('team_id')
-      .eq('user_id', user.id);
-    if(viceErr) throw viceErr;
-
-    var viceTeamIds = (viceRows||[]).map(function(r){return r.team_id;});
+    // Vice-captain lookup is wrapped in its own try/catch so that if
+    // team_vice_captains is missing or errors, captains still see their
+    // own teams below instead of the whole card silently disappearing.
     var viceTeams = [];
-    if(viceTeamIds.length){
-      var { data:vt, error:vtErr } = await sb
-        .from('teams').select('id, team_name, join_code, captain_user_id')
-        .in('id', viceTeamIds);
-      if(vtErr) throw vtErr;
-      viceTeams = vt||[];
+    try{
+      var { data:viceRows, error:viceErr } = await sb
+        .from('team_vice_captains').select('team_id')
+        .eq('user_id', user.id);
+      if(viceErr) throw viceErr;
+
+      var viceTeamIds = (viceRows||[]).map(function(r){return r.team_id;});
+      if(viceTeamIds.length){
+        var { data:vt, error:vtErr } = await sb
+          .from('teams').select('id, team_name, join_code, captain_user_id')
+          .in('id', viceTeamIds);
+        if(vtErr) throw vtErr;
+        viceTeams = vt||[];
+      }
+    }catch(viceLookupErr){
+      console.error('Vice-captain lookup failed (non-fatal, showing owned teams only):', viceLookupErr);
     }
 
     // Merge, tagging each with the viewer's role on that team
@@ -494,6 +501,7 @@ async function loadCaptainTeams(user){
   }catch(e){
     console.error('loadCaptainTeams error:',e);
     card.style.display='none';
+    toast('Could not load your captain teams: '+(e.message||'unknown error'),true);
   }
 }
 
@@ -783,6 +791,6 @@ window.addEventListener('load', async function(){
   }
 });
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v12-captain-change-request</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v13-captain-teams-resilient</div>
 </body>
 </html>
