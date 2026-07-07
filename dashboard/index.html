@@ -1,4 +1,4 @@
-<!-- VERSION: v13-captain-teams-resilient -->
+<!-- VERSION: v14-captain-joincode-autogen -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -289,6 +289,13 @@ const sb = window.supabase.createClient(
 );
 const NEON_URL = 'https://ep-shiny-mouse-abtjiaqk.eu-west-2.aws.neon.tech';
 
+function genJoinCode(){
+  var chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no ambiguous chars (0/O, 1/I)
+  var code='';
+  for(var i=0;i<6;i++)code+=chars[Math.floor(Math.random()*chars.length)];
+  return code;
+}
+
 function toast(msg, isErr=false){
   var t=document.getElementById('toast');
   t.textContent=msg;
@@ -508,6 +515,27 @@ async function loadCaptainTeams(user){
 async function renderCaptainTeams(){
   var listEl=document.getElementById('captain-teams-list');
   var rowsHtml = await Promise.all(captainTeamsData.map(async function(t){
+    // A captain team can reach this dashboard without ever having a
+    // join_code generated (e.g. claimed via /dashboard rather than the
+    // team app's Squad tab, which is the only other place a code gets
+    // created). Generate and persist one here too so it's never blank.
+    if(!t.join_code && t.myRole==='captain'){
+      var newCode = genJoinCode();
+      try{
+        var { error:codeErr } = await sb.from('teams')
+          .update({ join_code:newCode }).eq('id', t.id);
+        if(!codeErr){
+          t.join_code = newCode;
+          var idx = captainTeamsData.findIndex(function(x){return x.id===t.id;});
+          if(idx>-1) captainTeamsData[idx].join_code = newCode;
+        }else{
+          console.error('Could not generate join code:', codeErr);
+        }
+      }catch(genErr){
+        console.error('Could not generate join code:', genErr);
+      }
+    }
+
     var safeCode = (t.join_code||'').replace(/"/g,'&quot;');
     var safeName = (t.team_name||'').replace(/"/g,'&quot;');
     var roleLabel = t.myRole==='captain' ? 'Captain' : 'Vice Captain';
@@ -791,6 +819,6 @@ window.addEventListener('load', async function(){
   }
 });
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v13-captain-teams-resilient</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v14-captain-joincode-autogen</div>
 </body>
 </html>
