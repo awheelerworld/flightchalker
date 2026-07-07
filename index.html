@@ -113,7 +113,7 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-
 main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
 
 /* ── Tabs ── */
-.tabs{display:flex;margin-bottom:1.5rem;border-bottom:2px solid var(--border);overflow-x:auto}
+.tabs{display:flex;margin-bottom:1.5rem;border-bottom:2px solid var(--border);overflow-x:auto;overflow-y:hidden}
 .tab{font-family:'Barlow Condensed',sans-serif;font-size:.82rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.65rem 1rem;border:none;background:none;color:var(--dim);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:color .15s;white-space:nowrap;flex-shrink:0}
 .tab.active{color:var(--amber);border-bottom-color:var(--amber)}
 .tab.admin-tab.active{color:#8ac4ff;border-bottom-color:#8ac4ff}
@@ -384,7 +384,7 @@ html{scroll-behavior:smooth}
 }
 @media(max-width:600px){
   main{padding:1rem .75rem 5rem}
-  .tabs{gap:0;overflow-x:auto}
+  .tabs{gap:0;overflow-x:auto;overflow-y:hidden}
   .tab{font-size:.75rem;padding:.6rem .75rem;white-space:nowrap}
   .card{padding:1rem .75rem}
   .mr{padding:.6rem .6rem}
@@ -2576,7 +2576,7 @@ function initCollapsibles(){
 }
 
 function sw(name){
-  var names=['match','fixtures','table','history','players','stats'];
+  var names=['match','fixtures','table','history','players','stats','squad'];
   document.querySelectorAll('#screen-app .tab').forEach(function(t,i){t.classList.toggle('active',names[i]===name);});
   document.querySelectorAll('#screen-app .tc').forEach(function(c){c.classList.remove('active');});
   document.getElementById('tab-'+name).classList.add('active');
@@ -3009,6 +3009,6 @@ if(!navigator.onLine){
 
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-squad-render-on-login</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-squad-tab-highlight-fix</div>
 </body>
 </html>
