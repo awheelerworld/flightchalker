@@ -2411,15 +2411,18 @@ async function renderSquad(){
 async function captainLinkPlayer(){
   var playerSel=document.getElementById('link-player-sel');
   var playerName=playerSel?playerSel.value:'';
-  var identifier=document.getElementById('link-username').value.trim().replace('@','');
+  var rawIdentifier=document.getElementById('link-username').value.trim();
+  var identifier=rawIdentifier.replace(/^@/,'');
   var resultEl=document.getElementById('link-result');
   if(!playerName){resultEl.textContent='Please select a player';resultEl.style.color='var(--red)';return;}
   if(!identifier){resultEl.textContent='Please enter their username or email';resultEl.style.color='var(--red)';return;}
   resultEl.textContent='Looking up account...';resultEl.style.color='var(--dim)';
   try{
-    // Look up the target account by username or email
-    var lookupField = identifier.includes('@') ? 'email' : 'username';
-    var found=await sb('users?'+lookupField+'=eq.'+encodeURIComponent(identifier)+'&select=id,username,email');
+    // Look up the target account by username or email - checked on the
+    // original input (before the leading @ was stripped) so emails are
+    // correctly detected even though @ isn't valid in a username.
+    var lookupField = rawIdentifier.includes('@') ? 'email' : 'username';
+    var found=await sb('users?'+lookupField+'=ilike.'+encodeURIComponent(identifier)+'&select=id,username,email');
     if(!found||!found.length){
       resultEl.textContent='No Flight Chalker account found for "'+identifier+'". They need to create one first.';
       resultEl.style.color='var(--red)';
@@ -3009,6 +3012,6 @@ if(!navigator.onLine){
 
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-squad-nesting-fix</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-link-lookup-fix</div>
 </body>
 </html>
