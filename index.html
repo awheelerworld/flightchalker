@@ -775,6 +775,8 @@ html{scroll-behavior:smooth}
         <label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--dim)">Player</label>
         <select id="spsel" onchange="renderStats()" style="background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:Barlow,sans-serif;font-size:.9rem;padding:.4rem .75rem"><option value="">— Select player —</option></select>
       </div>
+      <div id="scontent"><div class="nh">Select a player to see their stats.</div></div>
+    </div>
 
     <!-- SQUAD MANAGEMENT -->
     <div id="tab-squad" class="tc">
@@ -823,8 +825,6 @@ html{scroll-behavior:smooth}
           <div id="link-status-list" style="margin-top:.75rem"></div>
         </div>
       </div>
-    </div>
-      <div id="scontent"><div class="nh">Select a player to see their stats.</div></div>
     </div>
   </main>
 </div>
@@ -3009,6 +3009,6 @@ if(!navigator.onLine){
 
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-squad-tab-highlight-fix</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-squad-nesting-fix</div>
 </body>
 </html>
