@@ -820,6 +820,7 @@ html{scroll-behavior:smooth}
             <button class="btna" onclick="captainLinkPlayer()">Link Account</button>
           </div>
           <div id="link-result" style="margin-top:.5rem;font-size:.8rem"></div>
+          <div id="link-status-list" style="margin-top:.75rem"></div>
         </div>
       </div>
     </div>
@@ -2408,32 +2409,104 @@ async function renderSquad(){
 async function captainLinkPlayer(){
   var playerSel=document.getElementById('link-player-sel');
   var playerName=playerSel?playerSel.value:'';
-  var username=document.getElementById('link-username').value.trim().replace('@','');
+  var identifier=document.getElementById('link-username').value.trim().replace('@','');
   var resultEl=document.getElementById('link-result');
   if(!playerName){resultEl.textContent='Please select a player';resultEl.style.color='var(--red)';return;}
-  if(!username){resultEl.textContent='Please enter their username';resultEl.style.color='var(--red)';return;}
-  // Find the player's email
-  var playerObj=players.find(function(p){return (p.name||p)===playerName;});
-  var playerEmail=playerObj&&playerObj.email?playerObj.email:null;
-  // Store the link in localStorage (captain side)
-  var links=JSON.parse(localStorage.getItem('fc_player_links_'+currentTeam.id)||'{}');
-  links[playerName]={username:username,email:playerEmail,linked_at:new Date().toISOString()};
-  localStorage.setItem('fc_player_links_'+currentTeam.id,JSON.stringify(links));
-  resultEl.textContent='@'+username+' linked to '+playerName+'! Their match history will now appear on their profile.';
-  resultEl.style.color='var(--gl)';
-  document.getElementById('link-username').value='';
-  playerSel.value='';
-  toast('@'+username+' linked to '+playerName);
+  if(!identifier){resultEl.textContent='Please enter their username or email';resultEl.style.color='var(--red)';return;}
+  resultEl.textContent='Looking up account...';resultEl.style.color='var(--dim)';
+  try{
+    // Look up the target account by username or email
+    var lookupField = identifier.includes('@') ? 'email' : 'username';
+    var found=await sb('users?'+lookupField+'=eq.'+encodeURIComponent(identifier)+'&select=id,username,email');
+    if(!found||!found.length){
+      resultEl.textContent='No Flight Chalker account found for "'+identifier+'". They need to create one first.';
+      resultEl.style.color='var(--red)';
+      return;
+    }
+    var targetUser=found[0];
+
+    // Check current link status on this player row
+    var existing=await sb('team_players?team_id=eq.'+currentTeam.id+'&name=eq.'+encodeURIComponent(playerName)+'&select=linked_user_id');
+    if(existing&&existing.length&&existing[0].linked_user_id){
+      if(existing[0].linked_user_id===targetUser.id){
+        resultEl.textContent=playerName+' is already linked to @'+(targetUser.username||identifier)+'.';
+        resultEl.style.color='var(--gl)';
+        return;
+      }
+      if(!confirm(playerName+' is already linked to another account. Replace that link with @'+(targetUser.username||identifier)+'?')){
+        resultEl.textContent='Link cancelled.';resultEl.style.color='var(--dim)';
+        return;
+      }
+    }
+
+    await sbPatch('team_players','team_id=eq.'+currentTeam.id+'&name=eq.'+encodeURIComponent(playerName),{
+      linked_user_id:targetUser.id,
+      linked_at:new Date().toISOString()
+    });
+
+    resultEl.textContent='@'+(targetUser.username||identifier)+' linked to '+playerName+'! Their match history will now appear on their profile.';
+    resultEl.style.color='var(--gl)';
+    document.getElementById('link-username').value='';
+    playerSel.value='';
+    toast('@'+(targetUser.username||identifier)+' linked to '+playerName);
+    populateLinkSelector();
+  }catch(e){
+    console.error('captainLinkPlayer error:',e);
+    resultEl.textContent='Error linking account: '+e.message;
+    resultEl.style.color='var(--red)';
+  }
 }
 
-function populateLinkSelector(){
+async function unlinkPlayer(playerName){
+  if(!confirm('Unlink '+playerName+' from their account?'))return;
+  try{
+    await sbPatch('team_players','team_id=eq.'+currentTeam.id+'&name=eq.'+encodeURIComponent(playerName),{
+      linked_user_id:null,
+      linked_at:null
+    });
+    toast(playerName+' unlinked');
+    populateLinkSelector();
+  }catch(e){
+    console.error('unlinkPlayer error:',e);
+    toast('Could not unlink: '+e.message,true);
+  }
+}
+
+async function populateLinkSelector(){
   var sel=document.getElementById('link-player-sel');
-  if(!sel)return;
+  if(!sel||!currentTeam)return;
   sel.innerHTML='<option value="">— Select player —</option>'
     +players.map(function(p){
       var name=p.name||p;
       return '<option value="'+esc(name)+'">'+esc(name)+'</option>';
     }).join('');
+
+  // Show current link status for every player on the roster
+  var statusEl=document.getElementById('link-status-list');
+  if(!statusEl)return;
+  statusEl.innerHTML='<div style="font-size:.8rem;color:var(--dim)">Loading link status...</div>';
+  try{
+    var rows=await sb('team_players?team_id=eq.'+currentTeam.id+'&select=name,linked_user_id&order=name.asc');
+    rows=rows||[];
+    var linkedIds=rows.map(function(r){return r.linked_user_id;}).filter(Boolean);
+    var userMap={};
+    if(linkedIds.length){
+      var uq=linkedIds.map(function(id){return '"'+id+'"';}).join(',');
+      var users=await sb('users?id=in.('+uq+')&select=id,username,email');
+      (users||[]).forEach(function(u){userMap[u.id]=u;});
+    }
+    statusEl.innerHTML=rows.map(function(r){
+      var linked=r.linked_user_id?userMap[r.linked_user_id]:null;
+      var statusHtml=linked
+        ? '<span style="color:var(--gl)">Linked to @'+esc(linked.username||linked.email||'account')+'</span> <button class="btns" style="font-size:.7rem;padding:2px 8px;margin-left:6px" onclick="unlinkPlayer(&quot;'+esc(r.name)+'&quot;)">Unlink</button>'
+        : '<span style="color:var(--dim)">Not linked</span>';
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:.35rem 0;border-bottom:1px solid var(--border);font-size:.82rem">'
+        +'<span>'+esc(r.name)+'</span><span>'+statusHtml+'</span></div>';
+    }).join('');
+  }catch(e){
+    console.error('populateLinkSelector status error:',e);
+    statusEl.innerHTML='<div style="font-size:.8rem;color:var(--red)">Could not load link status: '+e.message+'</div>';
+  }
 }
 
 async function squadApprove(membershipId){
@@ -2934,6 +3007,6 @@ if(!navigator.onLine){
 
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-squad-real-data</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-captain-link-real-data</div>
 </body>
 </html>
