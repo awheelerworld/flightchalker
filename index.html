@@ -1204,6 +1204,7 @@ async function registerTeam(){
 async function goToApp(){
   await loadTeamData();
   showScreen('screen-app');
+  renderSquad();
 }
 function closePinOverlay(){document.getElementById('pin-overlay').style.display='none';goToApp();}
 
@@ -1227,6 +1228,7 @@ async function loginTeam(){
     localStorage.setItem('mld_access','1');
     await loadTeamData();
     showScreen('screen-app');
+    renderSquad();
   }catch(e){st.textContent='Error: '+e.message;st.className='ast err';}
   sp.style.display='none';
 }
@@ -3007,6 +3009,6 @@ if(!navigator.onLine){
 
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-captain-link-real-data</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-squad-render-on-login</div>
 </body>
 </html>
