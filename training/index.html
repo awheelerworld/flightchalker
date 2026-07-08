@@ -152,12 +152,12 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
 <!-- ══ HEADER (shared) ══ -->
 <div class="hdr">
   <div>
-    <div class="hdr-logo">Flight <span>Chalker</span></div>
+    <a href="/dashboard" class="hdr-logo" style="text-decoration:none;color:inherit">Flight <span>Chalker</span></a>
     <div class="hdr-sub" id="hdr-sub">Training Zone</div>
   </div>
   <div style="display:flex;gap:.5rem">
     <button class="hbtn" id="btn-back-menu" onclick="showMenu()" style="display:none">← Games</button>
-    <a href="https://flightchalker.co.uk" style="text-decoration:none"><button class="hbtn">🏠 Home</button></a>
+    <a href="/dashboard" style="text-decoration:none"><button class="hbtn">🏠 Home</button></a>
   </div>
 </div>
 
@@ -902,6 +902,6 @@ function toast(msg,isErr){
   setTimeout(function(){t.classList.remove('show');},1800);
 }
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-training-supabase-auth</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-training-home-fix</div>
 </body>
 </html>
