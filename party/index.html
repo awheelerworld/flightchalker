@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzE0MTgxNCIvPgogIDxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YTdjNTkiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNGE3YzU5IiBzdHJva2Utd2lkdGg9IjEiLz4KICA8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI0IiBmaWxsPSIjZThjODQwIi8+Cjwvc3ZnPg==">
+<meta name="description" content="Set up a knockout or round robin darts tournament for your pub night or party - no accounts needed, just share the link.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://flightchalker.co.uk/party">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Party Mode — Flight Chalker">
+<meta property="og:description" content="Set up a knockout or round robin darts tournament in seconds. Share a link, no accounts needed.">
+<meta property="og:url" content="https://flightchalker.co.uk/party">
+<meta property="og:site_name" content="Flight Chalker">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎯 Party Mode — Flight Chalker</title>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-WQRGJRFF1Q"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-WQRGJRFF1Q');</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#141814;--surface:#1e251e;--s3:#2e382e;--green:#4a7c59;--gl:#5a9469;--amber:#e8c840;--red:#c0392b;--text:#e0d8c8;--dim:#8a9080;--border:#3a4a3a}
+body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh}
+header{background:var(--surface);border-bottom:2px solid var(--green);padding:0 1.25rem;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100}
+.logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.2rem;letter-spacing:.05em;text-transform:uppercase;text-decoration:none;color:var(--text)}
+.logo span{color:var(--amber)}
+main{max-width:760px;margin:0 auto;padding:1.5rem 1rem 4rem}
+h1{font-family:'Barlow Condensed',sans-serif;font-size:1.6rem;font-weight:900;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.3rem}
+h1 span{color:var(--amber)}
+.sub{font-size:.85rem;color:var(--dim);margin-bottom:1.5rem;line-height:1.5}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.5rem;margin-bottom:1.25rem}
+.card h2{font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:var(--amber);margin-bottom:1rem}
+.field{margin-bottom:1rem}
+.field label{display:block;font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:.4rem}
+.field input,.field select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.95rem;padding:.6rem .75rem}
+.field input:focus,.field select:focus{outline:none;border-color:var(--green)}
+.fmt-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.fmt-opt{background:var(--bg);border:2px solid var(--border);border-radius:8px;padding:1rem;cursor:pointer;text-align:center;transition:border-color .15s}
+.fmt-opt.sel{border-color:var(--green);background:#1a2a1e}
+.fmt-opt .ic{font-size:1.5rem;margin-bottom:.3rem}
+.fmt-opt .nm{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.85rem;text-transform:uppercase;letter-spacing:.05em}
+.fmt-opt .dc{font-size:.72rem;color:var(--dim);margin-top:.2rem;line-height:1.4}
+.plist{display:flex;flex-direction:column;gap:.5rem;margin-bottom:.75rem}
+.prow{display:flex;align-items:center;gap:.5rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:.5rem .75rem}
+.prow span{flex:1;font-size:.9rem}
+.prow button{background:none;border:none;color:var(--red);font-size:1.1rem;cursor:pointer;padding:0 4px}
+.add-row{display:flex;gap:.5rem}
+.add-row input{flex:1}
+.btn{background:var(--green);border:none;border-radius:8px;color:white;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.7rem 1.2rem;cursor:pointer;transition:background .15s}
+.btn:hover{background:var(--gl)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-sm{padding:.45rem .9rem;font-size:.82rem}
+.btn-outline{background:none;border:1px solid var(--border);color:var(--dim)}
+.btn-outline:hover{border-color:var(--green);color:var(--text)}
+.share-box{background:#1a2a1e;border:1px solid var(--green);border-radius:8px;padding:1rem;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem}
+.share-code{font-family:'Barlow Condensed',sans-serif;font-size:1.8rem;font-weight:900;color:var(--amber);letter-spacing:.15em}
+.round-hdr{font-family:'Barlow Condensed',sans-serif;font-size:.72rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--green);margin:1.25rem 0 .6rem}
+.match{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.85rem 1rem;margin-bottom:.6rem}
+.match.done{border-color:var(--green)}
+.match.bye{opacity:.65}
+.mrow{display:flex;align-items:center;justify-content:space-between;gap:.75rem}
+.mp{flex:1;font-size:.92rem;display:flex;align-items:center;gap:.4rem}
+.mp.winner{color:var(--gl);font-weight:700}
+.mp .crown{font-size:.85rem}
+.mvs{font-size:.72rem;color:var(--dim);padding:0 .3rem}
+.mscore-inputs{display:flex;align-items:center;gap:.5rem;margin-top:.6rem;padding-top:.6rem;border-top:1px solid var(--border)}
+.mscore-inputs input{width:52px;text-align:center;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;padding:.3rem}
+.mscore-inputs span{color:var(--dim);font-size:.85rem}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th{text-align:left;font-family:'Barlow Condensed',sans-serif;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);padding:.5rem .4rem;border-bottom:1px solid var(--border)}
+td{padding:.55rem .4rem;border-bottom:1px solid var(--border)}
+tr:last-child td{border-bottom:none}
+.champ-banner{background:linear-gradient(135deg,#2a2000,#1a2a1e);border:1px solid var(--amber);border-radius:10px;padding:1.5rem;text-align:center;margin-bottom:1.5rem}
+.champ-banner .tp{font-size:2rem}
+.champ-banner .nm{font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;font-weight:900;color:var(--amber);margin-top:.3rem}
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1rem;padding:.6rem 1.5rem;border-radius:6px;transition:transform .3s;z-index:999}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.err{background:var(--red)}
+.loading{text-align:center;padding:3rem;color:var(--dim)}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.hidden{display:none}
+</style>
+</head>
+<body>
+
+<header>
+  <a href="/" class="logo">Flight <span>Chalker</span></a>
+</header>
+
+<main>
+  <!-- SCREEN: choose create or join -->
+  <div id="screen-landing">
+    <h1>Party <span>Mode</span></h1>
+    <div class="sub">Set up a quick knockout or round robin tournament. Share the link and everyone can join and enter scores — no accounts needed.</div>
+    <div class="card">
+      <h2>Start a New Tournament</h2>
+      <div class="field">
+        <label>Tournament Name</label>
+        <input type="text" id="t-name" placeholder="e.g. Friday Night Party">
+      </div>
+      <div class="field">
+        <label>Format</label>
+        <div class="fmt-row">
+          <div class="fmt-opt sel" id="fmt-knockout" onclick="selectFormat('knockout')">
+            <div class="ic">🏆</div>
+            <div class="nm">Knockout</div>
+            <div class="dc">Lose once, you're out. Fast and simple.</div>
+          </div>
+          <div class="fmt-opt" id="fmt-roundrobin" onclick="selectFormat('roundrobin')">
+            <div class="ic">🔄</div>
+            <div class="nm">Round Robin</div>
+            <div class="dc">Everyone plays everyone. More darts for all.</div>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Best of (legs per match)</label>
+        <select id="t-legs">
+          <option value="1">Single leg</option>
+          <option value="3" selected>Best of 3</option>
+          <option value="5">Best of 5</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Players</label>
+        <div class="plist" id="p-list"></div>
+        <div class="add-row">
+          <input type="text" id="p-add-name" placeholder="Player name" onkeydown="if(event.key==='Enter'){addPlayerField();}">
+          <button class="btn btn-sm" onclick="addPlayerField()">Add</button>
+        </div>
+      </div>
+      <button class="btn" id="create-btn" onclick="createTournament()" style="width:100%">Create Tournament 🎯</button>
+    </div>
+
+    <div class="card">
+      <h2>Already Have a Code?</h2>
+      <div class="add-row">
+        <input type="text" id="join-code-input" placeholder="Enter tournament code" style="text-transform:uppercase" onkeydown="if(event.key==='Enter'){joinByCode();}">
+        <button class="btn btn-sm" onclick="joinByCode()">Join</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN: loading -->
+  <div id="screen-loading" class="loading hidden"><span class="spin"></span>Loading tournament...</div>
+
+  <!-- SCREEN: not found -->
+  <div id="screen-notfound" class="hidden" style="text-align:center;padding:3rem 1rem">
+    <h2 style="font-family:'Barlow Condensed',sans-serif;color:var(--text);margin-bottom:.5rem">Tournament Not Found</h2>
+    <p style="color:var(--dim);font-size:.85rem;margin-bottom:1rem">This code doesn't match any tournament.</p>
+    <a href="/party" style="color:var(--gl)">← Start a new one</a>
+  </div>
+
+  <!-- SCREEN: tournament view -->
+  <div id="screen-tournament" class="hidden">
+    <h1 id="tv-name"><span>🎯</span></h1>
+    <div class="sub" id="tv-format"></div>
+
+    <div class="share-box">
+      <div>
+        <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.15em;color:var(--dim);margin-bottom:.3rem">Share this code</div>
+        <div class="share-code" id="tv-code">------</div>
+      </div>
+      <button class="btn btn-sm" onclick="copyPartyLink()">Copy Link</button>
+    </div>
+
+    <div id="tv-champion"></div>
+    <div id="tv-standings"></div>
+    <div id="tv-bracket"></div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const sbClient = window.supabase.createClient(
+  'https://xkovqamknwyjzlgijcel.supabase.co',
+  'sb_publishable_1zeVlEGjUdGNwA-i8pktHg_nSjRXYEQ'
+);
+const SB_URL = sbClient.supabaseUrl;
+const SB_KEY = sbClient.supabaseKey;
+
+// ── Simple REST helpers (mirrors the pattern used elsewhere in the app) ──
+async function sbGet(path){
+  const res=await fetch(SB_URL+'/rest/v1/'+path,{
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
+  });
+  if(!res.ok)throw new Error('Request failed: '+res.status);
+  return res.json();
+}
+async function sbInsert(table, rows){
+  const res=await fetch(SB_URL+'/rest/v1/'+table,{
+    method:'POST',
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
+    body:JSON.stringify(rows)
+  });
+  var out=await res.json();
+  if(!res.ok)throw new Error((out&&out.message)||'Insert failed');
+  return out;
+}
+async function sbUpdate(table, filter, body){
+  const res=await fetch(SB_URL+'/rest/v1/'+table+'?'+filter,{
+    method:'PATCH',
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+    body:JSON.stringify(body)
+  });
+  if(!res.ok){var e=await res.json().catch(function(){return{};});throw new Error(e.message||'Update failed');}
+}
+
+function toast(msg,isErr=false){
+  var t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast'+(isErr?' err':'')+' show';
+  setTimeout(function(){t.classList.remove('show');},2500);
+}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function showScreen(id){
+  ['screen-landing','screen-loading','screen-notfound','screen-tournament'].forEach(function(s){
+    document.getElementById(s).classList.toggle('hidden', s!==id);
+  });
+}
+
+// ── Create flow ──────────────────────────────────────────────────────────
+var selectedFormat='knockout';
+var pendingPlayers=[];
+
+function selectFormat(f){
+  selectedFormat=f;
+  document.getElementById('fmt-knockout').classList.toggle('sel',f==='knockout');
+  document.getElementById('fmt-roundrobin').classList.toggle('sel',f==='roundrobin');
+}
+
+function renderPlayerList(){
+  var el=document.getElementById('p-list');
+  if(!pendingPlayers.length){
+    el.innerHTML='<div style="font-size:.82rem;color:var(--dim)">No players added yet.</div>';
+    return;
+  }
+  el.innerHTML=pendingPlayers.map(function(name,i){
+    return '<div class="prow"><span>'+esc(name)+'</span><button onclick="removePlayerField('+i+')">×</button></div>';
+  }).join('');
+}
+
+function addPlayerField(){
+  var inp=document.getElementById('p-add-name');
+  var name=inp.value.trim();
+  if(!name)return;
+  pendingPlayers.push(name);
+  inp.value='';
+  inp.focus();
+  renderPlayerList();
+}
+function removePlayerField(i){
+  pendingPlayers.splice(i,1);
+  renderPlayerList();
+}
+
+function genShareCode(){
+  var chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  var c='';
+  for(var i=0;i<6;i++)c+=chars[Math.floor(Math.random()*chars.length)];
+  return c;
+}
+
+async function createTournament(){
+  var name=document.getElementById('t-name').value.trim()||'Party Tournament';
+  var legs=parseInt(document.getElementById('t-legs').value);
+  if(pendingPlayers.length<2){
+    toast('Add at least 2 players',true);
+    return;
+  }
+  if(selectedFormat==='knockout' && pendingPlayers.length>64){
+    toast('Knockout supports up to 64 players',true);
+    return;
+  }
+  var btn=document.getElementById('create-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spin"></span>Creating...';
+
+  try{
+    var shareCode=genShareCode();
+    var tRows=await sbInsert('party_tournaments',[{name:name,format:selectedFormat,share_code:shareCode,legs_per_match:legs,status:'active'}]);
+    var tournament=tRows[0];
+
+    // Insert players
+    var playerRows=pendingPlayers.map(function(n){return {tournament_id:tournament.id,name:n};});
+    var players=await sbInsert('party_players', playerRows);
+
+    if(selectedFormat==='knockout'){
+      await generateKnockoutRound1(tournament.id, players);
+    }else{
+      await generateRoundRobin(tournament.id, players);
+    }
+
+    window.location.href='/party?code='+shareCode;
+  }catch(e){
+    console.error('createTournament error:',e);
+    toast('Error: '+e.message,true);
+    btn.disabled=false;btn.innerHTML='Create Tournament 🎯';
+  }
+}
+
+async function joinByCode(){
+  var code=document.getElementById('join-code-input').value.trim().toUpperCase();
+  if(!code){toast('Enter a code',true);return;}
+  window.location.href='/party?code='+code;
+}
+
+// ── Bracket generation ──────────────────────────────────────────────────
+function shuffle(arr){
+  var a=arr.slice();
+  for(var i=a.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var tmp=a[i];a[i]=a[j];a[j]=tmp;
+  }
+  return a;
+}
+
+async function insertMatches(rows){
+  return await sbInsert('party_matches', rows);
+}
+
+async function generateKnockoutRound1(tournamentId, players){
+  var shuffled=shuffle(players);
+  var n=shuffled.length;
+  var bracketSize=1;
+  while(bracketSize<n)bracketSize*=2;
+  var slots=shuffled.slice();
+  while(slots.length<bracketSize)slots.push(null); // byes fill remaining slots
+
+  var matches=[];
+  var order=0;
+  for(var i=0;i<slots.length;i+=2){
+    var p1=slots[i], p2=slots[i+1];
+    var isBye = !p1 || !p2;
+    var winner = isBye ? (p1||p2) : null;
+    matches.push({
+      tournament_id:tournamentId, round:1, match_order:order++,
+      player1_id:p1?p1.id:null, player2_id:p2?p2.id:null,
+      winner_id: winner?winner.id:null,
+      is_bye:isBye, status: isBye?'complete':'pending'
+    });
+  }
+  await insertMatches(matches);
+  await maybeAdvanceKnockout(tournamentId);
+}
+
+// After any match completes, check if the whole round is done and generate
+// the next round pairing the winners in order. Repeats until only the
+// final round remains, or auto-advances through bye-only rounds.
+async function maybeAdvanceKnockout(tournamentId){
+  var rows=await sbGet('party_matches?tournament_id=eq.'+tournamentId+'&order=round.asc,match_order.asc');
+  if(!rows||!rows.length)return;
+  var maxRound=Math.max.apply(null, rows.map(function(m){return m.round;}));
+  var currentRoundMatches=rows.filter(function(m){return m.round===maxRound;});
+  var allDone=currentRoundMatches.every(function(m){return m.status==='complete';});
+  if(!allDone)return;
+  if(currentRoundMatches.length===1){
+    // Final complete - mark tournament finished
+    await sbUpdate('party_tournaments','id=eq.'+tournamentId,{status:'complete'});
+    return;
+  }
+  // Build next round from winners in match_order sequence
+  var winners=currentRoundMatches.sort(function(a,b){return a.match_order-b.match_order;})
+    .map(function(m){return m.winner_id;});
+  var nextRound=maxRound+1;
+  var matches=[];
+  var order=0;
+  for(var i=0;i<winners.length;i+=2){
+    var w1=winners[i], w2=winners[i+1];
+    var isBye = !w1 || !w2;
+    var winner = isBye ? (w1||w2) : null;
+    matches.push({
+      tournament_id:tournamentId, round:nextRound, match_order:order++,
+      player1_id:w1||null, player2_id:w2||null,
+      winner_id: winner||null,
+      is_bye:isBye, status: isBye?'complete':'pending'
+    });
+  }
+  await insertMatches(matches);
+  await maybeAdvanceKnockout(tournamentId); // handles chained bye rounds
+}
+
+async function generateRoundRobin(tournamentId, players){
+  var list=players.slice();
+  if(list.length%2===1)list.push(null); // bye slot
+  var n=list.length;
+  var rounds=n-1;
+  var matches=[];
+  var arr=list.slice();
+  for(var r=0;r<rounds;r++){
+    var order=0;
+    for(var i=0;i<n/2;i++){
+      var p1=arr[i], p2=arr[n-1-i];
+      if(p1&&p2){
+        matches.push({
+          tournament_id:tournamentId, round:r+1, match_order:order++,
+          player1_id:p1.id, player2_id:p2.id, winner_id:null,
+          is_bye:false, status:'pending'
+        });
+      }
+    }
+    // rotate all but the first element
+    var fixed=arr[0];
+    var rest=arr.slice(1);
+    rest.unshift(rest.pop());
+    arr=[fixed].concat(rest);
+  }
+  await insertMatches(matches);
+}
+
+// ── View / join a tournament ─────────────────────────────────────────────
+var currentTournament=null, currentPlayers=[], currentMatches=[];
+
+function playerName(id){
+  if(!id)return 'BYE';
+  var p=currentPlayers.find(function(p){return p.id===id;});
+  return p?p.name:'Unknown';
+}
+
+async function loadTournamentByCode(code){
+  showScreen('screen-loading');
+  try{
+    var tRows=await sbGet('party_tournaments?share_code=eq.'+encodeURIComponent(code)+'&select=*');
+    if(!tRows||!tRows.length){showScreen('screen-notfound');return;}
+    currentTournament=tRows[0];
+    currentPlayers=await sbGet('party_players?tournament_id=eq.'+currentTournament.id+'&select=*');
+    currentMatches=await sbGet('party_matches?tournament_id=eq.'+currentTournament.id+'&order=round.asc,match_order.asc&select=*');
+    renderTournament();
+    showScreen('screen-tournament');
+  }catch(e){
+    console.error('loadTournamentByCode error:',e);
+    toast('Could not load tournament: '+e.message,true);
+    showScreen('screen-notfound');
+  }
+}
+
+function copyPartyLink(){
+  var url='https://flightchalker.co.uk/party?code='+currentTournament.share_code;
+  navigator.clipboard.writeText(url).then(function(){
+    toast('Link copied!');
+  }).catch(function(){
+    toast(url);
+  });
+}
+
+function renderTournament(){
+  document.getElementById('tv-name').innerHTML=esc(currentTournament.name)+' <span>🎯</span>';
+  var fmtLabel = currentTournament.format==='knockout' ? 'Knockout' : 'Round Robin';
+  document.getElementById('tv-format').textContent=fmtLabel+' · Best of '+currentTournament.legs_per_match+' · '+currentPlayers.length+' players';
+  document.getElementById('tv-code').textContent=currentTournament.share_code;
+
+  var champEl=document.getElementById('tv-champion');
+  if(currentTournament.status==='complete'){
+    var champion=findChampion();
+    champEl.innerHTML = champion ? (
+      '<div class="champ-banner"><div class="tp">🏆</div><div class="nm">'+esc(champion)+' wins!</div></div>'
+    ) : '';
+  }else{
+    champEl.innerHTML='';
+  }
+
+  if(currentTournament.format==='roundrobin'){
+    document.getElementById('tv-standings').innerHTML=renderStandings();
+  }else{
+    document.getElementById('tv-standings').innerHTML='';
+  }
+
+  document.getElementById('tv-bracket').innerHTML=renderMatches();
+}
+
+function findChampion(){
+  var maxRound=Math.max.apply(null, currentMatches.map(function(m){return m.round;}));
+  var finalMatches=currentMatches.filter(function(m){return m.round===maxRound;});
+  if(finalMatches.length!==1||finalMatches[0].status!=='complete')return null;
+  return playerName(finalMatches[0].winner_id);
+}
+
+function renderStandings(){
+  var stats={};
+  currentPlayers.forEach(function(p){stats[p.id]={name:p.name,played:0,won:0,drawn:0,lost:0,legsFor:0,legsAgainst:0,pts:0};});
+  currentMatches.forEach(function(m){
+    if(m.status!=='complete'||m.is_bye)return;
+    if(!m.player1_id||!m.player2_id)return;
+    var s1=stats[m.player1_id], s2=stats[m.player2_id];
+    if(!s1||!s2)return;
+    s1.played++;s2.played++;
+    s1.legsFor+=m.player1_legs;s1.legsAgainst+=m.player2_legs;
+    s2.legsFor+=m.player2_legs;s2.legsAgainst+=m.player1_legs;
+    if(m.player1_legs>m.player2_legs){s1.won++;s1.pts+=2;s2.lost++;}
+    else if(m.player2_legs>m.player1_legs){s2.won++;s2.pts+=2;s1.lost++;}
+    else{s1.drawn++;s2.drawn++;s1.pts++;s2.pts++;}
+  });
+  var rows=Object.values(stats).sort(function(a,b){
+    if(b.pts!==a.pts)return b.pts-a.pts;
+    return (b.legsFor-b.legsAgainst)-(a.legsFor-a.legsAgainst);
+  });
+  var html='<div class="round-hdr">Standings</div><table><tr><th>Player</th><th>P</th><th>W</th><th>D</th><th>L</th><th>Legs</th><th>Pts</th></tr>';
+  rows.forEach(function(r){
+    html+='<tr><td>'+esc(r.name)+'</td><td>'+r.played+'</td><td>'+r.won+'</td><td>'+r.drawn+'</td><td>'+r.lost+'</td><td>'+r.legsFor+'-'+r.legsAgainst+'</td><td>'+r.pts+'</td></tr>';
+  });
+  html+='</table>';
+  return html;
+}
+
+function renderMatches(){
+  var byRound={};
+  currentMatches.forEach(function(m){
+    (byRound[m.round]=byRound[m.round]||[]).push(m);
+  });
+  var rounds=Object.keys(byRound).map(Number).sort(function(a,b){return a-b;});
+  var maxRound=rounds[rounds.length-1];
+  var html='';
+  rounds.forEach(function(r){
+    var label = currentTournament.format==='knockout'
+      ? (r===maxRound ? 'Final' : (r===maxRound-1 ? 'Semi-Final' : 'Round '+r))
+      : 'Round '+r;
+    html+='<div class="round-hdr">'+label+'</div>';
+    byRound[r].sort(function(a,b){return a.match_order-b.match_order;}).forEach(function(m){
+      html+=renderMatchCard(m);
+    });
+  });
+  return html;
+}
+
+function renderMatchCard(m){
+  var p1=playerName(m.player1_id), p2=playerName(m.player2_id);
+  var done=m.status==='complete';
+  var cls='match'+(done?' done':'')+(m.is_bye?' bye':'');
+  var p1cls='mp'+(done&&m.winner_id===m.player1_id?' winner':'');
+  var p2cls='mp'+(done&&m.winner_id===m.player2_id?' winner':'');
+  var crown1 = done&&m.winner_id===m.player1_id ? '<span class="crown">👑</span>' : '';
+  var crown2 = done&&m.winner_id===m.player2_id ? '<span class="crown">👑</span>' : '';
+
+  if(m.is_bye){
+    return '<div class="'+cls+'"><div class="mrow"><span class="mp winner">'+esc(p1==='BYE'?p2:p1)+' <span class="crown">👑</span></span><span class="mvs">bye</span></div></div>';
+  }
+
+  var scoreArea;
+  if(done){
+    scoreArea='<div class="mvs">'+m.player1_legs+' – '+m.player2_legs+'</div>';
+  }else{
+    scoreArea='<div class="mvs">vs</div>';
+  }
+
+  var editForm = !done ? (
+    '<div class="mscore-inputs">'
+      +'<input type="number" min="0" max="'+currentTournament.legs_per_match+'" id="score1-'+m.id+'" value="0">'
+      +'<span>–</span>'
+      +'<input type="number" min="0" max="'+currentTournament.legs_per_match+'" id="score2-'+m.id+'" value="0">'
+      +'<button class="btn btn-sm" onclick="saveMatchResult(&quot;'+m.id+'&quot;)">Save</button>'
+    +'</div>'
+  ) : '';
+
+  return '<div class="'+cls+'">'
+    +'<div class="mrow">'
+      +'<span class="'+p1cls+'">'+esc(p1)+crown1+'</span>'
+      +scoreArea
+      +'<span class="'+p2cls+'">'+crown2+esc(p2)+'</span>'
+    +'</div>'
+    +editForm
+  +'</div>';
+}
+
+async function saveMatchResult(matchId){
+  var s1=parseInt(document.getElementById('score1-'+matchId).value)||0;
+  var s2=parseInt(document.getElementById('score2-'+matchId).value)||0;
+  var needed=Math.ceil(currentTournament.legs_per_match/2);
+  if(s1<needed && s2<needed){
+    toast('One player needs at least '+needed+' legs to win',true);
+    return;
+  }
+  if(s1===s2){
+    toast('Scores can\'t be tied',true);
+    return;
+  }
+  var match=currentMatches.find(function(m){return m.id===matchId;});
+  var winnerId = s1>s2 ? match.player1_id : match.player2_id;
+  try{
+    await sbUpdate('party_matches','id=eq.'+matchId,{
+      player1_legs:s1, player2_legs:s2, winner_id:winnerId, status:'complete'
+    });
+    if(currentTournament.format==='knockout'){
+      await maybeAdvanceKnockout(currentTournament.id);
+    }
+    toast('Result saved!');
+    await loadTournamentByCode(currentTournament.share_code);
+  }catch(e){
+    console.error('saveMatchResult error:',e);
+    toast('Could not save result: '+e.message,true);
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────
+(function(){
+  renderPlayerList();
+  var params=new URLSearchParams(window.location.search);
+  var code=params.get('code');
+  if(code){
+    loadTournamentByCode(code.toUpperCase());
+  }else{
+    showScreen('screen-landing');
+  }
+})();
+</script>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-party-mode-v1</div>
+</body>
+</html>
