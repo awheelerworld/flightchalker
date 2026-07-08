@@ -1,4 +1,4 @@
-<!-- VERSION: v14-captain-joincode-autogen -->
+<!-- VERSION: v16-party-mode-entry -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -170,6 +170,12 @@ input:checked+.slider::before{transform:translateX(18px);background:white}
       <h3>Training Zone</h3>
       <p>Checkout practice, around the clock, doubles training.</p>
       <div class="go">Train now →</div>
+    </a>
+    <a href="/party" class="game-card">
+      <div class="icon">🎉</div>
+      <h3>Party Mode</h3>
+      <p>Set up a knockout or round robin tournament. Share the link - no accounts needed for guests.</p>
+      <div class="go">Start a tournament →</div>
     </a>
   </div>
 
@@ -530,9 +536,11 @@ async function renderCaptainTeams(){
           if(idx>-1) captainTeamsData[idx].join_code = newCode;
         }else{
           console.error('Could not generate join code:', codeErr);
+          toast('Could not generate a join code: '+(codeErr.message||'unknown error'),true);
         }
       }catch(genErr){
         console.error('Could not generate join code:', genErr);
+        toast('Could not generate a join code: '+(genErr.message||'unknown error'),true);
       }
     }
 
@@ -819,6 +827,6 @@ window.addEventListener('load', async function(){
   }
 });
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v14-captain-joincode-autogen</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v16-party-mode-entry</div>
 </body>
 </html>
