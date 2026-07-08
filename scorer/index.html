@@ -192,7 +192,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
   gtag('js', new Date());
   gtag('config', 'G-WQRGJRFF1Q');
 </script>
-<script src="https://unpkg.com/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -450,14 +450,40 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
 <div class="toast" id="toast"></div>
 
 <script>
-// ── Checkout table ─────────────────────────────────────────────────────────────
-// ── Access guard ──────────────────────────────────────────────────────────────
-(function(){
-  var hasAccess=localStorage.getItem('mld_access')==='1';
-  if(!hasAccess){
-    window.location.href='https://flightchalker.co.uk/?msg=login';
+// ── Access guard: individual player accounts use Supabase Auth (same as
+// /dashboard and /training), not the team app's localStorage flag - this
+// page used to check for a team login session, which a logged-in player
+// never has, sending them to team login by mistake.
+const sb = window.supabase.createClient(
+  'https://xkovqamknwyjzlgijcel.supabase.co',
+  'sb_publishable_1zeVlEGjUdGNwA-i8pktHg_nSjRXYEQ'
+);
+var fcUser=null,fcSessionStart=null;
+async function fcInit(){
+  try{
+    const { data:{ session } } = await sb.auth.getSession();
+    if(!session){
+      window.location.href='/login?redirect=/scorer';
+      return false;
+    }
+    var su=session.user;
+    fcUser={
+      id: su.id,
+      username: (su.user_metadata&&su.user_metadata.username) || su.email.split('@')[0],
+      email: su.email
+    };
+    console.log('FC Player:',fcUser.username);
+    return true;
+  }catch(e){
+    console.error('Scorer page auth check failed:',e);
+    window.location.href='/login?redirect=/scorer';
+    return false;
   }
-})();
+}
+fcInit();
+</script>
+<script>
+// ── Checkout table ─────────────────────────────────────────────────────────────
 const CHECKOUTS={
   170:'T20 T20 Bull',167:'T20 T19 Bull',164:'T20 T18 Bull',161:'T20 T17 Bull',
   160:'T20 T20 D20',158:'T20 T20 D19',157:'T20 T19 D20',156:'T20 T20 D18',
@@ -804,21 +830,8 @@ function toast(msg,isErr){
 }
 
 // ── Flight Chalker Player Session Module ──────────────────────────────────
-var fcUser=null,fcSessionStart=null;
-async function fcInit(){
-  try{
-    if(!window.Clerk){
-      var s=document.createElement('script');
-      s.src='https://unpkg.com/@clerk/clerk-js@latest/dist/clerk.browser.js';
-      document.head.appendChild(s);
-      await new Promise(function(r){s.onload=r;});
-    }
-    var clerk=new window.Clerk('pk_live_Y2xlcmsuZmxpZ2h0Y2hhbGtlci5jby51ayQ');
-    await clerk.load();
-    window.Clerk=clerk;
-    if(clerk.user){fcUser=clerk.user;console.log('FC Player:',fcUser.username||fcUser.id);}
-  }catch(e){console.log('FC: guest mode');}
-}
+// (fcUser/fcInit are now set up top of the previous script block, using
+// Supabase Auth - see the access guard above.)
 function fcBegin(gameType){
   fcSessionStart=Date.now();
   if(typeof gtag!=='undefined')gtag('event','game_start',{game_type:gameType,logged_in:!!fcUser});
@@ -1132,5 +1145,6 @@ function showWinByName(name){
 // Init
 if(document.getElementById('x01-options'))document.getElementById('x01-options').style.display='block';
 </script>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-scorer-supabase-auth</div>
 </body>
 </html>
