@@ -200,7 +200,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
 <div id="screen-setup" class="screen active">
   <div class="hdr">
     <div>
-      <div class="hdr-logo">Flight <span>Chalker</span></div>
+      <a href="/dashboard" class="hdr-logo" style="text-decoration:none;color:inherit">Flight <span>Chalker</span></a>
       <div class="hdr-sub">Darts Scorer</div>
     </div>
     <a href="https://flightchalker.co.uk" style="text-decoration:none"><button class="hbtn">← Home</button></a>
@@ -286,7 +286,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
 <div id="screen-game" class="screen">
   <div class="hdr">
     <div>
-      <div class="hdr-logo">Flight <span>Chalker</span></div>
+      <a href="/dashboard" class="hdr-logo" style="text-decoration:none;color:inherit">Flight <span>Chalker</span></a>
       <div class="hdr-sub" id="game-sub">Leg 1</div>
     </div>
     <div style="display:flex;gap:.5rem">
@@ -334,7 +334,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
 <!-- ══════════════════ CRICKET SCREEN ══════════════════ -->
 <div id="screen-cricket" class="screen">
   <div class="hdr">
-    <div><div class="hdr-logo">Flight <span>Chalker</span></div><div class="hdr-sub">Cricket</div></div>
+    <div><a href="/dashboard" class="hdr-logo" style="text-decoration:none;color:inherit">Flight <span>Chalker</span></a><div class="hdr-sub">Cricket</div></div>
     <div style="display:flex;gap:.5rem">
       <button class="hbtn" onclick="undoLast()">↩ Undo</button>
       <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button>
@@ -357,7 +357,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
 <!-- ══════════════════ KILLER SCREEN ══════════════════ -->
 <div id="screen-killer" class="screen">
   <div class="hdr">
-    <div><div class="hdr-logo">Flight <span>Chalker</span></div><div class="hdr-sub">Killer</div></div>
+    <div><a href="/dashboard" class="hdr-logo" style="text-decoration:none;color:inherit">Flight <span>Chalker</span></a><div class="hdr-sub">Killer</div></div>
     <div style="display:flex;gap:.5rem">
       <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button>
     </div>
@@ -380,7 +380,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
 <!-- ══════════════════ SHANGHAI SCREEN ══════════════════ -->
 <div id="screen-shanghai" class="screen">
   <div class="hdr">
-    <div><div class="hdr-logo">Flight <span>Chalker</span></div><div class="hdr-sub">Shanghai</div></div>
+    <div><a href="/dashboard" class="hdr-logo" style="text-decoration:none;color:inherit">Flight <span>Chalker</span></a><div class="hdr-sub">Shanghai</div></div>
     <div style="display:flex;gap:.5rem">
       <button class="hbtn" onclick="undoLast()">↩ Undo</button>
       <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button>
@@ -408,7 +408,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
 <!-- ══════════════════ HALVE-IT SCREEN ══════════════════ -->
 <div id="screen-halveit" class="screen">
   <div class="hdr">
-    <div><div class="hdr-logo">Flight <span>Chalker</span></div><div class="hdr-sub">Halve-It</div></div>
+    <div><a href="/dashboard" class="hdr-logo" style="text-decoration:none;color:inherit">Flight <span>Chalker</span></a><div class="hdr-sub">Halve-It</div></div>
     <div style="display:flex;gap:.5rem">
       <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button>
     </div>
@@ -432,7 +432,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
 <div id="screen-win" class="screen">
   <div class="hdr">
     <div>
-      <div class="hdr-logo">Flight <span>Chalker</span></div>
+      <a href="/dashboard" class="hdr-logo" style="text-decoration:none;color:inherit">Flight <span>Chalker</span></a>
       <div class="hdr-sub">Game Over</div>
     </div>
     <a href="https://flightchalker.co.uk" style="text-decoration:none"><button class="hbtn">← Home</button></a>
@@ -1145,6 +1145,6 @@ function showWinByName(name){
 // Init
 if(document.getElementById('x01-options'))document.getElementById('x01-options').style.display='block';
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-scorer-supabase-auth</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-scorer-home-link</div>
 </body>
 </html>
