@@ -1,4 +1,4 @@
-<!-- VERSION: v16-party-mode-entry -->
+<!-- VERSION: v17-signout-fix -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -414,8 +414,8 @@ async function selfLinkAccount(){
 async function signOut(){
   try{
     await sb.auth.signOut();
-    window.location.href='/';
-  }catch(e){window.location.href='/';}
+    window.location.href='/login';
+  }catch(e){window.location.href='/login';}
 }
 
 async function loadDashboard(user){
@@ -827,6 +827,6 @@ window.addEventListener('load', async function(){
   }
 });
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v16-party-mode-entry</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v17-signout-fix</div>
 </body>
 </html>
