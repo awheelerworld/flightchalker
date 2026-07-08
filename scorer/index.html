@@ -290,7 +290,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
       <div class="hdr-sub" id="game-sub">Leg 1</div>
     </div>
     <div style="display:flex;gap:.5rem">
-      <button class="hbtn" onclick="undoThrow()">↩ Undo</button>
+      <button class="hbtn" onclick="undoLast()">↩ Undo</button>
       <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button>
     </div>
   </div>
@@ -348,7 +348,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
       <div id="cricket-numpad" style="display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;margin-bottom:.6rem"></div>
       <div class="action-row">
         <button class="btn-undo" onclick="cricketMiss()">Miss</button>
-        <button class="btn-next" onclick="cricketNextTurn()">Next Turn →</button>
+        <button class="btn-next" onclick="cricketNext()">Next Turn →</button>
       </div>
     </div>
   </div>
@@ -1145,6 +1145,6 @@ function showWinByName(name){
 // Init
 if(document.getElementById('x01-options'))document.getElementById('x01-options').style.display='block';
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-scorer-home-fix2</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-scorer-diagnostic-fixes</div>
 </body>
 </html>
