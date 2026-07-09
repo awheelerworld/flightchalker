@@ -111,7 +111,7 @@ tr:last-child td{border-bottom:none}
 <body>
 
 <header>
-  <a href="/party" class="logo">Flight <span>Chalker</span></a>
+  <a href="/party" class="logo" onclick="return goHome(event)">Flight <span>Chalker</span></a>
 </header>
 
 <main>
@@ -259,6 +259,19 @@ const sbClient = window.supabase.createClient(
 );
 const SB_URL = sbClient.supabaseUrl;
 const SB_KEY = sbClient.supabaseKey;
+
+// Logo click: logged-in players go to their dashboard, guests (no account
+// needed for Party Mode) stay within Party Mode instead of hitting a login wall.
+async function goHome(e){
+  e.preventDefault();
+  try{
+    const { data:{ session } } = await sbClient.auth.getSession();
+    window.location.href = session ? '/dashboard' : '/party';
+  }catch(err){
+    window.location.href = '/party';
+  }
+  return false;
+}
 
 // ── Simple REST helpers (mirrors the pattern used elsewhere in the app) ──
 async function sbGet(path){
@@ -885,6 +898,6 @@ function renderScoring(){
   }
 })();
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-party-logo-fix</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-party-logo-smart</div>
 </body>
 </html>
