@@ -23,6 +23,8 @@
 body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh}
 header{background:var(--surface);border-bottom:2px solid var(--green);padding:0 1.25rem;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100}
 .logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.2rem;letter-spacing:.05em;text-transform:uppercase;text-decoration:none;color:var(--text)}
+.hbtn{background:none;border:1px solid var(--border);border-radius:4px;color:var(--dim);font-family:'Barlow Condensed',sans-serif;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;cursor:pointer}
+.hbtn:hover{border-color:var(--red);color:#ff8080}
 .logo span{color:var(--amber)}
 main{max-width:760px;margin:0 auto;padding:1.5rem 1rem 4rem}
 h1{font-family:'Barlow Condensed',sans-serif;font-size:1.6rem;font-weight:900;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.3rem}
@@ -112,6 +114,7 @@ tr:last-child td{border-bottom:none}
 
 <header>
   <a href="/party" class="logo" onclick="return goHome(event)">Flight <span>Chalker</span></a>
+  <button class="hbtn" onclick="goHome(event)">← Home</button>
 </header>
 
 <main>
@@ -898,6 +901,6 @@ function renderScoring(){
   }
 })();
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-party-logo-smart</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-party-home-button</div>
 </body>
 </html>
