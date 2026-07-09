@@ -1,832 +1,890 @@
-<!-- VERSION: v16-party-mode-entry -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzE0MTgxNCIvPgogIDxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YTdjNTkiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNGE3YzU5IiBzdHJva2Utd2lkdGg9IjEiLz4KICA8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI0IiBmaWxsPSIjZThjODQwIi8+Cjwvc3ZnPg==">
-  <meta name="description" content="Your Flight Chalker player dashboard.">
-  <meta name="robots" content="noindex, nofollow">
-  <link rel="canonical" href="https://flightchalker.co.uk/dashboard">
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="Dashboard — Flight Chalker">
-  <meta property="og:description" content="Your Flight Chalker player dashboard.">
-  <meta property="og:url" content="https://flightchalker.co.uk/dashboard">
-  <meta property="og:site_name" content="Flight Chalker">
+<meta name="description" content="Set up a knockout or round robin darts tournament for your pub night or party - no accounts needed, just share the link.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://flightchalker.co.uk/party">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Party Mode — Flight Chalker">
+<meta property="og:description" content="Set up a knockout or round robin darts tournament in seconds. Share a link, no accounts needed.">
+<meta property="og:url" content="https://flightchalker.co.uk/party">
+<meta property="og:site_name" content="Flight Chalker">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard — Flight Chalker</title>
-<meta name="description" content="Your Flight Chalker player dashboard. Access the scorer, training zone and view your stats.">
-<meta name="robots" content="noindex, nofollow">
+<title>🎯 Party Mode — Flight Chalker</title>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-WQRGJRFF1Q"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-WQRGJRFF1Q');</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#141814;--surface:#1e251e;--s2:#252e25;--s3:#2e382e;--green:#4a7c59;--gl:#5a9469;--amber:#e8c840;--red:#c0392b;--text:#e0d8c8;--dim:#8a9080;--border:#3a4a3a}
+:root{--bg:#141814;--surface:#1e251e;--s3:#2e382e;--green:#4a7c59;--gl:#5a9469;--amber:#e8c840;--red:#c0392b;--text:#e0d8c8;--dim:#8a9080;--border:#3a4a3a}
 body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh}
-
-/* Header */
 header{background:var(--surface);border-bottom:2px solid var(--green);padding:0 1.25rem;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100}
 .logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.2rem;letter-spacing:.05em;text-transform:uppercase;text-decoration:none;color:var(--text)}
 .logo span{color:var(--amber)}
-.hright{display:flex;align-items:center;gap:.75rem}
-.username-badge{font-family:'Barlow Condensed',sans-serif;font-size:.85rem;color:var(--amber);font-weight:700}
-.btn-signout{background:none;border:1px solid var(--border);border-radius:4px;color:var(--dim);font-family:'Barlow Condensed',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;cursor:pointer}
-.btn-signout:hover{border-color:var(--red);color:#ff8080}
-
-main{max-width:900px;margin:0 auto;padding:1.5rem 1rem 4rem}
-
-/* Welcome banner */
-.welcome{background:linear-gradient(135deg,#1e3a28,#141814);border:1px solid var(--green);border-radius:12px;padding:1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
-.welcome-text h2{font-family:'Barlow Condensed',sans-serif;font-size:1.5rem;font-weight:900;color:var(--text)}
-.welcome-text h2 span{color:var(--amber)}
-.welcome-text p{font-size:.82rem;color:var(--dim);margin-top:.25rem}
-.free-badge{background:#1a2a1e;border:1px solid var(--green);border-radius:20px;padding:.3rem .9rem;font-family:'Barlow Condensed',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gl)}
-
-/* Section headers */
-.sec-title{font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--green);margin-bottom:.75rem}
-
-/* Game cards */
-.game-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem}
-.game-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.25rem;text-decoration:none;color:var(--text);transition:border-color .15s;display:flex;flex-direction:column;gap:.5rem}
-.game-card:hover{border-color:var(--green)}
-.game-card .icon{font-size:1.8rem}
-.game-card h3{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:900;text-transform:uppercase;letter-spacing:.05em}
-.game-card p{font-size:.78rem;color:var(--dim);line-height:1.4}
-.game-card .go{font-family:'Barlow Condensed',sans-serif;font-size:.78rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--green);margin-top:.25rem}
-
-/* Stats grid */
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.75rem;margin-bottom:1.5rem}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem;text-align:center}
-.stat-card .val{font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:900;color:var(--amber);line-height:1}
-.stat-card .lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-top:4px}
-
-/* Team section */
-.team-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.25rem;margin-bottom:1rem}
-.team-card h3{font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.75rem}
-.captain-team-row{border:1px solid var(--border);border-radius:8px;padding:.9rem;margin-bottom:.75rem}
-.captain-team-row:last-child{margin-bottom:0}
-.captain-team-name{font-weight:700;font-size:.92rem;margin-bottom:.5rem}
-.join-code-display{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
-.join-code-value{font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;font-weight:900;letter-spacing:.15em;color:var(--amber);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:.35rem .75rem}
-.code-btn{background:var(--s3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.78rem;font-weight:600;padding:.4rem .7rem;cursor:pointer;transition:background .15s}
-.code-btn:hover{background:var(--green)}
-.role-badge{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);background:var(--s3);border-radius:10px;padding:2px 8px;margin-left:.4rem}
-.vc-section{margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--border)}
-.vc-list{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.5rem}
-.vc-chip{font-size:.78rem;background:var(--s3);border:1px solid var(--border);border-radius:14px;padding:.25rem .6rem .25rem .8rem;display:flex;align-items:center;gap:.4rem}
-.vc-chip button{background:none;border:none;color:var(--red);cursor:pointer;font-size:.85rem;padding:0;line-height:1}
-.vc-add-row{display:flex;gap:.4rem}
-.vc-add-row input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.82rem;padding:.4rem .6rem}
-.team-item{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.6rem 0;border-bottom:1px solid var(--border);flex-wrap:wrap}
-.team-item:last-child{border-bottom:none}
-.team-name{font-weight:600;font-size:.9rem}
-.team-league{font-size:.75rem;color:var(--dim)}
-.status-badge{font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 10px;border-radius:10px}
-.status-badge.approved{background:#1a3a22;color:var(--gl);border:1px solid var(--green)}
-.status-badge.pending{background:#2a2a10;color:var(--amber);border:1px solid #6a6200}
-.status-badge.rejected{background:#2a1010;color:#ff8080;border:1px solid var(--red)}
-.link-btn{background:none;border:none;color:var(--gl);font-size:.72rem;text-decoration:underline;cursor:pointer;padding:0;margin-left:.5rem}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:1000;padding:1rem}
-.modal-overlay.show{display:flex}
-.modal-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.5rem;width:100%;max-width:380px}
-.modal-box h4{font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:900;text-transform:uppercase;letter-spacing:.05em;color:var(--amber);margin-bottom:.5rem}
-.modal-box p{font-size:.8rem;color:var(--dim);margin-bottom:1rem;line-height:1.5}
-.member-option{display:flex;align-items:center;gap:.5rem;padding:.5rem;border:1px solid var(--border);border-radius:6px;margin-bottom:.4rem;cursor:pointer}
-.member-option:hover{border-color:var(--green)}
-.member-option input{accent-color:var(--green)}
-.modal-actions{display:flex;gap:.5rem;margin-top:1rem}
-.modal-actions button{flex:1;padding:.5rem;border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:.85rem;cursor:pointer;border:none}
-.modal-actions .cancel{background:var(--s3);color:var(--text)}
-.modal-actions .confirm{background:var(--green);color:white}
-
-/* Join team form */
-.join-form{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.75rem}
-.join-form input{flex:1;min-width:150px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.9rem;padding:.5rem .75rem}
-.join-form input:focus{outline:none;border-color:var(--green)}
-.join-form button{background:var(--green);border:none;border-radius:6px;color:white;font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.5rem 1.25rem;cursor:pointer}
-
-/* Profile section */
-.profile-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.25rem;margin-bottom:1rem}
-.profile-row{display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--border);font-size:.88rem;flex-wrap:wrap;gap:.5rem}
-.profile-row:last-child{border-bottom:none}
-.profile-row .label{color:var(--dim);font-size:.78rem;text-transform:uppercase;letter-spacing:.08em}
-.toggle{position:relative;display:inline-block;width:40px;height:22px}
-.toggle input{opacity:0;width:0;height:0}
-.slider{position:absolute;cursor:pointer;inset:0;background:var(--s3);border-radius:22px;transition:.3s}
-.slider::before{content:'';position:absolute;width:16px;height:16px;left:3px;bottom:3px;background:var(--dim);border-radius:50%;transition:.3s}
-input:checked+.slider{background:var(--green)}
-input:checked+.slider::before{transform:translateX(18px);background:white}
-
-.btn-profile-link{background:none;border:1px solid var(--border);border-radius:6px;color:var(--gl);font-family:'Barlow Condensed',sans-serif;font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 12px;cursor:pointer;text-decoration:none;display:inline-block}
-.btn-profile-link:hover{border-color:var(--green)}
-
+main{max-width:760px;margin:0 auto;padding:1.5rem 1rem 4rem}
+h1{font-family:'Barlow Condensed',sans-serif;font-size:1.6rem;font-weight:900;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.3rem}
+h1 span{color:var(--amber)}
+.sub{font-size:.85rem;color:var(--dim);margin-bottom:1.5rem;line-height:1.5}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.5rem;margin-bottom:1.25rem}
+.card h2{font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:var(--amber);margin-bottom:1rem}
+.field{margin-bottom:1rem}
+.field label{display:block;font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:.4rem}
+.field input,.field select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.95rem;padding:.6rem .75rem}
+.field input:focus,.field select:focus{outline:none;border-color:var(--green)}
+.fmt-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.fmt-opt{background:var(--bg);border:2px solid var(--border);border-radius:8px;padding:1rem;cursor:pointer;text-align:center;transition:border-color .15s}
+.fmt-opt.sel{border-color:var(--green);background:#1a2a1e}
+.fmt-opt .ic{font-size:1.5rem;margin-bottom:.3rem}
+.fmt-opt .nm{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.85rem;text-transform:uppercase;letter-spacing:.05em}
+.fmt-opt .dc{font-size:.72rem;color:var(--dim);margin-top:.2rem;line-height:1.4}
+.plist{display:flex;flex-direction:column;gap:.5rem;margin-bottom:.75rem}
+.prow{display:flex;align-items:center;gap:.5rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:.5rem .75rem}
+.prow span{flex:1;font-size:.9rem}
+.prow button{background:none;border:none;color:var(--red);font-size:1.1rem;cursor:pointer;padding:0 4px}
+.add-row{display:flex;gap:.5rem}
+.add-row input{flex:1}
+.btn{background:var(--green);border:none;border-radius:8px;color:white;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.7rem 1.2rem;cursor:pointer;transition:background .15s}
+.btn:hover{background:var(--gl)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-sm{padding:.45rem .9rem;font-size:.82rem}
+.btn-outline{background:none;border:1px solid var(--border);color:var(--dim)}
+.btn-outline:hover{border-color:var(--green);color:var(--text)}
+.share-box{background:#1a2a1e;border:1px solid var(--green);border-radius:8px;padding:1rem;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem}
+.share-code{font-family:'Barlow Condensed',sans-serif;font-size:1.8rem;font-weight:900;color:var(--amber);letter-spacing:.15em}
+.round-hdr{font-family:'Barlow Condensed',sans-serif;font-size:.72rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--green);margin:1.25rem 0 .6rem}
+.match{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.85rem 1rem;margin-bottom:.6rem}
+.match.done{border-color:var(--green)}
+.match.bye{opacity:.65}
+.mrow{display:flex;align-items:center;justify-content:space-between;gap:.75rem}
+.mp{flex:1;font-size:.92rem;display:flex;align-items:center;gap:.4rem}
+.mp.winner{color:var(--gl);font-weight:700}
+.mp .crown{font-size:.85rem}
+.mvs{font-size:.72rem;color:var(--dim);padding:0 .3rem}
+.mscore-inputs{display:flex;align-items:center;gap:.5rem;margin-top:.6rem;padding-top:.6rem;border-top:1px solid var(--border)}
+.mscore-inputs input{width:52px;text-align:center;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;padding:.3rem}
+.mscore-inputs span{color:var(--dim);font-size:.85rem}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th{text-align:left;font-family:'Barlow Condensed',sans-serif;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);padding:.5rem .4rem;border-bottom:1px solid var(--border)}
+td{padding:.55rem .4rem;border-bottom:1px solid var(--border)}
+tr:last-child td{border-bottom:none}
+.champ-banner{background:linear-gradient(135deg,#2a2000,#1a2a1e);border:1px solid var(--amber);border-radius:10px;padding:1.5rem;text-align:center;margin-bottom:1.5rem}
+.champ-banner .tp{font-size:2rem}
+.champ-banner .nm{font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;font-weight:900;color:var(--amber);margin-top:.3rem}
 .toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1rem;padding:.6rem 1.5rem;border-radius:6px;transition:transform .3s;z-index:999}
 .toast.show{transform:translateX(-50%) translateY(0)}
 .toast.err{background:var(--red)}
-.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle;margin-right:4px}
+.loading{text-align:center;padding:3rem;color:var(--dim)}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle;margin-right:6px}
 @keyframes sp{to{transform:rotate(360deg)}}
+.hidden{display:none}
 
-.loading{text-align:center;padding:3rem;color:var(--dim);font-size:.9rem}
-
-@media(max-width:500px){
-  .game-grid{grid-template-columns:1fr}
-  .welcome{flex-direction:column}
-}
+/* ── Turn-by-turn scoring overlay ─────────────────────────────────────── */
+#scoring-overlay{position:fixed;inset:0;background:var(--bg);z-index:500;overflow-y:auto;padding:1rem}
+.sc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.sc-close{background:none;border:1px solid var(--border);border-radius:6px;color:var(--dim);font-size:.85rem;padding:.4rem .9rem;cursor:pointer}
+.sc-sub{text-align:center;font-size:.8rem;color:var(--dim);margin-bottom:1rem}
+.sc-players{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem}
+.sc-pcard{background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:1rem;text-align:center}
+.sc-pcard.active{border-color:var(--amber)}
+.sc-pname{font-size:.85rem;color:var(--dim);margin-bottom:.3rem}
+.sc-pscore{font-family:'Barlow Condensed',sans-serif;font-size:2.4rem;font-weight:900;color:var(--text);line-height:1}
+.sc-pscore.danger{color:#ff8080}
+.sc-pscore.finishing{color:var(--amber)}
+.sc-plegs{font-size:.78rem;color:var(--dim);margin-top:.3rem}
+.sc-checkout{font-size:.72rem;color:var(--gl);margin-top:.3rem}
+.sc-input-box{text-align:center;margin-bottom:.75rem}
+.sc-throw-title{font-size:.85rem;color:var(--dim);margin-bottom:.5rem}
+#sc-score-input{width:140px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:900;background:var(--surface);border:2px solid var(--border);border-radius:8px;color:var(--text);padding:.5rem}
+.sc-numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;max-width:280px;margin:.75rem auto}
+.sc-np-btn{background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;padding:.9rem;cursor:pointer}
+.sc-np-btn.special{color:var(--red)}
+.sc-actions{display:flex;gap:.6rem;justify-content:center;margin:1rem 0}
+.sc-double-check{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:600;display:none;align-items:center;justify-content:center;padding:1rem}
+.sc-double-box{background:var(--surface);border:1px solid var(--amber);border-radius:10px;padding:1.5rem;max-width:340px;text-align:center}
+.sc-leg-history{margin-top:1.25rem;font-size:.8rem;color:var(--dim)}
+.sc-lh-row{padding:.3rem 0;border-bottom:1px solid var(--border)}
 </style>
 </head>
 <body>
 
 <header>
-  <a href="/" class="logo">Flight <span>Chalker</span></a>
-  <div class="hright">
-    <span class="username-badge" id="username-display"></span>
-    <button class="btn-signout" onclick="signOut()">Sign Out</button>
-  </div>
+  <a href="/party" class="logo">Flight <span>Chalker</span></a>
 </header>
 
-<main id="main-content" style="display:none">
-
-  <!-- Welcome -->
-  <div class="welcome">
-    <div class="welcome-text">
-      <h2>Welcome back, <span id="welcome-name">Player</span>! 🎯</h2>
-      <p>Ready to throw some darts?</p>
-    </div>
-    <div class="free-badge">✓ Free Member</div>
-  </div>
-
-  <!-- Quick access -->
-  <div class="sec-title">Quick Access</div>
-  <div class="game-grid">
-    <a href="/scorer" class="game-card">
-      <div class="icon">🎯</div>
-      <h3>Play Darts</h3>
-      <p>501, 301, Cricket, Killer and more game modes.</p>
-      <div class="go">Play now →</div>
-    </a>
-    <a href="/training" class="game-card">
-      <div class="icon">🏹</div>
-      <h3>Training Zone</h3>
-      <p>Checkout practice, around the clock, doubles training.</p>
-      <div class="go">Train now →</div>
-    </a>
-    <a href="/party" class="game-card">
-      <div class="icon">🎉</div>
-      <h3>Party Mode</h3>
-      <p>Set up a knockout or round robin tournament. Share the link - no accounts needed for guests.</p>
-      <div class="go">Start a tournament →</div>
-    </a>
-  </div>
-
-  <!-- Stats -->
-  <div class="sec-title">Your Stats</div>
-  <div class="stats-grid" id="stats-grid">
-    <div class="stat-card"><div class="val" id="stat-sessions">—</div><div class="lbl">Games Played</div></div>
-    <div class="stat-card"><div class="val" id="stat-training">—</div><div class="lbl">Training Sessions</div></div>
-    <div class="stat-card"><div class="val" id="stat-best">—</div><div class="lbl">Best Score</div></div>
-    <div class="stat-card"><div class="val" id="stat-180s">—</div><div class="lbl">180s Hit</div></div>
-  </div>
-
-  <!-- Team memberships -->
-  <div class="sec-title">My Teams</div>
-  <div class="team-card" id="captain-teams-card" style="display:none">
-    <h3>My Teams (Captain)</h3>
-    <div id="captain-teams-list"></div>
-  </div>
-
-  <div class="team-card">
-    <h3>League Teams</h3>
-    <div id="teams-list"><div class="loading"><span class="spin"></span> Loading...</div></div>
-    <div style="margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);margin-bottom:.5rem">Join a Team</div>
-      <div style="font-size:.8rem;color:var(--dim);margin-bottom:.5rem;line-height:1.5">Enter your team join code to request to join, or link your account to existing match records.</div>
-      <div class="join-form">
-        <input type="text" id="join-code" placeholder="Team join code">
-        <button onclick="requestJoinTeam()">Request to Join</button>
+<main>
+  <!-- SCREEN: choose create or join -->
+  <div id="screen-landing">
+    <h1>Party <span>Mode</span></h1>
+    <div class="sub">Set up a quick knockout or round robin tournament. Share the link and everyone can join and enter scores — no accounts needed.</div>
+    <div class="card">
+      <h2>Start a New Tournament</h2>
+      <div class="field">
+        <label>Tournament Name</label>
+        <input type="text" id="t-name" placeholder="e.g. Friday Night Party">
       </div>
-    </div>
-
-    <!-- Captain code - instant, no approval needed -->
-    <div style="margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--amber);margin-bottom:.5rem">Have a Captain Code?</div>
-      <div style="font-size:.8rem;color:var(--dim);margin-bottom:.5rem;line-height:1.5">If your league admin has given you a captain code, enter it here to take charge of your team's join code and squad.</div>
-      <div class="join-form">
-        <input type="text" id="captain-code" placeholder="Captain code">
-        <button onclick="claimCaptaincy()">Claim Captaincy</button>
-      </div>
-    </div>
-
-    <!-- Self-service account linking -->
-    <div style="margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--amber);margin-bottom:.5rem">Link to Existing Match Records</div>
-      <div style="font-size:.8rem;color:var(--dim);margin-bottom:.75rem;line-height:1.5">
-        If your captain has been recording your match scores before you created an account, link your account to claim your history. You'll need your team join code and the name used in match records.
-      </div>
-      <div style="display:flex;flex-direction:column;gap:.5rem">
-        <input type="text" id="link-team-code" placeholder="Team join code" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.9rem;padding:.5rem .75rem">
-        <div id="link-player-list" style="display:none">
-          <div style="font-size:.78rem;color:var(--dim);margin-bottom:.35rem">Select your name from the team's player list:</div>
-          <select id="link-name-sel" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.9rem;padding:.5rem .75rem;margin-bottom:.5rem">
-            <option value="">— Select your name —</option>
-          </select>
-          <div style="font-size:.78rem;color:var(--dim);margin-bottom:.35rem">Confirm your email address (must match what your captain registered):</div>
-          <input type="email" id="link-email-confirm" placeholder="Your email address" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.9rem;padding:.5rem .75rem;margin-bottom:.5rem">
-          <button onclick="selfLinkAccount()" style="width:100%;background:var(--amber);border:none;border-radius:6px;color:var(--bg);font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.55rem;cursor:pointer">Link My Account</button>
+      <div class="field">
+        <label>Format</label>
+        <div class="fmt-row">
+          <div class="fmt-opt sel" id="fmt-knockout" onclick="selectFormat('knockout')">
+            <div class="ic">🏆</div>
+            <div class="nm">Knockout</div>
+            <div class="dc">Lose once, you're out. Fast and simple.</div>
+          </div>
+          <div class="fmt-opt" id="fmt-roundrobin" onclick="selectFormat('roundrobin')">
+            <div class="ic">🔄</div>
+            <div class="nm">Round Robin</div>
+            <div class="dc">Everyone plays everyone. More darts for all.</div>
+          </div>
         </div>
-        <button id="find-team-btn" onclick="findTeamPlayers()" style="background:var(--s3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.5rem;cursor:pointer">Find My Team →</button>
       </div>
-      <div id="link-result" style="margin-top:.5rem;font-size:.8rem"></div>
+      <div class="field">
+        <label>Game</label>
+        <select id="t-startscore">
+          <option value="301">301</option>
+          <option value="501" selected>501</option>
+          <option value="601">601</option>
+          <option value="701">701</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Best of (legs per match)</label>
+        <select id="t-legs">
+          <option value="1">Single leg</option>
+          <option value="3" selected>Best of 3</option>
+          <option value="5">Best of 5</option>
+          <option value="7">Best of 7</option>
+        </select>
+      </div>
+      <div class="field" style="display:flex;align-items:center;gap:.6rem">
+        <input type="checkbox" id="t-doublefinish" checked style="width:18px;height:18px;accent-color:var(--green)">
+        <label style="margin:0;text-transform:none;font-size:.85rem;letter-spacing:0;color:var(--text)">Must finish on a double</label>
+      </div>
+      <div class="field">
+        <label>Players</label>
+        <div class="plist" id="p-list"></div>
+        <div class="add-row">
+          <input type="text" id="p-add-name" placeholder="Player name" onkeydown="if(event.key==='Enter'){addPlayerField();}">
+          <button class="btn btn-sm" onclick="addPlayerField()">Add</button>
+        </div>
+      </div>
+      <button class="btn" id="create-btn" onclick="createTournament()" style="width:100%">Create Tournament 🎯</button>
+    </div>
+
+    <div class="card">
+      <h2>Already Have a Code?</h2>
+      <div class="add-row">
+        <input type="text" id="join-code-input" placeholder="Enter tournament code" style="text-transform:uppercase" onkeydown="if(event.key==='Enter'){joinByCode();}">
+        <button class="btn btn-sm" onclick="joinByCode()">Join</button>
+      </div>
     </div>
   </div>
 
-  <!-- Profile -->
-  <div class="sec-title">Profile Settings</div>
-  <div class="profile-card">
-    <div class="profile-row">
-      <span class="label">Username</span>
-      <span id="profile-username" style="font-weight:600;font-family:'Barlow Condensed',sans-serif;font-size:1rem;color:var(--amber)"></span>
-    </div>
-    <div class="profile-row">
-      <span class="label">Email</span>
-      <span id="profile-email" style="font-size:.85rem"></span>
-    </div>
-    <div class="profile-row">
-      <span class="label">Public Leaderboards</span>
-      <label class="toggle">
-        <input type="checkbox" id="leaderboard-toggle" onchange="updateLeaderboardPref(this.checked)" checked>
-        <span class="slider"></span>
-      </label>
-    </div>
-    <div class="profile-row">
-      <span class="label">Public Profile</span>
-      <a href="#" id="profile-link" class="btn-profile-link" target="_blank">View Profile →</a>
-    </div>
-    <div class="profile-row">
-      <span class="label">Member Since</span>
-      <span id="profile-since" style="font-size:.85rem;color:var(--dim)"></span>
-    </div>
+  <!-- SCREEN: loading -->
+  <div id="screen-loading" class="loading hidden"><span class="spin"></span>Loading tournament...</div>
+
+  <!-- SCREEN: not found -->
+  <div id="screen-notfound" class="hidden" style="text-align:center;padding:3rem 1rem">
+    <h2 style="font-family:'Barlow Condensed',sans-serif;color:var(--text);margin-bottom:.5rem">Tournament Not Found</h2>
+    <p style="color:var(--dim);font-size:.85rem;margin-bottom:1rem">This code doesn't match any tournament.</p>
+    <a href="/party" style="color:var(--gl)">← Start a new one</a>
   </div>
 
+  <!-- SCREEN: tournament view -->
+  <div id="screen-tournament" class="hidden">
+    <h1 id="tv-name"><span>🎯</span></h1>
+    <div class="sub" id="tv-format"></div>
+
+    <div class="share-box">
+      <div>
+        <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.15em;color:var(--dim);margin-bottom:.3rem">Share this code</div>
+        <div class="share-code" id="tv-code">------</div>
+      </div>
+      <button class="btn btn-sm" onclick="copyPartyLink()">Copy Link</button>
+    </div>
+
+    <div id="tv-champion"></div>
+    <div id="tv-standings"></div>
+    <div id="tv-bracket"></div>
+  </div>
 </main>
 
-<div id="loading-screen" class="loading" style="padding:4rem">
-  <span class="spin"></span> Loading your dashboard...
+<!-- Turn-by-turn scoring overlay -->
+<div id="scoring-overlay" class="hidden">
+  <div class="sc-top">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;text-transform:uppercase;letter-spacing:.05em">🎯 Live Score</div>
+    <button class="sc-close" onclick="closeScoring()">← Back to Tournament</button>
+  </div>
+  <div class="sc-sub" id="sc-sub">Leg 1 of 3</div>
+
+  <div class="sc-players" id="sc-players"></div>
+
+  <div class="sc-input-box">
+    <div class="sc-throw-title" id="sc-throw-title"></div>
+    <input type="text" id="sc-score-input" readonly value="">
+  </div>
+
+  <div class="sc-numpad" id="sc-numpad"></div>
+
+  <div class="sc-actions">
+    <button class="btn btn-outline btn-sm" onclick="scUndo()">Undo</button>
+    <button class="btn btn-sm" onclick="scSubmit()">Enter</button>
+  </div>
+
+  <div class="sc-leg-history hidden" id="sc-leg-history">
+    <div class="round-hdr">Legs</div>
+    <div id="sc-leg-history-rows"></div>
+  </div>
+</div>
+
+<div class="sc-double-check" id="sc-double-check">
+  <div class="sc-double-box">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;margin-bottom:.5rem">Finished on a double?</div>
+    <div style="font-size:.85rem;color:var(--dim);margin-bottom:1rem">Scored <span id="sc-double-score"></span> to finish this leg</div>
+    <div style="display:flex;gap:.6rem;justify-content:center">
+      <button class="btn btn-sm" onclick="scConfirmDouble(true)">Yes, double</button>
+      <button class="btn btn-outline btn-sm" onclick="scConfirmDouble(false)">No, bust</button>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<div class="modal-overlay" id="captain-change-modal">
-  <div class="modal-box">
-    <h4>Request Change of Captain</h4>
-    <p>Choose who you'd like to propose as the new captain. Your league admin will review and approve the change.</p>
-    <div id="captain-change-members">Loading squad...</div>
-    <div class="modal-actions">
-      <button class="cancel" onclick="closeCaptainChangeModal()">Cancel</button>
-      <button class="confirm" onclick="submitCaptainChangeRequest()">Submit Request</button>
-    </div>
-  </div>
-</div>
-
 <script>
-const sb = window.supabase.createClient(
+const sbClient = window.supabase.createClient(
   'https://xkovqamknwyjzlgijcel.supabase.co',
   'sb_publishable_1zeVlEGjUdGNwA-i8pktHg_nSjRXYEQ'
 );
-const NEON_URL = 'https://ep-shiny-mouse-abtjiaqk.eu-west-2.aws.neon.tech';
+const SB_URL = sbClient.supabaseUrl;
+const SB_KEY = sbClient.supabaseKey;
 
-function genJoinCode(){
-  var chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no ambiguous chars (0/O, 1/I)
-  var code='';
-  for(var i=0;i<6;i++)code+=chars[Math.floor(Math.random()*chars.length)];
-  return code;
+// ── Simple REST helpers (mirrors the pattern used elsewhere in the app) ──
+async function sbGet(path){
+  const res=await fetch(SB_URL+'/rest/v1/'+path,{
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
+  });
+  if(!res.ok)throw new Error('Request failed: '+res.status);
+  return res.json();
+}
+async function sbInsert(table, rows){
+  const res=await fetch(SB_URL+'/rest/v1/'+table,{
+    method:'POST',
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
+    body:JSON.stringify(rows)
+  });
+  var out=await res.json();
+  if(!res.ok)throw new Error((out&&out.message)||'Insert failed');
+  return out;
+}
+async function sbUpdate(table, filter, body){
+  const res=await fetch(SB_URL+'/rest/v1/'+table+'?'+filter,{
+    method:'PATCH',
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+    body:JSON.stringify(body)
+  });
+  if(!res.ok){var e=await res.json().catch(function(){return{};});throw new Error(e.message||'Update failed');}
 }
 
-function toast(msg, isErr=false){
+const CHECKOUTS={
+  170:'T20 T20 Bull',167:'T20 T19 Bull',164:'T20 T18 Bull',161:'T20 T17 Bull',
+  160:'T20 T20 D20',158:'T20 T20 D19',157:'T20 T19 D20',156:'T20 T20 D18',
+  155:'T20 T19 D19',154:'T20 T18 D20',153:'T20 T19 D18',152:'T20 T20 D16',
+  151:'T20 T17 D20',150:'T20 T18 D18',149:'T20 T19 D16',148:'T20 T16 D20',
+  147:'T20 T17 D18',146:'T20 T18 D16',145:'T20 T15 D20',144:'T20 T20 D12',
+  143:'T20 T17 D16',142:'T20 T14 D20',141:'T20 T19 D12',140:'T20 T16 D16',
+  139:'T20 T13 D20',138:'T20 T18 D12',137:'T20 T19 D10',136:'T20 T20 D8',
+  135:'T20 T17 D12',134:'T20 T14 D16',133:'T20 T19 D8',132:'T20 T16 D12',
+  131:'T20 T13 D16',130:'T20 T18 D8',129:'T19 T16 D12',128:'T18 T14 D16',
+  127:'T20 T17 D8',126:'T19 T19 D6',125:'T20 T15 D10',124:'T20 T14 D11',
+  123:'T19 T16 D9',122:'T18 T18 D7',121:'T20 T11 D14',120:'T20 S20 D20',
+  119:'T19 T12 D13',118:'T20 S18 D20',117:'T20 S17 D20',116:'T20 S16 D20',
+  115:'T20 S15 D20',114:'T20 S14 D20',113:'T20 S13 D20',112:'T20 S12 D20',
+  111:'T20 S11 D20',110:'T20 S10 D20',109:'T20 S9 D20',108:'T20 S8 D20',
+  107:'T19 S10 D20',106:'T20 S6 D20',105:'T20 S5 D20',104:'T20 S4 D20',
+  103:'T20 S3 D20',102:'T20 S2 D20',101:'T20 S1 D20',100:'T20 D20',
+  99:'T19 S10 D16',98:'T20 D19',97:'T19 D20',96:'T20 D18',95:'T19 D19',
+  94:'T18 D20',93:'T19 D18',92:'T20 D16',91:'T17 D20',90:'T18 D18',
+  89:'T19 D16',88:'T20 D14',87:'T17 D18',86:'T18 D16',85:'T15 D20',
+  84:'T20 D12',83:'T17 D16',82:'T14 D20',81:'T19 D12',80:'T16 D16',
+  79:'T13 D20',78:'T18 D12',77:'T19 D10',76:'T20 D8',75:'T17 D12',
+  74:'T14 D16',73:'T19 D8',72:'T16 D12',71:'T13 D16',70:'T18 D8',
+  69:'T19 D6',68:'T20 D4',67:'T17 D8',66:'T10 D18',65:'T19 D4',
+  64:'T16 D8',63:'T17 D6',62:'T10 D16',61:'T15 D8',60:'S20 D20',
+  59:'S19 D20',58:'S18 D20',57:'S17 D20',56:'T16 D4',55:'S15 D20',
+  54:'S14 D20',53:'S13 D20',52:'S12 D20',51:'S11 D20',50:'S10 D20',
+  49:'S9 D20',48:'S16 D16',47:'S15 D16',46:'S14 D16',45:'S13 D16',
+  44:'S12 D16',43:'S11 D16',42:'S10 D16',41:'S9 D16',40:'D20',
+  38:'D19',36:'D18',34:'D17',32:'D16',30:'D15',28:'D14',26:'D13',
+  24:'D12',22:'D11',20:'D10',18:'D9',16:'D8',14:'D7',12:'D6',
+  10:'D5',8:'D4',6:'D3',4:'D2',2:'D1'
+};
+
+function toast(msg,isErr=false){
   var t=document.getElementById('toast');
-  t.textContent=msg;
-  t.className='toast'+(isErr?' err':'')+' show';
-  setTimeout(function(){t.classList.remove('show');},3000);
+  t.textContent=msg;t.className='toast'+(isErr?' err':'')+' show';
+  setTimeout(function(){t.classList.remove('show');},2500);
 }
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-async function findTeamPlayers(){
-  var code=document.getElementById('link-team-code').value.trim().toUpperCase();
-  var resultEl=document.getElementById('link-result');
-  if(!code){resultEl.textContent='Please enter your team join code';resultEl.style.color='var(--red)';return;}
-  var btn=document.getElementById('find-team-btn');
-  btn.textContent='Searching...';btn.disabled=true;
-  try{
-    // Look up team by join code in Supabase leagues project
-    var res=await fetch('https://xkovqamknwyjzlgijcel.supabase.co/rest/v1/teams?join_code=eq.'+code+'&select=id,team_name,league_id',{
-      headers:{
-        'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhrb3ZxYW1rbnd5anpsZ2lqY2VsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwNzM5NzQsImV4cCI6MjA2MjY0OTk3NH0.Ypm_JGBQQMz3OeHMgbdkJFzTZaHpv8MXGajCAHH-0Q0',
-        'Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhrb3ZxYW1rbnd5anpsZ2lqY2VsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwNzM5NzQsImV4cCI6MjA2MjY0OTk3NH0.Ypm_JGBQQMz3OeHMgbdkJFzTZaHpv8MXGajCAHH-0Q0'
-      }
-    });
-    var teams=await res.json();
-    if(!teams||!teams.length){
-      resultEl.textContent='Team not found. Please check your join code.';
-      resultEl.style.color='var(--red)';
-      btn.textContent='Find My Team →';btn.disabled=false;
-      return;
-    }
-    var team=teams[0];
-    // Get players for this team from team app Supabase
-    var res2=await fetch('https://jiihvnrhnqylwcdwxcpav.supabase.co/rest/v1/players?team_id=eq.'+team.id+'&select=name,email&order=name.asc',{
-      headers:{
-        'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppaSVudnJobnF5bHdjZHd4Y3BhdiIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzgxMjI4ODk1LCJleHAiOjIwOTY4MDQ4OTV9.qBRA4uwAUp7Oi1_j1Azid-2ZK3xL8xt7QHDaAneqO9M',
-        'Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppaSVudnJobnF5bHdjZHd4Y3BhdiIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzgxMjI4ODk1LCJleHAiOjIwOTY4MDQ4OTV9.qBRA4uwAUp7Oi1_j1Azid-2ZK3xL8xt7QHDaAneqO9M'
-      }
-    });
-    var teamPlayers=await res2.json();
-    if(!teamPlayers||!teamPlayers.length){
-      resultEl.textContent='No players found for this team yet.';
-      resultEl.style.color='var(--dim)';
-      btn.textContent='Find My Team →';btn.disabled=false;
-      return;
-    }
-    // Populate dropdown
-    var sel=document.getElementById('link-name-sel');
-    sel.innerHTML='<option value="">— Select your name —</option>'
-      +teamPlayers.map(function(p){
-        return '<option value="'+p.name+'" data-email="'+(p.email||'')+'">'
-          +p.name+(p.email?' ✉':'')
-          +'</option>';
-      }).join('');
-    // Store team info
-    localStorage.setItem('fc_link_team',JSON.stringify({id:team.id,name:team.team_name,code:code}));
-    document.getElementById('link-player-list').style.display='block';
-    document.getElementById('find-team-btn').style.display='none';
-    resultEl.textContent='Found '+team.team_name+' — select your name below.';
-    resultEl.style.color='var(--gl)';
-  }catch(e){
-    resultEl.textContent='Error finding team: '+e.message;
-    resultEl.style.color='var(--red)';
-    btn.textContent='Find My Team →';btn.disabled=false;
-  }
-}
-
-async function selfLinkAccount(){
-  var sel=document.getElementById('link-name-sel');
-  var selectedName=sel.value;
-  var selectedOpt=sel.options[sel.selectedIndex];
-  var storedEmail=selectedOpt?selectedOpt.getAttribute('data-email'):'';
-  var enteredEmail=document.getElementById('link-email-confirm').value.trim().toLowerCase();
-  var resultEl=document.getElementById('link-result');
-  if(!selectedName){resultEl.textContent='Please select your name';resultEl.style.color='var(--red)';return;}
-  // Verify email matches if one was stored
-  if(storedEmail&&enteredEmail!==storedEmail){
-    resultEl.textContent='Email does not match our records. Please check with your captain.';
-    resultEl.style.color='var(--red)';
-    return;
-  }
-  // If no email stored, check against their account email
-  var clerkEmail=window.currentUser&&window.currentUser.emailAddresses[0]?window.currentUser.emailAddresses[0].emailAddress.toLowerCase():'';
-  if(!storedEmail&&enteredEmail!==clerkEmail){
-    resultEl.textContent='Email must match your registered account email.';
-    resultEl.style.color='var(--red)';
-    return;
-  }
-  // Save link
-  var teamData=JSON.parse(localStorage.getItem('fc_link_team')||'{}');
-  var links=JSON.parse(localStorage.getItem('fc_memberships')||'[]');
-  var existing=links.find(function(l){return l.team_id===teamData.id;});
-  if(existing){
-    resultEl.textContent='Already linked to this team!';
-    resultEl.style.color='var(--dim)';
-    return;
-  }
-  links.push({
-    team_id:teamData.id,
-    team_name:teamData.name,
-    league_name:'Linked via join code',
-    player_name:selectedName,
-    status:'approved',
-    linked_at:new Date().toISOString()
+function showScreen(id){
+  ['screen-landing','screen-loading','screen-notfound','screen-tournament'].forEach(function(s){
+    document.getElementById(s).classList.toggle('hidden', s!==id);
   });
-  localStorage.setItem('fc_memberships',JSON.stringify(links));
-  resultEl.textContent='Success! Your account is now linked to '+selectedName+' in '+teamData.name+'. Your match history will appear on your profile.';
-  resultEl.style.color='var(--gl)';
-  document.getElementById('link-player-list').style.display='none';
-  loadTeams(window.currentUser);
 }
 
-async function signOut(){
-  try{
-    await sb.auth.signOut();
-    window.location.href='/';
-  }catch(e){window.location.href='/';}
+// ── Create flow ──────────────────────────────────────────────────────────
+var selectedFormat='knockout';
+var pendingPlayers=[];
+
+function selectFormat(f){
+  selectedFormat=f;
+  document.getElementById('fmt-knockout').classList.toggle('sel',f==='knockout');
+  document.getElementById('fmt-roundrobin').classList.toggle('sel',f==='roundrobin');
 }
 
-async function loadDashboard(user){
-  // Set username display
-  var username = user.username || user.firstName || user.emailAddresses[0].emailAddress.split('@')[0];
-  document.getElementById('username-display').textContent = '@'+username;
-  document.getElementById('welcome-name').textContent = username;
-  document.getElementById('profile-username').textContent = '@'+username;
-  document.getElementById('profile-email').textContent = user.emailAddresses[0]?.emailAddress || '';
-  document.getElementById('profile-link').href = '/player/'+username;
-
-  // Member since
-  var since = new Date(user.createdAt).toLocaleDateString('en-GB',{month:'long',year:'numeric'});
-  document.getElementById('profile-since').textContent = since;
-
-  // Load stats from localStorage for now (will connect to Neon later)
-  var sessions = parseInt(localStorage.getItem('fc_game_sessions')||'0');
-  var training = parseInt(localStorage.getItem('fc_training_sessions')||'0');
-  var best = localStorage.getItem('fc_best_score')||'—';
-  var s180 = parseInt(localStorage.getItem('fc_180s')||'0');
-  document.getElementById('stat-sessions').textContent = sessions||'—';
-  document.getElementById('stat-training').textContent = training||'—';
-  document.getElementById('stat-best').textContent = best;
-  document.getElementById('stat-180s').textContent = s180||'—';
-
-  // Load team memberships
-  loadTeams(user);
-
-  // If the player arrived via a captain's shared invite link (/join?code=XXX),
-  // pre-fill the join code so they don't have to type it in.
-  var pendingCode = localStorage.getItem('fc_pending_join_code');
-  if(pendingCode){
-    var codeInput = document.getElementById('join-code');
-    if(codeInput) codeInput.value = pendingCode;
-    localStorage.removeItem('fc_pending_join_code');
+function renderPlayerList(){
+  var el=document.getElementById('p-list');
+  if(!pendingPlayers.length){
+    el.innerHTML='<div style="font-size:.82rem;color:var(--dim)">No players added yet.</div>';
+    return;
   }
-
-  // Leaderboard preference
-  var optIn = localStorage.getItem('fc_leaderboard_opt');
-  document.getElementById('leaderboard-toggle').checked = optIn !== '0';
-
-  // Show dashboard
-  document.getElementById('loading-screen').style.display = 'none';
-  document.getElementById('main-content').style.display = 'block';
+  el.innerHTML=pendingPlayers.map(function(name,i){
+    return '<div class="prow"><span>'+esc(name)+'</span><button onclick="removePlayerField('+i+')">×</button></div>';
+  }).join('');
 }
 
-// Shows join codes for any teams this user captains, with copy + share.
-// ASSUMPTION: team_memberships has a 'role' column with value 'captain'.
-// If your actual column/value differs, this is the one place to change it.
-// Shows join codes for any teams this user captains OR vice-captains, with
-// copy + share. Only the primary captain gets add/remove vice-captain controls.
-// ASSUMPTION: public.users has 'email' and 'username' columns for lookup -
-// adjust the lookup query below if yours differ.
-var captainTeamsData = [];
+function addPlayerField(){
+  var inp=document.getElementById('p-add-name');
+  var name=inp.value.trim();
+  if(!name)return;
+  pendingPlayers.push(name);
+  inp.value='';
+  inp.focus();
+  renderPlayerList();
+}
+function removePlayerField(i){
+  pendingPlayers.splice(i,1);
+  renderPlayerList();
+}
 
-async function loadCaptainTeams(user){
-  var card=document.getElementById('captain-teams-card');
-  var listEl=document.getElementById('captain-teams-list');
+function genShareCode(){
+  var chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  var c='';
+  for(var i=0;i<6;i++)c+=chars[Math.floor(Math.random()*chars.length)];
+  return c;
+}
+
+async function createTournament(){
+  var name=document.getElementById('t-name').value.trim()||'Party Tournament';
+  var legs=parseInt(document.getElementById('t-legs').value);
+  var startScore=parseInt(document.getElementById('t-startscore').value);
+  var doubleFinish=document.getElementById('t-doublefinish').checked;
+  if(pendingPlayers.length<2){
+    toast('Add at least 2 players',true);
+    return;
+  }
+  if(selectedFormat==='knockout' && pendingPlayers.length>64){
+    toast('Knockout supports up to 64 players',true);
+    return;
+  }
+  var btn=document.getElementById('create-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spin"></span>Creating...';
+
   try{
-    var { data:ownedTeams, error:ownErr } = await sb
-      .from('teams').select('id, team_name, join_code, captain_user_id')
-      .eq('captain_user_id', user.id);
-    if(ownErr) throw ownErr;
+    var shareCode=genShareCode();
+    var tRows=await sbInsert('party_tournaments',[{name:name,format:selectedFormat,share_code:shareCode,legs_per_match:legs,start_score:startScore,double_finish:doubleFinish,status:'active'}]);
+    var tournament=tRows[0];
 
-    // Vice-captain lookup is wrapped in its own try/catch so that if
-    // team_vice_captains is missing or errors, captains still see their
-    // own teams below instead of the whole card silently disappearing.
-    var viceTeams = [];
-    try{
-      var { data:viceRows, error:viceErr } = await sb
-        .from('team_vice_captains').select('team_id')
-        .eq('user_id', user.id);
-      if(viceErr) throw viceErr;
+    // Insert players
+    var playerRows=pendingPlayers.map(function(n){return {tournament_id:tournament.id,name:n};});
+    var players=await sbInsert('party_players', playerRows);
 
-      var viceTeamIds = (viceRows||[]).map(function(r){return r.team_id;});
-      if(viceTeamIds.length){
-        var { data:vt, error:vtErr } = await sb
-          .from('teams').select('id, team_name, join_code, captain_user_id')
-          .in('id', viceTeamIds);
-        if(vtErr) throw vtErr;
-        viceTeams = vt||[];
-      }
-    }catch(viceLookupErr){
-      console.error('Vice-captain lookup failed (non-fatal, showing owned teams only):', viceLookupErr);
+    if(selectedFormat==='knockout'){
+      await generateKnockoutRound1(tournament.id, players);
+    }else{
+      await generateRoundRobin(tournament.id, players);
     }
 
-    // Merge, tagging each with the viewer's role on that team
-    var byId = {};
-    (ownedTeams||[]).forEach(function(t){ byId[t.id] = Object.assign({},t,{myRole:'captain'}); });
-    viceTeams.forEach(function(t){ if(!byId[t.id]) byId[t.id] = Object.assign({},t,{myRole:'vice_captain'}); });
-    captainTeamsData = Object.values(byId);
-
-    if(!captainTeamsData.length){ card.style.display='none'; return; }
-    card.style.display='block';
-    await renderCaptainTeams();
+    window.location.href='/party?code='+shareCode;
   }catch(e){
-    console.error('loadCaptainTeams error:',e);
-    card.style.display='none';
-    toast('Could not load your captain teams: '+(e.message||'unknown error'),true);
+    console.error('createTournament error:',e);
+    toast('Error: '+e.message,true);
+    btn.disabled=false;btn.innerHTML='Create Tournament 🎯';
   }
 }
 
-async function renderCaptainTeams(){
-  var listEl=document.getElementById('captain-teams-list');
-  var rowsHtml = await Promise.all(captainTeamsData.map(async function(t){
-    // A captain team can reach this dashboard without ever having a
-    // join_code generated (e.g. claimed via /dashboard rather than the
-    // team app's Squad tab, which is the only other place a code gets
-    // created). Generate and persist one here too so it's never blank.
-    if(!t.join_code && t.myRole==='captain'){
-      var newCode = genJoinCode();
-      try{
-        var { error:codeErr } = await sb.from('teams')
-          .update({ join_code:newCode }).eq('id', t.id);
-        if(!codeErr){
-          t.join_code = newCode;
-          var idx = captainTeamsData.findIndex(function(x){return x.id===t.id;});
-          if(idx>-1) captainTeamsData[idx].join_code = newCode;
-        }else{
-          console.error('Could not generate join code:', codeErr);
-          toast('Could not generate a join code: '+(codeErr.message||'unknown error'),true);
-        }
-      }catch(genErr){
-        console.error('Could not generate join code:', genErr);
-        toast('Could not generate a join code: '+(genErr.message||'unknown error'),true);
+async function joinByCode(){
+  var code=document.getElementById('join-code-input').value.trim().toUpperCase();
+  if(!code){toast('Enter a code',true);return;}
+  window.location.href='/party?code='+code;
+}
+
+// ── Bracket generation ──────────────────────────────────────────────────
+function shuffle(arr){
+  var a=arr.slice();
+  for(var i=a.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var tmp=a[i];a[i]=a[j];a[j]=tmp;
+  }
+  return a;
+}
+
+async function insertMatches(rows){
+  return await sbInsert('party_matches', rows);
+}
+
+async function generateKnockoutRound1(tournamentId, players){
+  var shuffled=shuffle(players);
+  var n=shuffled.length;
+  var bracketSize=1;
+  while(bracketSize<n)bracketSize*=2;
+  var slots=shuffled.slice();
+  while(slots.length<bracketSize)slots.push(null); // byes fill remaining slots
+
+  var matches=[];
+  var order=0;
+  for(var i=0;i<slots.length;i+=2){
+    var p1=slots[i], p2=slots[i+1];
+    var isBye = !p1 || !p2;
+    var winner = isBye ? (p1||p2) : null;
+    matches.push({
+      tournament_id:tournamentId, round:1, match_order:order++,
+      player1_id:p1?p1.id:null, player2_id:p2?p2.id:null,
+      winner_id: winner?winner.id:null,
+      is_bye:isBye, status: isBye?'complete':'pending'
+    });
+  }
+  await insertMatches(matches);
+  await maybeAdvanceKnockout(tournamentId);
+}
+
+// After any match completes, check if the whole round is done and generate
+// the next round pairing the winners in order. Repeats until only the
+// final round remains, or auto-advances through bye-only rounds.
+async function maybeAdvanceKnockout(tournamentId){
+  var rows=await sbGet('party_matches?tournament_id=eq.'+tournamentId+'&order=round.asc,match_order.asc');
+  if(!rows||!rows.length)return;
+  var maxRound=Math.max.apply(null, rows.map(function(m){return m.round;}));
+  var currentRoundMatches=rows.filter(function(m){return m.round===maxRound;});
+  var allDone=currentRoundMatches.every(function(m){return m.status==='complete';});
+  if(!allDone)return;
+  if(currentRoundMatches.length===1){
+    // Final complete - mark tournament finished
+    await sbUpdate('party_tournaments','id=eq.'+tournamentId,{status:'complete'});
+    return;
+  }
+  // Build next round from winners in match_order sequence
+  var winners=currentRoundMatches.sort(function(a,b){return a.match_order-b.match_order;})
+    .map(function(m){return m.winner_id;});
+  var nextRound=maxRound+1;
+  var matches=[];
+  var order=0;
+  for(var i=0;i<winners.length;i+=2){
+    var w1=winners[i], w2=winners[i+1];
+    var isBye = !w1 || !w2;
+    var winner = isBye ? (w1||w2) : null;
+    matches.push({
+      tournament_id:tournamentId, round:nextRound, match_order:order++,
+      player1_id:w1||null, player2_id:w2||null,
+      winner_id: winner||null,
+      is_bye:isBye, status: isBye?'complete':'pending'
+    });
+  }
+  await insertMatches(matches);
+  await maybeAdvanceKnockout(tournamentId); // handles chained bye rounds
+}
+
+async function generateRoundRobin(tournamentId, players){
+  var list=players.slice();
+  if(list.length%2===1)list.push(null); // bye slot
+  var n=list.length;
+  var rounds=n-1;
+  var matches=[];
+  var arr=list.slice();
+  for(var r=0;r<rounds;r++){
+    var order=0;
+    for(var i=0;i<n/2;i++){
+      var p1=arr[i], p2=arr[n-1-i];
+      if(p1&&p2){
+        matches.push({
+          tournament_id:tournamentId, round:r+1, match_order:order++,
+          player1_id:p1.id, player2_id:p2.id, winner_id:null,
+          is_bye:false, status:'pending'
+        });
       }
     }
-
-    var safeCode = (t.join_code||'').replace(/"/g,'&quot;');
-    var safeName = (t.team_name||'').replace(/"/g,'&quot;');
-    var roleLabel = t.myRole==='captain' ? 'Captain' : 'Vice Captain';
-
-    var vcHtml = '';
-    if(t.myRole==='captain'){
-      var { data:vcRows } = await sb
-        .from('team_vice_captains').select('user_id').eq('team_id', t.id);
-      var vcUserIds = (vcRows||[]).map(function(r){return r.user_id;});
-      var vcNames = [];
-      if(vcUserIds.length){
-        var { data:vcUsers } = await sb.from('users').select('id, username, email').in('id', vcUserIds);
-        vcNames = vcUsers||[];
-      }
-      vcHtml = '<div class="vc-section">'
-        +'<div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:.4rem">Vice Captains</div>'
-        +'<div class="vc-list">'
-          + (vcNames.length ? vcNames.map(function(u){
-              return '<span class="vc-chip">'+(u.username||u.email||'Player')
-                +'<button onclick="removeViceCaptain(&quot;'+t.id+'&quot;,&quot;'+u.id+'&quot;)" title="Remove">×</button></span>';
-            }).join('') : '<span style="font-size:.78rem;color:var(--dim)">None yet</span>')
-        +'</div>'
-        +'<div class="vc-add-row">'
-          +'<input type="text" id="vc-input-'+t.id+'" placeholder="Email or username">'
-          +'<button class="code-btn" onclick="addViceCaptain(&quot;'+t.id+'&quot;)">Add</button>'
-        +'</div>'
-      +'</div>';
-    }
-
-    return '<div class="captain-team-row">'
-      +'<div class="captain-team-name">'+(t.team_name||'Team')+'<span class="role-badge">'+roleLabel+'</span></div>'
-      +'<div class="join-code-display">'
-        +'<span class="join-code-value">'+(t.join_code||'—')+'</span>'
-        +'<button class="code-btn" onclick="copyJoinCode(&quot;'+safeCode+'&quot;)">Copy Code</button>'
-        +'<button class="code-btn" onclick="shareJoinCode(&quot;'+safeCode+'&quot;,&quot;'+safeName+'&quot;)">Share</button>'
-      +'</div>'
-      + vcHtml
-    +'</div>';
-  }));
-  listEl.innerHTML = rowsHtml.join('');
+    // rotate all but the first element
+    var fixed=arr[0];
+    var rest=arr.slice(1);
+    rest.unshift(rest.pop());
+    arr=[fixed].concat(rest);
+  }
+  await insertMatches(matches);
 }
 
-async function addViceCaptain(teamId){
-  var input = document.getElementById('vc-input-'+teamId);
-  var identifier = input.value.trim();
-  if(!identifier){ toast('Enter an email or username first',true); return; }
+// ── View / join a tournament ─────────────────────────────────────────────
+var currentTournament=null, currentPlayers=[], currentMatches=[];
+
+function playerName(id){
+  if(!id)return 'BYE';
+  var p=currentPlayers.find(function(p){return p.id===id;});
+  return p?p.name:'Unknown';
+}
+
+async function loadTournamentByCode(code){
+  showScreen('screen-loading');
   try{
-    var query = sb.from('users').select('id').limit(1);
-    query = identifier.includes('@') ? query.eq('email', identifier) : query.eq('username', identifier);
-    var { data:found, error:lookupErr } = await query.single();
-    if(lookupErr || !found){ toast('No player found with that email/username',true); return; }
-
-    var { error:insertErr } = await sb.from('team_vice_captains')
-      .insert({ team_id:teamId, user_id:found.id });
-    if(insertErr) throw insertErr;
-
-    toast('Vice captain added!');
-    input.value='';
-    var t = captainTeamsData.find(function(x){return x.id===teamId;});
-    await loadCaptainTeams(window.currentUser); // refresh from source of truth
+    var tRows=await sbGet('party_tournaments?share_code=eq.'+encodeURIComponent(code)+'&select=*');
+    if(!tRows||!tRows.length){showScreen('screen-notfound');return;}
+    currentTournament=tRows[0];
+    currentPlayers=await sbGet('party_players?tournament_id=eq.'+currentTournament.id+'&select=*');
+    currentMatches=await sbGet('party_matches?tournament_id=eq.'+currentTournament.id+'&order=round.asc,match_order.asc&select=*');
+    renderTournament();
+    showScreen('screen-tournament');
   }catch(e){
-    console.error('addViceCaptain error:',e);
-    toast('Could not add vice captain: '+e.message,true);
+    console.error('loadTournamentByCode error:',e);
+    toast('Could not load tournament: '+e.message,true);
+    showScreen('screen-notfound');
   }
 }
 
-async function removeViceCaptain(teamId, userId){
-  if(!confirm('Remove this vice captain?')) return;
-  try{
-    var { error } = await sb.from('team_vice_captains')
-      .delete().eq('team_id', teamId).eq('user_id', userId);
-    if(error) throw error;
-    toast('Vice captain removed');
-    await loadCaptainTeams(window.currentUser);
-  }catch(e){
-    console.error('removeViceCaptain error:',e);
-    toast('Could not remove vice captain: '+e.message,true);
-  }
-}
-
-function copyJoinCode(code){
-  navigator.clipboard.writeText(code).then(function(){
-    toast('Join code copied!');
+function copyPartyLink(){
+  var url='https://flightchalker.co.uk/party?code='+currentTournament.share_code;
+  navigator.clipboard.writeText(url).then(function(){
+    toast('Link copied!');
   }).catch(function(){
-    toast('Could not copy - code is '+code,true);
+    toast(url);
   });
 }
 
-function shareJoinCode(code, teamName){
-  var link='https://flightchalker.co.uk/join?code='+encodeURIComponent(code);
-  var text='Join '+(teamName||'my team')+' on Flight Chalker! Use code '+code+' or tap this link: '+link;
-  if(navigator.share){
-    navigator.share({ title:'Join '+(teamName||'my team')+' on Flight Chalker', text:text, url:link })
-      .catch(function(){ /* user cancelled share - ignore */ });
+function renderTournament(){
+  document.getElementById('tv-name').innerHTML=esc(currentTournament.name)+' <span>🎯</span>';
+  var fmtLabel = currentTournament.format==='knockout' ? 'Knockout' : 'Round Robin';
+  document.getElementById('tv-format').textContent=fmtLabel+' · '+currentTournament.start_score+' · Best of '+currentTournament.legs_per_match+' · '+currentPlayers.length+' players';
+  document.getElementById('tv-code').textContent=currentTournament.share_code;
+
+  var champEl=document.getElementById('tv-champion');
+  if(currentTournament.status==='complete'){
+    var champion=findChampion();
+    champEl.innerHTML = champion ? (
+      '<div class="champ-banner"><div class="tp">🏆</div><div class="nm">'+esc(champion)+' wins!</div></div>'
+    ) : '';
   }else{
-    navigator.clipboard.writeText(text).then(function(){
-      toast('Invite link copied!');
-    }).catch(function(){
-      toast('Could not copy - link is '+link,true);
+    champEl.innerHTML='';
+  }
+
+  if(currentTournament.format==='roundrobin'){
+    document.getElementById('tv-standings').innerHTML=renderStandings();
+  }else{
+    document.getElementById('tv-standings').innerHTML='';
+  }
+
+  document.getElementById('tv-bracket').innerHTML=renderMatches();
+}
+
+function findChampion(){
+  var maxRound=Math.max.apply(null, currentMatches.map(function(m){return m.round;}));
+  var finalMatches=currentMatches.filter(function(m){return m.round===maxRound;});
+  if(finalMatches.length!==1||finalMatches[0].status!=='complete')return null;
+  return playerName(finalMatches[0].winner_id);
+}
+
+function renderStandings(){
+  var stats={};
+  currentPlayers.forEach(function(p){stats[p.id]={name:p.name,played:0,won:0,drawn:0,lost:0,legsFor:0,legsAgainst:0,pts:0};});
+  currentMatches.forEach(function(m){
+    if(m.status!=='complete'||m.is_bye)return;
+    if(!m.player1_id||!m.player2_id)return;
+    var s1=stats[m.player1_id], s2=stats[m.player2_id];
+    if(!s1||!s2)return;
+    s1.played++;s2.played++;
+    s1.legsFor+=m.player1_legs;s1.legsAgainst+=m.player2_legs;
+    s2.legsFor+=m.player2_legs;s2.legsAgainst+=m.player1_legs;
+    if(m.player1_legs>m.player2_legs){s1.won++;s1.pts+=2;s2.lost++;}
+    else if(m.player2_legs>m.player1_legs){s2.won++;s2.pts+=2;s1.lost++;}
+    else{s1.drawn++;s2.drawn++;s1.pts++;s2.pts++;}
+  });
+  var rows=Object.values(stats).sort(function(a,b){
+    if(b.pts!==a.pts)return b.pts-a.pts;
+    return (b.legsFor-b.legsAgainst)-(a.legsFor-a.legsAgainst);
+  });
+  var html='<div class="round-hdr">Standings</div><table><tr><th>Player</th><th>P</th><th>W</th><th>D</th><th>L</th><th>Legs</th><th>Pts</th></tr>';
+  rows.forEach(function(r){
+    html+='<tr><td>'+esc(r.name)+'</td><td>'+r.played+'</td><td>'+r.won+'</td><td>'+r.drawn+'</td><td>'+r.lost+'</td><td>'+r.legsFor+'-'+r.legsAgainst+'</td><td>'+r.pts+'</td></tr>';
+  });
+  html+='</table>';
+  return html;
+}
+
+function renderMatches(){
+  var byRound={};
+  currentMatches.forEach(function(m){
+    (byRound[m.round]=byRound[m.round]||[]).push(m);
+  });
+  var rounds=Object.keys(byRound).map(Number).sort(function(a,b){return a-b;});
+  var maxRound=rounds[rounds.length-1];
+  var html='';
+  rounds.forEach(function(r){
+    var label = currentTournament.format==='knockout'
+      ? (r===maxRound ? 'Final' : (r===maxRound-1 ? 'Semi-Final' : 'Round '+r))
+      : 'Round '+r;
+    html+='<div class="round-hdr">'+label+'</div>';
+    byRound[r].sort(function(a,b){return a.match_order-b.match_order;}).forEach(function(m){
+      html+=renderMatchCard(m);
     });
+  });
+  return html;
+}
+
+function renderMatchCard(m){
+  var p1=playerName(m.player1_id), p2=playerName(m.player2_id);
+  var done=m.status==='complete';
+  var cls='match'+(done?' done':'')+(m.is_bye?' bye':'');
+  var p1cls='mp'+(done&&m.winner_id===m.player1_id?' winner':'');
+  var p2cls='mp'+(done&&m.winner_id===m.player2_id?' winner':'');
+  var crown1 = done&&m.winner_id===m.player1_id ? '<span class="crown">👑</span>' : '';
+  var crown2 = done&&m.winner_id===m.player2_id ? '<span class="crown">👑</span>' : '';
+
+  if(m.is_bye){
+    return '<div class="'+cls+'"><div class="mrow"><span class="mp winner">'+esc(p1==='BYE'?p2:p1)+' <span class="crown">👑</span></span><span class="mvs">bye</span></div></div>';
   }
-}
 
-async function loadTeams(user){
-  var el = document.getElementById('teams-list');
-  try{
-    var { data:memberships, error } = await sb
-      .from('team_memberships')
-      .select('status, team_id')
-      .eq('user_id', user.id);
-    if(error) throw error;
-    if(!memberships || !memberships.length){
-      el.innerHTML = '<div style="font-size:.85rem;color:var(--dim);padding:.5rem 0">You are not currently linked to any league teams.</div>';
-      return;
-    }
-
-    var teamIds = memberships.map(function(m){return m.team_id;});
-    var { data:teams } = await sb.from('teams').select('id, team_name, league_id').in('id', teamIds);
-    var leagueIds = (teams||[]).map(function(t){return t.league_id;}).filter(Boolean);
-    var leagueMap = {};
-    if(leagueIds.length){
-      var { data:leagues } = await sb.from('leagues').select('id, name').in('id', leagueIds);
-      (leagues||[]).forEach(function(l){ leagueMap[l.id] = l.name; });
-    }
-    var teamMap = {};
-    (teams||[]).forEach(function(t){ teamMap[t.id] = t; });
-
-    el.innerHTML = memberships.map(function(m){
-      var t = teamMap[m.team_id] || {};
-      var leagueName = leagueMap[t.league_id] || '';
-      var changeLink = m.status==='approved'
-        ? '<button class="link-btn" onclick="openCaptainChangeModal(&quot;'+m.team_id+'&quot;)">Request change of captain</button>'
-        : '';
-      return '<div class="team-item">'
-        +'<div><div class="team-name">'+(t.team_name||'Team')+'</div><div class="team-league">'+leagueName+'</div></div>'
-        +'<span class="status-badge '+m.status+'">'+m.status+'</span>'+changeLink
-        +'</div>';
-    }).join('');
-  }catch(e){
-    console.error('loadTeams error:',e);
-    el.innerHTML = '<div style="font-size:.85rem;color:var(--red);padding:.5rem 0">Could not load teams.</div>';
+  var scoreArea;
+  if(done){
+    scoreArea='<div class="mvs">'+m.player1_legs+' – '+m.player2_legs+'</div>';
+  }else if(m.game_state){
+    var gsv=m.game_state;
+    scoreArea='<div class="mvs">'+gsv.legs[0]+' – '+gsv.legs[1]+' (leg '+gsv.currentLeg+')</div>';
+  }else{
+    scoreArea='<div class="mvs">vs</div>';
   }
+
+  var actionBtn = !done ? (
+    '<div style="margin-top:.6rem;text-align:center">'
+      +'<button class="btn btn-sm" onclick="openScoring(&quot;'+m.id+'&quot;)">'+(m.game_state?'Resume Match':'Score This Match')+' 🎯</button>'
+    +'</div>'
+  ) : '';
+
+  return '<div class="'+cls+'">'
+    +'<div class="mrow">'
+      +'<span class="'+p1cls+'">'+esc(p1)+crown1+'</span>'
+      +scoreArea
+      +'<span class="'+p2cls+'">'+crown2+esc(p2)+'</span>'
+    +'</div>'
+    +actionBtn
+  +'</div>';
 }
 
-async function requestJoinTeam(){
-  var code = document.getElementById('join-code').value.trim().toUpperCase();
-  if(!code){toast('Please enter a join code',true);return;}
-  try{
-    var { data:team, error:teamErr } = await sb.from('teams').select('id, team_name').eq('join_code', code).single();
-    if(teamErr || !team){toast('No team found with that join code',true);return;}
+// ── Turn-by-turn scoring engine (mirrors /scorer's X01 engine, persisted
+// to Supabase after every throw so any device can pick up mid-match) ────
+var sgs=null; // scoring game state for the match currently being played
 
-    var { error:insertErr } = await sb.from('team_memberships').insert({
-      team_id: team.id,
-      user_id: window.currentUser.id,
-      status: 'pending'
-    });
-    if(insertErr){
-      if(insertErr.code==='23505'){ toast('You already have a request for this team',true); return; }
-      throw insertErr;
-    }
-    document.getElementById('join-code').value = '';
-    toast('Join request sent to '+(team.team_name||'the team')+'!');
-    loadTeams(window.currentUser);
-  }catch(e){
-    console.error('requestJoinTeam error:',e);
-    toast('Could not send request: '+e.message,true);
-  }
-}
+async function openScoring(matchId){
+  var match=currentMatches.find(function(m){return m.id===matchId;});
+  if(!match)return;
+  var p1=playerName(match.player1_id), p2=playerName(match.player2_id);
+  var startScore=currentTournament.start_score;
+  var bestOf=currentTournament.legs_per_match;
 
-// Instant, no-approval captaincy claim - the gatekeeping already happened
-// when the league admin chose who to send this code to.
-async function claimCaptaincy(){
-  var code = document.getElementById('captain-code').value.trim().toUpperCase();
-  if(!code){toast('Please enter a captain code',true);return;}
-  try{
-    var { data:team, error:teamErr } = await sb.from('teams')
-      .select('id, team_name, captain_user_id').eq('captain_code', code).single();
-    if(teamErr || !team){toast('No team found with that captain code',true);return;}
-    if(team.captain_user_id){
-      toast('This team already has a captain assigned. Contact your league admin if this seems wrong.',true);
-      return;
-    }
-    var { error:updateErr } = await sb.from('teams')
-      .update({ captain_user_id: window.currentUser.id }).eq('id', team.id);
-    if(updateErr) throw updateErr;
-
-    document.getElementById('captain-code').value = '';
-    toast('You are now captain of '+(team.team_name||'your team')+'! 🎯');
-    await loadCaptainTeams(window.currentUser);
-  }catch(e){
-    console.error('claimCaptaincy error:',e);
-    toast('Could not claim captaincy: '+e.message,true);
-  }
-}
-
-var captainChangeTeamId = null;
-
-async function openCaptainChangeModal(teamId){
-  captainChangeTeamId = teamId;
-  var modal = document.getElementById('captain-change-modal');
-  var membersEl = document.getElementById('captain-change-members');
-  membersEl.innerHTML = 'Loading squad...';
-  modal.classList.add('show');
-  try{
-    var { data:members, error } = await sb
-      .from('team_memberships').select('user_id')
-      .eq('team_id', teamId).eq('status', 'approved');
-    if(error) throw error;
-    var userIds = (members||[]).map(function(m){return m.user_id;})
-      .filter(function(id){return id !== window.currentUser.id;}); // don't propose yourself
-    if(!userIds.length){
-      membersEl.innerHTML = '<p style="color:var(--dim);font-size:.82rem">No other squad members found to propose.</p>';
-      return;
-    }
-    var { data:users, error:userErr } = await sb.from('users').select('id, username, email').in('id', userIds);
-    if(userErr) throw userErr;
-    membersEl.innerHTML = (users||[]).map(function(u,i){
-      var label = u.username || u.email || 'Player';
-      return '<label class="member-option">'
-        +'<input type="radio" name="proposed-captain" value="'+u.id+'"'+(i===0?' checked':'')+'>'
-        + label
-      +'</label>';
-    }).join('');
-  }catch(e){
-    console.error('openCaptainChangeModal error:',e);
-    membersEl.innerHTML = '<p style="color:var(--red);font-size:.82rem">Could not load squad members.</p>';
-  }
-}
-
-function closeCaptainChangeModal(){
-  document.getElementById('captain-change-modal').classList.remove('show');
-  captainChangeTeamId = null;
-}
-
-async function submitCaptainChangeRequest(){
-  var selected = document.querySelector('input[name="proposed-captain"]:checked');
-  if(!selected){toast('Please select a squad member',true);return;}
-  try{
-    var { error } = await sb.from('captain_change_requests').insert({
-      team_id: captainChangeTeamId,
-      requested_by: window.currentUser.id,
-      proposed_captain_id: selected.value
-    });
-    if(error) throw error;
-    toast('Change request sent to your league admin');
-    closeCaptainChangeModal();
-  }catch(e){
-    console.error('submitCaptainChangeRequest error:',e);
-    toast('Could not send request: '+e.message,true);
-  }
-}
-
-function updateLeaderboardPref(checked){
-  localStorage.setItem('fc_leaderboard_opt', checked?'1':'0');
-  toast(checked?'Added to leaderboards':'Removed from leaderboards');
-}
-
-// Init
-window.addEventListener('load', async function(){
-  try{
-    const { data:{ session } } = await sb.auth.getSession();
-    if(!session){
-      window.location.href = '/login?redirect=/dashboard';
-      return;
-    }
-    var su = session.user;
-    // Adapter: keeps the same shape loadDashboard/loadTeams already expect,
-    // so none of that logic needs to change.
-    var adaptedUser = {
-      id: su.id,
-      username: su.user_metadata&&su.user_metadata.username,
-      firstName: su.user_metadata&&su.user_metadata.firstName,
-      emailAddresses: [{ emailAddress: su.email }]
+  if(match.game_state){
+    sgs=match.game_state;
+    sgs.matchId=matchId;
+  }else{
+    sgs={
+      matchId:matchId,
+      startScore:startScore,
+      players:[p1,p2],
+      playerIds:[match.player1_id,match.player2_id],
+      scores:[startScore,startScore],
+      legs:[0,0],
+      currentPlayer:0,
+      currentLeg:1,
+      bestOf:bestOf,
+      legsToWin:Math.ceil(bestOf/2),
+      doubleFinish:currentTournament.double_finish,
+      history:[],
+      legHistory:[],
+      inputVal:''
     };
-    window.currentUser = adaptedUser;
-    await loadDashboard(adaptedUser);
-    await loadCaptainTeams(adaptedUser);
-  }catch(e){
-    console.error('Dashboard error:',e);
-    document.getElementById('loading-screen').innerHTML = '<div style="color:var(--red)">Error loading dashboard. <a href="/" style="color:var(--gl)">Go home</a></div>';
   }
-});
+  document.getElementById('scoring-overlay').classList.remove('hidden');
+  buildScNumpad();
+  renderScoring();
+}
+
+function closeScoring(){
+  sgs=null;
+  document.getElementById('scoring-overlay').classList.add('hidden');
+}
+
+function buildScNumpad(){
+  var np=document.getElementById('sc-numpad');
+  var nums=[7,8,9,4,5,6,1,2,3,'CLR',0,'⌫'];
+  np.innerHTML=nums.map(function(n){
+    var cls='sc-np-btn'+(n==='CLR'||n==='⌫'?' special':'');
+    return '<button class="'+cls+'" onclick="scNumpadPress(&quot;'+n+'&quot;)">'+n+'</button>';
+  }).join('');
+}
+
+function scNumpadPress(val){
+  if(val==='⌫'){sgs.inputVal=sgs.inputVal.slice(0,-1);}
+  else if(val==='CLR'){sgs.inputVal='';}
+  else{if(sgs.inputVal.length>=3)return;sgs.inputVal+=String(val);}
+  document.getElementById('sc-score-input').value=sgs.inputVal;
+}
+
+function scSubmit(){
+  var val=parseInt(sgs.inputVal);
+  if(isNaN(val)||val<0||val>180){toast('Enter a valid score (0-180)',true);return;}
+  var remaining=sgs.scores[sgs.currentPlayer];
+  var newScore=remaining-val;
+
+  if(newScore<0||(sgs.doubleFinish&&newScore===1)){
+    toast('BUST! Score unchanged',true);
+    sgs.inputVal='';document.getElementById('sc-score-input').value='';
+    scAdvancePlayer();
+    return;
+  }
+  if(newScore===0){
+    if(sgs.doubleFinish){
+      document.getElementById('sc-double-score').textContent=val;
+      document.getElementById('sc-double-check').style.display='flex';
+      return;
+    }
+    scRecordScore(val,remaining);
+    scLegWon();
+    return;
+  }
+  scRecordScore(val,remaining);
+  scAdvancePlayer();
+}
+
+function scConfirmDouble(wasDouble){
+  document.getElementById('sc-double-check').style.display='none';
+  var val=parseInt(sgs.inputVal);
+  var remaining=sgs.scores[sgs.currentPlayer];
+  if(wasDouble){
+    scRecordScore(val,remaining);
+    scLegWon();
+  }else{
+    toast('Not a double — BUST! Score unchanged',true);
+    sgs.inputVal='';document.getElementById('sc-score-input').value='';
+    scAdvancePlayer();
+  }
+}
+
+function scRecordScore(val,remaining){
+  sgs.history.push({player:sgs.currentPlayer,prevScore:remaining,scored:val});
+  sgs.scores[sgs.currentPlayer]-=val;
+  sgs.inputVal='';
+  document.getElementById('sc-score-input').value='';
+  persistGameState();
+}
+
+function scAdvancePlayer(){
+  sgs.currentPlayer=(sgs.currentPlayer+1)%2;
+  renderScoring();
+}
+
+function scUndo(){
+  if(!sgs.history.length){toast('Nothing to undo',true);return;}
+  var last=sgs.history.pop();
+  sgs.scores[last.player]=last.prevScore;
+  sgs.currentPlayer=last.player;
+  sgs.inputVal='';
+  document.getElementById('sc-score-input').value='';
+  renderScoring();
+  persistGameState();
+  toast('Undone');
+}
+
+function scLegWon(){
+  var winner=sgs.currentPlayer;
+  sgs.legs[winner]++;
+  sgs.legHistory.push({leg:sgs.currentLeg,winner:winner,legs:sgs.legs.slice()});
+  toast(sgs.players[winner]+' wins leg '+sgs.currentLeg+'! 🎉');
+
+  if(sgs.legs[winner]>=sgs.legsToWin){
+    setTimeout(function(){finalizeMatch(winner);},800);
+    return;
+  }
+  setTimeout(function(){
+    sgs.currentLeg++;
+    sgs.scores=[sgs.startScore,sgs.startScore];
+    sgs.currentPlayer=0;
+    sgs.history=[];
+    sgs.inputVal='';
+    renderScoring();
+    persistGameState();
+  },800);
+}
+
+async function persistGameState(){
+  try{
+    await sbUpdate('party_matches','id=eq.'+sgs.matchId,{game_state:sgs});
+  }catch(e){
+    console.error('persistGameState error:',e);
+  }
+}
+
+async function finalizeMatch(winnerIdx){
+  try{
+    await sbUpdate('party_matches','id=eq.'+sgs.matchId,{
+      player1_legs:sgs.legs[0], player2_legs:sgs.legs[1],
+      winner_id:sgs.playerIds[winnerIdx], status:'complete', game_state:null
+    });
+    if(currentTournament.format==='knockout'){
+      await maybeAdvanceKnockout(currentTournament.id);
+    }
+    toast(sgs.players[winnerIdx]+' wins the match! 🏆');
+    closeScoring();
+    await loadTournamentByCode(currentTournament.share_code);
+  }catch(e){
+    console.error('finalizeMatch error:',e);
+    toast('Could not save match result: '+e.message,true);
+  }
+}
+
+function renderScoring(){
+  document.getElementById('sc-sub').textContent='Leg '+sgs.currentLeg+' of '+sgs.bestOf;
+
+  document.getElementById('sc-players').innerHTML=sgs.players.map(function(name,i){
+    var score=sgs.scores[i];
+    var isActive=i===sgs.currentPlayer;
+    var scoreClass=score<=40?'danger':score<=170?'finishing':'';
+    var checkout=sgs.doubleFinish&&score<=170&&CHECKOUTS[score]?
+      '<div class="sc-checkout">→ '+CHECKOUTS[score]+'</div>':'';
+    return '<div class="sc-pcard'+(isActive?' active':'')+'">'
+      +'<div class="sc-pname">'+esc(name)+(isActive?' 🎯':'')+'</div>'
+      +'<div class="sc-pscore '+scoreClass+'">'+score+'</div>'
+      +'<div class="sc-plegs">Legs: '+sgs.legs[i]+'</div>'
+      +checkout
+    +'</div>';
+  }).join('');
+
+  document.getElementById('sc-throw-title').textContent=sgs.players[sgs.currentPlayer]+"'s turn — enter 3-dart total";
+  document.getElementById('sc-score-input').value=sgs.inputVal;
+
+  if(sgs.legHistory.length){
+    document.getElementById('sc-leg-history').classList.remove('hidden');
+    document.getElementById('sc-leg-history-rows').innerHTML=sgs.legHistory.map(function(leg){
+      return '<div class="sc-lh-row">Leg '+leg.leg+': '+sgs.players.map(function(p,i){return p+' '+leg.legs[i];}).join(' — ')+'</div>';
+    }).join('');
+  }
+}
+(function(){
+  renderPlayerList();
+  var params=new URLSearchParams(window.location.search);
+  var code=params.get('code');
+  if(code){
+    loadTournamentByCode(code.toUpperCase());
+  }else{
+    showScreen('screen-landing');
+  }
+})();
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v16-party-mode-entry</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-party-logo-fix</div>
 </body>
 </html>
