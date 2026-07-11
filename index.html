@@ -1011,33 +1011,47 @@ async function tryAutoLinkPlayer(){
   try{
     const sbAuth = window.supabase.createClient(SB, SK);
     const { data:{ session } } = await sbAuth.auth.getSession();
-    if(!session)return false;
+    if(!session)return false; // no player logged in - normal for team-only captains
 
     var links=await sb('team_players?linked_user_id=eq.'+session.user.id+'&select=team_id,name');
-    if(!links||!links.length)return false;
+    console.log('tryAutoLinkPlayer: found links for', session.user.id, links);
+    if(!links||!links.length)return false; // player logged in but not linked to any team yet - normal
 
     var uniqueTeamIds=Array.from(new Set(links.map(function(l){return l.team_id;})));
 
     if(uniqueTeamIds.length===1){
-      return await loadTeamById(uniqueTeamIds[0]);
+      var ok=await loadTeamById(uniqueTeamIds[0]);
+      if(!ok)toast('Found your team link, but could not load the team - check the console for details.',true);
+      return ok;
     }
 
     var idList=uniqueTeamIds.map(function(id){return '"'+id+'"';}).join(',');
     var teamRows=await sb('teams?id=in.('+idList+')&select=id,team_name');
+    if(!teamRows||!teamRows.length){
+      toast('Found multiple team links, but could not load the teams - check the console for details.',true);
+      return false;
+    }
     showTeamPicker(teamRows);
     return true;
   }catch(e){
     console.error('tryAutoLinkPlayer error:',e);
+    toast('Could not auto-detect your team: '+e.message,true);
     return false;
   }
 }
 
 async function loadTeamById(teamId){
   var rows=await sb('teams?id=eq.'+teamId+'&select=*');
-  if(!rows||!rows.length)return false;
+  if(!rows||!rows.length){
+    console.error('loadTeamById: no team row found for id', teamId);
+    return false;
+  }
   var team=rows[0];
   var leagueRows=await sb('leagues?id=eq.'+team.league_id+'&select=*');
-  if(!leagueRows||!leagueRows.length)return false;
+  if(!leagueRows||!leagueRows.length){
+    console.error('loadTeamById: no league row found for league_id', team.league_id, 'on team', team);
+    return false;
+  }
   currentTeam=team;currentTeam.score_threshold=team.score_threshold||80;currentLeague=leagueRows[0];
   localStorage.setItem('mld_session',JSON.stringify({team:currentTeam,league:currentLeague}));
   localStorage.setItem('mld_access','1');
@@ -3097,6 +3111,6 @@ if(!navigator.onLine){
 
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-player-team-bridge</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-team-bridge-diagnostic</div>
 </body>
 </html>
