@@ -1,3 +1,4 @@
+<!-- VERSION: v1-real-stats -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,11 +14,9 @@
   <meta property="og:site_name" content="Flight Chalker">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Player Profile — Flight Chalker</title>
-<meta name="description" content="Flight Chalker player profile and darts statistics.">
-<meta name="robots" content="index, follow">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-WQRGJRFF1Q"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-WQRGJRFF1Q');</script>
-<script src="https://unpkg.com/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -44,10 +43,14 @@ main{max-width:700px;margin:0 auto;padding:2rem 1rem 4rem}
 .badge{background:var(--s3);border:1px solid var(--border);border-radius:20px;padding:.3rem .9rem;font-family:'Barlow Condensed',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
 .badge.earned{background:#1a2a1e;border-color:var(--green);color:var(--gl)}
 .badge.gold{background:#2a2000;border-color:var(--amber);color:var(--amber)}
-.teams-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.25rem;margin-bottom:1.5rem}
-.teams-card h3{font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.75rem}
-.team-row{display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--border);font-size:.88rem;flex-wrap:wrap;gap:.5rem}
-.team-row:last-child{border-bottom:none}
+.recent-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.25rem;margin-bottom:1.5rem}
+.recent-row{display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--border);font-size:.85rem;flex-wrap:wrap;gap:.5rem}
+.recent-row:last-child{border-bottom:none}
+.recent-row .mode{font-weight:600}
+.recent-row .when{font-size:.72rem;color:var(--dim)}
+.recent-row .outcome{font-size:.75rem;padding:2px 8px;border-radius:4px}
+.recent-row .outcome.win{background:#1a2a1e;color:var(--gl)}
+.recent-row .outcome.loss{background:rgba(192,57,43,.15);color:#ff8080}
 .not-found{text-align:center;padding:4rem 2rem;color:var(--dim)}
 .not-found h2{font-family:'Barlow Condensed',sans-serif;font-size:1.5rem;color:var(--text);margin-bottom:.5rem}
 .loading{text-align:center;padding:4rem;color:var(--dim)}
@@ -83,7 +86,6 @@ main{max-width:700px;margin:0 auto;padding:2rem 1rem 4rem}
         <h1><span>@</span><span id="profile-username"></span></h1>
         <div class="profile-meta">
           <span id="profile-since"></span>
-          <span id="profile-location"></span>
         </div>
         <div style="margin-top:.5rem"><span class="free-badge">✓ Free Member</span></div>
       </div>
@@ -93,26 +95,25 @@ main{max-width:700px;margin:0 auto;padding:2rem 1rem 4rem}
     <div class="sec-title">Achievements</div>
     <div class="badges-row" id="badges-row">
       <span class="badge" id="badge-180">🎯 180 Club</span>
-      <span class="badge" id="badge-century">💯 Century Checkout</span>
-      <span class="badge" id="badge-bullseye">🎪 Bullseye</span>
-      <span class="badge" id="badge-consistent">⚡ Consistent</span>
+      <span class="badge" id="badge-century">💯 100+ Checkout</span>
+      <span class="badge" id="badge-consistent">⚡ Consistent (10+ games)</span>
     </div>
 
     <!-- Stats -->
     <div class="sec-title">Statistics</div>
     <div class="stats-grid">
       <div class="stat-card"><div class="val" id="stat-games">—</div><div class="lbl">Games Played</div></div>
+      <div class="stat-card"><div class="val" id="stat-wins">—</div><div class="lbl">Games Won</div></div>
       <div class="stat-card"><div class="val" id="stat-training">—</div><div class="lbl">Training Sessions</div></div>
       <div class="stat-card"><div class="val" id="stat-best">—</div><div class="lbl">Best Score</div></div>
       <div class="stat-card"><div class="val" id="stat-180s">—</div><div class="lbl">180s Hit</div></div>
-      <div class="stat-card"><div class="val" id="stat-checkout">—</div><div class="lbl">Best Checkout</div></div>
       <div class="stat-card"><div class="val" id="stat-winrate">—</div><div class="lbl">Win Rate</div></div>
     </div>
 
-    <!-- Teams -->
-    <div class="teams-card">
-      <h3>League Teams</h3>
-      <div id="teams-list"><span style="font-size:.85rem;color:var(--dim)">No league teams listed.</span></div>
+    <!-- Recent activity -->
+    <div class="sec-title">Recent Activity</div>
+    <div class="recent-card">
+      <div id="recent-list"><span style="font-size:.85rem;color:var(--dim)">No games recorded yet.</span></div>
     </div>
 
     <!-- Share -->
@@ -125,58 +126,70 @@ main{max-width:700px;margin:0 auto;padding:2rem 1rem 4rem}
 </main>
 
 <script>
-const CLERK_KEY = 'pk_live_Y2xlcmsuZmxpZ2h0Y2hhbGtlci5jby51ayQ';
+const sb = window.supabase.createClient(
+  'https://xkovqamknwyjzlgijcel.supabase.co',
+  'sb_publishable_1zeVlEGjUdGNwA-i8pktHg_nSjRXYEQ'
+);
 
 // Get username from URL path /player/username
 var pathParts = window.location.pathname.split('/');
 var username = pathParts[pathParts.length-1] || pathParts[pathParts.length-2];
+
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 function showNotFound(){
   document.getElementById('loading').style.display='none';
   document.getElementById('not-found').style.display='block';
 }
 
-function showProfile(data){
+function showProfile(profile, summary, recentSessions){
   document.getElementById('loading').style.display='none';
   document.getElementById('profile-content').style.display='block';
 
-  // Avatar - first letter of username
-  document.getElementById('profile-avatar').textContent = data.username[0].toUpperCase();
-  document.getElementById('profile-username').textContent = data.username;
+  document.getElementById('profile-avatar').textContent = profile.username[0].toUpperCase();
+  document.getElementById('profile-username').textContent = profile.username;
 
-  // Meta
-  var since = data.created_at ? new Date(data.created_at).toLocaleDateString('en-GB',{month:'long',year:'numeric'}) : '';
+  var since = profile.created_at ? new Date(profile.created_at).toLocaleDateString('en-GB',{month:'long',year:'numeric'}) : '';
   document.getElementById('profile-since').textContent = since ? 'Member since '+since : '';
 
-  // Stats
-  document.getElementById('stat-games').textContent = data.game_sessions||'—';
-  document.getElementById('stat-training').textContent = data.training_sessions||'—';
-  document.getElementById('stat-best').textContent = data.best_score||'—';
-  document.getElementById('stat-180s').textContent = data.total_180s||'—';
-  document.getElementById('stat-checkout').textContent = data.best_checkout ? data.best_checkout+'%' : '—';
-  document.getElementById('stat-winrate').textContent = data.win_rate ? data.win_rate+'%' : '—';
+  var gamesPlayed = summary ? Number(summary.games_played)||0 : 0;
+  var gamesWon = summary ? Number(summary.games_won)||0 : 0;
+  var trainingSessions = summary ? Number(summary.training_sessions)||0 : 0;
+  var total180s = summary ? Number(summary.total_180s)||0 : 0;
+  var bestScore = summary ? Number(summary.best_score)||0 : 0;
+  var winRate = gamesPlayed>0 ? Math.round((gamesWon/gamesPlayed)*100) : 0;
 
-  // Badges
-  if(data.total_180s>0){document.getElementById('badge-180').className='badge gold';}
-  if(data.best_checkout>=100){document.getElementById('badge-century').className='badge earned';}
-  if(data.game_sessions>=10){document.getElementById('badge-consistent').className='badge earned';}
+  document.getElementById('stat-games').textContent = gamesPlayed||'—';
+  document.getElementById('stat-wins').textContent = gamesWon||'—';
+  document.getElementById('stat-training').textContent = trainingSessions||'—';
+  document.getElementById('stat-best').textContent = bestScore||'—';
+  document.getElementById('stat-180s').textContent = total180s||'—';
+  document.getElementById('stat-winrate').textContent = gamesPlayed>0 ? winRate+'%' : '—';
 
-  // Teams
-  if(data.teams&&data.teams.length){
-    document.getElementById('teams-list').innerHTML = data.teams.map(function(t){
-      return '<div class="team-row">'
-        +'<div><div style="font-weight:600;font-size:.9rem">'+t.team_name+'</div>'
-        +'<div style="font-size:.75rem;color:var(--dim)">'+t.league_name+'</div></div>'
-        +'<span style="font-size:.75rem;color:var(--gl)">Active</span>'
+  if(total180s>0){document.getElementById('badge-180').className='badge gold';}
+  if(bestScore>=100){document.getElementById('badge-century').className='badge earned';}
+  if(gamesPlayed>=10){document.getElementById('badge-consistent').className='badge earned';}
+
+  if(recentSessions&&recentSessions.length){
+    document.getElementById('recent-list').innerHTML = recentSessions.map(function(s){
+      var when = new Date(s.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+      var modeLabel = s.game_mode.charAt(0).toUpperCase()+s.game_mode.slice(1);
+      var outcome = '';
+      if(s.session_type==='game'&&s.won!=null){
+        outcome = '<span class="outcome '+(s.won?'win':'loss')+'">'+(s.won?'WIN':'LOSS')+'</span>';
+      }
+      return '<div class="recent-row">'
+        +'<div><div class="mode">'+esc(modeLabel)+(s.session_type==='training'?' (training)':'')+'</div>'
+        +'<div class="when">'+when+'</div></div>'
+        +outcome
         +'</div>';
     }).join('');
   }
 
-  // Update page title and meta
-  document.title = '@'+data.username+' — Flight Chalker';
+  document.title = '@'+profile.username+' — Flight Chalker';
 }
 
-function shareProfile(){
+async function shareProfile(){
   if(navigator.share){
     navigator.share({
       title: '@'+username+' on Flight Chalker',
@@ -193,40 +206,42 @@ async function loadProfile(){
   if(!username || username==='player'){showNotFound();return;}
 
   try{
-    // For now load from localStorage if it's the current user's own profile
-    const clerk = new window.Clerk(CLERK_KEY);
-    await clerk.load();
-    window.Clerk = clerk;
+    var { data:profiles, error:profileErr } = await sb
+      .from('users').select('id, username, email, created_at')
+      .eq('username', username).limit(1);
+    if(profileErr) throw profileErr;
+    if(!profiles||!profiles.length){showNotFound();return;}
+    var profile=profiles[0];
 
-    if(clerk.user && clerk.user.username === username){
-      // Show own profile from Clerk data
-      var sessions = parseInt(localStorage.getItem('fc_game_sessions')||'0');
-      var training = parseInt(localStorage.getItem('fc_training_sessions')||'0');
-      var best = localStorage.getItem('fc_best_score')||null;
-      var s180 = parseInt(localStorage.getItem('fc_180s')||'0');
-      var memberships = JSON.parse(localStorage.getItem('fc_memberships')||'[]');
-      showProfile({
-        username: clerk.user.username,
-        created_at: clerk.user.createdAt,
-        game_sessions: sessions||null,
-        training_sessions: training||null,
-        best_score: best,
-        total_180s: s180||null,
-        teams: memberships.filter(function(m){return m.status==='approved';})
-      });
-    } else {
-      // Public profile - would fetch from Neon API
-      // For now show placeholder
-      showProfile({
-        username: username,
-        created_at: new Date().toISOString(),
-        game_sessions: null,
-        training_sessions: null,
-        best_score: null,
-        total_180s: null,
-        teams: []
-      });
+    // Aggregated stats via the security-definer function - works whether
+    // this is your own profile or someone else's, since it only exposes
+    // summary numbers, never raw session rows.
+    var summary=null;
+    try{
+      var { data:summaryRows, error:summaryErr } = await sb.rpc('get_player_stats_summary');
+      if(!summaryErr && summaryRows){
+        summary = summaryRows.find(function(r){return r.user_id===profile.id;}) || null;
+      }
+    }catch(sErr){
+      console.error('Could not load stats summary:',sErr);
     }
+
+    // Recent activity is only visible on your OWN profile (game_sessions
+    // RLS restricts raw rows to their owner) - falls back to empty for
+    // anyone viewing someone else's profile, which is intentional privacy.
+    var recentSessions=[];
+    try{
+      var { data:recentRows } = await sb
+        .from('game_sessions').select('session_type, game_mode, won, created_at')
+        .eq('user_id', profile.id)
+        .order('created_at', { ascending:false })
+        .limit(10);
+      recentSessions = recentRows||[];
+    }catch(rErr){
+      // Not our own profile - fine, just show no recent activity list.
+    }
+
+    showProfile(profile, summary, recentSessions);
   }catch(e){
     console.error(e);
     showNotFound();
@@ -235,5 +250,6 @@ async function loadProfile(){
 
 loadProfile();
 </script>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v1-real-stats</div>
 </body>
 </html>
