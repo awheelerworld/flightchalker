@@ -463,22 +463,33 @@ function fcBegin(gameType){
 function fcEnd(gameType,result){
   if(!fcUser)return;
   var dur=fcSessionStart?Math.round((Date.now()-fcSessionStart)/1000):0;
-  var n=parseInt(localStorage.getItem('fc_game_sessions')||'0')+1;
-  localStorage.setItem('fc_game_sessions',n);
-  if(result.best&&result.best>(parseInt(localStorage.getItem('fc_best_score')||'0')))
-    localStorage.setItem('fc_best_score',result.best);
-  if(result.s180){
-    var cur=parseInt(localStorage.getItem('fc_180s')||'0');
-    localStorage.setItem('fc_180s',cur+result.s180);
-  }
+  var won = result.winner ? (String(result.winner).toLowerCase()===String(fcUser.username).toLowerCase()) : null;
+  sb.from('game_sessions').insert({
+    user_id: fcUser.id,
+    session_type: 'game',
+    game_mode: gameType,
+    result: result.winner||null,
+    won: won,
+    score: result.best||null,
+    checkouts_180: result.s180||0,
+    duration_seconds: dur,
+    meta: { legs: result.legs||null }
+  }).then(function(){}).catch(function(e){console.error('fcEnd: could not save session:',e);});
   if(typeof gtag!=='undefined')gtag('event','game_complete',{game_type:gameType,duration:dur,username:fcUser.username||fcUser.id});
 }
-function fcTrain(gameType,score,meta){
+async function fcTrain(gameType,score,meta){
   if(!fcUser)return;
-  var n=parseInt(localStorage.getItem('fc_training_sessions')||'0')+1;
-  localStorage.setItem('fc_training_sessions',n);
-  if(score&&score>(parseInt(localStorage.getItem('fc_best_score')||'0')))
-    localStorage.setItem('fc_best_score',score);
+  try{
+    await sb.from('game_sessions').insert({
+      user_id: fcUser.id,
+      session_type: 'training',
+      game_mode: gameType,
+      score: score||null,
+      meta: meta||null
+    });
+  }catch(e){
+    console.error('fcTrain: could not save session:',e);
+  }
   if(typeof gtag!=='undefined')gtag('event','training_complete',{game_type:gameType,score:score,username:fcUser.username||fcUser.id});
 }
 // ──────────────────────────────────────────────────────────────────────────
@@ -902,6 +913,6 @@ function toast(msg,isErr){
   setTimeout(function(){t.classList.remove('show');},1800);
 }
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-training-home-fix</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-stats-tracking</div>
 </body>
 </html>
