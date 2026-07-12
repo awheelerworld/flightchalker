@@ -661,7 +661,7 @@ html{scroll-behavior:smooth}
           <polygon points="19.5,16.5 28,8 30,11" fill="#e8c840"/>
         </svg>
       </div>
-      <a href="/?logout=1" onclick="localStorage.removeItem('mld_session');localStorage.removeItem('mld_admin')" style="text-decoration:none;color:inherit">
+      <a href="#" onclick="logout();return false;" style="text-decoration:none;color:inherit">
         <div class="app-logo-text">Flight <span>Chalker</span></div>
         <div class="app-logo-sub" id="app-team-label">—</div>
       </a>
@@ -1128,13 +1128,24 @@ function goTo(screen){
   }
   showScreen('screen-'+screen);
 }
-function logout(){
+async function logout(){
   currentTeam=null;currentLeague=null;players=[];matchHistory=[];leagueFixtures=[];leagueTeams=[];
   localStorage.removeItem('mld_session');
   localStorage.removeItem('mld_admin');
   localStorage.removeItem('mld_access');
-  // Redirect to home with no session - prevents flash
-  window.location.href='/';
+  // Also sign out of the individual player session if one exists.
+  // Otherwise the auto-link bridge (which checks for a player session on
+  // every load) immediately logs the player straight back into their
+  // team the moment this page reloads, making Log Out appear broken.
+  try{
+    const sbAuth = window.supabase.createClient(SB, SK);
+    await sbAuth.auth.signOut();
+  }catch(e){
+    console.error('logout: could not sign out player session:', e);
+  }
+  // Redirect with ?logout=1 so the page-load handler clears state before
+  // anything (including the auto-link bridge) gets a chance to run.
+  window.location.href='/?logout=1';
 }
 function adminLogout(){
   localStorage.removeItem('mld_admin');
@@ -3111,6 +3122,6 @@ if(!navigator.onLine){
 
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-team-bridge-diagnostic</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-logout-fix</div>
 </body>
 </html>
