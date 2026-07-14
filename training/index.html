@@ -136,6 +136,19 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
 .toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1rem;padding:.6rem 1.5rem;border-radius:6px;transition:transform .3s;z-index:999;pointer-events:none}
 .toast.show{transform:translateX(-50%) translateY(0)}
 .toast.err{background:var(--red)}
+
+/* CPU Opponent */
+.cpu-scores{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:.75rem}
+.cpu-score-card{background:var(--s2);border:2px solid var(--border);border-radius:10px;padding:.85rem;text-align:center;transition:border-color .2s}
+.cpu-score-card.on-turn{border-color:var(--amber);box-shadow:0 0 10px rgba(232,200,64,.25)}
+.cpu-score-name{font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:.35rem}
+.cpu-score-val{font-family:'Barlow Condensed',sans-serif;font-size:2.4rem;font-weight:900;color:var(--amber);line-height:1}
+.cpu-score-sub{font-size:.7rem;color:var(--dim);margin-top:.25rem}
+.cpu-turn-banner{text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gl);padding:.5rem;margin-bottom:.75rem;background:#1a2a1e;border:1px solid var(--green);border-radius:6px}
+.cpu-turn-banner.cpu-thinking{color:var(--amber);background:#2a2000;border-color:var(--amber)}
+.quick-scores{display:grid;grid-template-columns:repeat(5,1fr);gap:.35rem;margin-bottom:.6rem}
+.qs-btn{background:var(--s3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;padding:.4rem;cursor:pointer;text-align:center}
+.qs-btn:hover{background:var(--green);border-color:var(--green);color:#fff}
 </style>
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-WQRGJRFF1Q"></script>
@@ -198,6 +211,12 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
         <div class="game-card-name">Trebles Practice</div>
         <div class="game-card-desc">Drill your treble accuracy on any segment. Essential for big scoring.</div>
         <div class="game-card-tag">Scoring</div>
+      </div>
+      <div class="game-card" onclick="startGame('cpu')">
+        <div class="game-card-icon">🤖</div>
+        <div class="game-card-name">CPU Opponent</div>
+        <div class="game-card-desc">Race a simulated computer player at 501 or 301. Pick their skill level and go head to head.</div>
+        <div class="game-card-tag">Match Play</div>
       </div>
     </div>
   </div>
@@ -371,6 +390,78 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
   </div>
 </div>
 
+<!-- ══════════ CPU OPPONENT ══════════ -->
+<div id="screen-cpu-setup" class="screen">
+  <div class="game-wrap">
+    <div class="game-title">🤖 CPU Opponent</div>
+    <div class="game-sub">Race a simulated computer player. First to zero wins.</div>
+    <div class="setup-section">
+      <h3>CPU Skill Level</h3>
+      <div class="score-btns" style="grid-template-columns:1fr">
+        <button class="score-btn" id="cpu-skill-beginner" onclick="cpuSelectSkill('beginner')">Beginner<br><small style="font-size:.68rem;font-weight:400">~25 match avg · struggles on the doubles</small></button>
+        <button class="score-btn sel" id="cpu-skill-club" onclick="cpuSelectSkill('club')">Club Player<br><small style="font-size:.68rem;font-weight:400">~40 match avg · solid weekly player</small></button>
+        <button class="score-btn" id="cpu-skill-pro" onclick="cpuSelectSkill('pro')">Pro<br><small style="font-size:.68rem;font-weight:400">~50 match avg · strong scoring, sharp on outs</small></button>
+        <button class="score-btn" id="cpu-skill-elite" onclick="cpuSelectSkill('elite')">Elite<br><small style="font-size:.68rem;font-weight:400">~90 match avg · world class, ruthless finisher</small></button>
+      </div>
+    </div>
+    <div class="setup-section">
+      <h3>Starting Score</h3>
+      <div class="score-btns">
+        <button class="score-btn" id="cpu-start-301" onclick="cpuSelectStart(301)">301</button>
+        <button class="score-btn sel" id="cpu-start-501" onclick="cpuSelectStart(501)">501</button>
+      </div>
+    </div>
+    <button class="btn-start" onclick="cpuStartGame()">Start Match 🎯</button>
+  </div>
+</div>
+
+<div id="screen-cpu" class="screen">
+  <div class="game-wrap">
+    <div class="game-title">CPU Opponent</div>
+    <div class="game-sub" id="cpu-match-sub">501 · Double Out</div>
+    <div class="cpu-scores">
+      <div class="cpu-score-card" id="cpu-card-you">
+        <div class="cpu-score-name">You</div>
+        <div class="cpu-score-val" id="cpu-you-score">501</div>
+        <div class="cpu-score-sub" id="cpu-you-avg">Avg —</div>
+      </div>
+      <div class="cpu-score-card" id="cpu-card-cpu">
+        <div class="cpu-score-name" id="cpu-name-label">CPU</div>
+        <div class="cpu-score-val" id="cpu-cpu-score">501</div>
+        <div class="cpu-score-sub" id="cpu-cpu-avg">Avg —</div>
+      </div>
+    </div>
+    <div class="cpu-turn-banner" id="cpu-turn-banner">Your throw</div>
+    <div class="input-area" id="cpu-input-area">
+      <div class="input-label">Enter your 3-dart score · must finish on a double or Bull</div>
+      <div class="display-input" id="cpu-display">0</div>
+      <div class="quick-scores">
+        <div class="qs-btn" onclick="cpuQuickScore(26)">26</div>
+        <div class="qs-btn" onclick="cpuQuickScore(41)">41</div>
+        <div class="qs-btn" onclick="cpuQuickScore(45)">45</div>
+        <div class="qs-btn" onclick="cpuQuickScore(60)">60</div>
+        <div class="qs-btn" onclick="cpuQuickScore(81)">81</div>
+        <div class="qs-btn" onclick="cpuQuickScore(85)">85</div>
+        <div class="qs-btn" onclick="cpuQuickScore(95)">95</div>
+        <div class="qs-btn" onclick="cpuQuickScore(100)">100</div>
+        <div class="qs-btn" onclick="cpuQuickScore(140)">140</div>
+        <div class="qs-btn" onclick="cpuQuickScore(180)">180</div>
+      </div>
+      <div class="numpad">
+        <div class="np" onclick="cpuDigit(1)">1</div><div class="np" onclick="cpuDigit(2)">2</div><div class="np" onclick="cpuDigit(3)">3</div>
+        <div class="np" onclick="cpuDigit(4)">4</div><div class="np" onclick="cpuDigit(5)">5</div><div class="np" onclick="cpuDigit(6)">6</div>
+        <div class="np" onclick="cpuDigit(7)">7</div><div class="np" onclick="cpuDigit(8)">8</div><div class="np" onclick="cpuDigit(9)">9</div>
+        <div class="np dl" onclick="cpuClear()">C</div><div class="np" onclick="cpuDigit(0)">0</div><div class="np sp" onclick="cpuBackspace()">⌫</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-hit" onclick="cpuSubmitScore()">Submit Turn</button>
+        <button class="btn-miss" onclick="cpuQuickScore(0)">No Score</button>
+      </div>
+    </div>
+    <div class="history-list" id="cpu-history"></div>
+  </div>
+</div>
+
 <!-- ══════════ RESULT ══════════ -->
 <div id="screen-result" class="screen">
   <div class="game-wrap">
@@ -525,6 +616,7 @@ function startGame(game){
   else if(game==='bobs'){initBobs();}
   else if(game==='doubles'){initDoubles();}
   else if(game==='trebles'){initTrebles();}
+  else if(game==='cpu'){initCpu();}
 }
 
 function playAgain(){startGame(currentGame);}
@@ -917,6 +1009,249 @@ function tpUpdateHistory(){
     return '<div class="history-item"><span>'+h.target+' dart '+h.dart+'</span>'
       +'<span class="'+(h.hit?'history-hit':'history-miss')+'">'+(h.hit?'HIT':'MISS')+'</span></div>';
   }).join('');
+}
+
+// ── CPU OPPONENT: THROW SIMULATION ENGINE ───────────────────────────────────────
+// Simulates a dart landing using polar coordinates on a normalised dartboard
+// (radius 0-1 = bullseye to outer double wire), then maps the landing back to
+// a segment/ring. Skill level controls the spread (accuracy) of each throw.
+const DARTBOARD_ORDER=[20,1,18,4,13,6,10,15,2,17,3,19,7,16,8,11,14,9,12,5];
+const SEG_ANGLE=18; // degrees per wedge
+const RING={bull:0.0374,obull:0.0935,tIn:0.582,tOut:0.629,dIn:0.953,dOut:1.0};
+
+const CPU_SKILLS={
+  beginner:{name:'Beginner',angleSpread:11,radiusSpread:0.15},
+  club:{name:'Club Player',angleSpread:6.5,radiusSpread:0.095},
+  pro:{name:'Pro',angleSpread:3.2,radiusSpread:0.05},
+  elite:{name:'Elite',angleSpread:1.8,radiusSpread:0.028}
+};
+
+function gaussianRandom(){
+  var u=0,v=0;
+  while(u===0)u=Math.random();
+  while(v===0)v=Math.random();
+  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+}
+
+function segAngleCenter(num){return DARTBOARD_ORDER.indexOf(num)*SEG_ANGLE;}
+
+// targetRing: 'S'|'D'|'T'|'BULL'
+function simulateThrow(targetNum,targetRing,skillKey){
+  var skill=CPU_SKILLS[skillKey]||CPU_SKILLS.club;
+  var idealAngle=0,idealRadius=0;
+  if(targetRing!=='BULL'){
+    idealAngle=segAngleCenter(targetNum);
+    idealRadius = targetRing==='T' ? (RING.tIn+RING.tOut)/2
+                : targetRing==='D' ? (RING.dIn+RING.dOut)/2
+                : (RING.obull+RING.tIn)/2;
+  }
+  var angle=((idealAngle+gaussianRandom()*skill.angleSpread)%360+360)%360;
+  var radius=Math.max(0,idealRadius+gaussianRandom()*skill.radiusSpread);
+
+  if(radius>RING.dOut)return{score:0,label:'MISS',bed:'miss'};
+  if(radius<=RING.bull)return{score:50,label:'BULL',bed:'bull'};
+  if(radius<=RING.obull)return{score:25,label:'25',bed:'obull'};
+
+  var segIdx=Math.floor(((angle+SEG_ANGLE/2)%360)/SEG_ANGLE);
+  var num=DARTBOARD_ORDER[segIdx];
+
+  if(radius>=RING.tIn&&radius<=RING.tOut)return{score:num*3,label:'T'+num,bed:'treble',num:num};
+  if(radius>=RING.dIn&&radius<=RING.dOut)return{score:num*2,label:'D'+num,bed:'double',num:num};
+  return{score:num,label:'S'+num,bed:'single',num:num};
+}
+
+function cpuParseRoute(token){
+  if(token==='Bull')return{num:null,ring:'BULL'};
+  return{num:parseInt(token.slice(1),10),ring:token[0]};
+}
+
+// Decide what the CPU aims at for its next dart, given remaining score
+function cpuChooseTarget(remaining){
+  if(remaining===50)return{num:null,ring:'BULL'};
+  if(remaining<=170&&CO[remaining])return cpuParseRoute(CO[remaining].split(' ')[0]);
+  if(remaining<=40&&remaining%2===0)return{num:remaining/2,ring:'D'};
+  return{num:20,ring:'T'}; // default scoring shot
+}
+
+// Simulate a full 3-dart CPU turn from a given remaining score
+function simulateCpuTurn(remaining,skillKey){
+  var turnScore=0,darts=[],r=remaining,checkedOut=false;
+  for(var i=0;i<3;i++){
+    if(r<=0)break;
+    var tgt=cpuChooseTarget(r);
+    var res=simulateThrow(tgt.num,tgt.ring,skillKey);
+    var newR=r-res.score;
+    var validFinish=res.bed==='double'||res.bed==='bull';
+    if(newR<0||newR===1||(newR===0&&!validFinish)){
+      darts.push({label:res.label,score:0,bust:true});
+      turnScore=0; r=remaining; // whole turn busts, revert
+      break;
+    }
+    darts.push({label:res.label,score:res.score,bust:false});
+    turnScore+=res.score;
+    r=newR;
+    if(r===0){checkedOut=true;break;}
+  }
+  return{turnScore:turnScore,darts:darts,remaining:r,checkedOut:checkedOut};
+}
+
+// ── CPU OPPONENT: GAME STATE & UI ────────────────────────────────────────────
+var cpuSetup={skill:'club',start:501};
+var cpu=null;
+
+function cpuSelectSkill(s){
+  cpuSetup.skill=s;
+  ['beginner','club','pro','elite'].forEach(function(k){
+    var el=document.getElementById('cpu-skill-'+k);
+    if(el)el.classList.toggle('sel',k===s);
+  });
+}
+function cpuSelectStart(n){
+  cpuSetup.start=n;
+  [301,501].forEach(function(v){
+    var el=document.getElementById('cpu-start-'+v);
+    if(el)el.classList.toggle('sel',v===n);
+  });
+}
+
+function initCpu(){
+  document.getElementById('hdr-sub').textContent='CPU Opponent';
+  showScreen('screen-cpu-setup');
+}
+
+function cpuStartGame(){
+  cpu={
+    start:cpuSetup.start,skill:cpuSetup.skill,
+    you:cpuSetup.start,cpuScore:cpuSetup.start,
+    yourTurn:true,history:[],
+    yourDartsThrown:0,yourScoredTotal:0,
+    cpuDartsThrown:0,cpuScoredTotal:0,
+    input:''
+  };
+  fcBegin('cpu_race');
+  document.getElementById('cpu-name-label').textContent='🤖 CPU ('+CPU_SKILLS[cpu.skill].name+')';
+  document.getElementById('cpu-match-sub').textContent=cpu.start+' · Double Out vs '+CPU_SKILLS[cpu.skill].name;
+  showScreen('screen-cpu');
+  cpuUpdateDisplay();
+  cpuUpdateTurnUI();
+}
+
+function cpuDigit(d){
+  if(cpu.input.length>=3)return;
+  var next=cpu.input+String(d);
+  if(parseInt(next,10)>180)return;
+  cpu.input=next;
+  cpuRenderInput();
+}
+function cpuBackspace(){cpu.input=cpu.input.slice(0,-1);cpuRenderInput();}
+function cpuClear(){cpu.input='';cpuRenderInput();}
+function cpuQuickScore(n){cpu.input=String(n);cpuRenderInput();cpuSubmitScore();}
+
+function cpuRenderInput(){
+  var disp=document.getElementById('cpu-display');
+  disp.textContent=cpu.input||'0';
+  disp.className='display-input';
+}
+
+function cpuSubmitScore(){
+  var score=parseInt(cpu.input||'0',10);
+  if(isNaN(score)||score<0||score>180){toast('Enter a valid score',true);return;}
+  cpu.input='';
+  applyYourTurn(score);
+}
+
+function applyYourTurn(score){
+  var newR=cpu.you-score;
+  var bust = newR<0 || newR===1;
+  if(!bust){cpu.you=newR;cpu.yourScoredTotal+=score;}
+  cpu.yourDartsThrown+=3;
+  cpuAddHistory('You',bust?0:score,bust);
+  cpuUpdateDisplay();
+
+  if(typeof ScoreCaller!=='undefined'){
+    if(bust)ScoreCaller.callBustOut();
+    else if(score>0)ScoreCaller.callHit();
+    else ScoreCaller.callMiss();
+  }
+
+  if(!bust&&cpu.you===0){
+    cpuFinish('You');
+    return;
+  }
+  cpu.yourTurn=false;
+  cpuUpdateTurnUI();
+  setTimeout(cpuTakeTurn,1100);
+}
+
+function cpuTakeTurn(){
+  var banner=document.getElementById('cpu-turn-banner');
+  banner.textContent='🤖 CPU throwing...';
+  banner.classList.add('cpu-thinking');
+  setTimeout(function(){
+    var result=simulateCpuTurn(cpu.cpuScore,cpu.skill);
+    cpu.cpuScore=result.remaining;
+    cpu.cpuDartsThrown+=3;
+    cpu.cpuScoredTotal+=result.turnScore;
+    var label=result.darts.map(function(d){return d.label;}).join(' ');
+    cpuAddHistory('CPU',result.turnScore,result.darts.some(function(d){return d.bust;}),label);
+    cpuUpdateDisplay();
+    if(result.checkedOut){
+      cpuFinish('CPU');
+      return;
+    }
+    cpu.yourTurn=true;
+    cpuUpdateTurnUI();
+  },1300);
+}
+
+function cpuUpdateDisplay(){
+  document.getElementById('cpu-you-score').textContent=cpu.you;
+  document.getElementById('cpu-cpu-score').textContent=cpu.cpuScore;
+  var yAvg=cpu.yourDartsThrown?Math.round(cpu.yourScoredTotal/cpu.yourDartsThrown*3):0;
+  var cAvg=cpu.cpuDartsThrown?Math.round(cpu.cpuScoredTotal/cpu.cpuDartsThrown*3):0;
+  document.getElementById('cpu-you-avg').textContent='Avg '+(yAvg||'—');
+  document.getElementById('cpu-cpu-avg').textContent='Avg '+(cAvg||'—');
+}
+
+function cpuUpdateTurnUI(){
+  var banner=document.getElementById('cpu-turn-banner');
+  var inputArea=document.getElementById('cpu-input-area');
+  document.getElementById('cpu-card-you').classList.toggle('on-turn',cpu.yourTurn);
+  document.getElementById('cpu-card-cpu').classList.toggle('on-turn',!cpu.yourTurn);
+  banner.classList.remove('cpu-thinking');
+  if(cpu.yourTurn){
+    banner.textContent='Your throw';
+    inputArea.style.display='block';
+    cpuRenderInput();
+  } else {
+    banner.textContent='🤖 CPU up next';
+    inputArea.style.display='none';
+  }
+}
+
+function cpuAddHistory(who,score,bust,detail){
+  cpu.history.unshift({who:who,score:score,bust:bust,detail:detail});
+  document.getElementById('cpu-history').innerHTML=cpu.history.slice(0,8).map(function(h){
+    var txt=h.bust?'BUST':(h.detail?h.detail+' ('+h.score+')':String(h.score));
+    return '<div class="history-item"><span>'+h.who+'</span>'
+      +'<span class="'+(h.bust?'history-miss':'history-hit')+'">'+txt+'</span></div>';
+  }).join('');
+}
+
+function cpuFinish(winner){
+  var youWon=winner==='You';
+  fcEnd('cpu_race',{winner:winner,best:cpu.start-Math.min(cpu.you,cpu.cpuScore)});
+  if(typeof ScoreCaller!=='undefined'){
+    ScoreCaller.callComplete(youWon?'You win!':'CPU wins');
+  }
+  showResult(
+    youWon?'You Win! 🏆':'CPU Wins 🤖',
+    youWon?'You beat the '+CPU_SKILLS[cpu.skill].name+' CPU!':'The '+CPU_SKILLS[cpu.skill].name+' CPU checked out first. Try again!',
+    [
+      {val:cpu.yourDartsThrown?Math.round(cpu.yourScoredTotal/cpu.yourDartsThrown*3):0,lbl:'Your Avg',cls:'g'},
+      {val:cpu.cpuDartsThrown?Math.round(cpu.cpuScoredTotal/cpu.cpuDartsThrown*3):0,lbl:'CPU Avg',cls:'a'}
+    ]
+  );
 }
 
 // ── RESULT ─────────────────────────────────────────────────────────────────────
