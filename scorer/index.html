@@ -203,7 +203,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
       <a href="/dashboard" class="hdr-logo" style="text-decoration:none;color:inherit">Flight <span>Chalker</span></a>
       <div class="hdr-sub">Darts Scorer</div>
     </div>
-    <a href="/dashboard" style="text-decoration:none"><button class="hbtn">← Home</button></a>
+    <a href="/dashboard" style="text-decoration:none"><button class="hbtn">← Home</button></a><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button>
   </div>
   <div class="setup-wrap">
     <div class="setup-title">🎯 Play Darts</div>
@@ -291,7 +291,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
     </div>
     <div style="display:flex;gap:.5rem">
       <button class="hbtn" onclick="undoLast()">↩ Undo</button>
-      <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button>
+      <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button>
     </div>
   </div>
   <div class="game-wrap">
@@ -337,7 +337,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
     <div><a href="/dashboard" class="hdr-logo" style="text-decoration:none;color:inherit">Flight <span>Chalker</span></a><div class="hdr-sub">Cricket</div></div>
     <div style="display:flex;gap:.5rem">
       <button class="hbtn" onclick="undoLast()">↩ Undo</button>
-      <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button>
+      <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button>
     </div>
   </div>
   <div class="game-wrap">
@@ -359,7 +359,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
   <div class="hdr">
     <div><a href="/dashboard" class="hdr-logo" style="text-decoration:none;color:inherit">Flight <span>Chalker</span></a><div class="hdr-sub">Killer</div></div>
     <div style="display:flex;gap:.5rem">
-      <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button>
+      <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button>
     </div>
   </div>
   <div class="game-wrap">
@@ -383,7 +383,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
     <div><a href="/dashboard" class="hdr-logo" style="text-decoration:none;color:inherit">Flight <span>Chalker</span></a><div class="hdr-sub">Shanghai</div></div>
     <div style="display:flex;gap:.5rem">
       <button class="hbtn" onclick="undoLast()">↩ Undo</button>
-      <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button>
+      <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button>
     </div>
   </div>
   <div class="game-wrap">
@@ -410,7 +410,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
   <div class="hdr">
     <div><a href="/dashboard" class="hdr-logo" style="text-decoration:none;color:inherit">Flight <span>Chalker</span></a><div class="hdr-sub">Halve-It</div></div>
     <div style="display:flex;gap:.5rem">
-      <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button>
+      <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button>
     </div>
   </div>
   <div class="game-wrap">
@@ -435,7 +435,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
       <a href="/dashboard" class="hdr-logo" style="text-decoration:none;color:inherit">Flight <span>Chalker</span></a>
       <div class="hdr-sub">Game Over</div>
     </div>
-    <a href="/dashboard" style="text-decoration:none"><button class="hbtn">← Home</button></a>
+    <a href="/dashboard" style="text-decoration:none"><button class="hbtn">← Home</button></a><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button>
   </div>
   <div class="win-wrap">
     <div class="win-emoji">🏆</div>
@@ -481,6 +481,9 @@ async function fcInit(){
   }
 }
 fcInit();
+document.addEventListener('DOMContentLoaded', function(){
+  updateCallerButton();
+});
 </script>
 <script>
 // ── Checkout table ─────────────────────────────────────────────────────────────
@@ -695,6 +698,7 @@ function recordScore(val,remaining){
   gs.inputVal='';
   var inp=document.getElementById('score-input');
   if(inp){inp.value='';inp.style.borderColor='var(--border)';inp.style.color='var(--text)';}
+  speak(val+'. '+gs.scores[gs.currentPlayer]+' remaining.');
 }
 
 function advancePlayer(){
@@ -708,6 +712,7 @@ function advancePlayer(){
 
 function markBust(){
   toast('BUST! Score unchanged',true);
+  speak('Bust! No score.');
   gs.inputVal='';
   var inp=document.getElementById('score-input');
   if(inp){inp.value='';inp.style.borderColor='var(--border)';inp.style.color='var(--text)';}
@@ -732,6 +737,7 @@ function legWon(){
   gs.legs[winner]++;
   gs.legHistory.push({leg:gs.currentLeg,winner:winner,scores:gs.legs.slice()});
   toast(gs.players[winner]+' wins leg '+gs.currentLeg+'! 🎉');
+  speak('Game shot! '+gs.players[winner]+'!');
   if(gs.legs[winner]>=gs.legsToWin){
     setTimeout(function(){showWin(winner);},900);
     return;
@@ -829,6 +835,37 @@ function toast(msg,isErr){
   setTimeout(function(){t.classList.remove('show');},2000);
 }
 
+// ── Audio caller ─────────────────────────────────────────────────────────
+// Uses the browser's built-in text-to-speech (Web Speech API) - no external
+// service, no cost, works offline once the voice is loaded. Exact
+// pronunciation (e.g. whether "180" is read as "one hundred and eighty" or
+// "one hundred eighty") depends on the device/browser's own voice, not
+// something we can fully control from here.
+var callerEnabled = localStorage.getItem('fc_caller_enabled') !== '0'; // default on
+function speak(text){
+  if(!callerEnabled)return;
+  if(!('speechSynthesis' in window))return;
+  try{
+    window.speechSynthesis.cancel(); // don't let calls queue up and lag behind play
+    var u = new SpeechSynthesisUtterance(text);
+    u.rate = 1.0;
+    window.speechSynthesis.speak(u);
+  }catch(e){
+    console.error('speak error:', e);
+  }
+}
+function toggleCaller(){
+  callerEnabled = !callerEnabled;
+  localStorage.setItem('fc_caller_enabled', callerEnabled ? '1' : '0');
+  updateCallerButton();
+  if(callerEnabled)speak('Caller on');
+}
+function updateCallerButton(){
+  document.querySelectorAll('.caller-toggle-btn').forEach(function(btn){
+    btn.textContent = callerEnabled ? '🔊 Caller' : '🔇 Caller';
+  });
+}
+
 // ── Flight Chalker Player Session Module ──────────────────────────────────
 // (fcUser/fcInit are now set up top of the previous script block, using
 // Supabase Auth - see the access guard above.)
@@ -836,25 +873,44 @@ function fcBegin(gameType){
   fcSessionStart=Date.now();
   if(typeof gtag!=='undefined')gtag('event','game_start',{game_type:gameType,logged_in:!!fcUser});
 }
-function fcEnd(gameType,result){
+async function fcEnd(gameType,result){
   if(!fcUser)return;
   var dur=fcSessionStart?Math.round((Date.now()-fcSessionStart)/1000):0;
-  var n=parseInt(localStorage.getItem('fc_game_sessions')||'0')+1;
-  localStorage.setItem('fc_game_sessions',n);
-  if(result.best&&result.best>(parseInt(localStorage.getItem('fc_best_score')||'0')))
-    localStorage.setItem('fc_best_score',result.best);
-  if(result.s180){
-    var cur=parseInt(localStorage.getItem('fc_180s')||'0');
-    localStorage.setItem('fc_180s',cur+result.s180);
+  // "won" is a best-effort match against the logged-in player's own name -
+  // /scorer allows any locally-typed player names for local multiplayer, so
+  // this can only be inferred, not guaranteed, when playing against a
+  // non-account opponent typed in on the same device.
+  var won = result.winner ? (String(result.winner).toLowerCase()===String(fcUser.username).toLowerCase()) : null;
+  try{
+    await sb.from('game_sessions').insert({
+      user_id: fcUser.id,
+      session_type: 'game',
+      game_mode: gameType,
+      result: result.winner||null,
+      won: won,
+      score: result.best||null,
+      checkouts_180: result.s180||0,
+      duration_seconds: dur,
+      meta: { legs: result.legs||null }
+    });
+  }catch(e){
+    console.error('fcEnd: could not save session:',e);
   }
   if(typeof gtag!=='undefined')gtag('event','game_complete',{game_type:gameType,duration:dur,username:fcUser.username||fcUser.id});
 }
-function fcTrain(gameType,score,meta){
+async function fcTrain(gameType,score,meta){
   if(!fcUser)return;
-  var n=parseInt(localStorage.getItem('fc_training_sessions')||'0')+1;
-  localStorage.setItem('fc_training_sessions',n);
-  if(score&&score>(parseInt(localStorage.getItem('fc_best_score')||'0')))
-    localStorage.setItem('fc_best_score',score);
+  try{
+    await sb.from('game_sessions').insert({
+      user_id: fcUser.id,
+      session_type: 'training',
+      game_mode: gameType,
+      score: score||null,
+      meta: meta||null
+    });
+  }catch(e){
+    console.error('fcTrain: could not save session:',e);
+  }
   if(typeof gtag!=='undefined')gtag('event','training_complete',{game_type:gameType,score:score,username:fcUser.username||fcUser.id});
 }
 // ──────────────────────────────────────────────────────────────────────────
@@ -905,15 +961,17 @@ function startCricket(){
 
 function cricketDart(num){
   var cr=cricket,p=cr.currentPlayer;
-  if(num===0){cr.dartsThrown++;if(cr.dartsThrown>=3){cricketNext();return;}toast('Miss');renderCricket();return;}
+  if(num===0){cr.dartsThrown++;if(cr.dartsThrown>=3){cricketNext();return;}toast('Miss');speak('Miss');renderCricket();return;}
   if(!cNums.includes(num))return;
   cr.dartsThrown++;
   if(cr.marks[p][num]<3){
     cr.marks[p][num]++;
-    toast(num+(cr.marks[p][num]===3?' closed!':cr.marks[p][num]===1?' /':' X'));
+    var label=(num===25?'Bull':num);
+    if(cr.marks[p][num]===3){toast(num+' closed!');speak(label+', closed!');}
+    else{toast(num+(cr.marks[p][num]===1?' /':' X'));speak(String(label));}
   } else {
     var canScore=cr.players.some(function(_,i){return i!==p&&cr.marks[i][num]<3;});
-    if(canScore){cr.points[p]+=num;toast('+'+num+' pts!');}
+    if(canScore){cr.points[p]+=num;toast('+'+num+' pts!');speak((num===25?'Bull':num)+'. Plus '+num+' points.');}
   }
   if(cr.dartsThrown>=3){cricketNext();return;}
   renderCricket();
@@ -970,21 +1028,22 @@ function startKiller(){
 function killerDart(num){
   var k=killer,p=k.currentPlayer;
   if(!k.isKiller[p]){
-    if(num===k.doubles[p]){k.isKiller[p]=true;toast(k.players[p]+' is a KILLER! 🔪');k.dartsThrown=3;}
-    else{k.dartsThrown++;toast('Need D'+k.doubles[p]);}
+    if(num===k.doubles[p]){k.isKiller[p]=true;toast(k.players[p]+' is a KILLER! 🔪');speak(k.players[p]+' is a Killer!');k.dartsThrown=3;}
+    else{k.dartsThrown++;toast('Need D'+k.doubles[p]);speak('Miss');}
   } else {
     var t=k.doubles.indexOf(num);
     if(t!==-1&&t!==p&&k.lives[t]>0){
-      k.lives[t]--;toast(k.players[t]+' -1 life!',true);
+      k.lives[t]--;toast(k.players[t]+' -1 life!',true);speak(k.players[t]+' loses a life!');
       if(k.lives[t]<=0){if(k.lives.filter(function(l){return l>0;}).length===1){showWinByName(k.players[p]);return;}}
-    } else if(t===p){k.lives[p]--;k.isKiller[p]=false;toast('Own double! -1 life 😬',true);}
+    } else if(t===p){k.lives[p]--;k.isKiller[p]=false;toast('Own double! -1 life 😬',true);speak('Own double! Lost a life.');}
+    else{speak('Miss');}
     k.dartsThrown++;
   }
   if(k.dartsThrown>=3){killerNextTurn();return;}
   renderKiller();
 }
 
-function killerMiss(){killer.dartsThrown++;if(killer.dartsThrown>=3){killerNextTurn();return;}toast('Miss');renderKiller();}
+function killerMiss(){killer.dartsThrown++;speak('Miss');if(killer.dartsThrown>=3){killerNextTurn();return;}toast('Miss');renderKiller();}
 
 function killerNextTurn(){
   killer.dartsThrown=0;
@@ -1028,10 +1087,13 @@ function shanghaiDart(val,mult){
   var sh=shanghai;
   if(sh.currentDarts.length>=3)return;
   sh.currentDarts.push({val:val,mult:mult});
+  var n=sh.currentRound;
+  var label = mult===0?'Miss':(mult===1?'Single':mult===2?'Double':'Triple')+' '+n;
+  speak(label);
   for(var d=0;d<3;d++){
     var chip=document.getElementById('sh-dart-'+d);
     if(d<sh.currentDarts.length){
-      var dart=sh.currentDarts[d];var n=sh.currentRound;
+      var dart=sh.currentDarts[d];
       chip.textContent=dart.mult===0?'Miss':(dart.mult===1?'S':dart.mult===2?'D':'T')+n;
       chip.className='dart-chip has-value';
     } else {chip.textContent='—';chip.className='dart-chip';}
@@ -1040,6 +1102,7 @@ function shanghaiDart(val,mult){
     var mults=sh.currentDarts.map(function(d){return d.mult;});
     if(mults.includes(1)&&mults.includes(2)&&mults.includes(3)){
       toast('SHANGHAI! Instant win! 🎯');
+      speak('Shanghai! Instant win!');
       setTimeout(function(){showWinByName(sh.players[sh.currentPlayer]);},800);
       return;
     }
@@ -1051,7 +1114,9 @@ function shanghaiMiss(){shanghaiDart(0,0);}
 
 function shanghaiNextTurn(){
   var sh=shanghai;
-  sh.scores[sh.currentPlayer]+=sh.currentDarts.reduce(function(a,d){return a+d.val;},0);
+  var roundTotal=sh.currentDarts.reduce(function(a,d){return a+d.val;},0);
+  sh.scores[sh.currentPlayer]+=roundTotal;
+  speak(roundTotal+' this round. '+sh.scores[sh.currentPlayer]+' total.');
   sh.currentDarts=[];
   document.getElementById('sh-next-btn').disabled=true;
   for(var d=0;d<3;d++){var c=document.getElementById('sh-dart-'+d);c.textContent='—';c.className='dart-chip';}
@@ -1103,8 +1168,8 @@ function halveitScore(s){halveit.inputVal=String(s);document.getElementById('hal
 
 function halveitSubmit(){
   var hv=halveit,p=hv.currentPlayer,scored=parseInt(hv.inputVal)||0;
-  if(scored===0){hv.scores[p]=Math.floor(hv.scores[p]/2);toast('Missed! Score halved!',true);}
-  else{hv.scores[p]+=scored;toast('+'+scored+' points!');}
+  if(scored===0){hv.scores[p]=Math.floor(hv.scores[p]/2);toast('Missed! Score halved!',true);speak('Missed! Halved to '+hv.scores[p]+'.');}
+  else{hv.scores[p]+=scored;toast('+'+scored+' points!');speak(scored+'. '+hv.scores[p]+' total.');}
   hv.inputVal='';document.getElementById('halveit-input').value='';
   hv.currentPlayer=(hv.currentPlayer+1)%hv.players.length;
   if(hv.currentPlayer===0){
@@ -1145,6 +1210,6 @@ function showWinByName(name){
 // Init
 if(document.getElementById('x01-options'))document.getElementById('x01-options').style.display='block';
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-scorer-diagnostic-fixes</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-audio-caller</div>
 </body>
 </html>
