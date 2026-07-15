@@ -437,15 +437,22 @@ async function loadDashboard(user){
   var since = new Date(user.createdAt).toLocaleDateString('en-GB',{month:'long',year:'numeric'});
   document.getElementById('profile-since').textContent = since;
 
-  // Load stats from localStorage for now (will connect to Neon later)
-  var sessions = parseInt(localStorage.getItem('fc_game_sessions')||'0');
-  var training = parseInt(localStorage.getItem('fc_training_sessions')||'0');
-  var best = localStorage.getItem('fc_best_score')||'—';
-  var s180 = parseInt(localStorage.getItem('fc_180s')||'0');
-  document.getElementById('stat-sessions').textContent = sessions||'—';
-  document.getElementById('stat-training').textContent = training||'—';
-  document.getElementById('stat-best').textContent = best;
-  document.getElementById('stat-180s').textContent = s180||'—';
+  // Load real stats from Supabase (game_sessions, via the get_player_stats RPC)
+  try{
+    var { data:statsRows, error:statsErr } = await sb.rpc('get_player_stats');
+    if(statsErr) throw statsErr;
+    var s = (statsRows && statsRows[0]) || {};
+    document.getElementById('stat-sessions').textContent = s.games_played||'—';
+    document.getElementById('stat-training').textContent = s.training_sessions||'—';
+    document.getElementById('stat-best').textContent = (s.best_score!=null?s.best_score:'—');
+    document.getElementById('stat-180s').textContent = s.total_180s||'—';
+  }catch(e){
+    console.error('Could not load player stats:',e);
+    document.getElementById('stat-sessions').textContent = '—';
+    document.getElementById('stat-training').textContent = '—';
+    document.getElementById('stat-best').textContent = '—';
+    document.getElementById('stat-180s').textContent = '—';
+  }
 
   // Load team memberships
   loadTeams(user);
