@@ -942,6 +942,20 @@ html{scroll-behavior:smooth}
   </div>
 </div>
 
+<!-- PDF Choice Modal -->
+<div class="co2" id="pdf-choice-modal">
+  <div class="cb" style="max-width:400px">
+    <h3 style="color:var(--amber)">Download Match PDF</h3>
+    <p style="color:var(--dim);font-size:.85rem;margin-bottom:1.25rem">Choose which version to generate.</p>
+    <input type="hidden" id="pdf-choice-idx">
+    <div style="display:flex;flex-direction:column;gap:.6rem;margin-bottom:1.25rem">
+      <button class="btnp" onclick="downloadPDF(document.getElementById('pdf-choice-idx').value,'team')" style="background:#1a3a1e;border:1px solid var(--green);color:var(--gl);text-align:left;line-height:1.4">📋 Team Copy<div style="font-size:.72rem;font-weight:400;color:var(--dim);margin-top:2px">Every score of 80+ shown per player — for the group chat</div></button>
+      <button class="btnp" onclick="downloadPDF(document.getElementById('pdf-choice-idx').value,'league')" style="background:var(--s3);border:1px solid var(--border);color:var(--amber);text-align:left;line-height:1.4">🏆 League Copy<div style="font-size:.72rem;font-weight:400;color:var(--dim);margin-top:2px">Results and 180s only — for league submission</div></button>
+    </div>
+    <button class="btns" onclick="closePdfChoice()" style="width:100%">Cancel</button>
+  </div>
+</div>
+
 <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" style="display:none;position:fixed;bottom:5rem;right:1.25rem;background:var(--green);border:none;border-radius:50%;width:42px;height:42px;color:white;font-size:1.2rem;cursor:pointer;z-index:500;box-shadow:0 2px 8px rgba(0,0,0,.4)">&#8679;</button>
 <!-- Onboarding modal -->
 <div id="onboarding-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:400;align-items:center;justify-content:center;padding:1rem">
@@ -1985,7 +1999,7 @@ async function renderHistory(){
         +'<div class="ha"><button class="hb" onclick="viewMatch('+i+')">View</button>'
         +'<button class="hb" onclick="openEdit('+i+')">Edit</button>'
         +'<button class="hb del" onclick="askDel(&quot;'+m.id+'&quot;,&quot;'+esc(m.opponent)+'&quot;)">Delete</button>'
-        +'<button class="hb" onclick="downloadPDF('+i+')">PDF</button></div></div>';
+        +'<button class="hb" onclick="openPdfChoice('+i+')">PDF</button></div></div>';
     }).join('');
   }catch(e){el.innerHTML='<div class="nh">Error: '+esc(e.message)+'</div>';}
 }
@@ -2142,6 +2156,15 @@ function closeWalkoverModal(){
   document.getElementById('walkover-modal').classList.remove('open');
 }
 
+function openPdfChoice(idx){
+  document.getElementById('pdf-choice-idx').value=idx;
+  document.getElementById('pdf-choice-modal').classList.add('open');
+}
+
+function closePdfChoice(){
+  document.getElementById('pdf-choice-modal').classList.remove('open');
+}
+
 // ── View match ────────────────────────────────────────────────────────────────
 function viewMatch(idx){
   var m=matchHistory[idx];var d=new Date(m.match_date+'T00:00:00');
@@ -2156,7 +2179,7 @@ function viewMatch(idx){
   if(db.length){h+='</div><div class="ms"><div class="mst">Doubles</div>';db.forEach(function(x,i){var legs=x.legsFor!==undefined?(x.legsFor+' – '+x.legsAgainst):'';h+='<div class="mrow"><span class="mrn">D'+(i+1)+'</span><span class="mrname">'+esc(x.p1||'—')+' &amp; '+esc(x.p2||'—')+'</span>'+rb(x.result,legs)+'<div class="msc">'+ch(x.scores1)+' '+ch(x.scores2)+'</div></div>';});}
   if(t4&&t4.result!==undefined){h+='</div><div class="ms"><div class="mst">Team Game</div>';var tN=[];for(var pi=1;pi<=6;pi++){if(t4['p'+pi])tN.push(esc(t4['p'+pi]));}h+='<div class="mrow"><span class="mrn">Team</span><span class="mrname">'+tN.join(', ')+'</span>'+rb(t4.result,'')+'<div class="msc">'+ch((t4.scores||[]).flat())+'</div></div>';}
   h+='</div><div class="mf"><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:1.5rem;font-weight:900;color:'+(won?'var(--gl)':'var(--red)')+'">'+m.wins+'–'+m.losses+' '+(won?'WIN':'LOSS')+'</div><div style="color:var(--amber);font-family:\'Barlow Condensed\',sans-serif">⬡ '+m.eighties+' scores over 80</div></div>';
-  h+='<div class="mf"><button class="mc" onclick="closeMo()">Close</button><button class="btnp" style="font-size:.85rem;padding:.45rem 1.25rem" onclick="closeMo();openEdit('+idx+')">Edit</button><button class="btn-email" style="font-size:.85rem;padding:.45rem 1.25rem" onclick="downloadPDF('+idx+')">&#8681; PDF</button></div>';
+  h+='<div class="mf"><button class="mc" onclick="closeMo()">Close</button><button class="btnp" style="font-size:.85rem;padding:.45rem 1.25rem" onclick="closeMo();openEdit('+idx+')">Edit</button><button class="btn-email" style="font-size:.85rem;padding:.45rem 1.25rem" onclick="closeMo();openPdfChoice('+idx+')">&#8681; PDF</button></div>';
   document.getElementById('mbody').innerHTML=h;document.getElementById('modal').classList.add('open');
 }
 
@@ -2279,7 +2302,9 @@ function renderStats(){
 }
 
 // ── PDF ───────────────────────────────────────────────────────────────────────
-function downloadPDF(idx){
+function downloadPDF(idx,mode){
+  closePdfChoice();
+  mode=mode||'team';
   var m=matchHistory[idx];
   var jsPDF=window.jspdf.jsPDF;
   var doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
@@ -2309,7 +2334,10 @@ function downloadPDF(idx){
   doc.text((team+' vs '+m.opponent).toUpperCase(),pad,y);y+=5;
   var dt=new Date(m.match_date+'T00:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   doc.setFont('helvetica','normal');doc.setFontSize(8);setC(C.dim);
-  doc.text(dt+' · '+(m.venue.charAt(0).toUpperCase()+m.venue.slice(1)),pad,y);y+=8;
+  doc.text(dt+' · '+(m.venue.charAt(0).toUpperCase()+m.venue.slice(1)),pad,y);
+  doc.setFont('helvetica','bold');doc.setFontSize(7);setC(C.green);
+  doc.text(mode==='league'?'LEAGUE COPY':'TEAM COPY',W-pad,y,'right');
+  y+=8;
 
   // Score box
   var won=m.wins>m.losses;
@@ -2342,10 +2370,12 @@ function downloadPDF(idx){
     y+=6;
   }
 
-  function drawRow(label,player,legs,result,scores){
+  function drawRow(label,player,legs,result,scores,mode){
     var isWin=result==='win',isLoss=result==='loss';
     var s180=scores?scores.filter(function(v){return v===180;}).length:0;
-    var rH=10;
+    var bigScores=(mode==='team'&&scores)?scores.filter(function(v){return v>=80;}).sort(function(a,b){return b-a;}):[];
+    var showList=bigScores.length>0;
+    var rH=showList?14:10;
     if(y+rH>278){doc.addPage();y=14;}
     setF(isWin?[22,40,26]:isLoss?[40,20,20]:[26,32,26]);
     doc.rect(pad,y,W-pad*2,rH,'F');
@@ -2362,7 +2392,7 @@ function downloadPDF(idx){
       doc.setFont('helvetica','bold');doc.setFontSize(8);setC(C.text);
       doc.text(legs,pad+72,ty);
     }
-    if(s180>0){
+    if(mode!=='team'&&s180>0){
       doc.setFont('helvetica','bold');doc.setFontSize(7);setC(C.amber);
       doc.text('180'+(s180>1?' x'+s180:''),pad+84,ty);
     }
@@ -2373,6 +2403,20 @@ function downloadPDF(idx){
       setC(isWin?C.winTxt:C.lossTxt);
       doc.text(isWin?'WIN':'LOSS',W-pad-11,y+6.5,'center');
     }
+    if(showList){
+      var ly=ty+5;
+      doc.setFont('helvetica','normal');doc.setFontSize(6.5);setC(C.dim);
+      doc.text('80+:',pad+10,ly);
+      var lx=pad+18;
+      bigScores.forEach(function(v){
+        var is180=v===180;
+        doc.setFont('helvetica','bold');doc.setFontSize(6.5);
+        setC(is180?C.amber:C.text);
+        var txt=String(v);
+        doc.text(txt,lx,ly);
+        lx+=doc.getTextWidth(txt)+3;
+      });
+    }
     y+=rH+0.5;
   }
 
@@ -2380,7 +2424,7 @@ function downloadPDF(idx){
     secHeader('SINGLES');
     singles.forEach(function(s,i){
       var legs=s.legsFor!==undefined?s.legsFor+'-'+s.legsAgainst:'';
-      drawRow('S'+(i+1),s.player||'—',legs,s.result,s.scores||[]);
+      drawRow('S'+(i+1),s.player||'—',legs,s.result,s.scores||[],mode);
     });
     y+=3;
   }
@@ -2390,7 +2434,7 @@ function downloadPDF(idx){
       var names=(d.p1||'—')+' & '+(d.p2||'—');
       var sc=[].concat(d.scores1||[]).concat(d.scores2||[]);
       var legs=d.legsFor!==undefined?d.legsFor+'-'+d.legsAgainst:'';
-      drawRow('D'+(i+1),names,legs,d.result,sc);
+      drawRow('D'+(i+1),names,legs,d.result,sc,mode);
     });
     y+=3;
   }
@@ -2398,7 +2442,7 @@ function downloadPDF(idx){
     secHeader('TEAM GAME');
     var tp=[team4.p1,team4.p2,team4.p3,team4.p4].filter(Boolean).join(', ')||'—';
     var ts=(team4.scores||[]).reduce(function(a,b){return a.concat(b);},[]);
-    drawRow('4v4',tp,'',team4.result,ts);
+    drawRow('4v4',tp,'',team4.result,ts,mode);
     y+=3;
   }
 
@@ -2408,7 +2452,7 @@ function downloadPDF(idx){
   doc.text('Flight Chalker · flightchalker.co.uk',W/2,y,'center');
 
   var safe=m.opponent.replace(/[^a-z0-9]/gi,'_').toLowerCase();
-  doc.save('match-'+safe+'-'+m.match_date+'.pdf');
+  doc.save('match-'+safe+'-'+m.match_date+'-'+mode+'.pdf');
 }
 
 // ── Tabs ──────────────────────────────────────────────────────────────────────
