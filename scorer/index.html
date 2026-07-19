@@ -472,6 +472,20 @@ async function fcInit(){
       username: (su.user_metadata&&su.user_metadata.username) || su.email.split('@')[0],
       email: su.email
     };
+
+    // Google-only accounts may not have a public.users row yet — see
+    // dashboard/index.html for the full explanation. Create it here too
+    // in case this page is reached directly (bookmark/deep link) without
+    // passing through the dashboard first.
+    try{
+      var { data:existingProfile } = await sb.from('users').select('id').eq('id',su.id).single();
+      if(!existingProfile){
+        await sb.from('users').insert({ id:su.id, email:su.email, username:fcUser.username });
+      }
+    }catch(profileErr){
+      console.error('Profile row check/create failed (non-fatal):',profileErr);
+    }
+
     return true;
   }catch(e){
     console.error('Scorer page auth check failed:',e);
