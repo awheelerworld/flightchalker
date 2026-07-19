@@ -158,16 +158,33 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
   gtag('js', new Date());
   gtag('config', 'G-WQRGJRFF1Q');
 </script>
+<script src="/subscription-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/caller.js"></script>
 </head>
 <body>
+
+<!-- ══ PREMIUM GATE ══ Training Zone is a premium feature. This overlay
+     covers the page until fcInit() confirms the signed-in player has an
+     active subscription; free users get an upgrade prompt instead of the
+     training content underneath. -->
+<div id="premium-gate" style="position:fixed;inset:0;background:#141814;z-index:9999;display:flex;align-items:center;justify-content:center;padding:1.5rem">
+  <div id="premium-gate-loading" style="color:#8a9080;font-family:'Barlow',sans-serif;font-size:.9rem">Loading…</div>
+  <div id="premium-gate-locked" style="display:none;background:#1e251e;border:1px solid #3a4a3a;border-radius:12px;padding:2rem;max-width:380px;width:100%;text-align:center">
+    <div style="font-size:2rem;margin-bottom:.5rem">🎯</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:#e8c840;margin-bottom:.5rem">Training Zone is a Premium Feature</div>
+    <div style="font-size:.88rem;color:#8a9080;margin-bottom:1.5rem;line-height:1.5">Checkout challenges, around the clock, doubles training and progress tracking — upgrade to unlock the full training zone.</div>
+    <a href="/upgrade?redirect=/training" style="display:block;background:#4a7c59;border:none;border-radius:8px;color:white;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.75rem;text-decoration:none;margin-bottom:.75rem">See Premium →</a>
+    <a href="/dashboard" style="color:#8a9080;font-size:.82rem;text-decoration:none">← Back to Dashboard</a>
+  </div>
+</div>
 
 <!-- ══ HEADER (shared) ══ -->
 <div class="hdr">
   <div>
     <a href="/dashboard" class="hdr-logo" style="text-decoration:none;color:inherit">Flight <span>Chalker</span></a>
     <div class="hdr-sub" id="hdr-sub">Training Zone</div>
+
   </div>
   <div style="display:flex;gap:.5rem">
     <button class="hbtn" id="btn-back-menu" onclick="showMenu()" style="display:none">← Games</button>
@@ -499,9 +516,31 @@ async function fcInit(){
     fcUser={
       id: su.id,
       username: (su.user_metadata&&su.user_metadata.username) || su.email.split('@')[0],
-      email: su.email
+      email: su.email,
+      tier: 'free'
     };
-    console.log('FC Player:',fcUser.username);
+
+    // Subscriptions are switched off site-wide right now (see
+    // /subscription-config.js) — everyone gets full access, no tier
+    // lookup, no gate. Flip SUBSCRIPTIONS_ENABLED to true when ready.
+    if(!SUBSCRIPTIONS_ENABLED){
+      document.getElementById('premium-gate').style.display='none';
+      return true;
+    }
+
+    // Look up subscription tier — defaults to 'free' on any error so a
+    // lookup hiccup never accidentally unlocks a premium feature.
+    try{
+      var { data:profile } = await sb.from('users').select('subscription_tier').eq('id',su.id).single();
+      if(profile&&profile.subscription_tier)fcUser.tier=profile.subscription_tier;
+    }catch(e){console.error('Subscription tier lookup failed, defaulting to free:',e);}
+
+    if(fcUser.tier!=='premium'){
+      document.getElementById('premium-gate-loading').style.display='none';
+      document.getElementById('premium-gate-locked').style.display='block';
+      return false;
+    }
+    document.getElementById('premium-gate').style.display='none';
     return true;
   }catch(e){
     console.error('Training page auth check failed:',e);
