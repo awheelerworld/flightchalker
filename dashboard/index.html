@@ -821,6 +821,23 @@ window.addEventListener('load', async function(){
       return;
     }
     var su = session.user;
+
+    // Accounts created via "Continue with Google" never got a row in
+    // public.users — that insert only used to happen on the email/password
+    // signup path (see /join). Without a row here, username lookups,
+    // account-linking and subscription_tier all have nothing to read from.
+    // Create it on-the-fly the first time we see this account, wherever
+    // that happens to be (dashboard is where every Google sign-in lands).
+    try{
+      var { data:existingProfile } = await sb.from('users').select('id').eq('id',su.id).single();
+      if(!existingProfile){
+        var fallbackUsername=(su.user_metadata&&(su.user_metadata.username||su.user_metadata.full_name||su.user_metadata.name))||su.email.split('@')[0];
+        await sb.from('users').insert({ id:su.id, email:su.email, username:fallbackUsername });
+      }
+    }catch(profileErr){
+      console.error('Profile row check/create failed (non-fatal):',profileErr);
+    }
+
     // Adapter: keeps the same shape loadDashboard/loadTeams already expect,
     // so none of that logic needs to change.
     var adaptedUser = {
