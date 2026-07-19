@@ -89,6 +89,7 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
 .toast.err{background:var(--red)}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-WQRGJRFF1Q"></script>
 <script>
@@ -106,24 +107,29 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
         the admin password they set when creating their league. Once in,
         they only ever see/edit their own league (teams, fixtures,
         notices) — never other leagues on the platform.
-     2. PLATFORM ADMIN — the site owner's master password, unlocks every
-        league (Leagues tab lists all of them).
+     2. PLATFORM ADMIN — the site owner (or anyone else you grant access
+        to) signs in with a real Flight Chalker account. Access is
+        controlled by an is_platform_admin flag on that account's row in
+        public.users, checked fresh on every login and every page load —
+        not by a shared password. This also means real password reset
+        (via /forgot-password) works for platform admin, since there's
+        an actual account and email address to send it to.
      New leagues are created without any login (self-service), same as
      team registration elsewhere on the site — the league body sets
      their own password at that point.
 
-     SECURITY NOTE (read before deploying): both checks work by fetching
-     the stored password via the Supabase anon key and comparing it in
-     the browser. That means anyone who reads the page source can see
-     how the check works, and anyone with the anon key (visible in every
-     page's source, by design) could query the `leagues` table directly
-     and bypass this UI entirely. This gate stops casual/opportunistic
-     access and matches the same model already used for team PIN login
-     elsewhere in the app — it is NOT a substitute for Supabase Row
-     Level Security policies restricting who can read `admin_password`
-     and who can write to leagues/teams/fixtures/notices. See the
-     security instructions provided alongside this file.
-     CHANGE PLATFORM_ADMIN_PW BELOW BEFORE DEPLOYING. -->
+     SECURITY NOTE (read before deploying): League Login still works by
+     fetching the stored league password via the Supabase anon key and
+     comparing it in the browser — anyone who reads the page source can
+     see how the check works, and anyone with the anon key (visible in
+     every page's source, by design) could query the `leagues` table
+     directly and bypass this UI entirely. This matches the same model
+     already used for team PIN login elsewhere in the app. Platform Admin
+     no longer has this weakness (it's real Supabase Auth), but the
+     is_platform_admin flag on public.users is still just a column
+     anyone with the anon key can currently read — restricting who can
+     read/write it needs Row Level Security. See the security
+     instructions provided alongside this file. -->
 <div id="admin-gate" style="position:fixed;inset:0;background:#141814;display:flex;align-items:center;justify-content:center;padding:1.5rem;z-index:9999;overflow-y:auto">
   <div style="background:var(--surface,#1e251e);border:1px solid var(--border,#3a4a3a);border-radius:12px;padding:2rem;max-width:380px;width:100%">
 
@@ -152,10 +158,36 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
     <!-- PLATFORM ADMIN LOGIN (hidden by default) -->
     <div id="gate-platform-login" style="display:none">
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:#8ac4ff;margin-bottom:.4rem">Platform Admin</div>
-      <div style="font-size:.85rem;color:var(--dim,#8a9080);margin-bottom:1.25rem">Site-wide access — every league on Flight Chalker.</div>
-      <input type="password" id="gate-pw" placeholder="Platform admin password" autocomplete="off" onkeydown="if(event.key==='Enter')checkAdminGate()" style="width:100%;background:#141814;border:1px solid var(--border,#3a4a3a);border-radius:6px;color:#e0d8c8;font-family:'Barlow',sans-serif;font-size:.95rem;padding:.6rem .75rem;margin-bottom:.75rem">
+      <div style="font-size:.85rem;color:var(--dim,#8a9080);margin-bottom:1.25rem">Site-wide access — every league on Flight Chalker. Sign in with your Flight Chalker account.</div>
+
+      <button onclick="signInWithGooglePlatform()" style="display:flex;align-items:center;justify-content:center;gap:.75rem;width:100%;background:white;border:none;border-radius:8px;color:#333;font-family:'Barlow',sans-serif;font-size:.95rem;font-weight:600;padding:.65rem;cursor:pointer;margin-bottom:1rem">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:20px;height:20px;flex-shrink:0">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        Continue with Google
+      </button>
+      <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem">
+        <div style="flex:1;height:1px;background:var(--border,#3a4a3a)"></div>
+        <span style="font-size:.75rem;color:var(--dim,#8a9080)">or sign in with email</span>
+        <div style="flex:1;height:1px;background:var(--border,#3a4a3a)"></div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:.75rem">
+        <label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--dim,#8a9080)">Email</label>
+        <input type="email" id="pa-email" placeholder="you@example.com" autocomplete="off" style="background:#141814;border:1px solid var(--border,#3a4a3a);border-radius:6px;color:#e0d8c8;font-family:'Barlow',sans-serif;font-size:.95rem;padding:.6rem .75rem">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:.75rem">
+        <label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--dim,#8a9080)">Password</label>
+        <input type="password" id="pa-password" placeholder="Your password" autocomplete="off" onkeydown="if(event.key==='Enter')platformLogin()" style="background:#141814;border:1px solid var(--border,#3a4a3a);border-radius:6px;color:#e0d8c8;font-family:'Barlow',sans-serif;font-size:.95rem;padding:.6rem .75rem">
+      </div>
       <div id="gate-err" style="font-size:.8rem;color:var(--red,#c0392b);margin-bottom:.75rem;display:none">Incorrect password.</div>
-      <button onclick="checkAdminGate()" style="width:100%;background:#2a5a8c;border:none;border-radius:8px;color:white;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.65rem;cursor:pointer;margin-bottom:1rem">Enter</button>
+      <button onclick="platformLogin()" id="pa-login-btn" style="width:100%;background:#2a5a8c;border:none;border-radius:8px;color:white;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.65rem;cursor:pointer;margin-bottom:1rem">Enter</button>
+      <div style="text-align:center;font-size:.82rem;margin-bottom:.75rem">
+        <a href="/forgot-password" style="color:var(--gl,#5a9469);text-decoration:none">Forgot password? →</a>
+      </div>
       <div style="text-align:center;font-size:.82rem">
         <a href="javascript:void(0)" onclick="showGateLeagueLogin()" style="color:var(--gl,#5a9469);text-decoration:none">← Back to league login</a>
       </div>
@@ -318,8 +350,20 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
 </div><!-- /#admin-real-content -->
 
 <script>
-// ── Admin session (client-side speed bump — see warning comment above) ───────
-const PLATFORM_ADMIN_PW='FlightChalkerAdmin2026'; // CHANGE THIS before deploying
+// ── Admin session ──────────────────────────────────────────────────────────
+// League Login below is still a client-side speed bump (see warning comment
+// near the top of this file) — same caveats as before, unchanged.
+//
+// Platform Admin now uses a REAL Flight Chalker account (Supabase Auth)
+// instead of a shared password. Only accounts with is_platform_admin=true
+// on their public.users row can get past this gate. This is what makes a
+// genuine "forgot password" possible for platform admin — a shared string
+// has no account and nowhere to send a reset email, but a real account
+// does, so /forgot-password (already built for players) works here too.
+const paClient = window.supabase.createClient(
+  'https://xkovqamknwyjzlgijcel.supabase.co',
+  'sb_publishable_1zeVlEGjUdGNwA-i8pktHg_nSjRXYEQ'
+);
 
 var scopedLeagueId=null;   // set when a league body is logged in — null in platform-admin mode
 var scopedLeagueName=null;
@@ -360,14 +404,67 @@ async function checkLeagueLogin(){
   }
 }
 
-// Platform admin — site owner, sees every league.
-function checkAdminGate(){
-  var pw=document.getElementById('gate-pw').value;
+// Shared by password login, Google login, and session-restore-on-reload.
+// Some accounts (anyone who signed up via "Continue with Google" on /join
+// or /login) never got a row in public.users — that insert only happens
+// on the email/password signup path elsewhere on the site. Without a row
+// there, is_platform_admin has nowhere to live, so this creates one
+// on-the-fly (defaulting to is_platform_admin=false) if it's missing,
+// then returns whether that account has platform admin access.
+async function checkPlatformAccess(user){
+  var { data:profile } = await paClient.from('users').select('is_platform_admin').eq('id',user.id).single();
+  if(!profile){
+    var username=(user.user_metadata&&(user.user_metadata.username||user.user_metadata.full_name))||user.email.split('@')[0];
+    try{
+      await paClient.from('users').insert({ id:user.id, email:user.email, username:username });
+    }catch(e){ /* row may already exist from a race with another tab - fine either way */ }
+    var { data:retry } = await paClient.from('users').select('is_platform_admin').eq('id',user.id).single();
+    profile=retry;
+  }
+  return !!(profile&&profile.is_platform_admin);
+}
+
+async function signInWithGooglePlatform(){
   var err=document.getElementById('gate-err');
-  if(pw===PLATFORM_ADMIN_PW){
+  err.style.display='none';
+  try{
+    const { error } = await paClient.auth.signInWithOAuth({
+      provider:'google',
+      options:{ redirectTo:'https://flightchalker.co.uk/admin' }
+    });
+    if(error) throw error;
+    // Browser now redirects to Google, then back to /admin — the
+    // page-load handler further down picks up the session from there.
+  }catch(e){
+    err.textContent='Google sign in failed: '+e.message;err.style.display='block';
+  }
+}
+
+// Platform admin — real account sign-in, then check is_platform_admin.
+async function platformLogin(){
+  var email=document.getElementById('pa-email').value.trim();
+  var pw=document.getElementById('pa-password').value;
+  var err=document.getElementById('gate-err');
+  var btn=document.getElementById('pa-login-btn');
+  err.style.display='none';
+  if(!email||!pw){err.textContent='Please enter your email and password.';err.style.display='block';return;}
+  btn.disabled=true;btn.textContent='Signing in…';
+  try{
+    const { data, error } = await paClient.auth.signInWithPassword({ email:email, password:pw });
+    if(error) throw error;
+
+    var allowed=await checkPlatformAccess(data.user);
+    if(!allowed){
+      await paClient.auth.signOut();
+      err.textContent='This account doesn\'t have platform admin access.';err.style.display='block';
+      btn.disabled=false;btn.textContent='Enter';
+      return;
+    }
     enterPlatformMode();
-  }else{
+  }catch(e){
+    err.textContent = e.message==='Invalid login credentials' ? 'Incorrect email or password.' : e.message;
     err.style.display='block';
+    btn.disabled=false;btn.textContent='Enter';
   }
 }
 
@@ -412,21 +509,24 @@ function enterCreateMode(){
   document.getElementById('panel-create').classList.add('active');
 }
 
-function adminLogout(){
+async function adminLogout(){
   sessionStorage.removeItem('fc_admin_mode');
   sessionStorage.removeItem('fc_league_id');
   sessionStorage.removeItem('fc_league_name');
+  try{ await paClient.auth.signOut(); }catch(e){}
   window.location.href='/admin';
 }
 
-// Restore an existing session on reload (per-tab only — sessionStorage).
-(function(){
+// Restore an existing session on reload, AND handle landing back here
+// straight after a Google OAuth redirect (supabase-js picks the session
+// up from the URL automatically — we just need to check it once loaded).
+// League mode is per-tab (sessionStorage only). Platform mode always
+// re-verifies the real Supabase Auth session AND the is_platform_admin
+// flag — so if you're signed out elsewhere, or the flag gets revoked,
+// the gate re-appears instead of trusting a stale local flag.
+(async function(){
   var mode=sessionStorage.getItem('fc_admin_mode');
-  if(mode==='platform'){
-    document.getElementById('admin-gate').style.display='none';
-    document.getElementById('admin-real-content').style.display='block';
-    document.getElementById('header-sub').textContent='Platform Admin · All Leagues';
-  }else if(mode==='league'){
+  if(mode==='league'){
     scopedLeagueId=sessionStorage.getItem('fc_league_id');
     scopedLeagueName=sessionStorage.getItem('fc_league_name');
     document.getElementById('admin-gate').style.display='none';
@@ -434,6 +534,31 @@ function adminLogout(){
     document.getElementById('header-sub').textContent=scopedLeagueName+' · League Admin';
     document.getElementById('tab-leagues').textContent='My League';
     document.getElementById('tab-create').style.display='none';
+    return;
+  }
+
+  // Covers both: (a) mode==='platform' from a previous visit this tab,
+  // and (b) just landed back from Google with no sessionStorage flag yet.
+  try{
+    const { data:{ session } } = await paClient.auth.getSession();
+    if(!session)throw new Error('no session');
+    var allowed=await checkPlatformAccess(session.user);
+    if(!allowed)throw new Error('not platform admin');
+    enterPlatformMode();
+  }catch(e){
+    if(mode)sessionStorage.removeItem('fc_admin_mode');
+    // If we got here via a Google redirect with a real (but unauthorized)
+    // session, sign out cleanly and surface why, rather than leaving them
+    // stuck signed-in-but-blocked with no explanation.
+    try{
+      const { data:{ session } } = await paClient.auth.getSession();
+      if(session){
+        await paClient.auth.signOut();
+        showGatePlatform();
+        document.getElementById('gate-err').textContent="Signed in, but that account doesn't have platform admin access yet.";
+        document.getElementById('gate-err').style.display='block';
+      }
+    }catch(e2){}
   }
 })();
 </script>
