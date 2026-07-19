@@ -100,23 +100,100 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
 </head>
 <body>
 
+<!-- ═══ ADMIN GATE ═══
+     Two access tiers:
+     1. LEAGUE LOGIN — a league body signs in with their league name +
+        the admin password they set when creating their league. Once in,
+        they only ever see/edit their own league (teams, fixtures,
+        notices) — never other leagues on the platform.
+     2. PLATFORM ADMIN — the site owner's master password, unlocks every
+        league (Leagues tab lists all of them).
+     New leagues are created without any login (self-service), same as
+     team registration elsewhere on the site — the league body sets
+     their own password at that point.
+
+     SECURITY NOTE (read before deploying): both checks work by fetching
+     the stored password via the Supabase anon key and comparing it in
+     the browser. That means anyone who reads the page source can see
+     how the check works, and anyone with the anon key (visible in every
+     page's source, by design) could query the `leagues` table directly
+     and bypass this UI entirely. This gate stops casual/opportunistic
+     access and matches the same model already used for team PIN login
+     elsewhere in the app — it is NOT a substitute for Supabase Row
+     Level Security policies restricting who can read `admin_password`
+     and who can write to leagues/teams/fixtures/notices. See the
+     security instructions provided alongside this file.
+     CHANGE PLATFORM_ADMIN_PW BELOW BEFORE DEPLOYING. -->
+<div id="admin-gate" style="position:fixed;inset:0;background:#141814;display:flex;align-items:center;justify-content:center;padding:1.5rem;z-index:9999;overflow-y:auto">
+  <div style="background:var(--surface,#1e251e);border:1px solid var(--border,#3a4a3a);border-radius:12px;padding:2rem;max-width:380px;width:100%">
+
+    <!-- LEAGUE LOGIN (default view) -->
+    <div id="gate-league-login">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:var(--amber,#e8c840);margin-bottom:.4rem">League Administration</div>
+      <div style="font-size:.85rem;color:var(--dim,#8a9080);margin-bottom:1.25rem">Sign in with your league name and admin password to manage your league.</div>
+      <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:.75rem">
+        <label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--dim,#8a9080)">League Name</label>
+        <input type="text" id="ll-name" placeholder="e.g. Monday Night Darts 2026" autocomplete="off" style="background:#141814;border:1px solid var(--border,#3a4a3a);border-radius:6px;color:#e0d8c8;font-family:'Barlow',sans-serif;font-size:.95rem;padding:.6rem .75rem">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:.75rem">
+        <label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--dim,#8a9080)">Admin Password</label>
+        <input type="password" id="ll-pw" placeholder="Your league's admin password" autocomplete="off" onkeydown="if(event.key==='Enter')checkLeagueLogin()" style="background:#141814;border:1px solid var(--border,#3a4a3a);border-radius:6px;color:#e0d8c8;font-family:'Barlow',sans-serif;font-size:.95rem;padding:.6rem .75rem">
+      </div>
+      <div id="ll-err" style="font-size:.8rem;color:var(--red,#c0392b);margin-bottom:.75rem;display:none">League not found or incorrect password.</div>
+      <button onclick="checkLeagueLogin()" style="width:100%;background:var(--green,#4a7c59);border:none;border-radius:8px;color:white;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.65rem;cursor:pointer;margin-bottom:1rem">Log In</button>
+      <div style="text-align:center;font-size:.82rem;border-top:1px solid var(--border,#3a4a3a);padding-top:1rem">
+        <a href="javascript:void(0)" onclick="showGateCreate()" style="color:var(--gl,#5a9469);text-decoration:none">New league? Create one here →</a>
+      </div>
+      <div style="text-align:center;font-size:.75rem;margin-top:.75rem">
+        <a href="javascript:void(0)" onclick="showGatePlatform()" style="color:var(--dim,#8a9080);text-decoration:none">Platform admin? Sign in here →</a>
+      </div>
+    </div>
+
+    <!-- PLATFORM ADMIN LOGIN (hidden by default) -->
+    <div id="gate-platform-login" style="display:none">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:#8ac4ff;margin-bottom:.4rem">Platform Admin</div>
+      <div style="font-size:.85rem;color:var(--dim,#8a9080);margin-bottom:1.25rem">Site-wide access — every league on Flight Chalker.</div>
+      <input type="password" id="gate-pw" placeholder="Platform admin password" autocomplete="off" onkeydown="if(event.key==='Enter')checkAdminGate()" style="width:100%;background:#141814;border:1px solid var(--border,#3a4a3a);border-radius:6px;color:#e0d8c8;font-family:'Barlow',sans-serif;font-size:.95rem;padding:.6rem .75rem;margin-bottom:.75rem">
+      <div id="gate-err" style="font-size:.8rem;color:var(--red,#c0392b);margin-bottom:.75rem;display:none">Incorrect password.</div>
+      <button onclick="checkAdminGate()" style="width:100%;background:#2a5a8c;border:none;border-radius:8px;color:white;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.65rem;cursor:pointer;margin-bottom:1rem">Enter</button>
+      <div style="text-align:center;font-size:.82rem">
+        <a href="javascript:void(0)" onclick="showGateLeagueLogin()" style="color:var(--gl,#5a9469);text-decoration:none">← Back to league login</a>
+      </div>
+    </div>
+
+    <!-- CREATE LEAGUE (hidden by default; reveals the real Create League panel below) -->
+    <div id="gate-create-prompt" style="display:none">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:var(--amber,#e8c840);margin-bottom:.4rem">Create Your League</div>
+      <div style="font-size:.85rem;color:var(--dim,#8a9080);margin-bottom:1.25rem">Set up your own darts league. You'll choose an admin password here — keep it safe, you'll use it to log back in and manage your league.</div>
+      <button onclick="enterCreateMode()" style="width:100%;background:var(--green,#4a7c59);border:none;border-radius:8px;color:white;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.65rem;cursor:pointer;margin-bottom:1rem">Continue →</button>
+      <div style="text-align:center;font-size:.82rem">
+        <a href="javascript:void(0)" onclick="showGateLeagueLogin()" style="color:var(--gl,#5a9469);text-decoration:none">← Back to league login</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="admin-real-content" style="display:none">
+
 <div id="header">
   <div>
     <a href="/" class="logo">Flight <span>Chalker</span></a>
-    <div class="logo-sub">League Administration</div>
+    <div class="logo-sub" id="header-sub">League Administration</div>
   </div>
-  <button class="logout-btn" onclick="window.location.href='/'">Log Out</button>
+  <button class="logout-btn" onclick="adminLogout()">Log Out</button>
 </div>
 
 <main>
   <div class="tabs">
-    <button class="tab active" onclick="showTab('leagues')">Leagues</button>
-    <button class="tab" onclick="showTab('create')">Create League</button>
-    <button class="tab" onclick="showTab('fixtures')">Fixtures</button>
-    <button class="tab" onclick="showTab('notices')">📢 Notices</button>
+    <button class="tab active" id="tab-leagues" onclick="showTab('leagues')">Leagues</button>
+    <button class="tab" id="tab-create" onclick="showTab('create')">Create League</button>
+    <button class="tab" id="tab-fixtures" onclick="showTab('fixtures')">Fixtures</button>
+    <button class="tab" id="tab-notices" onclick="showTab('notices')">📢 Notices</button>
   </div>
 
-  <!-- LEAGUES PANEL -->
+  <!-- LEAGUES PANEL (shows every league in platform-admin mode, or just the
+       logged-in league body's own league in league-scoped mode) -->
   <div id="panel-leagues" class="panel active">
     <div id="leagues-list"><div class="lh"><span class="spin"></span> Loading leagues…</div></div>
   </div>
@@ -238,6 +315,128 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
 
 <div class="toast" id="toast"></div>
 
+</div><!-- /#admin-real-content -->
+
+<script>
+// ── Admin session (client-side speed bump — see warning comment above) ───────
+const PLATFORM_ADMIN_PW='FlightChalkerAdmin2026'; // CHANGE THIS before deploying
+
+var scopedLeagueId=null;   // set when a league body is logged in — null in platform-admin mode
+var scopedLeagueName=null;
+
+function showGateLeagueLogin(){
+  document.getElementById('gate-league-login').style.display='block';
+  document.getElementById('gate-platform-login').style.display='none';
+  document.getElementById('gate-create-prompt').style.display='none';
+}
+function showGatePlatform(){
+  document.getElementById('gate-league-login').style.display='none';
+  document.getElementById('gate-platform-login').style.display='block';
+  document.getElementById('gate-create-prompt').style.display='none';
+}
+function showGateCreate(){
+  document.getElementById('gate-league-login').style.display='none';
+  document.getElementById('gate-platform-login').style.display='none';
+  document.getElementById('gate-create-prompt').style.display='block';
+}
+
+// League body login — looks their league up by name and checks its own
+// admin_password (the one they set when they created the league).
+async function checkLeagueLogin(){
+  var name=document.getElementById('ll-name').value.trim();
+  var pw=document.getElementById('ll-pw').value;
+  var err=document.getElementById('ll-err');
+  err.style.display='none';
+  if(!name||!pw){err.textContent='Please enter your league name and password.';err.style.display='block';return;}
+  try{
+    var rows=await sb('leagues?name=ilike.'+encodeURIComponent(name)+'&select=id,name,admin_password');
+    var league=rows&&rows.find(function(l){return l.name.toLowerCase()===name.toLowerCase();});
+    if(!league||league.admin_password!==pw){
+      err.textContent='League not found or incorrect password.';err.style.display='block';return;
+    }
+    enterLeagueMode(league.id,league.name);
+  }catch(e){
+    err.textContent='Error: '+e.message;err.style.display='block';
+  }
+}
+
+// Platform admin — site owner, sees every league.
+function checkAdminGate(){
+  var pw=document.getElementById('gate-pw').value;
+  var err=document.getElementById('gate-err');
+  if(pw===PLATFORM_ADMIN_PW){
+    enterPlatformMode();
+  }else{
+    err.style.display='block';
+  }
+}
+
+function enterLeagueMode(id,name){
+  scopedLeagueId=id;scopedLeagueName=name;
+  sessionStorage.setItem('fc_admin_mode','league');
+  sessionStorage.setItem('fc_league_id',id);
+  sessionStorage.setItem('fc_league_name',name);
+  document.getElementById('admin-gate').style.display='none';
+  document.getElementById('admin-real-content').style.display='block';
+  document.getElementById('header-sub').textContent=name+' · League Admin';
+  // League-scoped bodies manage only their own league: no cross-league
+  // "Leagues" browser and no separate "Create League" tab (they already
+  // have one). "Leagues" tab is relabelled to show just their league.
+  document.getElementById('tab-leagues').textContent='My League';
+  document.getElementById('tab-create').style.display='none';
+  showTab('leagues');
+}
+
+function enterPlatformMode(){
+  scopedLeagueId=null;scopedLeagueName=null;
+  sessionStorage.setItem('fc_admin_mode','platform');
+  sessionStorage.removeItem('fc_league_id');
+  sessionStorage.removeItem('fc_league_name');
+  document.getElementById('admin-gate').style.display='none';
+  document.getElementById('admin-real-content').style.display='block';
+  document.getElementById('header-sub').textContent='Platform Admin · All Leagues';
+  document.getElementById('tab-leagues').textContent='Leagues';
+  document.getElementById('tab-create').style.display='';
+  showTab('leagues');
+}
+
+// Reveals the existing "Create League" panel with no tabs/nav around it —
+// used for brand-new league bodies who don't have a login yet. On success
+// createLeague() below transitions straight into enterLeagueMode().
+function enterCreateMode(){
+  document.getElementById('admin-gate').style.display='none';
+  document.getElementById('admin-real-content').style.display='block';
+  document.getElementById('header-sub').textContent='Create Your League';
+  document.querySelectorAll('.tabs .tab').forEach(function(t){t.style.display='none';});
+  document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
+  document.getElementById('panel-create').classList.add('active');
+}
+
+function adminLogout(){
+  sessionStorage.removeItem('fc_admin_mode');
+  sessionStorage.removeItem('fc_league_id');
+  sessionStorage.removeItem('fc_league_name');
+  window.location.href='/admin';
+}
+
+// Restore an existing session on reload (per-tab only — sessionStorage).
+(function(){
+  var mode=sessionStorage.getItem('fc_admin_mode');
+  if(mode==='platform'){
+    document.getElementById('admin-gate').style.display='none';
+    document.getElementById('admin-real-content').style.display='block';
+    document.getElementById('header-sub').textContent='Platform Admin · All Leagues';
+  }else if(mode==='league'){
+    scopedLeagueId=sessionStorage.getItem('fc_league_id');
+    scopedLeagueName=sessionStorage.getItem('fc_league_name');
+    document.getElementById('admin-gate').style.display='none';
+    document.getElementById('admin-real-content').style.display='block';
+    document.getElementById('header-sub').textContent=scopedLeagueName+' · League Admin';
+    document.getElementById('tab-leagues').textContent='My League';
+    document.getElementById('tab-create').style.display='none';
+  }
+})();
+</script>
 <script>
 const SB='https://xkovqamknwyjzlgijcel.supabase.co';
 const SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhrb3ZxYW1rbnd5anpsZ2lqY2VsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0MzkxMTQsImV4cCI6MjA5NzAxNTExNH0.3KtXmzojAdvYbKLW0LP0BmfaqRz4oBEK7k0xFsGDmXI';
@@ -817,8 +1016,8 @@ function toast(msg,isErr){
 }
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-// Init
-loadLeagues();
+// Init — only auto-loads if a session was already unlocked this tab
+if(sessionStorage.getItem('fc_admin_mode'))loadLeagues();
 </script>
 </body>
 </html>
