@@ -520,6 +520,20 @@ async function fcInit(){
       tier: 'free'
     };
 
+    // Google-only accounts may not have a public.users row yet — see
+    // dashboard/index.html for the full explanation. Create it here too
+    // in case this page is reached directly without passing through the
+    // dashboard first. Runs regardless of SUBSCRIPTIONS_ENABLED below, so
+    // the row exists and is ready the moment subscriptions go live.
+    try{
+      var { data:existingProfile } = await sb.from('users').select('id').eq('id',su.id).single();
+      if(!existingProfile){
+        await sb.from('users').insert({ id:su.id, email:su.email, username:fcUser.username });
+      }
+    }catch(profileErr){
+      console.error('Profile row check/create failed (non-fatal):',profileErr);
+    }
+
     // Subscriptions are switched off site-wide right now (see
     // /subscription-config.js) — everyone gets full access, no tier
     // lookup, no gate. Flip SUBSCRIPTIONS_ENABLED to true when ready.
