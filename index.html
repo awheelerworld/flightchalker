@@ -123,6 +123,17 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
 /* ── Cards ── */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.25rem;margin-bottom:1.5rem}
 .card h2{font-family:'Barlow Condensed',sans-serif;font-size:.75rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);margin-bottom:1rem}
+
+/* ── Help / Support accordion ── */
+.help-item{border:1px solid var(--border);border-radius:6px;margin-bottom:.6rem;background:var(--bg);overflow:hidden}
+.help-item summary{cursor:pointer;padding:.75rem 1rem;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.95rem;letter-spacing:.02em;color:var(--text);list-style:none}
+.help-item summary::-webkit-details-marker{display:none}
+.help-item summary::after{content:'+';float:right;color:var(--gl);font-weight:900}
+.help-item[open] summary::after{content:'−'}
+.help-item .help-body{padding:0 1rem 1rem;font-size:.85rem;color:var(--dim);line-height:1.6}
+.help-item .help-body ol,.help-item .help-body ul{padding-left:1.25rem;margin-top:.25rem}
+.help-item .help-body li{margin-bottom:.4rem}
+.help-item .help-body strong{color:var(--text)}
 .card.admin-card{border-color:var(--blue);background:#0d1e2e}
 .card.admin-card h2{color:#5a9abf}
 
@@ -486,6 +497,9 @@ html{scroll-behavior:smooth}
     <div class="auth-card">
       <h2>Register Your Team</h2>
       <p>Enter your league code and team details to get started. Your league code will have been provided by your league administrator. Questions? Email <a href="/cdn-cgi/l/email-protection#462f28202906202a2f212e32252e272a2d233468252968332d" style="color:var(--amber);text-decoration:none"><span class="__cf_email__" data-cfemail="026b6c646d42646e6b656a76616a636e6967702c616d2c7769">[email&#160;protected]</span></a></p>
+      <div style="background:#1a2a1e;border:1px solid var(--green);border-radius:6px;padding:.75rem 1rem;margin-bottom:1.5rem;font-size:.8rem;color:var(--dim);line-height:1.5">
+        <strong style="color:var(--gl)">🎯 Currently free!</strong> Flight Chalker is free to use. If we introduce a subscription in the future, registered members will always receive advance notice and a grace period before any charges apply.
+      </div>
       <div class="afield"><label>League Code</label><input type="text" id="reg-league-code" placeholder="e.g. ABC123" style="text-transform:uppercase"></div>
       <div id="reg-league-info" style="display:none;background:var(--s3);border:1px solid var(--border);border-radius:6px;padding:.75rem;margin-bottom:1rem;font-size:.85rem">
         <div style="font-weight:600;color:var(--amber)" id="reg-league-name"></div>
@@ -560,6 +574,7 @@ html{scroll-behavior:smooth}
   <div id="section-admin-login" class="section-anchor" style="display:flex;justify-content:center;padding:2rem 1rem 3rem;border-top:1px solid var(--border);scroll-margin-top:0">
     <div class="auth-card" style="border-color:var(--blue);background:#0d1e2e">
       <h2 style="color:#8ac4ff">⚙ League Admin</h2>
+      <p>Are you looking for a system to record your darts league scores? Look no further. Flight Chalker offers a service for leagues to create a full fixture list, set up teams, assign team captains, and manage the league and results — all in one place.</p>
       <p>Click below to access the league administration panel.</p>
       <div class="arow"><a href="/admin" class="btn-admin" style="text-decoration:none;display:inline-block;text-align:center">Enter Admin Panel →</a></div>
       <div class="ast" id="admin-status"></div>
@@ -680,6 +695,7 @@ html{scroll-behavior:smooth}
       <button class="tab" onclick="sw('players')">Players</button>
       <button class="tab" onclick="sw('stats')">Stats</button>
       <button class="tab" id="squad-tab" onclick="sw('squad')" style="display:none">Squad <span id="squad-badge" style="display:none;background:var(--red);color:white;border-radius:10px;padding:1px 6px;font-size:.7rem;margin-left:3px">0</span></button>
+      <button class="tab" onclick="sw('help')">❓ Help</button>
     </div>
 
     <!-- RECORD MATCH -->
@@ -825,6 +841,98 @@ html{scroll-behavior:smooth}
           <div id="link-result" style="margin-top:.5rem;font-size:.8rem"></div>
           <div id="link-status-list" style="margin-top:.75rem"></div>
         </div>
+      </div>
+    </div>
+
+    <!-- HELP / SUPPORT -->
+    <div id="tab-help" class="tc">
+      <div class="card">
+        <h2>How to Use Flight Chalker</h2>
+        <p style="font-size:.82rem;color:var(--dim);margin-bottom:1rem">Tap a section below to expand it. If you're still stuck, scroll down for how to contact us.</p>
+
+        <details class="help-item" open>
+          <summary>🎯 Recording a Match</summary>
+          <div class="help-body">
+            <ol>
+              <li>Go to the <strong>Record Match</strong> tab.</li>
+              <li>Fill in the <strong>Date</strong>, <strong>Opponent</strong> and whether it's <strong>Home</strong> or <strong>Away</strong> under Match Details.</li>
+              <li>For each Single, Double and Team Game row, select the player(s) from the dropdown, then use the <strong>−</strong> / <strong>+</strong> buttons to record legs won and lost as the match is played. The result badge updates automatically once one side is ahead.</li>
+              <li>Enter any 80+ scores as they happen using the score box under each row — press Enter or tap <strong>+</strong> to log each one. A 180 is highlighted with a star.</li>
+              <li>The scorebar at the top keeps a running total of legs, matches won and 80+ scores for the whole match.</li>
+            </ol>
+          </div>
+        </details>
+
+        <details class="help-item">
+          <summary>💾 Save Draft, Save & Submit, Clear</summary>
+          <div class="help-body">
+            <ul>
+              <li><strong>💾 Save Draft</strong> — saves your progress without submitting the result. Use this mid-match if you want to finish entering scores later; you'll be offered to restore it next time you open Record Match.</li>
+              <li><strong>Save & Submit</strong> — finalises and submits the result. This updates the League Table, History and Stats immediately, and marks the fixture as played.</li>
+              <li><strong>Clear</strong> — wipes the current form. Use this if you've started entering the wrong match.</li>
+              <li><strong>✉ Email Results</strong> — opens your email app with the match result pre-filled, ready to send to your league secretary or WhatsApp group.</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="help-item">
+          <summary>📅 Fixtures</summary>
+          <div class="help-body">
+            <p>The <strong>Fixtures</strong> tab lists your team's remaining fixtures for the season. Tap <strong>Record Results</strong> on a fixture to load the date, opponent and venue straight into the Record Match form — no need to type them in again.</p>
+          </div>
+        </details>
+
+        <details class="help-item">
+          <summary>🏆 League Table</summary>
+          <div class="help-body">
+            <p>The <strong>League Table</strong> tab shows the live standings for your league, calculated from every submitted result across all teams. It updates automatically as soon as a match is submitted — by any team, not just yours.</p>
+          </div>
+        </details>
+
+        <details class="help-item">
+          <summary>📜 History &amp; Match PDFs</summary>
+          <div class="help-body">
+            <p>The <strong>History</strong> tab lists every match your team has submitted. Use the search box or the results filter (Wins/Losses/Draws) to find a specific match.</p>
+            <p style="margin-top:.5rem">Each match has three actions:</p>
+            <ul>
+              <li><strong>Edit</strong> — correct a mistake in a submitted result.</li>
+              <li><strong>Delete</strong> — remove a match entirely (this cannot be undone).</li>
+              <li><strong>PDF</strong> — downloads a report of that match. You'll be asked to choose:
+                <ul style="margin-top:.4rem">
+                  <li><strong>📋 Team Copy</strong> — every 80+ score shown per player, great for sharing in the team group chat.</li>
+                  <li><strong>🏆 League Copy</strong> — results and 180s only, the version most leagues want for official submission.</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="help-item">
+          <summary>👥 Players &amp; Squad</summary>
+          <div class="help-body">
+            <p>The <strong>Players</strong> tab is where you add or remove players from your team roster — these are the names that appear in the dropdowns when recording a match.</p>
+            <p style="margin-top:.5rem">If you're the team captain, you'll also see a <strong>Squad</strong> tab with extra tools:</p>
+            <ul>
+              <li>Your <strong>Team Join Code</strong> — share this with your players so they can link their own Flight Chalker account to the team and see their personal stats.</li>
+              <li><strong>Pending Join Requests</strong> — approve or decline players asking to join using your code.</li>
+              <li><strong>Link Player Accounts</strong> — manually connect a player's account to their match history if your captain was recording scores on their behalf before they signed up.</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="help-item">
+          <summary>📊 Stats</summary>
+          <div class="help-body">
+            <p>The <strong>Stats</strong> tab shows individual player statistics for the season — select a player from the dropdown to see their record, average, and 80+/180 counts.</p>
+          </div>
+        </details>
+
+        <details class="help-item">
+          <summary>🙋 Still Need Help?</summary>
+          <div class="help-body">
+            <p>Email us at <a href="/cdn-cgi/l/email-protection#462f28202906202a2f212e32252e272a2d233468252968332d" style="color:var(--amber);text-decoration:none"><span class="__cf_email__" data-cfemail="026b6c646d42646e6b656a76616a636e6967702c616d2c7769">[email&#160;protected]</span></a> and we'll help you sort it out.</p>
+          </div>
+        </details>
       </div>
     </div>
   </main>
@@ -1010,7 +1118,6 @@ html{scroll-behavior:smooth}
 // Clear session immediately if ?home=1 param present
 const SB='https://xkovqamknwyjzlgijcel.supabase.co';
 const SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhrb3ZxYW1rbnd5anpsZ2lqY2VsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0MzkxMTQsImV4cCI6MjA5NzAxNTExNH0.3KtXmzojAdvYbKLW0LP0BmfaqRz4oBEK7k0xFsGDmXI';
-const MASTER_PW='FlightChalkerAdmin2026';
 const LEAGUE_EMAIL='results@flightchalker.co.uk';
 
 // ── Player-account bridge ──────────────────────────────────────────────
@@ -1028,7 +1135,6 @@ async function tryAutoLinkPlayer(){
     if(!session)return false; // no player logged in - normal for team-only captains
 
     var links=await sb('team_players?linked_user_id=eq.'+session.user.id+'&select=team_id,name');
-    console.log('tryAutoLinkPlayer: found links for', session.user.id, links);
     if(!links||!links.length)return false; // player logged in but not linked to any team yet - normal
 
     var uniqueTeamIds=Array.from(new Set(links.map(function(l){return l.team_id;})));
@@ -1106,7 +1212,6 @@ let currentTeam=null,currentLeague=null,players=[],matchHistory=[],leagueFixture
     localStorage.removeItem('mld_admin');
     currentTeam=null;currentLeague=null;
     window.history.replaceState({},'','/');
-    console.log('Session cleared via URL param');
   }
 })();
 let regPlayers=[],regLeague=null,delId=null,confirmCb=null,editSt=null,charts={};
@@ -2733,7 +2838,7 @@ function initCollapsibles(){
 }
 
 function sw(name){
-  var names=['match','fixtures','table','history','players','stats','squad'];
+  var names=['match','fixtures','table','history','players','stats','squad','help'];
   document.querySelectorAll('#screen-app .tab').forEach(function(t,i){t.classList.toggle('active',names[i]===name);});
   document.querySelectorAll('#screen-app .tc').forEach(function(c){c.classList.remove('active');});
   document.getElementById('tab-'+name).classList.add('active');
