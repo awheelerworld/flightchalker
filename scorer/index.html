@@ -472,7 +472,6 @@ async function fcInit(){
       username: (su.user_metadata&&su.user_metadata.username) || su.email.split('@')[0],
       email: su.email
     };
-    console.log('FC Player:',fcUser.username);
     return true;
   }catch(e){
     console.error('Scorer page auth check failed:',e);
