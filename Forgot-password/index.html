@@ -1,0 +1,179 @@
+<!-- VERSION: v1-forgot-password-otp -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzE0MTgxNCIvPgogIDxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YTdjNTkiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNGE3YzU5IiBzdHJva2Utd2lkdGg9IjEiLz4KICA8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI0IiBmaWxsPSIjZThjODQwIi8+Cjwvc3ZnPg==">
+  <meta name="description" content="Reset your Flight Chalker account password.">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="canonical" href="https://flightchalker.co.uk/forgot-password">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reset Password — Flight Chalker</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#141814;--surface:#1e251e;--s3:#2e382e;--green:#4a7c59;--gl:#5a9469;--amber:#e8c840;--red:#c0392b;--text:#e0d8c8;--dim:#8a9080;--border:#3a4a3a}
+body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem}
+.logo{text-align:center;margin-bottom:2rem}
+.logo-title{font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:900;letter-spacing:.05em;text-transform:uppercase}
+.logo-title span{color:var(--amber)}
+.logo-sub{font-size:.8rem;color:var(--dim);letter-spacing:.15em;text-transform:uppercase;margin-top:4px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2rem;width:100%;max-width:400px}
+.card h2{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:var(--amber);margin-bottom:.4rem}
+.card p{font-size:.85rem;color:var(--dim);margin-bottom:1.5rem;line-height:1.5}
+.field{display:flex;flex-direction:column;gap:4px;margin-bottom:.75rem}
+.field label{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--dim)}
+.field input{background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.95rem;padding:.55rem .75rem}
+.field input:focus{outline:none;border-color:var(--green)}
+.field input.code-input{letter-spacing:.5em;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;font-weight:700}
+.btn-submit{width:100%;background:var(--green);border:none;border-radius:8px;color:white;font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.75rem;cursor:pointer;margin-top:.5rem;transition:background .15s}
+.btn-submit:hover{background:var(--gl)}
+.btn-submit:disabled{opacity:.6;cursor:default}
+.links{display:flex;justify-content:space-between;margin-top:1rem;font-size:.8rem}
+.links a{color:var(--gl);text-decoration:none}
+.error{font-size:.8rem;color:var(--red);margin-top:.5rem;display:none}
+.note{font-size:.78rem;color:var(--dim);margin-top:.75rem;line-height:1.5}
+.success{display:none;text-align:center}
+.success .tick{font-size:2.5rem;margin-bottom:.5rem}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="logo">
+  <a href="/" style="text-decoration:none;color:inherit">
+    <div class="logo-title">Flight <span>Chalker</span></div>
+    <div class="logo-sub">Darts League Platform</div>
+  </a>
+</div>
+
+<div class="card">
+
+  <!-- STEP 1: request a code -->
+  <div id="step-email">
+    <h2>Forgot Password?</h2>
+    <p>Enter the email address on your account and we'll send you a 6-digit reset code.</p>
+    <div class="field">
+      <label>Email Address</label>
+      <input type="email" id="fp-email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')sendCode()">
+    </div>
+    <div class="error" id="email-error"></div>
+    <button class="btn-submit" id="send-btn" onclick="sendCode()">Send Reset Code</button>
+    <div class="links">
+      <a href="/login">← Back to login</a>
+      <a href="/join">Create account</a>
+    </div>
+  </div>
+
+  <!-- STEP 2: enter code + new password -->
+  <div id="step-code" style="display:none">
+    <h2>Enter Your Code</h2>
+    <p>We've sent a 6-digit code to <strong id="sent-to-email" style="color:var(--text)"></strong>. Enter it below along with your new password.</p>
+    <div class="field">
+      <label>6-Digit Code</label>
+      <input type="text" id="fp-code" class="code-input" inputmode="numeric" maxlength="6" placeholder="000000">
+    </div>
+    <div class="field">
+      <label>New Password</label>
+      <input type="password" id="fp-newpw" placeholder="At least 8 characters">
+    </div>
+    <div class="field">
+      <label>Confirm New Password</label>
+      <input type="password" id="fp-newpw2" placeholder="Re-enter your new password" onkeydown="if(event.key==='Enter')resetPassword()">
+    </div>
+    <div class="error" id="code-error"></div>
+    <button class="btn-submit" id="reset-btn" onclick="resetPassword()">Reset Password</button>
+    <div class="note">Didn't get a code? Check your spam folder, or <a href="javascript:void(0)" onclick="backToEmail()" style="color:var(--gl)">try a different email</a>.</div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="success" id="step-success">
+    <div class="tick">✅</div>
+    <h2>Password Updated!</h2>
+    <p style="margin-bottom:0">You're all set — taking you to your dashboard…</p>
+  </div>
+
+</div>
+
+<script>
+const sb = window.supabase.createClient(
+  'https://xkovqamknwyjzlgijcel.supabase.co',
+  'sb_publishable_1zeVlEGjUdGNwA-i8pktHg_nSjRXYEQ'
+);
+
+var fpEmail=null;
+
+async function sendCode(){
+  var email=document.getElementById('fp-email').value.trim();
+  var err=document.getElementById('email-error');
+  var btn=document.getElementById('send-btn');
+  err.style.display='none';
+  if(!email||!email.includes('@')){
+    err.textContent='Please enter a valid email address.';err.style.display='block';return;
+  }
+  btn.disabled=true;btn.innerHTML='<span class="spin"></span>Sending…';
+  try{
+    const { error } = await sb.auth.resetPasswordForEmail(email);
+    if(error) throw error;
+    fpEmail=email;
+    document.getElementById('sent-to-email').textContent=email;
+    document.getElementById('step-email').style.display='none';
+    document.getElementById('step-code').style.display='block';
+  }catch(e){
+    // Don't reveal whether the email exists on the account - show the same
+    // generic message either way and still move to the code step.
+    fpEmail=email;
+    document.getElementById('sent-to-email').textContent=email;
+    document.getElementById('step-email').style.display='none';
+    document.getElementById('step-code').style.display='block';
+  }
+  btn.disabled=false;btn.innerHTML='Send Reset Code';
+}
+
+function backToEmail(){
+  document.getElementById('step-code').style.display='none';
+  document.getElementById('step-email').style.display='block';
+  document.getElementById('fp-code').value='';
+  document.getElementById('fp-newpw').value='';
+  document.getElementById('fp-newpw2').value='';
+}
+
+async function resetPassword(){
+  var code=document.getElementById('fp-code').value.trim();
+  var pw=document.getElementById('fp-newpw').value;
+  var pw2=document.getElementById('fp-newpw2').value;
+  var err=document.getElementById('code-error');
+  var btn=document.getElementById('reset-btn');
+  err.style.display='none';
+
+  if(!code||code.length<6){err.textContent='Please enter the 6-digit code from your email.';err.style.display='block';return;}
+  if(!pw||pw.length<8){err.textContent='Password must be at least 8 characters.';err.style.display='block';return;}
+  if(pw!==pw2){err.textContent='Passwords do not match.';err.style.display='block';return;}
+
+  btn.disabled=true;btn.innerHTML='<span class="spin"></span>Verifying…';
+  try{
+    // Verifying the code establishes a logged-in recovery session.
+    const { error:verifyErr } = await sb.auth.verifyOtp({
+      email: fpEmail,
+      token: code,
+      type: 'recovery'
+    });
+    if(verifyErr) throw verifyErr;
+
+    const { error:updateErr } = await sb.auth.updateUser({ password: pw });
+    if(updateErr) throw updateErr;
+
+    document.getElementById('step-code').style.display='none';
+    document.getElementById('step-success').style.display='block';
+    setTimeout(function(){window.location.href='/dashboard';},1800);
+  }catch(e){
+    err.textContent = e.message || 'That code is invalid or has expired. Please request a new one.';
+    err.style.display='block';
+    btn.disabled=false;btn.innerHTML='Reset Password';
+  }
+}
+</script>
+</body>
+</html>
