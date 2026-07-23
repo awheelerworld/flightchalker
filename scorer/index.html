@@ -183,6 +183,31 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
 .toast.show{transform:translateX(-50%) translateY(0)}
 .toast.err{background:var(--red)}
 .toast.bust-toast{background:var(--red);font-size:1.2rem}
+
+/* Halve-It round customiser */
+.hi-round-list{margin-top:.6rem}
+.hi-round-row{display:flex;align-items:center;gap:.4rem;background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:.4rem .5rem;margin-bottom:.3rem;cursor:grab}
+.hi-round-row.dragging{opacity:.4;border-color:var(--amber)}
+.hi-drag-handle{color:var(--dim);font-size:1rem;cursor:grab}
+.hi-round-num{color:var(--dim);font-size:.78rem;width:1.4rem}
+.hi-round-target{flex:1;font-family:'Barlow Condensed',sans-serif;font-weight:700;color:var(--amber)}
+.hi-move{background:none;border:1px solid var(--border);border-radius:4px;color:var(--text);width:26px;height:26px;font-size:.7rem;cursor:pointer}
+.hi-move:disabled{opacity:.25;cursor:default}
+.hi-remove{background:none;border:1px solid var(--red);color:var(--red);border-radius:4px;width:26px;height:26px;font-size:.75rem;cursor:pointer}
+.hi-preset-del{position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;border:none;border-radius:50%;width:16px;height:16px;font-size:.6rem;line-height:16px;cursor:pointer;padding:0}
+.hi-round-count{font-size:.75rem;color:var(--dim);margin-top:.3rem}
+
+/* Rules modal */
+.rules-btn{background:none;border:1px solid var(--amber);color:var(--amber);border-radius:6px;padding:.3rem .6rem;font-size:.8rem;cursor:pointer;white-space:nowrap}
+.rules-btn:active{background:var(--amber);color:#000}
+#rules-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;padding:1rem}
+#rules-modal-overlay.open{display:flex}
+#rules-modal{background:var(--s2);border:1px solid var(--border);border-radius:10px;max-width:480px;width:100%;max-height:85vh;overflow-y:auto;padding:1.2rem}
+#rules-modal h2{color:var(--amber);font-family:'Barlow Condensed',sans-serif;margin-bottom:.3rem}
+#rules-modal h4{margin:.8rem 0 .3rem;font-size:.85rem;text-transform:uppercase;letter-spacing:.03em;color:var(--dim)}
+#rules-modal p,#rules-modal li{font-size:.9rem;line-height:1.5}
+#rules-modal ul{padding-left:1.1rem}
+#rules-modal .close-btn{float:right;background:none;border:none;color:var(--dim);font-size:1.3rem;cursor:pointer;line-height:1}
 </style>
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-WQRGJRFF1Q"></script>
@@ -218,7 +243,48 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
         <button class="score-btn" onclick="selectMode('shanghai')">Shanghai</button>
         <button class="score-btn" onclick="selectMode('halveit')">Halve-It</button>
       </div>
-      <div id="mode-desc" style="font-size:.8rem;color:var(--dim);margin-top:.6rem;line-height:1.4">Count down from your starting score. Double to finish.</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-top:.6rem">
+        <div id="mode-desc" style="font-size:.8rem;color:var(--dim);line-height:1.4;flex:1">Count down from your starting score. Double to finish.</div>
+        <button class="rules-btn" onclick="showRules(selectedMode)">❓ Rules</button>
+      </div>
+    </div>
+
+    <div id="halveit-setup" style="display:none">
+      <div class="setup-section">
+        <h3>Rounds <span class="hi-round-count" id="hi-round-count"></span></h3>
+
+        <div style="font-size:.75rem;color:var(--dim);margin-bottom:.4rem">Presets</div>
+        <div class="score-btns" id="hi-preset-btns" style="grid-template-columns:repeat(2,1fr)"></div>
+
+        <div style="display:flex;gap:.4rem;align-items:center;margin-top:.5rem">
+          <label style="font-size:.75rem;color:var(--dim)">Or randomise:</label>
+          <select id="hi-random-count" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:.35rem">
+            <option value="5">5 rounds</option>
+            <option value="7" selected>7 rounds</option>
+            <option value="10">10 rounds</option>
+            <option value="15">15 rounds</option>
+          </select>
+          <button class="hbtn" onclick="hiRandomize(parseInt(document.getElementById('hi-random-count').value))">🎲 Randomise</button>
+        </div>
+
+        <div class="hi-round-list" id="hi-round-list"></div>
+
+        <div style="display:flex;gap:.4rem;margin-top:.5rem">
+          <select id="hi-add-type" onchange="hiUpdateNumSelect()" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:.4rem">
+            <option value="S">Single</option>
+            <option value="D">Double</option>
+            <option value="T">Treble</option>
+            <option value="B">Bullseye</option>
+          </select>
+          <select id="hi-add-num" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:.4rem"></select>
+          <button class="hbtn" onclick="hiAddTarget()">+ Add</button>
+        </div>
+
+        <div style="display:flex;gap:.4rem;margin-top:.6rem">
+          <input type="text" id="hi-preset-name" placeholder="Name this set to save it for everyone" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:.4rem .6rem">
+          <button class="hbtn" onclick="hiSavePreset()">💾 Save</button>
+        </div>
+      </div>
     </div>
 
     <div id="x01-options">
@@ -289,7 +355,8 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
       <a href="/dashboard" class="hdr-logo" style="text-decoration:none;color:inherit">Flight <span>Chalker</span></a>
       <div class="hdr-sub" id="game-sub">Leg 1</div>
     </div>
-    <div style="display:flex;gap:.5rem">
+    <div style="display:flex;gap:.5rem;align-items:center">
+      <button class="rules-btn" onclick="showRules('x01')">❓</button>
       <button class="hbtn" onclick="undoLast()">↩ Undo</button>
       <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button>
     </div>
@@ -335,7 +402,8 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
 <div id="screen-cricket" class="screen">
   <div class="hdr">
     <div><a href="/dashboard" class="hdr-logo" style="text-decoration:none;color:inherit">Flight <span>Chalker</span></a><div class="hdr-sub">Cricket</div></div>
-    <div style="display:flex;gap:.5rem">
+    <div style="display:flex;gap:.5rem;align-items:center">
+      <button class="rules-btn" onclick="showRules('cricket')">❓</button>
       <button class="hbtn" onclick="undoLast()">↩ Undo</button>
       <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button>
     </div>
@@ -358,7 +426,8 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
 <div id="screen-killer" class="screen">
   <div class="hdr">
     <div><a href="/dashboard" class="hdr-logo" style="text-decoration:none;color:inherit">Flight <span>Chalker</span></a><div class="hdr-sub">Killer</div></div>
-    <div style="display:flex;gap:.5rem">
+    <div style="display:flex;gap:.5rem;align-items:center">
+      <button class="rules-btn" onclick="showRules('killer')">❓</button>
       <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button>
     </div>
   </div>
@@ -381,7 +450,8 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
 <div id="screen-shanghai" class="screen">
   <div class="hdr">
     <div><a href="/dashboard" class="hdr-logo" style="text-decoration:none;color:inherit">Flight <span>Chalker</span></a><div class="hdr-sub">Shanghai</div></div>
-    <div style="display:flex;gap:.5rem">
+    <div style="display:flex;gap:.5rem;align-items:center">
+      <button class="rules-btn" onclick="showRules('shanghai')">❓</button>
       <button class="hbtn" onclick="undoLast()">↩ Undo</button>
       <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button>
     </div>
@@ -409,7 +479,8 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
 <div id="screen-halveit" class="screen">
   <div class="hdr">
     <div><a href="/dashboard" class="hdr-logo" style="text-decoration:none;color:inherit">Flight <span>Chalker</span></a><div class="hdr-sub">Halve-It</div></div>
-    <div style="display:flex;gap:.5rem">
+    <div style="display:flex;gap:.5rem;align-items:center">
+      <button class="rules-btn" onclick="showRules('halveit')">❓</button>
       <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button>
     </div>
   </div>
@@ -444,6 +515,15 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
     <div class="win-legs" id="win-legs"></div>
     <button class="btn-again" onclick="playAgain()">Play Again 🎯</button>
     <button class="btn-new" onclick="showScreen('screen-setup')">New Game Setup</button>
+  </div>
+</div>
+
+<div id="rules-modal-overlay" onclick="if(event.target===this)closeRules()">
+  <div id="rules-modal">
+    <button class="close-btn" onclick="closeRules()">✕</button>
+    <h2 id="rules-title"></h2>
+    <p id="rules-objective"></p>
+    <div id="rules-body"></div>
   </div>
 </div>
 
@@ -946,6 +1026,71 @@ function selectMode(mode){
   event.target.classList.add('sel');
   document.getElementById('mode-desc').textContent=modeDescs[mode];
   document.getElementById('x01-options').style.display=mode==='x01'?'block':'none';
+  document.getElementById('halveit-setup').style.display=mode==='halveit'?'block':'none';
+}
+
+// ── RULES MODAL ──────────────────────────────────────────────────────────────
+var gameRules={
+  x01:{
+    title:'X01 (301 / 501 / 701)',
+    objective:'Race to reduce your score from the starting number to exactly zero.',
+    body:'<h4>How to play</h4><ul>'+
+      '<li>Each player starts on the chosen score (e.g. 501).</li>'+
+      '<li>Take turns throwing 3 darts; the total is subtracted from your score.</li>'+
+      '<li>You must finish on a <b>double</b> (or the bullseye, which counts as double 25) — landing on exactly 0 any other way doesn\u2019t count.</li>'+
+      '<li>If a throw would take you below 0, to exactly 1, or to 0 without a checkout dart, it\u2019s a "bust" — your score resets to what it was before that turn.</li>'+
+      '</ul><h4>Winning</h4><p>First player to reach exactly 0 with a valid double-out wins.</p>'
+  },
+  cricket:{
+    title:'Cricket',
+    objective:'Be the first to "close" the numbers 15–20 and Bull, while having the highest (or equal) points among closed numbers.',
+    body:'<h4>How to play</h4><ul>'+
+      '<li>Only 15, 16, 17, 18, 19, 20 and Bull count.</li>'+
+      '<li>Hit a number 3 times (singles = 1 mark, doubles = 2, trebles = 3) to "open" it for you.</li>'+
+      '<li>Once you\u2019ve hit it 3 times, further hits on that number score points — but only if at least one opponent hasn\u2019t closed it yet.</li>'+
+      '<li>A number is "closed" for good once every player has hit it 3 times — no more points can be scored on it.</li>'+
+      '</ul><h4>Winning</h4><p>First player to close all their numbers AND have a points total equal to or higher than every opponent wins.</p>'
+  },
+  killer:{
+    title:'Killer',
+    objective:'Knock every other player out of the game by taking away their lives.',
+    body:'<h4>How to play</h4><ul>'+
+      '<li>Each player is assigned their own number on the board and throws to find it, then must hit doubles on their own number to become a "Killer".</li>'+
+      '<li>Once you\u2019re a Killer, hitting doubles on an opponent\u2019s number removes one of their lives — hitting your own number by mistake costs you a life instead.</li>'+
+      '<li>Each player starts with a set number of lives.</li>'+
+      '</ul><h4>Winning</h4><p>Last player with lives remaining wins.</p>'
+  },
+  shanghai:{
+    title:'Shanghai',
+    objective:'Score the most points across the numbered rounds — or win instantly with a "Shanghai".',
+    body:'<h4>How to play</h4><ul>'+
+      '<li>The game runs through 7 rounds — in round N, only hits on number N score.</li>'+
+      '<li>Singles, doubles, and trebles on that round\u2019s number all count toward your total.</li>'+
+      '<li>Hitting a single, double, and treble of that round\u2019s number in the same turn ("a Shanghai") wins the game outright, instantly.</li>'+
+      '</ul><h4>Winning</h4><p>Highest total after the final round wins, unless someone hits a Shanghai first.</p>'
+  },
+  halveit:{
+    title:'Halve-It',
+    objective:'Hit each round\u2019s target to add points — miss it completely and your whole score gets halved.',
+    body:'<h4>How to play</h4><ul>'+
+      '<li>Each round has a specific target (e.g. "20", "Double 7", "Treble 10", "Double Bull").</li>'+
+      '<li>Throw 3 darts at that round\u2019s target — any darts that hit it add to your score.</li>'+
+      '<li>If none of your 3 darts hit the target at all, your <b>entire running score is halved</b>, rounded down.</li>'+
+      '<li>Play moves through each round in order; everyone plays the same targets.</li>'+
+      '</ul><h4>Winning</h4><p>Highest score after the final round wins.</p>'
+  }
+};
+
+function showRules(mode){
+  var r=gameRules[mode];
+  if(!r){toast('No rules written for this mode yet',true);return;}
+  document.getElementById('rules-title').textContent=r.title;
+  document.getElementById('rules-objective').textContent=r.objective;
+  document.getElementById('rules-body').innerHTML=r.body;
+  document.getElementById('rules-modal-overlay').classList.add('open');
+}
+function closeRules(){
+  document.getElementById('rules-modal-overlay').classList.remove('open');
 }
 
 var _origStart=startGame;
@@ -1159,9 +1304,176 @@ var halveit={};
 var hiTargets=[20,16,'D7',14,'T10',17,'D Bull'];
 var hiValues=[20,16,14,14,30,17,50];
 
+// ── HALVE-IT ROUND CUSTOMISER ────────────────────────────────────────────────
+var hiBuiltinPresets={
+  'Standard 7':[20,16,'D7',14,'T10',17,'D Bull'],
+  'Big Numbers':[20,19,18,17,16,15,'D Bull'],
+  'Doubles Warm-up':['D5','D10','D15','D20','D Bull'],
+  'Trebles Gauntlet':['T20','T19','T18','T17','T16'],
+  'Quick 5':[20,'D5','T5',15,'D Bull']
+};
+var hiCustomRounds=hiBuiltinPresets['Standard 7'].slice();
+var hiSharedPresetsCache=[];
+
+var hiFullTargetPool=(function(){
+  var pool=[];
+  for(var i=1;i<=20;i++)pool.push(String(i));
+  for(var i=1;i<=20;i++)pool.push('D'+i);
+  for(var i=1;i<=20;i++)pool.push('T'+i);
+  pool.push('25','D Bull');
+  return pool;
+})();
+
+function hiUpdateNumSelect(){
+  var type=document.getElementById('hi-add-type').value;
+  var sel=document.getElementById('hi-add-num');
+  if(type==='B'){
+    sel.innerHTML='<option value="25">Single Bull (25)</option><option value="D Bull">Double Bull (50)</option>';
+  } else {
+    var opts='';
+    for(var i=1;i<=20;i++)opts+='<option value="'+i+'">'+i+'</option>';
+    sel.innerHTML=opts;
+  }
+}
+function hiAddTarget(){
+  var type=document.getElementById('hi-add-type').value;
+  var num=document.getElementById('hi-add-num').value;
+  var code=(type==='B'||type==='S')?num:(type+num);
+  hiCustomRounds.push(code);
+  hiRenderRoundList();
+}
+function hiRemove(i){hiCustomRounds.splice(i,1);hiRenderRoundList();}
+function hiMove(i,dir){
+  var j=i+dir;
+  if(j<0||j>=hiCustomRounds.length)return;
+  var tmp=hiCustomRounds[i];hiCustomRounds[i]=hiCustomRounds[j];hiCustomRounds[j]=tmp;
+  hiRenderRoundList();
+}
+var hiDragIdx=null;
+function hiDragStart(e){hiDragIdx=parseInt(e.currentTarget.dataset.idx);e.currentTarget.classList.add('dragging');}
+function hiDragOver(e){e.preventDefault();}
+function hiDrop(e){
+  e.preventDefault();
+  var dropIdx=parseInt(e.currentTarget.dataset.idx);
+  if(hiDragIdx===null||dropIdx===hiDragIdx)return;
+  var item=hiCustomRounds.splice(hiDragIdx,1)[0];
+  hiCustomRounds.splice(dropIdx,0,item);
+  hiDragIdx=null;
+  hiRenderRoundList();
+}
+function hiDragEnd(e){e.currentTarget.classList.remove('dragging');}
+function hiRenderRoundList(){
+  var wrap=document.getElementById('hi-round-list');
+  if(!wrap)return;
+  wrap.innerHTML=hiCustomRounds.map(function(t,i){
+    return '<div class="hi-round-row" draggable="true" data-idx="'+i+'" '+
+      'ondragstart="hiDragStart(event)" ondragover="hiDragOver(event)" ondrop="hiDrop(event)" ondragend="hiDragEnd(event)">'+
+      '<span class="hi-drag-handle">⠿</span>'+
+      '<span class="hi-round-num">'+(i+1)+'.</span>'+
+      '<span class="hi-round-target">'+esc(String(t))+'</span>'+
+      '<button class="hi-move" onclick="hiMove('+i+',-1)" '+(i===0?'disabled':'')+'>▲</button>'+
+      '<button class="hi-move" onclick="hiMove('+i+',1)" '+(i===hiCustomRounds.length-1?'disabled':'')+'>▼</button>'+
+      '<button class="hi-remove" onclick="hiRemove('+i+')">✕</button>'+
+      '</div>';
+  }).join('')||'<div style="color:var(--dim);font-size:.82rem;padding:.5rem">No rounds yet — add one below or load a preset.</div>';
+  var cnt=document.getElementById('hi-round-count');
+  if(cnt)cnt.textContent='('+hiCustomRounds.length+' round'+(hiCustomRounds.length!==1?'s':'')+')';
+}
+function hiRandomize(count){
+  count=Math.max(1,Math.min(count||7,hiFullTargetPool.length));
+  var pool=hiFullTargetPool.slice();
+  for(var i=pool.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var tmp=pool[i];pool[i]=pool[j];pool[j]=tmp;
+  }
+  hiCustomRounds=pool.slice(0,count);
+  hiRenderRoundList();
+  toast('Randomised '+count+' rounds — reshuffle, edit, or save it as a preset');
+}
+
+// ── HALVE-IT SHARED PRESETS (Supabase) ───────────────────────────────────────
+async function hiLoadSharedPresets(){
+  try{
+    var res=await sb.from('halveit_presets').select('id,name,rounds,created_by,created_by_name').order('created_at',{ascending:true});
+    if(res.error)throw res.error;
+    return res.data||[];
+  }catch(e){
+    console.error('hiLoadSharedPresets:',e);
+    return [];
+  }
+}
+async function hiSavePreset(){
+  var nameInput=document.getElementById('hi-preset-name');
+  var name=nameInput.value.trim();
+  if(!name){toast('Enter a name for this preset',true);return;}
+  if(!hiCustomRounds.length){toast('Add some rounds first',true);return;}
+  if(!fcUser){toast('Log in to save a preset for everyone',true);return;}
+  if(window.hiMatcher&&window.hiMatcher.hasMatch(name)){toast('That name isn\u2019t allowed — try something else',true);return;}
+  try{
+    var res=await sb.from('halveit_presets').insert({
+      name:name,
+      rounds:hiCustomRounds,
+      created_by:fcUser.id,
+      created_by_name:fcUser.username||null
+    });
+    if(res.error)throw res.error;
+    nameInput.value='';
+    toast('Saved "'+name+'" for everyone');
+    hiRenderPresetBtns();
+  }catch(e){
+    console.error('hiSavePreset:',e);
+    toast('Could not save preset',true);
+  }
+}
+async function hiDeletePreset(id){
+  if(!fcUser)return;
+  try{
+    var res=await sb.from('halveit_presets').delete().eq('id',id).eq('created_by',fcUser.id);
+    if(res.error)throw res.error;
+    toast('Preset deleted');
+    hiRenderPresetBtns();
+  }catch(e){
+    console.error('hiDeletePreset:',e);
+    toast('Could not delete preset',true);
+  }
+}
+function hiLoadPreset(idOrName,builtin){
+  var list;
+  if(builtin){
+    list=hiBuiltinPresets[idOrName];
+  } else {
+    var found=hiSharedPresetsCache.find(function(p){return p.id===idOrName;});
+    list=found?found.rounds:null;
+  }
+  if(!list)return;
+  hiCustomRounds=list.slice();
+  hiRenderRoundList();
+  toast('Loaded preset');
+}
+async function hiRenderPresetBtns(){
+  var wrap=document.getElementById('hi-preset-btns');
+  if(!wrap)return;
+  wrap.innerHTML='<div style="color:var(--dim);font-size:.78rem">Loading presets…</div>';
+  var h='';
+  Object.keys(hiBuiltinPresets).forEach(function(name){
+    h+='<button class="score-btn" onclick="hiLoadPreset(&quot;'+esc(name)+'&quot;,true)">'+esc(name)+'</button>';
+  });
+  hiSharedPresetsCache=await hiLoadSharedPresets();
+  hiSharedPresetsCache.forEach(function(p){
+    var mine=fcUser&&p.created_by===fcUser.id;
+    h+='<span style="position:relative;display:inline-block">'+
+       '<button class="score-btn" onclick="hiLoadPreset(&quot;'+esc(p.id)+'&quot;,false)">⭐ '+esc(p.name)+
+       (p.created_by_name?' <small style="opacity:.6">— '+esc(p.created_by_name)+'</small>':'')+'</button>'+
+       (mine?'<button class="hi-preset-del" onclick="event.stopPropagation();hiDeletePreset(&quot;'+esc(p.id)+'&quot;)">✕</button>':'')+
+       '</span>';
+  });
+  wrap.innerHTML=h||'<div style="color:var(--dim);font-size:.78rem">No shared presets yet.</div>';
+}
+
 function startHalveIt(){
   var names=Array.from(document.getElementById('player-names').querySelectorAll('input')).map(function(i){return i.value.trim()||'Player';});
-  halveit={players:names,scores:names.map(function(){return 0;}),currentPlayer:0,currentRound:0,inputVal:''};
+  var rounds=hiCustomRounds.length?hiCustomRounds.slice():hiTargets.slice();
+  halveit={players:names,scores:names.map(function(){return 0;}),currentPlayer:0,currentRound:0,inputVal:'',rounds:rounds};
   showScreen('screen-halveit');
   document.getElementById('halveit-numpad').innerHTML=[7,8,9,4,5,6,1,2,3,'CLR',0,'X'].map(function(n){
     return '<button class="np'+(n==='CLR'?' sp':n==='X'?' dl':'')+'" onclick="halveitNumpad(&quot;'+n+'&quot;)">'+n+'</button>';
@@ -1187,7 +1499,7 @@ function halveitSubmit(){
   hv.currentPlayer=(hv.currentPlayer+1)%hv.players.length;
   if(hv.currentPlayer===0){
     hv.currentRound++;
-    if(hv.currentRound>=hiTargets.length){showWinByName(hv.players[hv.scores.indexOf(Math.max.apply(null,hv.scores))]);return;}
+    if(hv.currentRound>=hv.rounds.length){showWinByName(hv.players[hv.scores.indexOf(Math.max.apply(null,hv.scores))]);return;}
   }
   renderHalveIt();
 }
@@ -1195,13 +1507,13 @@ function halveitSubmit(){
 function renderHalveIt(){
   var hv=halveit,cols='1fr '+'repeat('+hv.players.length+',1fr)';
   document.getElementById('halveit-turn-title').textContent=hv.players[hv.currentPlayer]+"'s turn";
-  document.getElementById('halveit-target-label').textContent='Round '+(hv.currentRound+1)+' — Target: '+hiTargets[hv.currentRound]+' (miss all = halved!)';
+  document.getElementById('halveit-target-label').textContent='Round '+(hv.currentRound+1)+' — Target: '+hv.rounds[hv.currentRound]+' (miss all = halved!)';
   var h='<div class="halveit-table"><div class="halveit-header" style="grid-template-columns:'+cols+'"><div>Round</div>';
   hv.players.forEach(function(p,i){
     h+='<div style="color:'+(i===hv.currentPlayer?'var(--amber)':'var(--dim)')+'">'+esc(p)+'</div>';
   });
   h+='</div>';
-  hiTargets.forEach(function(t,ri){
+  hv.rounds.forEach(function(t,ri){
     var cls='halveit-row'+(ri===hv.currentRound?' halveit-current':ri<hv.currentRound?' halveit-done':'');
     h+='<div class="'+cls+'" style="grid-template-columns:'+cols+'"><div>'+t+'</div>';
     hv.players.forEach(function(_,i){
@@ -1222,6 +1534,28 @@ function showWinByName(name){
 
 // Init
 if(document.getElementById('x01-options'))document.getElementById('x01-options').style.display='block';
+if(document.getElementById('hi-add-num'))hiUpdateNumSelect();
+if(document.getElementById('hi-round-list')){hiRenderRoundList();hiRenderPresetBtns();}
+</script>
+
+<script type="module">
+// ── Preset-name profanity filter ─────────────────────────────────────────────
+// Uses the "obscenity" library's maintained word list (catches slurs and hardcore
+// terms) but explicitly allows a short list of mild swear words through, so
+// preset names aren't blocked for everyday cursing. Edit hiAllowedMild below to
+// tune what counts as "mild" for your venue.
+import { RegExpMatcher, englishDataset, englishRecommendedTransformers } from 'https://esm.sh/obscenity@0.4.6';
+
+var hiAllowedMild=['damn','hell','crap','ass','bitch','bastard','shit','fuck','piss','bloody'];
+
+var hiFilteredDataset=englishDataset.removePhrasesIf(function(phrase){
+  return phrase.metadata && hiAllowedMild.indexOf(phrase.metadata.originalWord)!==-1;
+});
+
+window.hiMatcher=new RegExpMatcher({
+  ...hiFilteredDataset.build(),
+  ...englishRecommendedTransformers
+});
 </script>
 <div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-audio-caller</div>
 </body>
