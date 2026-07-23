@@ -269,6 +269,15 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
 
         <div class="hi-round-list" id="hi-round-list"></div>
 
+        <div style="margin-top:.6rem;padding-top:.6rem;border-top:1px solid var(--border)">
+          <label style="font-size:.75rem;color:var(--dim)">Or add a custom round — e.g. "Black White Black", "2 out of 3 in Green"</label>
+          <input type="text" id="hi-custom-label" placeholder="Describe the objective" style="width:100%;margin-top:.3rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:.4rem .6rem">
+          <div style="display:flex;gap:.4rem;margin-top:.4rem">
+            <input type="number" id="hi-custom-score" placeholder="Points if hit" value="20" min="0" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:.4rem .6rem">
+            <button class="hbtn" onclick="hiAddCustomRound()">+ Add Custom</button>
+          </div>
+        </div>
+
         <div style="display:flex;gap:.4rem;margin-top:.5rem">
           <select id="hi-add-type" onchange="hiUpdateNumSelect()" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:.4rem">
             <option value="S">Single</option>
@@ -490,10 +499,18 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
       <div class="throw-title" id="halveit-turn-title">Player 1's turn</div>
       <div id="halveit-target-label" style="font-family:'Barlow Condensed',sans-serif;font-size:1rem;color:var(--amber);margin-bottom:.6rem"></div>
       <input type="number" id="halveit-input" class="display-input" placeholder="0" readonly style="margin-bottom:.6rem">
-      <div id="halveit-numpad" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.35rem;margin-bottom:.6rem"></div>
-      <div class="action-row">
-        <button class="btn-bust" onclick="halveitScore(0)">Missed All (Halve!)</button>
-        <button class="btn-next" onclick="halveitSubmit()">Submit →</button>
+      <div id="halveit-standard-controls">
+        <div id="halveit-numpad" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.35rem;margin-bottom:.6rem"></div>
+        <div class="action-row">
+          <button class="btn-bust" onclick="halveitScore(0)">Missed All (Halve!)</button>
+          <button class="btn-next" onclick="halveitSubmit()">Submit →</button>
+        </div>
+      </div>
+      <div id="halveit-custom-controls" style="display:none">
+        <div class="action-row">
+          <button class="btn-bust" onclick="halveitScore(0)">❌ Missed (Halve!)</button>
+          <button class="btn-next" onclick="halveitCustomHit()"><span id="halveit-custom-hit-label">✅ Hit!</span></button>
+        </div>
       </div>
     </div>
   </div>
@@ -1362,6 +1379,20 @@ function hiDrop(e){
   hiRenderRoundList();
 }
 function hiDragEnd(e){e.currentTarget.classList.remove('dragging');}
+function hiRoundLabel(r){
+  return (r&&typeof r==='object'&&r.custom) ? (r.label+' (+'+r.score+')') : String(r);
+}
+function hiAddCustomRound(){
+  var labelInput=document.getElementById('hi-custom-label');
+  var scoreInput=document.getElementById('hi-custom-score');
+  var label=labelInput.value.trim();
+  var score=parseInt(scoreInput.value)||0;
+  if(!label){toast('Describe what the round requires',true);return;}
+  if(window.hiMatcher&&window.hiMatcher.hasMatch(label)){toast('That description isn\u2019t allowed — try different wording',true);return;}
+  hiCustomRounds.push({custom:true,label:label,score:score});
+  labelInput.value='';
+  hiRenderRoundList();
+}
 function hiRenderRoundList(){
   var wrap=document.getElementById('hi-round-list');
   if(!wrap)return;
@@ -1370,7 +1401,7 @@ function hiRenderRoundList(){
       'ondragstart="hiDragStart(event)" ondragover="hiDragOver(event)" ondrop="hiDrop(event)" ondragend="hiDragEnd(event)">'+
       '<span class="hi-drag-handle">⠿</span>'+
       '<span class="hi-round-num">'+(i+1)+'.</span>'+
-      '<span class="hi-round-target">'+esc(String(t))+'</span>'+
+      '<span class="hi-round-target">'+esc(hiRoundLabel(t))+'</span>'+
       '<button class="hi-move" onclick="hiMove('+i+',-1)" '+(i===0?'disabled':'')+'>▲</button>'+
       '<button class="hi-move" onclick="hiMove('+i+',1)" '+(i===hiCustomRounds.length-1?'disabled':'')+'>▼</button>'+
       '<button class="hi-remove" onclick="hiRemove('+i+')">✕</button>'+
@@ -1504,10 +1535,35 @@ function halveitSubmit(){
   renderHalveIt();
 }
 
+function halveitCustomHit(){
+  var hv=halveit,round=hv.rounds[hv.currentRound],p=hv.currentPlayer;
+  if(!round||typeof round!=='object')return;
+  hv.scores[p]+=round.score;
+  toast(round.score>0?('+'+round.score+' points!'):'Hit! No bonus points for this round.');
+  speak(round.score>0?(round.score+'. '+hv.scores[p]+' total.'):'Hit! '+hv.scores[p]+' total.');
+  hv.currentPlayer=(hv.currentPlayer+1)%hv.players.length;
+  if(hv.currentPlayer===0){
+    hv.currentRound++;
+    if(hv.currentRound>=hv.rounds.length){showWinByName(hv.players[hv.scores.indexOf(Math.max.apply(null,hv.scores))]);return;}
+  }
+  renderHalveIt();
+}
+
 function renderHalveIt(){
   var hv=halveit,cols='1fr '+'repeat('+hv.players.length+',1fr)';
+  var round=hv.rounds[hv.currentRound];
+  var isCustom=round&&typeof round==='object'&&round.custom;
   document.getElementById('halveit-turn-title').textContent=hv.players[hv.currentPlayer]+"'s turn";
-  document.getElementById('halveit-target-label').textContent='Round '+(hv.currentRound+1)+' — Target: '+hv.rounds[hv.currentRound]+' (miss all = halved!)';
+  if(isCustom){
+    document.getElementById('halveit-target-label').textContent='Round '+(hv.currentRound+1)+' — '+round.label+' (Hit = +'+round.score+', Miss = Halved)';
+    document.getElementById('halveit-standard-controls').style.display='none';
+    document.getElementById('halveit-custom-controls').style.display='block';
+    document.getElementById('halveit-custom-hit-label').textContent='✅ Hit! +'+round.score;
+  } else {
+    document.getElementById('halveit-target-label').textContent='Round '+(hv.currentRound+1)+' — Target: '+round+' (miss all = halved!)';
+    document.getElementById('halveit-standard-controls').style.display='block';
+    document.getElementById('halveit-custom-controls').style.display='none';
+  }
   var h='<div class="halveit-table"><div class="halveit-header" style="grid-template-columns:'+cols+'"><div>Round</div>';
   hv.players.forEach(function(p,i){
     h+='<div style="color:'+(i===hv.currentPlayer?'var(--amber)':'var(--dim)')+'">'+esc(p)+'</div>';
@@ -1515,7 +1571,7 @@ function renderHalveIt(){
   h+='</div>';
   hv.rounds.forEach(function(t,ri){
     var cls='halveit-row'+(ri===hv.currentRound?' halveit-current':ri<hv.currentRound?' halveit-done':'');
-    h+='<div class="'+cls+'" style="grid-template-columns:'+cols+'"><div>'+t+'</div>';
+    h+='<div class="'+cls+'" style="grid-template-columns:'+cols+'"><div>'+esc(hiRoundLabel(t))+'</div>';
     hv.players.forEach(function(_,i){
       h+='<div style="font-weight:700;color:var(--amber)">'+(ri<=hv.currentRound?hv.scores[i]:'&mdash;')+'</div>';
     });
