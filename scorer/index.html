@@ -1422,6 +1422,17 @@ var hiFullTargetPool=(function(){
   for(var i=1;i<=20;i++)pool.push('D'+i);
   for(var i=1;i<=20;i++)pool.push('T'+i);
   pool.push('25','D Bull');
+  // Non-numeric / special objective rounds — pulled from the built-in presets so
+  // Randomise can include them too, not just plain number/double/treble targets.
+  pool.push('Any Double','Any Treble','Inner Ring Only','Outer Ring Only','2 In, 1 Out');
+  pool.push(
+    {custom:true,label:'2 Black, 1 White',score:40},
+    {custom:true,label:'2 White, 1 Black',score:40},
+    {custom:true,label:'2 out of 3 darts in Green',score:40},
+    {custom:true,label:'2 out of 3 darts in Red',score:40},
+    {custom:true,label:'Hit inside the number circle (e.g. 20/10/6/9/8 wire)',score:40},
+    {custom:true,label:'Score 50+ this round',score:50}
+  );
   return pool;
 })();
 
