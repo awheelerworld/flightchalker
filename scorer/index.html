@@ -1517,20 +1517,19 @@ function hiRandomize(count){
   count=Math.max(1,Math.min(count||7,hiFullTargetPool.length));
   if(count===1){hiCustomRounds=['D Bull'];hiRenderRoundList();toast('Randomised 1 round — Bullseye');return;}
 
-  var middleSlots=count-2; // first slot = 20 (highest number), last slot = bullseye
+  var middleSlots=count-2; // first slot = open round (highest score), last slot = bullseye
   var neededSpecial=Math.min(2,middleSlots,hiSpecialPool.length);
 
   var chosenSpecial=hiShuffle(hiSpecialPool).slice(0,neededSpecial);
   var remainingSlots=middleSlots-chosenSpecial.length;
   var leftoverSpecial=hiSpecialPool.filter(function(s){return chosenSpecial.indexOf(s)===-1;});
-  var numberFillerPool=hiNumberPool.filter(function(n){return n!=='20';});
-  var fillerPool=hiShuffle(numberFillerPool.concat(leftoverSpecial));
+  var fillerPool=hiShuffle(hiNumberPool.concat(leftoverSpecial));
   var filler=fillerPool.slice(0,remainingSlots);
 
   var middle=hiShuffle(chosenSpecial.concat(filler));
-  hiCustomRounds=['20'].concat(middle,['D Bull']);
+  hiCustomRounds=['Open Round — Highest Score'].concat(middle,['D Bull']);
   hiRenderRoundList();
-  toast('Randomised '+hiCustomRounds.length+' rounds — opens on 20, finishes on the Bullseye');
+  toast('Randomised '+hiCustomRounds.length+' rounds — opens open-score, finishes on the Bullseye');
 }
 
 // ── HALVE-IT SHARED PRESETS (Supabase) ───────────────────────────────────────
