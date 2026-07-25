@@ -413,7 +413,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
     <div><a href="/dashboard" class="hdr-logo" style="text-decoration:none;color:inherit">Flight <span>Chalker</span></a><div class="hdr-sub">Cricket</div></div>
     <div style="display:flex;gap:.5rem;align-items:center">
       <button class="rules-btn" onclick="showRules('cricket')">❓</button>
-      <button class="hbtn" onclick="undoLast()">↩ Undo</button>
+      <button class="hbtn" onclick="cricketUndo()">↩ Undo</button>
       <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button>
     </div>
   </div>
@@ -437,6 +437,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
     <div><a href="/dashboard" class="hdr-logo" style="text-decoration:none;color:inherit">Flight <span>Chalker</span></a><div class="hdr-sub">Killer</div></div>
     <div style="display:flex;gap:.5rem;align-items:center">
       <button class="rules-btn" onclick="showRules('killer')">❓</button>
+      <button class="hbtn" onclick="killerUndo()">↩ Undo</button>
       <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button>
     </div>
   </div>
@@ -461,7 +462,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
     <div><a href="/dashboard" class="hdr-logo" style="text-decoration:none;color:inherit">Flight <span>Chalker</span></a><div class="hdr-sub">Shanghai</div></div>
     <div style="display:flex;gap:.5rem;align-items:center">
       <button class="rules-btn" onclick="showRules('shanghai')">❓</button>
-      <button class="hbtn" onclick="undoLast()">↩ Undo</button>
+      <button class="hbtn" onclick="shanghaiUndo()">↩ Undo</button>
       <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button>
     </div>
   </div>
@@ -490,6 +491,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
     <div><a href="/dashboard" class="hdr-logo" style="text-decoration:none;color:inherit">Flight <span>Chalker</span></a><div class="hdr-sub">Halve-It</div></div>
     <div style="display:flex;gap:.5rem;align-items:center">
       <button class="rules-btn" onclick="showRules('halveit')">❓</button>
+      <button class="hbtn" onclick="halveitUndo()">↩ Undo</button>
       <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button>
     </div>
   </div>
@@ -1125,7 +1127,7 @@ var cNums=[20,19,18,17,16,15,25];
 
 function startCricket(){
   var names=Array.from(document.getElementById('player-names').querySelectorAll('input')).map(function(i){return i.value.trim()||'Player';});
-  cricket={players:names,marks:names.map(function(){return{20:0,19:0,18:0,17:0,16:0,15:0,25:0};}),points:names.map(function(){return 0;}),currentPlayer:0,dartsThrown:0};
+  cricket={players:names,marks:names.map(function(){return{20:0,19:0,18:0,17:0,16:0,15:0,25:0};}),points:names.map(function(){return 0;}),currentPlayer:0,dartsThrown:0,history:[]};
   showScreen('screen-cricket');
   document.getElementById('cricket-numpad').innerHTML=[20,19,18,17,16,15,'Bull','Miss'].map(function(n){
     var val=n==='Bull'?25:n==='Miss'?0:n;
@@ -1136,8 +1138,9 @@ function startCricket(){
 
 function cricketDart(num){
   var cr=cricket,p=cr.currentPlayer;
+  cr.history.push({marks:JSON.parse(JSON.stringify(cr.marks)),points:cr.points.slice(),currentPlayer:cr.currentPlayer,dartsThrown:cr.dartsThrown});
   if(num===0){cr.dartsThrown++;if(cr.dartsThrown>=3){cricketNext();return;}toast('Miss');speak('Miss');renderCricket();return;}
-  if(!cNums.includes(num))return;
+  if(!cNums.includes(num)){cr.history.pop();return;}
   cr.dartsThrown++;
   if(cr.marks[p][num]<3){
     cr.marks[p][num]++;
@@ -1150,6 +1153,15 @@ function cricketDart(num){
   }
   if(cr.dartsThrown>=3){cricketNext();return;}
   renderCricket();
+}
+
+function cricketUndo(){
+  var cr=cricket;
+  if(!cr.history||!cr.history.length){toast('Nothing to undo',true);return;}
+  var last=cr.history.pop();
+  cr.marks=last.marks;cr.points=last.points;cr.currentPlayer=last.currentPlayer;cr.dartsThrown=last.dartsThrown;
+  renderCricket();
+  toast('Undone');
 }
 
 function cricketMiss(){cricketDart(0);}
@@ -1192,7 +1204,7 @@ function renderCricket(){
 function startKiller(){
   var names=Array.from(document.getElementById('player-names').querySelectorAll('input')).map(function(i){return i.value.trim()||'Player';});
   var nums=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20].sort(function(){return Math.random()-.5;}).slice(0,names.length);
-  killer={players:names,doubles:nums,lives:names.map(function(){return 3;}),isKiller:names.map(function(){return false;}),currentPlayer:0,dartsThrown:0};
+  killer={players:names,doubles:nums,lives:names.map(function(){return 3;}),isKiller:names.map(function(){return false;}),currentPlayer:0,dartsThrown:0,history:[]};
   showScreen('screen-killer');
   document.getElementById('killer-numpad').innerHTML=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20].map(function(n){
     return '<button class="np" onclick="killerDart('+n+')">'+n+'</button>';
@@ -1200,8 +1212,14 @@ function startKiller(){
   renderKiller();
 }
 
+function killerSnapshot(){
+  var k=killer;
+  return {lives:k.lives.slice(),isKiller:k.isKiller.slice(),currentPlayer:k.currentPlayer,dartsThrown:k.dartsThrown};
+}
+
 function killerDart(num){
   var k=killer,p=k.currentPlayer;
+  k.history.push(killerSnapshot());
   if(!k.isKiller[p]){
     if(num===k.doubles[p]){k.isKiller[p]=true;toast(k.players[p]+' is a KILLER! 🔪');speak(k.players[p]+' is a Killer!');k.dartsThrown=3;}
     else{k.dartsThrown++;toast('Need D'+k.doubles[p]);speak('Miss');}
@@ -1218,7 +1236,16 @@ function killerDart(num){
   renderKiller();
 }
 
-function killerMiss(){killer.dartsThrown++;speak('Miss');if(killer.dartsThrown>=3){killerNextTurn();return;}toast('Miss');renderKiller();}
+function killerMiss(){killer.history.push(killerSnapshot());killer.dartsThrown++;speak('Miss');if(killer.dartsThrown>=3){killerNextTurn();return;}toast('Miss');renderKiller();}
+
+function killerUndo(){
+  var k=killer;
+  if(!k.history||!k.history.length){toast('Nothing to undo',true);return;}
+  var last=k.history.pop();
+  k.lives=last.lives;k.isKiller=last.isKiller;k.currentPlayer=last.currentPlayer;k.dartsThrown=last.dartsThrown;
+  renderKiller();
+  toast('Undone');
+}
 
 function killerNextTurn(){
   killer.dartsThrown=0;
@@ -1244,9 +1271,38 @@ var shanghai={};
 
 function startShanghai(){
   var names=Array.from(document.getElementById('player-names').querySelectorAll('input')).map(function(i){return i.value.trim()||'Player';});
-  shanghai={players:names,scores:names.map(function(){return 0;}),currentPlayer:0,currentRound:1,currentDarts:[]};
+  shanghai={players:names,scores:names.map(function(){return 0;}),currentPlayer:0,currentRound:1,currentDarts:[],history:[]};
   showScreen('screen-shanghai');
   renderShanghai();
+}
+
+function shanghaiSnapshot(){
+  var sh=shanghai;
+  return {scores:sh.scores.slice(),currentPlayer:sh.currentPlayer,currentRound:sh.currentRound,currentDarts:sh.currentDarts.map(function(d){return {val:d.val,mult:d.mult};})};
+}
+
+function shanghaiRefreshChips(){
+  var sh=shanghai,n=sh.currentRound;
+  for(var d=0;d<3;d++){
+    var chip=document.getElementById('sh-dart-'+d);
+    if(!chip)continue;
+    if(d<sh.currentDarts.length){
+      var dart=sh.currentDarts[d];
+      chip.textContent=dart.mult===0?'Miss':(dart.mult===1?'S':dart.mult===2?'D':'T')+n;
+      chip.className='dart-chip has-value';
+    } else {chip.textContent='—';chip.className='dart-chip';}
+  }
+  var nextBtn=document.getElementById('sh-next-btn');
+  if(nextBtn)nextBtn.disabled=sh.currentDarts.length<3;
+}
+
+function shanghaiUndo(){
+  var sh=shanghai;
+  if(!sh.history||!sh.history.length){toast('Nothing to undo',true);return;}
+  var last=sh.history.pop();
+  sh.scores=last.scores;sh.currentPlayer=last.currentPlayer;sh.currentRound=last.currentRound;sh.currentDarts=last.currentDarts;
+  renderShanghai();
+  toast('Undone');
 }
 
 function renderShanghaiNumpad(){
@@ -1261,18 +1317,12 @@ function renderShanghaiNumpad(){
 function shanghaiDart(val,mult){
   var sh=shanghai;
   if(sh.currentDarts.length>=3)return;
+  sh.history.push(shanghaiSnapshot());
   sh.currentDarts.push({val:val,mult:mult});
   var n=sh.currentRound;
   var label = mult===0?'Miss':(mult===1?'Single':mult===2?'Double':'Triple')+' '+n;
   speak(label);
-  for(var d=0;d<3;d++){
-    var chip=document.getElementById('sh-dart-'+d);
-    if(d<sh.currentDarts.length){
-      var dart=sh.currentDarts[d];
-      chip.textContent=dart.mult===0?'Miss':(dart.mult===1?'S':dart.mult===2?'D':'T')+n;
-      chip.className='dart-chip has-value';
-    } else {chip.textContent='—';chip.className='dart-chip';}
-  }
+  shanghaiRefreshChips();
   if(sh.currentDarts.length===3){
     var mults=sh.currentDarts.map(function(d){return d.mult;});
     if(mults.includes(1)&&mults.includes(2)&&mults.includes(3)){
@@ -1281,7 +1331,6 @@ function shanghaiDart(val,mult){
       setTimeout(function(){showWinByName(sh.players[sh.currentPlayer]);},800);
       return;
     }
-    document.getElementById('sh-next-btn').disabled=false;
   }
 }
 
@@ -1289,12 +1338,11 @@ function shanghaiMiss(){shanghaiDart(0,0);}
 
 function shanghaiNextTurn(){
   var sh=shanghai;
+  sh.history.push(shanghaiSnapshot());
   var roundTotal=sh.currentDarts.reduce(function(a,d){return a+d.val;},0);
   sh.scores[sh.currentPlayer]+=roundTotal;
   speak(roundTotal+' this round. '+sh.scores[sh.currentPlayer]+' total.');
   sh.currentDarts=[];
-  document.getElementById('sh-next-btn').disabled=true;
-  for(var d=0;d<3;d++){var c=document.getElementById('sh-dart-'+d);c.textContent='—';c.className='dart-chip';}
   sh.currentPlayer=(sh.currentPlayer+1)%sh.players.length;
   if(sh.currentPlayer===0){
     sh.currentRound++;
@@ -1314,6 +1362,7 @@ function renderShanghai(){
   h+='</div>';
   document.getElementById('shanghai-scores').innerHTML=h;
   renderShanghaiNumpad();
+  shanghaiRefreshChips();
 }
 
 // ── HALVE-IT ───────────────────────────────────────────────────────────────────
@@ -1327,7 +1376,42 @@ var hiBuiltinPresets={
   'Big Numbers':[20,19,18,17,16,15,'D Bull'],
   'Doubles Warm-up':['D5','D10','D15','D20','D Bull'],
   'Trebles Gauntlet':['T20','T19','T18','T17','T16'],
-  'Quick 5':[20,'D5','T5',15,'D Bull']
+  'Quick 5':[20,'D5','T5',15,'D Bull'],
+  'Doubles Only':['Any Double','Any Double','Any Double','Any Double','Any Double'],
+  'Trebles Only':['Any Treble','Any Treble','Any Treble','Any Treble','Any Treble'],
+  'Inner Ring Challenge':['Inner Ring Only','Inner Ring Only','Inner Ring Only'],
+  'Outer Ring Challenge':['Outer Ring Only','Outer Ring Only','Outer Ring Only'],
+  '2 In, 1 Out':['2 In, 1 Out','2 In, 1 Out','2 In, 1 Out'],
+  'Score Chaser':[
+    {custom:true,label:'Score 50+ this round',score:50},
+    {custom:true,label:'Score 60+ this round',score:60},
+    {custom:true,label:'Score 70+ this round',score:70}
+  ],
+  'BWB (Black-White-Black)':[
+    {custom:true,label:'2 Black, 1 White',score:40},
+    {custom:true,label:'2 Black, 1 White',score:40},
+    {custom:true,label:'2 Black, 1 White',score:40}
+  ],
+  'WBW (White-Black-White)':[
+    {custom:true,label:'2 White, 1 Black',score:40},
+    {custom:true,label:'2 White, 1 Black',score:40},
+    {custom:true,label:'2 White, 1 Black',score:40}
+  ],
+  '2 in Green':[
+    {custom:true,label:'2 out of 3 darts in Green',score:40},
+    {custom:true,label:'2 out of 3 darts in Green',score:40},
+    {custom:true,label:'2 out of 3 darts in Green',score:40}
+  ],
+  '2 in Red':[
+    {custom:true,label:'2 out of 3 darts in Red',score:40},
+    {custom:true,label:'2 out of 3 darts in Red',score:40},
+    {custom:true,label:'2 out of 3 darts in Red',score:40}
+  ],
+  'Number Circle':[
+    {custom:true,label:'Hit inside the number circle (e.g. 20/10/6/9/8 wire)',score:40},
+    {custom:true,label:'Hit inside the number circle (e.g. 20/10/6/9/8 wire)',score:40},
+    {custom:true,label:'Hit inside the number circle (e.g. 20/10/6/9/8 wire)',score:40}
+  ]
 };
 var hiCustomRounds=hiBuiltinPresets['Standard 7'].slice();
 var hiSharedPresetsCache=[];
@@ -1504,12 +1588,29 @@ async function hiRenderPresetBtns(){
 function startHalveIt(){
   var names=Array.from(document.getElementById('player-names').querySelectorAll('input')).map(function(i){return i.value.trim()||'Player';});
   var rounds=hiCustomRounds.length?hiCustomRounds.slice():hiTargets.slice();
-  halveit={players:names,scores:names.map(function(){return 0;}),currentPlayer:0,currentRound:0,inputVal:'',rounds:rounds};
+  halveit={players:names,scores:names.map(function(){return 0;}),currentPlayer:0,currentRound:0,inputVal:'',rounds:rounds,history:[]};
   showScreen('screen-halveit');
   document.getElementById('halveit-numpad').innerHTML=[7,8,9,4,5,6,1,2,3,'CLR',0,'X'].map(function(n){
     return '<button class="np'+(n==='CLR'?' sp':n==='X'?' dl':'')+'" onclick="halveitNumpad(&quot;'+n+'&quot;)">'+n+'</button>';
   }).join('');
   renderHalveIt();
+}
+
+function hiSnapshot(){
+  var hv=halveit;
+  return {scores:hv.scores.slice(),currentPlayer:hv.currentPlayer,currentRound:hv.currentRound};
+}
+
+function halveitUndo(){
+  var hv=halveit;
+  if(!hv.history||!hv.history.length){toast('Nothing to undo',true);return;}
+  var last=hv.history.pop();
+  hv.scores=last.scores;hv.currentPlayer=last.currentPlayer;hv.currentRound=last.currentRound;
+  hv.inputVal='';
+  var inp=document.getElementById('halveit-input');
+  if(inp)inp.value='';
+  renderHalveIt();
+  toast('Undone');
 }
 
 function halveitNumpad(v){
@@ -1524,6 +1625,7 @@ function halveitScore(s){halveit.inputVal=String(s);document.getElementById('hal
 
 function halveitSubmit(){
   var hv=halveit,p=hv.currentPlayer,scored=parseInt(hv.inputVal)||0;
+  hv.history.push(hiSnapshot());
   if(scored===0){hv.scores[p]=Math.floor(hv.scores[p]/2);toast('Missed! Score halved!',true);speak('Missed! Halved to '+hv.scores[p]+'.');}
   else{hv.scores[p]+=scored;toast('+'+scored+' points!');speak(scored+'. '+hv.scores[p]+' total.');}
   hv.inputVal='';document.getElementById('halveit-input').value='';
@@ -1538,6 +1640,7 @@ function halveitSubmit(){
 function halveitCustomHit(){
   var hv=halveit,round=hv.rounds[hv.currentRound],p=hv.currentPlayer;
   if(!round||typeof round!=='object')return;
+  hv.history.push(hiSnapshot());
   hv.scores[p]+=round.score;
   toast(round.score>0?('+'+round.score+' points!'):'Hit! No bonus points for this round.');
   speak(round.score>0?(round.score+'. '+hv.scores[p]+' total.'):'Hit! '+hv.scores[p]+' total.');
