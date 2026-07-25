@@ -154,6 +154,12 @@ input:checked+.slider::before{transform:translateX(18px);background:white}
     <div class="free-badge">✓ Free Member</div>
   </div>
 
+  <!-- Your Team (captains & vice-captains) -->
+  <div class="sec-title" id="your-team-title" style="display:none">Your Team</div>
+  <div class="team-card" id="captain-teams-card" style="display:none;margin-bottom:1.5rem">
+    <div id="captain-teams-list"></div>
+  </div>
+
   <!-- Quick access -->
   <div class="sec-title">Quick Access</div>
   <div class="game-grid">
@@ -194,54 +200,54 @@ input:checked+.slider::before{transform:translateX(18px);background:white}
 
   <!-- Team memberships -->
   <div class="sec-title">My Teams</div>
-  <div class="team-card" id="captain-teams-card" style="display:none">
-    <h3>My Teams (Captain)</h3>
-    <div id="captain-teams-list"></div>
-  </div>
-
   <div class="team-card">
     <h3>League Teams</h3>
     <div id="teams-list"><div class="loading"><span class="spin"></span> Loading...</div></div>
-    <div style="margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);margin-bottom:.5rem">Join a Team</div>
-      <div style="font-size:.8rem;color:var(--dim);margin-bottom:.5rem;line-height:1.5">Enter your team join code to request to join, or link your account to existing match records.</div>
-      <div class="join-form">
-        <input type="text" id="join-code" placeholder="Team join code">
-        <button onclick="requestJoinTeam()">Request to Join</button>
-      </div>
-    </div>
 
-    <!-- Captain code - instant, no approval needed -->
-    <div style="margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--amber);margin-bottom:.5rem">Have a Captain Code?</div>
-      <div style="font-size:.8rem;color:var(--dim);margin-bottom:.5rem;line-height:1.5">If your league admin has given you a captain code, enter it here to take charge of your team's join code and squad.</div>
-      <div class="join-form">
-        <input type="text" id="captain-code" placeholder="Captain code">
-        <button onclick="claimCaptaincy()">Claim Captaincy</button>
-      </div>
-    </div>
+    <details style="margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem">
+      <summary style="cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:.72rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);list-style:none">Manage Team Access</summary>
 
-    <!-- Self-service account linking -->
-    <div style="margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--amber);margin-bottom:.5rem">Link to Existing Match Records</div>
-      <div style="font-size:.8rem;color:var(--dim);margin-bottom:.75rem;line-height:1.5">
-        If your captain has been recording your match scores before you created an account, link your account to claim your history. You'll need your team join code and the name used in match records.
-      </div>
-      <div style="display:flex;flex-direction:column;gap:.5rem">
-        <input type="text" id="link-team-code" placeholder="Team join code" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.9rem;padding:.5rem .75rem">
-        <div id="link-player-list" style="display:none">
-          <div style="font-size:.78rem;color:var(--dim);margin-bottom:.35rem">Select your name from the team's player list:</div>
-          <select id="link-name-sel" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.9rem;padding:.5rem .75rem;margin-bottom:.5rem">
-            <option value="">— Select your name —</option>
-          </select>
-          <div style="font-size:.78rem;color:var(--dim);margin-bottom:.35rem">Confirm your email address (must match what your captain registered):</div>
-          <input type="email" id="link-email-confirm" placeholder="Your email address" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.9rem;padding:.5rem .75rem;margin-bottom:.5rem">
-          <button onclick="selfLinkAccount()" style="width:100%;background:var(--amber);border:none;border-radius:6px;color:var(--bg);font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.55rem;cursor:pointer">Link My Account</button>
+      <div style="margin-top:1rem">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);margin-bottom:.5rem">Join a Team</div>
+        <div style="font-size:.8rem;color:var(--dim);margin-bottom:.5rem;line-height:1.5">Enter your team join code to request to join, or link your account to existing match records.</div>
+        <div class="join-form">
+          <input type="text" id="join-code" placeholder="Team join code">
+          <button onclick="requestJoinTeam()">Request to Join</button>
         </div>
-        <button id="find-team-btn" onclick="findTeamPlayers()" style="background:var(--s3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.5rem;cursor:pointer">Find My Team →</button>
       </div>
-      <div id="link-result" style="margin-top:.5rem;font-size:.8rem"></div>
-    </div>
+
+      <!-- Captain code - instant, no approval needed -->
+      <div style="margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--amber);margin-bottom:.5rem">Have a Captain Code?</div>
+        <div style="font-size:.8rem;color:var(--dim);margin-bottom:.5rem;line-height:1.5">If your league admin has given you a captain code, enter it here to take charge of your team's join code and squad.</div>
+        <div class="join-form">
+          <input type="text" id="captain-code" placeholder="Captain code">
+          <button onclick="claimCaptaincy()">Claim Captaincy</button>
+        </div>
+      </div>
+
+      <!-- Self-service account linking -->
+      <div style="margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--amber);margin-bottom:.5rem">Link to Existing Match Records</div>
+        <div style="font-size:.8rem;color:var(--dim);margin-bottom:.75rem;line-height:1.5">
+          If your captain has been recording your match scores before you created an account, link your account to claim your history. You'll need your team join code and the name used in match records.
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.5rem">
+          <input type="text" id="link-team-code" placeholder="Team join code" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.9rem;padding:.5rem .75rem">
+          <div id="link-player-list" style="display:none">
+            <div style="font-size:.78rem;color:var(--dim);margin-bottom:.35rem">Select your name from the team's player list:</div>
+            <select id="link-name-sel" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.9rem;padding:.5rem .75rem;margin-bottom:.5rem">
+              <option value="">— Select your name —</option>
+            </select>
+            <div style="font-size:.78rem;color:var(--dim);margin-bottom:.35rem">Confirm your email address (must match what your captain registered):</div>
+            <input type="email" id="link-email-confirm" placeholder="Your email address" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.9rem;padding:.5rem .75rem;margin-bottom:.5rem">
+            <button onclick="selfLinkAccount()" style="width:100%;background:var(--amber);border:none;border-radius:6px;color:var(--bg);font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.55rem;cursor:pointer">Link My Account</button>
+          </div>
+          <button id="find-team-btn" onclick="findTeamPlayers()" style="background:var(--s3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.5rem;cursor:pointer">Find My Team →</button>
+        </div>
+        <div id="link-result" style="margin-top:.5rem;font-size:.8rem"></div>
+      </div>
+    </details>
   </div>
 
   <!-- Profile -->
@@ -484,6 +490,7 @@ var captainTeamsData = [];
 
 async function loadCaptainTeams(user){
   var card=document.getElementById('captain-teams-card');
+  var titleEl=document.getElementById('your-team-title');
   var listEl=document.getElementById('captain-teams-list');
   try{
     var { data:ownedTeams, error:ownErr } = await sb
@@ -519,12 +526,14 @@ async function loadCaptainTeams(user){
     viceTeams.forEach(function(t){ if(!byId[t.id]) byId[t.id] = Object.assign({},t,{myRole:'vice_captain'}); });
     captainTeamsData = Object.values(byId);
 
-    if(!captainTeamsData.length){ card.style.display='none'; return; }
+    if(!captainTeamsData.length){ card.style.display='none'; titleEl.style.display='none'; return; }
     card.style.display='block';
+    titleEl.style.display='block';
     await renderCaptainTeams();
   }catch(e){
     console.error('loadCaptainTeams error:',e);
     card.style.display='none';
+    titleEl.style.display='none';
     toast('Could not load your captain teams: '+(e.message||'unknown error'),true);
   }
 }
