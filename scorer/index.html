@@ -99,24 +99,33 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
 .throw-input-row{display:flex;gap:.5rem;margin-bottom:.75rem}
 .throw-input{flex:1;background:var(--bg);border:2px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:1.5rem;font-weight:700;padding:.5rem .75rem;text-align:center}
 .throw-input:focus{outline:none;border-color:var(--amber)}
+.display-input{width:100%;background:var(--bg);border:2px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:1.5rem;font-weight:700;padding:.5rem .75rem;text-align:center}
+.display-input:focus{outline:none;border-color:var(--amber)}
 .throw-add{background:var(--green);border:none;border-radius:6px;color:white;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.5rem 1.25rem;cursor:pointer}
 .throw-add:hover{background:var(--gl)}
 
 /* Numpad */
 .numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem;margin-bottom:.75rem}
-.np-btn{background:var(--s3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:700;padding:.6rem;cursor:pointer;transition:all .12s;text-align:center}
-.np-btn:hover{background:var(--green);border-color:var(--green);color:white}
+.np-btn{background:var(--s3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:700;padding:.7rem .4rem;min-height:48px;cursor:pointer;transition:all .12s;text-align:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.np-btn:active,.np-btn:hover{background:var(--green);border-color:var(--green);color:white}
 .np-btn.special{color:var(--amber);border-color:#6a5200}
 .np-btn.del-btn{color:var(--red);border-color:#5c2020}
 
+/* Numpad buttons for Cricket / Killer / Shanghai / Halve-It — was missing entirely,
+   causing unstyled tiny default buttons on mobile. Sized for comfortable touch (48px+). */
+.np{background:var(--s3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;padding:.7rem .4rem;min-height:48px;cursor:pointer;transition:all .12s;text-align:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.np:active{background:var(--green);border-color:var(--green);color:#fff;transform:scale(.96)}
+.np.sp{color:var(--amber);border-color:#6a5200}
+.np.dl{color:var(--red);border-color:#5c2020}
+
 /* Action buttons */
 .action-row{display:flex;gap:.5rem}
-.btn-bust{background:#2a0a0a;border:1px solid var(--red);border-radius:6px;color:#ff8080;font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.55rem 1.25rem;cursor:pointer;flex:1}
-.btn-bust:hover{background:#3a1010}
-.btn-next{background:var(--green);border:none;border-radius:6px;color:white;font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.55rem 1.5rem;cursor:pointer;flex:2}
-.btn-next:hover{background:var(--gl)}
-.btn-undo{background:var(--s3);border:1px solid var(--border);border-radius:6px;color:var(--dim);font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.55rem 1rem;cursor:pointer}
-.btn-undo:hover{border-color:var(--amber);color:var(--amber)}
+.btn-bust{background:#2a0a0a;border:1px solid var(--red);border-radius:6px;color:#ff8080;font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.7rem 1.25rem;min-height:48px;cursor:pointer;flex:1;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.btn-bust:active,.btn-bust:hover{background:#3a1010}
+.btn-next{background:var(--green);border:none;border-radius:6px;color:white;font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.7rem 1.5rem;min-height:48px;cursor:pointer;flex:2;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.btn-next:active,.btn-next:hover{background:var(--gl)}
+.btn-undo{background:var(--s3);border:1px solid var(--border);border-radius:6px;color:var(--dim);font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.7rem 1rem;min-height:48px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.btn-undo:active,.btn-undo:hover{border-color:var(--amber);color:var(--amber)}
 
 /* Checkout display */
 .checkout-box{background:#2a2000;border:1px solid #6a5200;border-radius:8px;padding:.75rem 1rem;margin-bottom:1rem}
@@ -208,6 +217,44 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
 #rules-modal p,#rules-modal li{font-size:.9rem;line-height:1.5}
 #rules-modal ul{padding-left:1.1rem}
 #rules-modal .close-btn{float:right;background:none;border:none;color:var(--dim);font-size:1.3rem;cursor:pointer;line-height:1}
+
+/* ── Landscape / short-viewport layout ─────────────────────────────────────── */
+@media (orientation:landscape) and (max-height:600px){
+  .hdr{height:42px;padding:0 .75rem}
+  .hdr-logo{font-size:.9rem}
+  .hdr-sub{font-size:.55rem}
+  .setup-wrap{max-width:900px;padding:.75rem 1rem}
+  .game-wrap{max-width:1100px;padding:.6rem 1rem;display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-start}
+  .game-wrap>:first-child{flex:1 1 340px;min-width:280px}
+  .game-wrap>.throw-area{flex:1 1 340px;min-width:280px}
+  #screen-game .game-wrap>.players-row{flex:2 1 260px}
+  #screen-game .game-wrap>.throw-area{flex:3 1 320px}
+  #checkout-box{display:none !important}
+  .pc-checkout{font-size:.85rem;margin-top:.35rem}
+  .leg-history{flex-basis:100%;order:4}
+  .halveit-table,#cricket-scoreboard,#killer-players,.players-row{max-height:62vh;overflow-y:auto}
+  .setup-section{padding:.7rem .9rem;margin-bottom:.6rem}
+  .setup-section h3{margin-bottom:.5rem}
+  .player-name-row{margin-bottom:.35rem}
+  .score-btns{grid-template-columns:repeat(5,1fr);gap:.35rem}
+  #hi-preset-btns{grid-template-columns:repeat(4,1fr) !important}
+
+  /* Keypad: fewer rows thanks to the extra landscape width, so buttons grow taller
+     and easier to tap instead of shrinking to fit. */
+  .np{min-height:60px;padding:.5rem .4rem;font-size:1.5rem}
+  #numpad,#halveit-numpad{grid-template-columns:repeat(6,1fr) !important;gap:.5rem !important}
+  #killer-numpad{grid-template-columns:repeat(10,1fr) !important;gap:.4rem !important}
+  #cricket-numpad{grid-template-columns:repeat(8,1fr) !important;gap:.4rem !important}
+  #shanghai-numpad{grid-template-columns:repeat(4,1fr) !important;gap:.5rem !important}
+
+  .display-input{font-size:1.3rem;padding:.4rem .6rem;margin-bottom:.5rem}
+  .action-row{gap:.5rem}
+  .hbtn,.rules-btn{padding:.4rem .7rem;font-size:.85rem}
+  .btn-bust,.btn-next,.btn-undo{padding:.6rem .8rem;font-size:1rem;min-height:48px}
+  .hi-round-list{max-height:22vh;overflow-y:auto}
+  .win-wrap{padding:1rem}
+  #rules-modal{max-height:80vh;padding:.8rem}
+}
 </style>
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-WQRGJRFF1Q"></script>
@@ -327,9 +374,10 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
         </select>
       </div>
       <div class="player-names" id="player-names">
-        <div class="player-name-row"><label>Player 1</label><input type="text" placeholder="Player 1" value="Player 1"></div>
-        <div class="player-name-row"><label>Player 2</label><input type="text" placeholder="Player 2" value="Player 2"></div>
+        <div class="player-name-row"><label>Player 1</label><input type="text" placeholder="Player 1" value="Player 1" list="fc-recent-names"></div>
+        <div class="player-name-row"><label>Player 2</label><input type="text" placeholder="Player 2" value="Player 2" list="fc-recent-names"></div>
       </div>
+      <datalist id="fc-recent-names"></datalist>
     </div>
 
     <div class="setup-section">
@@ -447,7 +495,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
       <div class="throw-title" id="killer-turn-title">Player 1's turn</div>
       <div id="killer-instruction" style="font-size:.82rem;color:var(--amber);margin-bottom:.6rem"></div>
       <input type="number" id="killer-input" class="display-input" placeholder="Score" min="1" max="20" readonly style="margin-bottom:.6rem">
-      <div id="killer-numpad" style="display:grid;grid-template-columns:repeat(5,1fr);gap:.35rem;margin-bottom:.6rem"></div>
+      <div id="killer-numpad" style="display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;margin-bottom:.6rem"></div>
       <div class="action-row">
         <button class="btn-bust" onclick="killerMiss()">Miss / Other</button>
         <button class="btn-next" onclick="killerNextTurn()">Next Turn →</button>
@@ -499,7 +547,8 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
     <div id="halveit-scores"></div>
     <div class="throw-area">
       <div class="throw-title" id="halveit-turn-title">Player 1's turn</div>
-      <div id="halveit-target-label" style="font-family:'Barlow Condensed',sans-serif;font-size:1rem;color:var(--amber);margin-bottom:.6rem"></div>
+      <div id="halveit-target-label" style="font-family:'Barlow Condensed',sans-serif;font-size:1rem;color:var(--amber);margin-bottom:.3rem"></div>
+      <div id="halveit-target-explain" style="font-size:.78rem;color:var(--dim);margin-bottom:.6rem;line-height:1.4"></div>
       <input type="number" id="halveit-input" class="display-input" placeholder="0" readonly style="margin-bottom:.6rem">
       <div id="halveit-standard-controls">
         <div id="halveit-numpad" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.35rem;margin-bottom:.6rem"></div>
@@ -659,7 +708,7 @@ function updatePlayerNames(){
   for(var i=0;i<n;i++){
     var row=document.createElement('div');
     row.className='player-name-row';
-    row.innerHTML='<label>Player '+(i+1)+'</label><input type="text" value="'+(existing[i]||'Player '+(i+1))+'">';
+    row.innerHTML='<label>Player '+(i+1)+'</label><input type="text" value="'+(existing[i]||'Player '+(i+1))+'" list="fc-recent-names">';
     wrap.appendChild(row);
   }
 }
@@ -669,6 +718,7 @@ function startGame(){
   var score=selectedScore===0?parseInt(document.getElementById('custom-score').value):selectedScore;
   if(!score||score<101){toast('Please enter a valid starting score',true);return;}
   var names=Array.from(document.getElementById('player-names').querySelectorAll('input')).map(function(i){return i.value.trim()||'Player';});
+  names.forEach(fcSaveRecentName);
   var bestOf=parseInt(document.getElementById('best-of').value);
   gs={
     startScore:score,
@@ -907,7 +957,7 @@ function renderGame(){
       '<div class="pc-checkout">→ '+CHECKOUTS[score]+'</div>':'';
     return '<div class="player-card'+(isActive?' active-player':'')+'">'
       +(isActive?'<div class="pc-turn">🎯</div>':'')
-      +'<div class="pc-name">'+esc(name)+'</div>'
+      +'<div class="pc-name" onclick="fcRenamePlayer(&quot;x01&quot;,'+i+')" style="cursor:pointer" title="Tap to rename">'+esc(name)+' ✎</div>'
       +'<div class="pc-score '+scoreClass+'">'+score+'</div>'
       +'<div class="pc-legs">Legs: '+gs.legs[i]+'</div>'
       +checkout
@@ -1029,6 +1079,43 @@ async function fcTrain(gameType,score,meta){
 
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
+// ── Remembered player names (local to this device, for quick one-off games) ──
+var FC_RECENT_NAMES_KEY='fc_recent_player_names';
+function fcGetRecentNames(){
+  try{return JSON.parse(localStorage.getItem(FC_RECENT_NAMES_KEY)||'[]');}catch(e){return [];}
+}
+function fcSaveRecentName(name){
+  if(!name)return;
+  var names=fcGetRecentNames().filter(function(n){return n.toLowerCase()!==name.toLowerCase();});
+  names.unshift(name);
+  names=names.slice(0,20);
+  try{localStorage.setItem(FC_RECENT_NAMES_KEY,JSON.stringify(names));}catch(e){}
+  fcPopulateNameDatalist();
+}
+function fcPopulateNameDatalist(){
+  var dl=document.getElementById('fc-recent-names');
+  if(!dl)return;
+  dl.innerHTML=fcGetRecentNames().map(function(n){return '<option value="'+esc(n)+'">';}).join('');
+}
+
+// Tap any player name mid-game to rename them — updates that game's state,
+// re-renders, and remembers the name locally for next time.
+var fcRenameStateMap={x01:function(){return gs;},cricket:function(){return cricket;},killer:function(){return killer;},shanghai:function(){return shanghai;},halveit:function(){return halveit;}};
+var fcRenameRenderMap={x01:function(){renderGame();},cricket:function(){renderCricket();},killer:function(){renderKiller();},shanghai:function(){renderShanghai();},halveit:function(){renderHalveIt();}};
+function fcRenamePlayer(mode,i){
+  var state=fcRenameStateMap[mode]&&fcRenameStateMap[mode]();
+  if(!state||!state.players)return;
+  var current=state.players[i];
+  var next=prompt('Player name:',current);
+  if(next===null)return;
+  next=next.trim();
+  if(!next)return;
+  state.players[i]=next;
+  fcSaveRecentName(next);
+  fcRenameRenderMap[mode]();
+  toast('Renamed to "'+next+'"');
+}
+
 // ── MODE SELECTION ─────────────────────────────────────────────────────────────
 var selectedMode='x01';
 var modeDescs={
@@ -1127,6 +1214,7 @@ var cNums=[20,19,18,17,16,15,25];
 
 function startCricket(){
   var names=Array.from(document.getElementById('player-names').querySelectorAll('input')).map(function(i){return i.value.trim()||'Player';});
+  names.forEach(fcSaveRecentName);
   cricket={players:names,marks:names.map(function(){return{20:0,19:0,18:0,17:0,16:0,15:0,25:0};}),points:names.map(function(){return 0;}),currentPlayer:0,dartsThrown:0,history:[]};
   showScreen('screen-cricket');
   document.getElementById('cricket-numpad').innerHTML=[20,19,18,17,16,15,'Bull','Miss'].map(function(n){
@@ -1181,7 +1269,7 @@ function renderCricket(){
   var cr=cricket,cols='1fr '+'repeat('+cr.players.length+',1fr)';
   var h='<div class="cricket-board"><div class="cricket-header" style="grid-template-columns:'+cols+'"><div>NUM</div>';
   cr.players.forEach(function(p,i){
-    h+='<div style="text-align:center;color:'+(i===cr.currentPlayer?'var(--amber)':'var(--dim)')+'">'+esc(p)+'</div>';
+    h+='<div style="text-align:center;color:'+(i===cr.currentPlayer?'var(--amber)':'var(--dim)')+';cursor:pointer" onclick="fcRenamePlayer(&quot;cricket&quot;,'+i+')" title="Tap to rename">'+esc(p)+' ✎</div>';
   });
   h+='</div>';
   cNums.forEach(function(n){
@@ -1203,6 +1291,7 @@ function renderCricket(){
 
 function startKiller(){
   var names=Array.from(document.getElementById('player-names').querySelectorAll('input')).map(function(i){return i.value.trim()||'Player';});
+  names.forEach(fcSaveRecentName);
   var nums=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20].sort(function(){return Math.random()-.5;}).slice(0,names.length);
   killer={players:names,doubles:nums,lives:names.map(function(){return 3;}),isKiller:names.map(function(){return false;}),currentPlayer:0,dartsThrown:0,history:[]};
   showScreen('screen-killer');
@@ -1259,7 +1348,7 @@ function renderKiller(){
   document.getElementById('killer-players').innerHTML=k.players.map(function(name,i){
     var lives='';for(var l=0;l<3;l++){lives+='<span>'+(l<k.lives[i]?'❤️':'🖤')+'</span>';}
     return '<div class="killer-card'+(i===p?' active-player':'')+(k.isKiller[i]?' is-killer':'')+(k.lives[i]<=0?' eliminated':'')+'">'
-      +'<div><div class="killer-name">'+esc(name)+'</div><div class="killer-double">D'+k.doubles[i]+'</div></div>'
+      +'<div><div class="killer-name" onclick="fcRenamePlayer(&quot;killer&quot;,'+i+')" style="cursor:pointer" title="Tap to rename">'+esc(name)+' ✎</div><div class="killer-double">D'+k.doubles[i]+'</div></div>'
       +'<div class="killer-lives">'+lives+'</div>'+(k.isKiller[i]?'<div class="killer-badge">KILLER</div>':'')+'</div>';
   }).join('');
   document.getElementById('killer-turn-title').textContent=k.players[p]+"'s turn — dart "+(k.dartsThrown+1)+" of 3";
@@ -1271,6 +1360,7 @@ var shanghai={};
 
 function startShanghai(){
   var names=Array.from(document.getElementById('player-names').querySelectorAll('input')).map(function(i){return i.value.trim()||'Player';});
+  names.forEach(fcSaveRecentName);
   shanghai={players:names,scores:names.map(function(){return 0;}),currentPlayer:0,currentRound:1,currentDarts:[],history:[]};
   showScreen('screen-shanghai');
   renderShanghai();
@@ -1357,7 +1447,7 @@ function renderShanghai(){
   document.getElementById('shanghai-target-label').textContent='Round '+n+' — Target: '+n+' (S='+n+' D='+(n*2)+' T='+(n*3)+')';
   var h='<div class="shanghai-scores"><div class="shanghai-round">Scores</div>';
   sh.players.forEach(function(p,i){
-    h+='<div class="shanghai-player-score"><span style="color:'+(i===sh.currentPlayer?'var(--amber)':'var(--text)')+'">'+esc(p)+'</span><span class="shanghai-total">'+sh.scores[i]+'</span></div>';
+    h+='<div class="shanghai-player-score"><span style="color:'+(i===sh.currentPlayer?'var(--amber)':'var(--text)')+';cursor:pointer" onclick="fcRenamePlayer(&quot;shanghai&quot;,'+i+')" title="Tap to rename">'+esc(p)+' ✎</span><span class="shanghai-total">'+sh.scores[i]+'</span></div>';
   });
   h+='</div>';
   document.getElementById('shanghai-scores').innerHTML=h;
@@ -1473,6 +1563,38 @@ function hiDrop(e){
   hiRenderRoundList();
 }
 function hiDragEnd(e){e.currentTarget.classList.remove('dragging');}
+var hiRoundExplanations={
+  'Open Round — Highest Score':'No target — just throw your 3 darts and enter your highest possible score. Miss the board completely with all 3 and your total is halved.',
+  'Any Double':'Any double on the board counts (D1–D20, or the Double Bull). Add up whatever you hit; if none of your 3 darts hit a double, your score is halved.',
+  'Any Treble':'Any treble on the board counts (T1–T20). Add up whatever you hit; if none of your 3 darts hit a treble, your score is halved.',
+  'Inner Ring Only':'All 3 darts must land in the inner singles ring — the area between the treble ring and the outer bull. Doubles, trebles, and both bulls don\u2019t count as a hit here.',
+  'Outer Ring Only':'All 3 darts must land in the outer singles ring — the area between the double ring and the treble ring. Doubles and trebles don\u2019t count as a hit here.',
+  '2 In, 1 Out':'Land 2 of your 3 darts in the inner ring and 1 in the outer ring (any order). Doubles, trebles, and bulls don\u2019t count.',
+  '2 Black, 1 White':'Hit 2 darts in black segments and 1 in a white segment, in any order.',
+  '2 White, 1 Black':'Hit 2 darts in white segments and 1 in a black segment, in any order.',
+  '2 out of 3 darts in Green':'At least 2 of your 3 darts must land in a green segment (any green double or treble).',
+  '2 out of 3 darts in Red':'At least 2 of your 3 darts must land in a red segment (any red double or treble).',
+  'Hit inside the number circle (e.g. 20/10/6/9/8 wire)':'At least 1 dart must land inside the wire circle formed by the cluster of numbers around the 20 — the ring of numbered segments closest to the bull.',
+  'Score 50+ this round':'Total 50 or more points across your 3 darts this round to bank the bonus. Fall short and your whole score is halved.'
+};
+function hiRoundExplain(round){
+  if(round&&typeof round==='object'&&round.custom){
+    return hiRoundExplanations[round.label]||('Tell us whether you achieved "'+round.label+'". Hit it to score +'+round.score+', miss it and your score is halved.');
+  }
+  var key=String(round);
+  if(hiRoundExplanations[key])return hiRoundExplanations[key];
+  if(key==='D Bull')return 'Hit the Double Bull (inner bullseye, worth 50) with any of your darts. Miss it completely with all 3 and your score is halved.';
+  if(key==='25')return 'Hit the outer Bull (worth 25) with any of your darts. Miss it completely with all 3 and your score is halved.';
+  if(/^D\d+$/.test(key))return 'Hit Double '+key.slice(1)+' with any of your darts. Miss it completely with all 3 and your score is halved.';
+  if(/^T\d+$/.test(key))return 'Hit Treble '+key.slice(1)+' with any of your darts. Miss it completely with all 3 and your score is halved.';
+  return 'Hit the number '+key+' — single, double, or treble all count — with any of your darts. Miss it completely with all 3 and your score is halved.';
+}
+function showRoundInfo(round){
+  document.getElementById('rules-title').textContent='Round Info';
+  document.getElementById('rules-objective').textContent=hiRoundLabel(round);
+  document.getElementById('rules-body').innerHTML='<p>'+esc(hiRoundExplain(round))+'</p>';
+  document.getElementById('rules-modal-overlay').classList.add('open');
+}
 function hiRoundLabel(r){
   return (r&&typeof r==='object'&&r.custom) ? (r.label+' (+'+r.score+')') : String(r);
 }
@@ -1498,11 +1620,22 @@ function hiRenderRoundList(){
       '<span class="hi-round-target">'+esc(hiRoundLabel(t))+'</span>'+
       '<button class="hi-move" onclick="hiMove('+i+',-1)" '+(i===0?'disabled':'')+'>▲</button>'+
       '<button class="hi-move" onclick="hiMove('+i+',1)" '+(i===hiCustomRounds.length-1?'disabled':'')+'>▼</button>'+
+      '<button class="hi-move" onclick="hiReroll('+i+')" title="Swap for a different round">🔀</button>'+
+      '<button class="hi-move" onclick="showRoundInfo(hiCustomRounds['+i+'])" title="What does this round require?">ⓘ</button>'+
       '<button class="hi-remove" onclick="hiRemove('+i+')">✕</button>'+
       '</div>';
   }).join('')||'<div style="color:var(--dim);font-size:.82rem;padding:.5rem">No rounds yet — add one below or load a preset.</div>';
   var cnt=document.getElementById('hi-round-count');
   if(cnt)cnt.textContent='('+hiCustomRounds.length+' round'+(hiCustomRounds.length!==1?'s':'')+')';
+}
+function hiReroll(i){
+  var current=hiCustomRounds[i];
+  var pool=hiNumberPool.concat(hiSpecialPool,['D Bull']);
+  var choices=pool.filter(function(p){return JSON.stringify(p)!==JSON.stringify(current);});
+  var pick=choices[Math.floor(Math.random()*choices.length)];
+  hiCustomRounds[i]=pick;
+  hiRenderRoundList();
+  toast('Swapped round '+(i+1));
 }
 function hiShuffle(arr){
   arr=arr.slice();
@@ -1613,6 +1746,7 @@ async function hiRenderPresetBtns(){
 
 function startHalveIt(){
   var names=Array.from(document.getElementById('player-names').querySelectorAll('input')).map(function(i){return i.value.trim()||'Player';});
+  names.forEach(fcSaveRecentName);
   var rounds=hiCustomRounds.length?hiCustomRounds.slice():hiTargets.slice();
   halveit={players:names,scores:names.map(function(){return 0;}),currentPlayer:0,currentRound:0,inputVal:'',rounds:rounds,history:[]};
   showScreen('screen-halveit');
@@ -1693,9 +1827,11 @@ function renderHalveIt(){
     document.getElementById('halveit-standard-controls').style.display='block';
     document.getElementById('halveit-custom-controls').style.display='none';
   }
+  var explainEl=document.getElementById('halveit-target-explain');
+  if(explainEl)explainEl.textContent=hiRoundExplain(round);
   var h='<div class="halveit-table"><div class="halveit-header" style="grid-template-columns:'+cols+'"><div>Round</div>';
   hv.players.forEach(function(p,i){
-    h+='<div style="color:'+(i===hv.currentPlayer?'var(--amber)':'var(--dim)')+'">'+esc(p)+'</div>';
+    h+='<div style="color:'+(i===hv.currentPlayer?'var(--amber)':'var(--dim)')+';cursor:pointer" onclick="fcRenamePlayer(&quot;halveit&quot;,'+i+')" title="Tap to rename">'+esc(p)+' ✎</div>';
   });
   h+='</div>';
   hv.rounds.forEach(function(t,ri){
@@ -1719,6 +1855,7 @@ function showWinByName(name){
 
 // Init
 if(document.getElementById('x01-options'))document.getElementById('x01-options').style.display='block';
+fcPopulateNameDatalist();
 if(document.getElementById('hi-add-num'))hiUpdateNumSelect();
 if(document.getElementById('hi-round-list')){hiRenderRoundList();hiRenderPresetBtns();}
 </script>
