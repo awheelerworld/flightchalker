@@ -1498,21 +1498,11 @@ function hiRenderRoundList(){
       '<span class="hi-round-target">'+esc(hiRoundLabel(t))+'</span>'+
       '<button class="hi-move" onclick="hiMove('+i+',-1)" '+(i===0?'disabled':'')+'>▲</button>'+
       '<button class="hi-move" onclick="hiMove('+i+',1)" '+(i===hiCustomRounds.length-1?'disabled':'')+'>▼</button>'+
-      '<button class="hi-move" onclick="hiReroll('+i+')" title="Swap for a different round">🔀</button>'+
       '<button class="hi-remove" onclick="hiRemove('+i+')">✕</button>'+
       '</div>';
   }).join('')||'<div style="color:var(--dim);font-size:.82rem;padding:.5rem">No rounds yet — add one below or load a preset.</div>';
   var cnt=document.getElementById('hi-round-count');
   if(cnt)cnt.textContent='('+hiCustomRounds.length+' round'+(hiCustomRounds.length!==1?'s':'')+')';
-}
-function hiReroll(i){
-  var current=hiCustomRounds[i];
-  var pool=hiNumberPool.concat(hiSpecialPool,['D Bull']);
-  var choices=pool.filter(function(p){return JSON.stringify(p)!==JSON.stringify(current);});
-  var pick=choices[Math.floor(Math.random()*choices.length)];
-  hiCustomRounds[i]=pick;
-  hiRenderRoundList();
-  toast('Swapped round '+(i+1));
 }
 function hiShuffle(arr){
   arr=arr.slice();
