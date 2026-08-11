@@ -1,0 +1,25 @@
+name: Supabase Keep-Alive
+
+on:
+  schedule:
+    # Runs every 3 days at 06:00 UTC — comfortably inside the 7-day pause window
+    - cron: '0 6 */3 * *'
+  workflow_dispatch: {}   # lets you trigger it manually from the Actions tab to test
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping leagues/admin project
+        run: |
+          curl -s -o /dev/null -w "Leagues project responded: %{http_code}\n" \
+            "${{ secrets.SUPABASE_LEAGUES_URL }}/rest/v1/" \
+            -H "apikey: ${{ secrets.SUPABASE_LEAGUES_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_LEAGUES_ANON_KEY }}"
+
+      - name: Ping player/team app project
+        run: |
+          curl -s -o /dev/null -w "Player app project responded: %{http_code}\n" \
+            "${{ secrets.SUPABASE_PLAYER_URL }}/rest/v1/" \
+            -H "apikey: ${{ secrets.SUPABASE_PLAYER_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_PLAYER_ANON_KEY }}"
