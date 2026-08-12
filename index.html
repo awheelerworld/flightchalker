@@ -1809,6 +1809,8 @@ async function checkDraftRestore(){
         });
       }
     }catch(e){fcLogError('checkForDraft:liveDraft',e,false);}
+  }
+  if(!draft)return;
   try{
     var d=JSON.parse(draft);
     if(!d.opponent)return;
