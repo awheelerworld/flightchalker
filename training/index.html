@@ -52,6 +52,21 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
 .game-card-desc{font-size:.82rem;color:var(--dim);line-height:1.4}
 .game-card-tag{font-family:'Barlow Condensed',sans-serif;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:3px;background:#1a2a1e;color:var(--gl);border:1px solid var(--green);align-self:flex-start;margin-top:.25rem}
 
+/* Tips & FAQ */
+.faq-wrap{max-width:640px;margin:0 auto;padding:1.5rem 1rem 3rem}
+.faq-list{display:flex;flex-direction:column;gap:.6rem;margin-top:1.25rem}
+.faq-item{background:var(--s2);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.faq-q{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:1rem 1.1rem;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:1.02rem;font-weight:700;letter-spacing:.02em;color:var(--text)}
+.faq-item:hover .faq-q{color:var(--amber)}
+.faq-arrow{flex-shrink:0;font-size:.85rem;color:var(--green);transition:transform .2s}
+.faq-item.open .faq-arrow{transform:rotate(90deg);color:var(--amber)}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .25s ease}
+.faq-item.open .faq-a{max-height:600px}
+.faq-a-inner{padding:0 1.1rem 1.1rem;font-size:.86rem;line-height:1.55;color:var(--dim)}
+.faq-source{display:inline-flex;align-items:center;gap:.3rem;margin-top:.7rem;font-family:'Barlow Condensed',sans-serif;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gl);text-decoration:none;border-bottom:1px solid transparent}
+.faq-source:hover{color:var(--amber);border-color:var(--amber)}
+.faq-note{font-size:.78rem;color:var(--dim);margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);line-height:1.5}
+
 /* Game screens */
 .game-wrap{max-width:500px;margin:0 auto;padding:1rem 1rem 3rem}
 .game-title{font-family:'Barlow Condensed',sans-serif;font-size:1.5rem;font-weight:900;text-transform:uppercase;letter-spacing:.05em;color:var(--amber);margin-bottom:.25rem}
@@ -235,7 +250,89 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
         <div class="game-card-desc">Race a simulated computer player at 501 or 301. Pick their skill level and go head to head.</div>
         <div class="game-card-tag">Match Play</div>
       </div>
+      <div class="game-card" onclick="showScreen('screen-tips');document.getElementById('hdr-sub').textContent='Tips &amp; FAQ'">
+        <div class="game-card-icon">💡</div>
+        <div class="game-card-name">Tips &amp; FAQ</div>
+        <div class="game-card-desc">Common problems like darts flying too high, drifting off line, or bouncing out — with fixes.</div>
+        <div class="game-card-tag">Advice</div>
+      </div>
     </div>
+  </div>
+</div>
+
+<!-- ══════════ TIPS & FAQ ══════════ -->
+<div id="screen-tips" class="screen">
+  <div class="faq-wrap">
+    <div class="menu-title" style="font-size:1.5rem">💡 Tips &amp; FAQ</div>
+    <div class="menu-sub">Common problems, with fixes — tap a question to expand</div>
+    <div class="faq-list">
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">My darts keep flying too high<span class="faq-arrow">▶</span></div>
+        <div class="faq-a"><div class="faq-a-inner">
+          This is usually caused by releasing the dart too late, or throwing too gently so it climbs before dropping onto the target. Try releasing a fraction earlier in your arm's extension — a harder, flatter throw also reduces the arc. If it's a consistent problem, a quick fix without changing your throw at all is to step back very slightly from the oche; moving back tends to bring a persistently high throw down onto target.
+          <br><a class="faq-source" href="https://darthelp.com/guides/how-to-throw-darts/" target="_blank" rel="noopener noreferrer">Source: DartHelp.com ↗</a>
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">My darts are flying too low / dropping short<span class="faq-arrow">▶</span></div>
+        <div class="faq-a"><div class="faq-a-inner">
+          Often down to a barrel that's too heavy paired with small flights, a weak release, or worn-out flights and shafts. Check your kit first — replace tired flights and shafts — then work on a firmer, more committed release rather than a soft push.
+          <br><a class="faq-source" href="https://www.skipjackdarts.com/why-do-my-darts-fly-so-badly-expert-dart-tips-skipjack.html" target="_blank" rel="noopener noreferrer">Source: SKIPJACK ↗</a>
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">My darts drift left or right<span class="faq-arrow">▶</span></div>
+        <div class="faq-a"><div class="faq-a-inner">
+          Almost always a stance issue rather than something in the flick of your wrist. Repositioning your back foot changes the angle your torso faces the board, so drifting left or right can usually be corrected there. Grip matters too — keeping your index finger pointed slightly forward as you release helps avoid pushing the dart sideways as your hand opens.
+          <br><a class="faq-source" href="https://darthelp.com/guides/improve-your-darts-stance/" target="_blank" rel="noopener noreferrer">Source: DartHelp.com ↗</a>
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">My groupings are inconsistent<span class="faq-arrow">▶</span></div>
+        <div class="faq-a"><div class="faq-a-inner">
+          Most misses trace back to one of three things: an inconsistent release point, body movement or swaying mid-throw, or rushing before you've properly settled into your aim. The fix for all three is the same — slow down, and build a repeatable pre-throw routine you do the same way every time.
+          <br><a class="faq-source" href="https://dartsy.org/blog/dart-accuracy-tips-drills" target="_blank" rel="noopener noreferrer">Source: Dartsy ↗</a>
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">My darts keep bouncing out<span class="faq-arrow">▶</span></div>
+        <div class="faq-a"><div class="faq-a-inner">
+          Three usual culprits: the dart, the board, or the throw. A dart hitting the board at an angle or with a weak throw often won't stick, so aim for a straight, confident entry rather than a soft lob. Blunt tips are more likely to deflect off a wire instead of sliding past it, so keep them sharpened. A well-worn board also holds darts worse — rotate it regularly, and consider a slightly heavier dart if you're a light thrower.
+          <br><a class="faq-source" href="https://belivesports.com/how-to-stop-darts-bouncing-out/" target="_blank" rel="noopener noreferrer">Source: BeliveSports ↗</a>
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">What weight darts should I use?<span class="faq-arrow">▶</span></div>
+        <div class="faq-a"><div class="faq-a-inner">
+          Most beginners land around 22–24g, which balances control and momentum and makes a consistent throw easier to develop. As a rule of thumb: if your dart flies fairly straight, a heavier dart (26g+) helps keep that trajectory stable; if it arcs more, a lighter dart (22–24g) often suits better. Borrow a few different weights before buying, and stick with one for at least a few weeks so muscle memory can build.
+          <br><a class="faq-source" href="https://findmydarts.com/en/blog/beginner-darts-what-weight-to-choose" target="_blank" rel="noopener noreferrer">Source: FindMyDarts ↗</a>
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">I keep missing doubles under pressure<span class="faq-arrow">▶</span></div>
+        <div class="faq-a"><div class="faq-a-inner">
+          A common trap is treating three darts at a double as three separate chances rather than giving each one full focus — leading to a casual first dart, a tense second, and a rushed third. Build a fixed pre-throw routine (same steps, same order, every single time) so under pressure your body falls back on habit instead of improvising. When you miss, reset before your next dart rather than dwelling on it — a breath and a step back from the oche is often enough.
+          <br><a class="faq-source" href="https://dartsaim.co.uk/articles/how-to-hit-doubles-in-darts/" target="_blank" rel="noopener noreferrer">Source: Darts Aim ↗</a>
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">How should I grip the dart?<span class="faq-arrow">▶</span></div>
+        <div class="faq-a"><div class="faq-a-inner">
+          Hold the dart around the centre of the barrel for steady balance, fingers straight, with just enough pressure to stay in control — not a tight grip. Consistency matters more than which exact grip you use: always hold it in the same spot, and let it glide out of your hand on release rather than pushing or flicking it.
+          <br><a class="faq-source" href="https://www.dartscorner.com/blogs/how-to/how-to-throw-a-dart" target="_blank" rel="noopener noreferrer">Source: Darts Corner ↗</a>
+        </div></div>
+      </div>
+
+    </div>
+    <div class="faq-note">Advice above is summarised from third-party darts coaching sites, linked under each answer — tap a source link to read the full article. Every player's technique is different, so treat these as a starting point rather than a fix-all.</div>
   </div>
 </div>
 
@@ -648,6 +745,13 @@ function showScreen(id){
 }
 
 function showMenu(){showScreen('screen-menu');document.getElementById('hdr-sub').textContent='Training Zone';}
+
+function toggleFaq(q){
+  var item=q.closest('.faq-item');
+  var wasOpen=item.classList.contains('open');
+  document.querySelectorAll('#screen-tips .faq-item.open').forEach(function(i){i.classList.remove('open');});
+  if(!wasOpen)item.classList.add('open');
+}
 
 // ── Score Caller (audio) ─────────────────────────────────────────────────
 function updateCallerBtn(){
