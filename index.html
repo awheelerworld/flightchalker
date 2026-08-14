@@ -1489,14 +1489,39 @@ function renderPChips(){
     var email=p.email||null;
     var linked=p.linked||false;
     var emailBadge=email
-      ?'<span title="Email: '+esc(email)+'" style="font-size:.65rem;color:'+(linked?'var(--gl)':'var(--amber)')+';">'+(linked?'✓':'✉')+' linked</span>'
+      ?(linked
+        ?'<span title="Email: '+esc(email)+'" style="font-size:.65rem;color:var(--gl)">✓ linked</span>'
+        :'<span title="Email: '+esc(email)+'" style="font-size:.65rem;color:var(--amber)">✉ not linked</span>')
       :'<span style="font-size:.65rem;color:var(--dim)">no email</span>';
+    var inviteBtn=(email&&!linked)
+      ?'<button class="pr2" onclick="inviteToSignUp('+i+')" title="Send sign-up invite" style="font-size:.75rem">✉️</button>'
+      :'';
     return '<div class="pchip">'+esc(name)
       +emailBadge
+      +inviteBtn
       +'<button class="pr2" onclick="editPlayer('+i+')" title="Edit" style="font-size:.75rem;opacity:.7">✎</button>'
       +'<button class="pr2" onclick="removePlayer('+i+')" title="Remove">×</button>'
       +'</div>';
   }).join('');
+}
+function inviteToSignUp(idx){
+  var p=players[idx];
+  if(!p||!p.email){toast('Add an email for this player first',true);return;}
+  var teamName=currentTeam&&currentTeam.team_name?currentTeam.team_name:'your team';
+  var leagueName=currentLeague&&currentLeague.name?currentLeague.name:'';
+  var joinCode=currentTeam&&currentTeam.join_code?currentTeam.join_code:'';
+  var subject=encodeURIComponent('You\'re invited to join '+teamName+' on Flight Chalker');
+  var body='Hi '+(p.name||'there')+',\n\n'
+    +'You\'ve been added to the squad for '+teamName+(leagueName?' in '+leagueName:'')+' on Flight Chalker — '
+    +'a free app for tracking matches, stats, and league results.\n\n'
+    +'To create your account and link yourself to the team:\n'
+    +'1. Go to https://flightchalker.co.uk/dashboard\n'
+    +'2. Sign in with Google\n'
+    +(joinCode?'3. Enter this team join code when prompted: '+joinCode+'\n':'3. Request to join '+teamName+' from the dashboard\n')
+    +'\nSee you on the oche!\n'
+    +teamName;
+  window.location.href='mailto:'+encodeURIComponent(p.email)+'?subject='+subject+'&body='+encodeURIComponent(body);
+  toast('Opening your email app to invite '+(p.name||'them')+'...');
 }
 function populateStatSel(){
   const sel=document.getElementById('spsel');const cur=sel.value;
