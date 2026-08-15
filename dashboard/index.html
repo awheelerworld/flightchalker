@@ -772,16 +772,16 @@ async function openCaptainChangeModal(teamId){
       .from('team_memberships').select('user_id')
       .eq('team_id', teamId).eq('status', 'approved');
     if(error) throw error;
-    var userIds = (members||[]).map(function(m){return m.user_id;})
-      .filter(function(id){return id !== window.currentUser.id;}); // don't propose yourself
+    var userIds = (members||[]).map(function(m){return m.user_id;});
     if(!userIds.length){
-      membersEl.innerHTML = '<p style="color:var(--dim);font-size:.82rem">No other squad members found to propose.</p>';
+      membersEl.innerHTML = '<p style="color:var(--dim);font-size:.82rem">No squad members found to propose.</p>';
       return;
     }
     var { data:users, error:userErr } = await sb.from('users').select('id, username, email').in('id', userIds);
     if(userErr) throw userErr;
     membersEl.innerHTML = (users||[]).map(function(u,i){
-      var label = u.username || u.email || 'Player';
+      var isSelf = u.id === window.currentUser.id;
+      var label = (u.username || u.email || 'Player') + (isSelf ? ' (you)' : '');
       return '<label class="member-option">'
         +'<input type="radio" name="proposed-captain" value="'+u.id+'"'+(i===0?' checked':'')+'>'
         + label
