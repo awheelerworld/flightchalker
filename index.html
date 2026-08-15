@@ -31,7 +31,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzE0MTgxNCIvPgogIDxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YTdjNTkiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNGE3YzU5IiBzdHJva2Utd2lkdGg9IjEiLz4KICA8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI0IiBmaWxsPSIjZThjODQwIi8+Cjwvc3ZnPg==">
-<title>🎯 Flight Chalker — League Platform v46</title>
+<title>🎯 Flight Chalker — League Platform v48</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -460,40 +460,47 @@ html{scroll-behavior:smooth}
     </svg>
     <div class="landing-title">Flight <span>Chalker</span></div>
     <div class="landing-sub">Your darts. Your league. Your rules.</div>
-    <div class="landing-sub2" style="margin-bottom:2rem">Make your scores take flight!</div>
-    <button class="btn-land-s" style="border-color:var(--amber);color:var(--amber);max-width:300px;width:100%" onclick="goTo('public');loadPublicLeagues()">&#127350; View League Table</button>
-  </div>
+    <div class="landing-sub2" style="margin-bottom:1.75rem">Free scorer, training drills, stats &amp; leaderboards.</div>
 
-  <!-- Two column cards -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;max-width:700px;margin:0 auto;padding:1.5rem 1rem">
-
-    <!-- Player card -->
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.5rem;display:flex;flex-direction:column;gap:.75rem">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--green)">Individual Player</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;font-weight:900;color:var(--text);line-height:1.1">Play Darts &amp; Train</div>
-      <div style="font-size:.8rem;color:var(--dim);line-height:1.5">Free account. Access the scorer, training zone and personal leaderboards.</div>
-      <a href="/join" style="display:block;text-align:center;background:var(--green);border-radius:6px;color:white;font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.65rem 1rem;text-decoration:none">🎯 Join Free</a>
-      <a href="/login" style="display:block;text-align:center;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--dim);font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.65rem 1rem;text-decoration:none">Sign In</a>
+    <!-- Primary player CTAs -->
+    <div style="display:flex;flex-direction:column;gap:.6rem;width:100%;max-width:320px">
+      <a href="/join" style="display:block;text-align:center;background:var(--green);border-radius:8px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.8rem 2rem;text-decoration:none">🎯 Play Free</a>
+      <a href="/login" style="display:block;text-align:center;background:transparent;border:2px solid var(--border);border-radius:8px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.7rem 2rem;text-decoration:none">Sign In</a>
     </div>
 
-    <!-- Team card -->
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.5rem;display:flex;flex-direction:column;gap:.75rem">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--amber)">League Team</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;font-weight:900;color:var(--text);line-height:1.1">Record Match Results</div>
-      <div style="font-size:.8rem;color:var(--dim);line-height:1.5">Log in as a team to record results, view fixtures and download match reports.</div>
-      <a href="#section-login" style="display:block;text-align:center;background:var(--amber);border-radius:6px;color:var(--bg);font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.65rem 1rem;text-decoration:none">Team Login</a>
-      <a href="#section-register" style="display:block;text-align:center;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--dim);font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.65rem 1rem;text-decoration:none">Register Team</a>
+    <div style="margin-top:1.5rem">
+      <a href="#" onclick="goTo('public');loadPublicLeagues();return false" style="font-size:.78rem;color:var(--dim);text-decoration:none;letter-spacing:.06em;text-transform:uppercase">🏆 View League Table</a>
     </div>
-
   </div>
 
-  <!-- League admin link -->
-  <div style="text-align:center;padding:.5rem 1rem 2rem">
-    <a href="/admin" style="font-size:.78rem;color:var(--dim);text-decoration:none;letter-spacing:.08em;text-transform:uppercase">⚙ League Admin</a>
+  <!-- Player benefits strip -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;max-width:700px;margin:0 auto;padding:2rem 1rem 1rem;text-align:center">
+    <div>
+      <div style="font-size:1.6rem;margin-bottom:.35rem">🎯</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text)">Free Scorer</div>
+      <div style="font-size:.75rem;color:var(--dim);margin-top:.2rem">All game modes, no account limits</div>
+    </div>
+    <div>
+      <div style="font-size:1.6rem;margin-bottom:.35rem">📈</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text)">Training Zone</div>
+      <div style="font-size:.75rem;color:var(--dim);margin-top:.2rem">Drills to sharpen your game</div>
+    </div>
+    <div>
+      <div style="font-size:1.6rem;margin-bottom:.35rem">🏅</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text)">Track Stats</div>
+      <div style="font-size:.75rem;color:var(--dim);margin-top:.2rem">Personal leaderboards &amp; history</div>
+    </div>
+  </div>
+
+  <!-- Team captain section (secondary) -->
+  <div style="max-width:400px;margin:1.5rem auto 0;padding:1.25rem 1.5rem;background:var(--surface);border:1px solid var(--border);border-radius:12px;text-align:center">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:.68rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);margin-bottom:.4rem">Starting a New League Team?</div>
+    <div style="font-size:.8rem;color:var(--dim);line-height:1.5;margin-bottom:.85rem">Register your team to record match results, view fixtures and download reports. Already playing? Log in to your player account and link to your team from your dashboard.</div>
+    <a href="#" onclick="goTo('register');return false" style="display:inline-block;font-size:.85rem;color:var(--amber);text-decoration:none;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.08em;text-transform:uppercase">Register Team →</a>
   </div>
 
   <!-- Register section -->
-  <div id="section-register" class="section-anchor" style="display:flex;justify-content:center;padding:2rem 1rem;border-top:1px solid var(--border);scroll-margin-top:0">
+  <div id="section-register" class="section-anchor" style="display:none;justify-content:center;padding:2rem 1rem;border-top:1px solid var(--border);scroll-margin-top:0">
     <div class="auth-card">
       <h2>Register Your Team</h2>
       <p>Enter your league code and team details to get started. Your league code will have been provided by your league administrator. Questions? Email <a href="/cdn-cgi/l/email-protection#462f28202906202a2f212e32252e272a2d233468252968332d" style="color:var(--amber);text-decoration:none"><span class="__cf_email__" data-cfemail="026b6c646d42646e6b656a76616a636e6967702c616d2c7769">[email&#160;protected]</span></a></p>
@@ -531,7 +538,7 @@ html{scroll-behavior:smooth}
   </div>
 
   <!-- Login section -->
-  <div id="section-login" class="section-anchor" style="display:flex;justify-content:center;padding:2rem 1rem;border-top:1px solid var(--border);scroll-margin-top:0">
+  <div id="section-login" class="section-anchor" style="display:none;justify-content:center;padding:2rem 1rem;border-top:1px solid var(--border);scroll-margin-top:0">
     <div class="auth-card">
       <div id="login-access-notice" style="display:none;background:#2a1a00;border:1px solid var(--amber);border-radius:6px;padding:.75rem 1rem;margin-bottom:1rem;font-size:.85rem;color:var(--amber)">
         🔒 Please log in with your team name and PIN to access Play Darts and Training Zone.
@@ -547,13 +554,13 @@ html{scroll-behavior:smooth}
       </div>
       <div class="arow"><button class="btnp" onclick="loginTeam()"><span id="login-spin" style="display:none" class="spin"></span>Log In</button></div>
       <div class="ast" id="login-status"></div>
-      <a href="#section-forgot-pin" class="back-link" style="color:var(--amber);text-decoration:none">Forgot PIN? →</a>
+      <a href="#" onclick="goTo('forgot-pin');return false" class="back-link" style="color:var(--amber);text-decoration:none">Forgot PIN? →</a>
       <div style="text-align:right;margin-top:1rem"><a href="#top" style="font-size:.75rem;color:var(--dim);text-decoration:none;font-family:'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase">↑ Back to top</a></div>
     </div>
   </div>
 
   <!-- Forgot PIN section -->
-  <div id="section-forgot-pin" class="section-anchor" style="display:flex;justify-content:center;padding:2rem 1rem;border-top:1px solid var(--border);scroll-margin-top:0">
+  <div id="section-forgot-pin" class="section-anchor" style="display:none;justify-content:center;padding:2rem 1rem;border-top:1px solid var(--border);scroll-margin-top:0">
     <div class="auth-card">
       <h2>Forgot Your PIN?</h2>
       <p>Enter your team name and the secret word you chose when registering. Your PIN will be shown if they match.</p>
@@ -571,7 +578,7 @@ html{scroll-behavior:smooth}
   </div>
 
   <!-- Admin login section -->
-  <div id="section-admin-login" class="section-anchor" style="display:flex;justify-content:center;padding:2rem 1rem 3rem;border-top:1px solid var(--border);scroll-margin-top:0">
+  <div id="section-admin-login" class="section-anchor" style="display:none;justify-content:center;padding:2rem 1rem 3rem;border-top:1px solid var(--border);scroll-margin-top:0">
     <div class="auth-card" style="border-color:var(--blue);background:#0d1e2e">
       <h2 style="color:#8ac4ff">⚙ League Admin</h2>
       <p>Are you looking for a system to record your darts league scores? Look no further. Flight Chalker offers a service for leagues to create a full fixture list, set up teams, assign team captains, and manage the league and results — all in one place.</p>
@@ -583,8 +590,12 @@ html{scroll-behavior:smooth}
   </div>
 
   <footer style="text-align:center;padding:1.25rem 1rem 2rem;font-size:.7rem;color:#4a5a4a;letter-spacing:.08em;font-family:Barlow,sans-serif;border-top:1px solid var(--border)">
-  <div style="margin-bottom:.4rem">powered by awheelerworld · flightchalker.co.uk</div>
-  <div>General enquiries: <a href="/cdn-cgi/l/email-protection#b6dfd8d0d9f6d0dadfd1dec2d5ded7daddd3c498d5d998c3dd" style="color:#5a7a5a;text-decoration:none;letter-spacing:.04em"><span class="__cf_email__" data-cfemail="2b42454d446b4d47424c435f48434a47404e59054844055e40">[email&#160;protected]</span></a></div>
+  <div style="margin-bottom:.6rem">powered by awheelerworld · flightchalker.co.uk</div>
+  <div style="margin-bottom:.6rem">General enquiries: <a href="/cdn-cgi/l/email-protection#b6dfd8d0d9f6d0dadfd1dec2d5ded7daddd3c498d5d998c3dd" style="color:#5a7a5a;text-decoration:none;letter-spacing:.04em"><span class="__cf_email__" data-cfemail="2b42454d446b4d47424c435f48434a47404e59054844055e40">[email&#160;protected]</span></a></div>
+  <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
+    <a href="#" onclick="goTo('forgot-pin');return false" style="color:#4a5a4a;text-decoration:none;letter-spacing:.04em">Forgot team PIN?</a>
+    <a href="/admin" style="color:#4a5a4a;text-decoration:none;letter-spacing:.04em">League Admin</a>
+  </div>
 </footer>
 </div>
 
@@ -1233,10 +1244,14 @@ async function sbPatch(table,filter,body){
 
 // ── Navigation ────────────────────────────────────────────────────────────────
 function goTo(screen){
-  // Inline sections on landing page - just scroll to them
+  // Inline sections on landing page - hidden by default, revealed on demand
   var inlineSections=['register','login','forgot-pin','admin-login'];
   if(inlineSections.includes(screen)){
     showScreen('screen-landing');
+    inlineSections.forEach(function(s){
+      var el=document.getElementById('section-'+s);
+      if(el) el.style.display = (s===screen) ? 'flex' : 'none';
+    });
     var target=document.getElementById('section-'+screen);
     if(target){setTimeout(function(){target.scrollIntoView({behavior:'smooth',block:'start'});},50);return;}
   }
@@ -1284,7 +1299,7 @@ document.addEventListener('DOMContentLoaded',async function(){
     showScreen('screen-landing');
     setTimeout(function(){
       var el=document.getElementById('section-login');
-      if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+      if(el){el.style.display='flex';el.scrollIntoView({behavior:'smooth',block:'start'});}
       // Show a notice above the login form
       var notice=document.getElementById('login-access-notice');
       if(notice)notice.style.display='block';
@@ -3311,5 +3326,6 @@ if(!navigator.onLine){
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 </script>
 <div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-logout-fix</div>
+<div style="position:fixed;bottom:6px;right:8px;font-family:monospace;font-size:.65rem;color:#3a4a3a;background:#141814;padding:2px 6px;border-radius:4px;z-index:9999;pointer-events:none">v48-sections-hidden</div>
 </body>
 </html>
