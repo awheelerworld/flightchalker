@@ -840,11 +840,14 @@ async function loadTeamList(leagueId){
     var pending=await sb('team_memberships?team_id=in.('+teamIds.join(',')+')&status=eq.pending&select=id,team_id,user_id');
     var pendingUserIds=pending.map(function(p){return p.user_id;});
 
+    var approvedMembers=await sb('team_memberships?team_id=in.('+teamIds.join(',')+')&status=eq.approved&select=id,team_id,user_id');
+    var approvedUserIds=approvedMembers.map(function(p){return p.user_id;});
+
     var changeRequests=await sb('captain_change_requests?team_id=in.('+teamIds.join(',')+')&status=eq.pending&select=id,team_id,requested_by,proposed_captain_id');
     var changeUserIds=[];
     changeRequests.forEach(function(c){changeUserIds.push(c.requested_by,c.proposed_captain_id);});
 
-    var allUserIds=pendingUserIds.concat(changeUserIds).filter(function(v,i,a){return a.indexOf(v)===i;});
+    var allUserIds=pendingUserIds.concat(approvedUserIds).concat(changeUserIds).filter(function(v,i,a){return a.indexOf(v)===i;});
     var userMap={};
     if(allUserIds.length){
       var users=await sb('users?id=in.('+allUserIds.join(',')+')&select=id,username,email');
@@ -880,6 +883,16 @@ async function loadTeamList(leagueId){
           +'</div>';
       }).join('') : '';
 
+      var teamSquad = approvedMembers.filter(function(m){return m.team_id===t.id;});
+      var squadHtml = teamSquad.length ? teamSquad.map(function(m){
+        var name = userMap[m.user_id]||'Player';
+        var isCaptain = t.captain_user_id===m.user_id;
+        return '<div style="display:flex;align-items:center;gap:.5rem;padding:.3rem 0;font-size:.78rem;flex-wrap:wrap">'
+          +'<span style="flex:1">'+esc(name)+(isCaptain?' <span style="color:var(--gl);font-size:.7rem">(current captain)</span>':'')+'</span>'
+          + (isCaptain ? '' : '<button onclick="assignCaptain(&quot;'+t.id+'&quot;,&quot;'+m.user_id+'&quot;,&quot;'+leagueId+'&quot;)" style="background:none;border:1px solid var(--green);border-radius:4px;color:var(--gl);font-size:.7rem;padding:2px 6px;cursor:pointer">Make Captain</button>')
+          +'</div>';
+      }).join('') : '<div style="font-size:.78rem;color:var(--dim);padding:.3rem 0">No approved squad members yet.</div>';
+
       return '<div style="padding:.5rem .75rem;background:var(--bg);border:1px solid var(--border);border-radius:5px;margin-bottom:.4rem">'
         +'<div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">'
           +'<div style="flex:1;font-weight:600;font-size:.9rem">'+esc(t.team_name)+'</div>'
@@ -895,6 +908,7 @@ async function loadTeamList(leagueId){
         +'</div>'
         + (requestsHtml ? '<div style="margin-top:.4rem;padding-top:.4rem;border-top:1px solid var(--border)"><div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin-bottom:.2rem">Join Requests</div>'+requestsHtml+'</div>' : '')
         + (changeReqHtml ? '<div style="margin-top:.4rem;padding-top:.4rem;border-top:1px solid var(--border)"><div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--amber);margin-bottom:.2rem">Captain Change Requests</div>'+changeReqHtml+'</div>' : '')
+        +'<div style="margin-top:.4rem;padding-top:.4rem;border-top:1px solid var(--border)"><div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin-bottom:.2rem">Squad — assign captain directly</div>'+squadHtml+'</div>'
         +'</div>';
     }).join('');
   }catch(e){el.innerHTML='<div class="nh">Error: '+esc(e.message)+'</div>';}
@@ -921,6 +935,20 @@ async function clearCaptain(teamId,leagueId){
   try{
     await sbPatch('teams','id=eq.'+teamId,{captain_user_id:null});
     toast('Captain cleared');
+    loadTeamList(leagueId);
+  }catch(e){toast('Error: '+e.message,true);}
+}
+
+// Direct assign - lets admin pick straight from the team's approved squad
+// members rather than generating a code and relying on that person to
+// redeem it themselves. Useful for a fast handover when a captain leaves.
+async function assignCaptain(teamId,userId,leagueId){
+  try{
+    var users=await sb('users?id=eq.'+userId+'&select=username,email');
+    var label = (users&&users[0]&&(users[0].username||users[0].email)) || 'this player';
+    if(!confirm('Make '+label+' the captain of this team? Any existing captain will be replaced.'))return;
+    await sbPatch('teams','id=eq.'+teamId,{captain_user_id:userId});
+    toast(label+' is now team captain');
     loadTeamList(leagueId);
   }catch(e){toast('Error: '+e.message,true);}
 }
