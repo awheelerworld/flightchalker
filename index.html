@@ -703,7 +703,6 @@ html{scroll-behavior:smooth}
       <button class="tab" onclick="sw('fixtures')">Fixtures</button>
       <button class="tab" onclick="sw('table')">League Table</button>
       <button class="tab" onclick="sw('history')">History</button>
-      <button class="tab" onclick="sw('players')">Players</button>
       <button class="tab" onclick="sw('stats')">Stats</button>
       <button class="tab" id="squad-tab" onclick="sw('squad')" style="display:none">Squad <span id="squad-badge" style="display:none;background:var(--red);color:white;border-radius:10px;padding:1px 6px;font-size:.7rem;margin-left:3px">0</span></button>
       <button class="tab" onclick="sw('help')">❓ Help</button>
@@ -785,18 +784,6 @@ html{scroll-behavior:smooth}
       </div>
     </div>
 
-    <!-- PLAYERS -->
-    <div id="tab-players" class="tc">
-      <div class="pp"><h2>Squad</h2>
-        <div class="pchips" id="pchips"></div>
-        <div class="apr2">
-          <input type="text" id="npname" placeholder="Player name" style="flex:1.5">
-          <input type="email" id="npemail" placeholder="Player email (optional)" style="flex:2">
-          <button class="btna" onclick="addPlayer()">Add</button>
-        </div>
-      </div>
-    </div>
-
     <!-- STATS -->
     <div id="tab-stats" class="tc">
       <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin-bottom:1.5rem">
@@ -822,6 +809,18 @@ html{scroll-behavior:smooth}
           <div style="font-size:.78rem;color:var(--dim);margin-top:.4rem">Share this code with players so they can link their Flight Chalker account to your team.</div>
         </div>
 
+        <!-- Squad roster (add/edit/remove players used in match lineups) -->
+        <div style="margin-bottom:1.5rem">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--green);margin-bottom:.75rem">Squad Roster</div>
+          <p style="font-size:.8rem;color:var(--dim);margin-bottom:.75rem;line-height:1.5">Add or remove the players who appear in the dropdowns when recording a match. Add an email to invite a player to link their own account below.</p>
+          <div class="pchips" id="pchips"></div>
+          <div class="apr2">
+            <input type="text" id="npname" placeholder="Player name" style="flex:1.5">
+            <input type="email" id="npemail" placeholder="Player email (optional)" style="flex:2">
+            <button class="btna" onclick="addPlayer()">Add</button>
+          </div>
+        </div>
+
         <!-- Pending requests -->
         <div style="margin-bottom:1.5rem">
           <div style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);margin-bottom:.75rem">Pending Join Requests</div>
@@ -832,7 +831,8 @@ html{scroll-behavior:smooth}
 
         <!-- Current squad -->
         <div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--green);margin-bottom:.75rem">Current Squad</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--green);margin-bottom:.75rem">Linked Accounts</div>
+          <div style="font-size:.78rem;color:var(--dim);margin-bottom:.6rem;line-height:1.5">Players who've joined using your team code and can see their own stats.</div>
           <div id="squad-members">
             <div style="font-size:.85rem;color:var(--dim);padding:.5rem 0">Loading squad...</div>
           </div>
@@ -919,13 +919,14 @@ html{scroll-behavior:smooth}
         </details>
 
         <details class="help-item">
-          <summary>👥 Players &amp; Squad</summary>
+          <summary>👥 Squad</summary>
           <div class="help-body">
-            <p>The <strong>Players</strong> tab is where you add or remove players from your team roster — these are the names that appear in the dropdowns when recording a match.</p>
-            <p style="margin-top:.5rem">If you're the team captain, you'll also see a <strong>Squad</strong> tab with extra tools:</p>
+            <p>The <strong>Squad</strong> tab is where you manage everything to do with your team:</p>
             <ul>
+              <li><strong>Squad Roster</strong> — add, edit or remove the players who appear in the dropdowns when recording a match.</li>
               <li>Your <strong>Team Join Code</strong> — share this with your players so they can link their own Flight Chalker account to the team and see their personal stats.</li>
               <li><strong>Pending Join Requests</strong> — approve or decline players asking to join using your code.</li>
+              <li><strong>Linked Accounts</strong> — players who've joined using your team code.</li>
               <li><strong>Link Player Accounts</strong> — manually connect a player's account to their match history if your captain was recording scores on their behalf before they signed up.</li>
             </ul>
           </div>
@@ -1100,7 +1101,7 @@ html{scroll-behavior:smooth}
       <div class="ob-step" data-step="3" style="display:none">
         <div style="font-size:2rem;margin-bottom:.5rem">👥</div>
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;color:var(--text);margin-bottom:.4rem">Squad</div>
-        <div style="font-size:.85rem;color:var(--dim);line-height:1.5">Manage your players in the <strong style="color:var(--text)">Players</strong> tab. Share your team join code from the <strong style="color:var(--text)">Squad</strong> tab so players can link their accounts.</div>
+        <div style="font-size:.85rem;color:var(--dim);line-height:1.5">Manage your roster and share your team join code from the <strong style="color:var(--text)">Squad</strong> tab so players can link their accounts.</div>
       </div>
       <div class="ob-step" data-step="4" style="display:none">
         <div style="font-size:2rem;margin-bottom:.5rem">💾</div>
@@ -2877,12 +2878,12 @@ function initCollapsibles(){
 }
 
 function sw(name){
-  var names=['match','fixtures','table','history','players','stats','squad','help'];
+  var names=['match','fixtures','table','history','stats','squad','help'];
   document.querySelectorAll('#screen-app .tab').forEach(function(t,i){t.classList.toggle('active',names[i]===name);});
   document.querySelectorAll('#screen-app .tc').forEach(function(c){c.classList.remove('active');});
   document.getElementById('tab-'+name).classList.add('active');
   if(name==='history')renderHistory();
-    if(name==='squad'){renderSquad();populateLinkSelector();}
+    if(name==='squad'){renderPChips();renderSquad();populateLinkSelector();}
   if(name==='table')renderLeagueTable();
   if(name==='fixtures')renderFixtures();
   if(name==='stats'){if(!matchHistory.length)renderHistory().then(renderStats);else renderStats();}
