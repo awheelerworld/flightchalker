@@ -513,7 +513,16 @@ html{scroll-behavior:smooth}
         <div style="color:var(--dim);font-size:.8rem;margin-top:3px" id="reg-league-format"></div>
       </div>
       <button class="btns" style="margin-bottom:1rem;width:100%" onclick="lookupLeague()">Look Up League</button>
-      <div class="afield"><label>Team Name</label><input type="text" id="reg-team" placeholder="e.g. The Crown Arrows"></div>
+      <div class="afield" id="reg-team-field">
+        <label>Team Name</label>
+        <input type="text" id="reg-team" placeholder="e.g. The Crown Arrows">
+        <select id="reg-team-select" style="display:none">
+          <option value="">— Select your team —</option>
+        </select>
+        <span class="hint" id="reg-team-hint" style="display:none">Team names for this league are set by your league admin. Not seeing your team? Contact them.</span>
+      </div>
+      <div class="afield" id="reg-claim-name-field" style="display:none"><label>Your Name</label><input type="text" id="reg-claim-name" placeholder="e.g. Dave Smith"></div>
+      <div class="afield" id="reg-claim-email-field" style="display:none"><label>Your Email</label><input type="email" id="reg-claim-email" placeholder="you@example.com"><span class="hint">Your league admin will use this to verify your request.</span></div>
       <div class="afield">
         <label>Players <span style="font-weight:400;text-transform:none;letter-spacing:0">(type name, press Enter)</span></label>
         <div class="player-tags" id="reg-player-tags" style="display:flex;flex-wrap:wrap;gap:.4rem;padding:.5rem .6rem;background:var(--bg);border:1px solid var(--border);border-radius:5px;min-height:46px;align-items:center;cursor:text" onclick="document.getElementById('reg-player-input').focus()">
@@ -1034,6 +1043,17 @@ html{scroll-behavior:smooth}
   </div>
 </div>
 
+<div id="claim-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;align-items:center;justify-content:center;padding:1rem">
+  <div class="auth-card" style="max-width:400px">
+    <h2>Request Sent &#128231;</h2>
+    <p>Your request to claim <strong style="color:var(--amber)" id="claim-team-name"></strong> has been sent to your league admin for approval.</p>
+    <div class="pin-box"><div class="pin-num" id="claim-pin-display">0000</div><div class="pin-lbl">Your Team PIN (once approved)</div></div>
+    <p style="font-size:.82rem;color:var(--dim);line-height:1.5"><strong style="color:var(--red)">Write your PIN down — you won't see it again.</strong> You won't be able to log in until your league admin approves the request — they'll be in touch, or you can check with them directly.</p>
+    <div class="arow"><button class="btnp" onclick="closeClaimOverlay()">Back to Home</button></div>
+  </div>
+</div>
+
+
 <!-- Modal -->
 <div class="mo" id="modal" onclick="closeMo(event)"><div class="mb" id="mbody"></div></div>
 <!-- Confirm -->
@@ -1362,7 +1382,44 @@ async function lookupLeague(){
       regLeague.num_singles+' singles · '+
       regLeague.num_doubles+' doubles · '+
       (regLeague.team_game_players>0?regLeague.team_game_players+'-player team game':'no team game');
+    await setupTeamNameField();
   }catch(e){toast('Error: '+e.message,true);}
+}
+
+// Toggles between free-text team name entry and a fixed list set by the
+// league admin (from the Captain Contacts list in admin.html), depending on
+// the league's fixed_team_names flag. In fixed mode, only team names that
+// haven't already been claimed by a registered team are shown.
+async function setupTeamNameField(){
+  var textInp=document.getElementById('reg-team');
+  var sel=document.getElementById('reg-team-select');
+  var hint=document.getElementById('reg-team-hint');
+  var claimNameField=document.getElementById('reg-claim-name-field');
+  var claimEmailField=document.getElementById('reg-claim-email-field');
+  if(!regLeague||!regLeague.fixed_team_names){
+    textInp.style.display='';sel.style.display='none';hint.style.display='none';
+    claimNameField.style.display='none';claimEmailField.style.display='none';
+    return;
+  }
+  textInp.style.display='none';sel.style.display='';hint.style.display='block';
+  claimNameField.style.display='';claimEmailField.style.display='';
+  sel.innerHTML='<option value="">Loading team names…</option>';
+  try{
+    var contacts=await sb('league_captains?league_id=eq.'+regLeague.id+'&select=team_name&order=team_name.asc');
+    var registered=await sb('teams?league_id=eq.'+regLeague.id+'&select=team_name');
+    var pendingReqs=await sb('team_claim_requests?league_id=eq.'+regLeague.id+'&status=eq.pending&select=team_name');
+    var taken={};
+    (registered||[]).forEach(function(t){taken[t.team_name]=true;});
+    (pendingReqs||[]).forEach(function(r){taken[r.team_name]=true;});
+    var names=(contacts||[]).map(function(c){return c.team_name;}).filter(function(n,i,a){return n&&a.indexOf(n)===i;});
+    var available=names.filter(function(n){return !taken[n];});
+    if(!available.length){
+      sel.innerHTML='<option value="">No unclaimed team names available</option>';
+      toast('All set team names for this league are already claimed or pending approval. Contact your league admin.',true);
+      return;
+    }
+    sel.innerHTML='<option value="">— Select your team —</option>'+available.map(function(n){return '<option value="'+esc(n)+'">'+esc(n)+'</option>';}).join('');
+  }catch(e){sel.innerHTML='<option value="">Could not load team names</option>';}
 }
 
 // ── Registration ──────────────────────────────────────────────────────────────
@@ -1406,22 +1463,47 @@ function removeRegTag(i){regPlayers.splice(i,1);renderRegTags();}
 
 async function registerTeam(){
   if(!regLeague){toast('Please look up your league code first',true);return;}
-  const teamName=document.getElementById('reg-team').value.trim();
+  const teamName=(regLeague.fixed_team_names
+    ? document.getElementById('reg-team-select').value
+    : document.getElementById('reg-team').value).trim();
   const st=document.getElementById('reg-status');
   const sp=document.getElementById('reg-spin');
-  if(!teamName){st.textContent='Please enter your team name.';st.className='ast err';return;}
+  if(!teamName){st.textContent=regLeague.fixed_team_names?'Please select your team name.':'Please enter your team name.';st.className='ast err';return;}
   if(regPlayers.length<2){st.textContent='Please add at least 2 players.';st.className='ast err';return;}
   sp.style.display='inline-block';st.textContent='';
   const secret=document.getElementById('reg-secret').value.trim().toLowerCase();
   if(!secret){st.textContent='Please enter a secret word.';st.className='ast err';sp.style.display='none';return;}
   const pin=String(Math.floor(1000+Math.random()*9000));
+  const threshold=parseInt(document.getElementById('reg-threshold').value)||80;
+
+  if(regLeague.fixed_team_names){
+    const claimName=document.getElementById('reg-claim-name').value.trim();
+    const claimEmail=document.getElementById('reg-claim-email').value.trim().toLowerCase();
+    if(!claimEmail||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(claimEmail)){st.textContent='Please enter a valid email so your league admin can verify your request.';st.className='ast err';sp.style.display='none';return;}
+    try{
+      const existingReq=await sb('team_claim_requests?team_name=eq.'+encodeURIComponent(teamName)+'&league_id=eq.'+regLeague.id+'&status=eq.pending&select=id');
+      if(existingReq&&existingReq.length){st.textContent='A request for this team is already pending approval.';st.className='ast err';sp.style.display='none';return;}
+      const existingTeam=await sb('teams?team_name=eq.'+encodeURIComponent(teamName)+'&league_id=eq.'+regLeague.id+'&select=id');
+      if(existingTeam&&existingTeam.length){st.textContent='That team has already been claimed.';st.className='ast err';sp.style.display='none';return;}
+      await sb('team_claim_requests',{method:'POST',prefer:'return=minimal',body:JSON.stringify({
+        league_id:regLeague.id,team_name:teamName,captain_name:claimName||null,email:claimEmail,
+        pin,secret_word:secret,score_threshold:threshold,players:JSON.stringify(regPlayers)
+      })});
+      document.getElementById('claim-team-name').textContent=teamName;
+      document.getElementById('claim-pin-display').textContent=pin;
+      document.getElementById('claim-overlay').style.display='flex';
+    }catch(e){st.textContent='Error: '+e.message;st.className='ast err';}
+    sp.style.display='none';
+    return;
+  }
+
   try{
     const existing=await sb('teams?team_name=eq.'+encodeURIComponent(teamName)+'&league_id=eq.'+regLeague.id+'&select=id');
     if(existing&&existing.length){st.textContent='That team name is already registered in this league.';st.className='ast err';sp.style.display='none';return;}
-    const teamRes=await sb('teams',{method:'POST',prefer:'return=representation',body:JSON.stringify({team_name:teamName,pin,league_id:regLeague.id,secret_word:secret,score_threshold:parseInt(document.getElementById('reg-threshold').value)||80})});
+    const teamRes=await sb('teams',{method:'POST',prefer:'return=representation',body:JSON.stringify({team_name:teamName,pin,league_id:regLeague.id,secret_word:secret,score_threshold:threshold})});
     const teamId=teamRes[0].id;
     for(const name of regPlayers){await sb('team_players',{method:'POST',prefer:'return=minimal',body:JSON.stringify({team_id:teamId,name})});}
-    currentTeam={id:teamId,team_name:teamName,pin,league_id:regLeague.id,score_threshold:parseInt(document.getElementById('reg-threshold').value)||80};
+    currentTeam={id:teamId,team_name:teamName,pin,league_id:regLeague.id,score_threshold:threshold};
     currentLeague=regLeague;
     localStorage.setItem('mld_session',JSON.stringify({team:currentTeam,league:currentLeague}));
     document.getElementById('pin-display').textContent=pin;
@@ -1437,6 +1519,10 @@ async function goToApp(){
   renderSquad();
 }
 function closePinOverlay(){document.getElementById('pin-overlay').style.display='none';goToApp();}
+function closeClaimOverlay(){
+  document.getElementById('claim-overlay').style.display='none';
+  window.location.href='/';
+}
 
 // ── Login ─────────────────────────────────────────────────────────────────────
 async function loginTeam(){
