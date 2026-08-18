@@ -300,6 +300,7 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
       <div class="field"><label>Match Night</label>
         <select id="cl-night"><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Sunday</option></select>
       </div>
+      <div class="field"><label style="display:flex;align-items:center;gap:.5rem;font-weight:400;text-transform:none;letter-spacing:0"><input type="checkbox" id="cl-fixedteams" style="width:auto"> Fix team names — captains pick from a list you set (e.g. pub/club names), instead of typing their own</label></div>
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#5a9abf;margin-bottom:.75rem;margin-top:.25rem">Match Format</div>
       <div class="grid">
         <div class="field"><label>Singles</label><input type="number" id="cl-singles" value="6" min="1" max="12"></div>
@@ -641,6 +642,7 @@ async function loadLeagues(){
         +'<div class="league-actions">'
         +'<span class="code-badge">Code: '+code+'</span>'
         +'<span class="code-badge" style="color:var(--amber);border-color:#6a5200;background:#2a2000">'+count+' team'+(count!==1?'s':'')+' registered</span>'
+        +'<span class="code-badge" style="'+(l.fixed_team_names?'color:var(--amber);border-color:#6a5200;background:#2a2000':'color:var(--dim)')+'">'+(l.fixed_team_names?'🔒 Fixed team names':'✎ Captains choose team name')+'</span>'
         +'<button class="btn-admin" style="font-size:.72rem;padding:3px 10px" onclick="toggleEdit(\''+l.id+'\')">✎ Edit</button>'
         +'</div>'
         +'<div class="edit-panel" id="ep-'+l.id+'">'
@@ -659,6 +661,7 @@ async function loadLeagues(){
         +'<div class="field"><label>Points Win</label><input type="number" id="epw-'+l.id+'" value="'+(l.points_win||2)+'"></div>'
         +'<div class="field"><label>Points Draw</label><input type="number" id="epd-'+l.id+'" value="'+(l.points_draw||1)+'"></div>'
         +'<div class="field"><label>Points Loss</label><input type="number" id="epl-'+l.id+'" value="'+(l.points_loss||0)+'"></div>'
+        +'<div class="field" style="grid-column:1/-1"><label style="display:flex;align-items:center;gap:.5rem;font-weight:400;text-transform:none;letter-spacing:0"><input type="checkbox" id="eftn-'+l.id+'" '+(l.fixed_team_names?'checked':'')+' style="width:auto"> Fix team names — captains must pick from the Captain Contacts list instead of typing their own</label></div>'
         +'</div>'
         +'<div style="display:flex;gap:.5rem;margin-top:.75rem">'
         +'<button class="btn-admin" onclick="saveEdit(\''+l.id+'\')">Save</button>'
@@ -666,10 +669,38 @@ async function loadLeagues(){
         +'</div>'
         +'<div class="st" id="est-'+l.id+'"></div>'
         +'</div>'
-        +'<div style="margin-top:.4rem"><button class="btn-admin" style="font-size:.72rem;padding:3px 10px;background:#1a2a1e;border-color:var(--green)" onclick="toggleTeams(&quot;'+l.id+'&quot;)">👥 Manage Teams</button></div>'
+        +'<div style="margin-top:.4rem;display:flex;gap:.4rem;flex-wrap:wrap">'
+        +'<button class="btn-admin" style="font-size:.72rem;padding:3px 10px;background:#1a2a1e;border-color:var(--green)" onclick="toggleTeams(&quot;'+l.id+'&quot;)">👥 Manage Teams</button>'
+        +'<button class="btn-admin" style="font-size:.72rem;padding:3px 10px;background:#1a2a1e;border-color:var(--amber);color:var(--amber)" onclick="toggleCaptains(&quot;'+l.id+'&quot;)">📇 Captain Contacts</button>'
+        +'</div>'
         +'<div class="edit-panel" id="teams-panel-'+l.id+'" style="border-color:var(--green);margin-top:.4rem">'
         +'<h3 style="color:var(--gl)">Registered Teams</h3>'
         +'<div id="teams-list-'+l.id+'"><div class="lh">Loading…</div></div>'
+        +'</div>'
+        +'<div class="edit-panel" id="captains-panel-'+l.id+'" style="border-color:var(--amber);margin-top:.4rem">'
+        +'<h3 style="color:var(--amber)">Captain Contacts</h3>'
+        +'<p style="font-size:.78rem;color:var(--dim);margin-bottom:.6rem;line-height:1.5">Record captain contact details here — e.g. from your pre-season captains\' meeting — so you can email the whole league about registration, fixture changes, or weekly results.</p>'
+        + (l.fixed_team_names ? (
+        '<div style="margin-bottom:1rem">'
+        +'<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--amber);margin-bottom:.5rem">Team Claim Requests</div>'
+        +'<div id="claims-list-'+l.id+'"><div class="lh">Loading…</div></div>'
+        +'</div>'
+        ) : '')
+        +'<div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.75rem">'
+        +'<button class="btn-admin" style="font-size:.72rem;padding:3px 10px" onclick="emailCaptainsInvite(&quot;'+l.id+'&quot;,&quot;'+esc(l.name)+'&quot;,&quot;'+code+'&quot;)">✉️ Invite to Register</button>'
+        +'<button class="btn-admin" style="font-size:.72rem;padding:3px 10px" onclick="emailBulletin(&quot;'+l.id+'&quot;,&quot;'+esc(l.name)+'&quot;)">📢 Send Bulletin</button>'
+        +'<button class="btn-admin" style="font-size:.72rem;padding:3px 10px" onclick="document.getElementById(&quot;cc-import-'+l.id+'&quot;).click()">📥 Import from Excel</button>'
+        +'<button class="btn-admin" style="font-size:.72rem;padding:3px 10px;background:none" onclick="downloadCaptainTemplate()">⬇️ Download Template</button>'
+        +'<input type="file" id="cc-import-'+l.id+'" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleCaptainImport(event,&quot;'+l.id+'&quot;)">'
+        +'</div>'
+        +'<div id="cc-import-status-'+l.id+'" style="font-size:.8rem;margin-bottom:.5rem"></div>'
+        +'<div id="captains-list-'+l.id+'"><div class="lh">Loading…</div></div>'
+        +'<div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.75rem;padding-top:.6rem;border-top:1px solid var(--border)">'
+        +'<input type="text" id="cc-team-'+l.id+'" placeholder="Team name" style="flex:1;min-width:110px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:Barlow,sans-serif;font-size:.82rem;padding:.4rem .5rem">'
+        +'<input type="text" id="cc-name-'+l.id+'" placeholder="Captain name" style="flex:1;min-width:110px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:Barlow,sans-serif;font-size:.82rem;padding:.4rem .5rem">'
+        +'<input type="email" id="cc-email-'+l.id+'" placeholder="Email" style="flex:1;min-width:150px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:Barlow,sans-serif;font-size:.82rem;padding:.4rem .5rem">'
+        +'<button class="btn-admin" onclick="addCaptainContact(&quot;'+l.id+'&quot;)">Add</button>'
+        +'</div>'
         +'</div>'
         +'</div>';
     }).join('');
@@ -696,7 +727,8 @@ async function saveEdit(id){
     best_of_doubles:parseInt(document.getElementById('ebd-'+id).value),
     points_win:parseInt(document.getElementById('epw-'+id).value),
     points_draw:parseInt(document.getElementById('epd-'+id).value),
-    points_loss:parseInt(document.getElementById('epl-'+id).value)
+    points_loss:parseInt(document.getElementById('epl-'+id).value),
+    fixed_team_names:document.getElementById('eftn-'+id).checked
   };
   if(!data.name){st.textContent='Name required';st.className='st err';return;}
   st.textContent='Saving…';st.className='st';
@@ -731,16 +763,261 @@ async function createLeague(){
         best_of_doubles:parseInt(document.getElementById('cl-bodub').value),
         points_win:parseInt(document.getElementById('cl-pwin').value),
         points_draw:parseInt(document.getElementById('cl-pdraw').value),
-        points_loss:parseInt(document.getElementById('cl-ploss').value)
+        points_loss:parseInt(document.getElementById('cl-ploss').value),
+        fixed_team_names:document.getElementById('cl-fixedteams').checked
       })
     });
     var code=res[0].id.replace(/-/g,'').toUpperCase().slice(0,8);
     st.innerHTML='<span style="color:var(--gl)">✓ League created!</span> Registration code: <strong style="color:var(--amber);font-size:1.1rem;letter-spacing:.1em">'+code+'</strong>';
     st.className='st';
     document.getElementById('cl-name').value='';
+    document.getElementById('cl-fixedteams').checked=false;
     document.getElementById('cl-pw').value='';
   }catch(e){st.textContent='Error: '+e.message;st.className='st err';}
   sp.style.display='none';
+}
+
+// ── Captain contacts ─────────────────────────────────────────────────────────
+function downloadCaptainTemplate(){
+  var data=[
+    ['Team Name','Captain Name','Email'],
+    ['The Crown Arrows','Dave Smith','dave@example.com'],
+    ['Red Lion Rockets','',''],
+  ];
+  var ws=XLSX.utils.aoa_to_sheet(data);
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Team Contacts');
+  XLSX.writeFile(wb,'flightchalker-team-contacts-template.xlsx');
+}
+
+// Accepts .xlsx/.xls/.csv. Column headers are matched flexibly (case-
+// insensitive, partial match) so "Team", "Team Name" and "Club" all work for
+// the team column, etc. Existing team names for the league (case-insensitive)
+// are skipped rather than duplicated.
+async function handleCaptainImport(event,leagueId){
+  var file=event.target.files[0];
+  if(!file)return;
+  var statusEl=document.getElementById('cc-import-status-'+leagueId);
+  statusEl.textContent='Reading file…';statusEl.style.color='var(--dim)';
+  try{
+    var data=await file.arrayBuffer();
+    var wb=XLSX.read(data,{type:'array'});
+    var sheet=wb.Sheets[wb.SheetNames[0]];
+    var rows=XLSX.utils.sheet_to_json(sheet,{defval:''});
+    if(!rows.length){statusEl.textContent='No rows found in that file.';statusEl.style.color='var(--red)';event.target.value='';return;}
+
+    var keys=Object.keys(rows[0]);
+    function findKey(candidates){
+      return keys.find(function(k){
+        var kl=k.toLowerCase().trim();
+        return candidates.some(function(c){return kl===c||kl.indexOf(c)!==-1;});
+      });
+    }
+    var teamKey=findKey(['team name','team','club']);
+    var nameKey=findKey(['captain name','captain','name']);
+    var emailKey=findKey(['email']);
+    if(!teamKey){statusEl.textContent='Couldn\u2019t find a "Team Name" column in that file.';statusEl.style.color='var(--red)';event.target.value='';return;}
+
+    var existing=await sb('league_captains?league_id=eq.'+leagueId+'&select=team_name');
+    var existingNames={};(existing||[]).forEach(function(r){existingNames[(r.team_name||'').trim().toLowerCase()]=true;});
+
+    var toInsert=[],skipped=0,seen={};
+    rows.forEach(function(r){
+      var team=String(r[teamKey]||'').trim();
+      if(!team)return;
+      var key=team.toLowerCase();
+      if(existingNames[key]||seen[key]){skipped++;return;}
+      seen[key]=true;
+      toInsert.push({
+        league_id:leagueId,
+        team_name:team,
+        captain_name:nameKey?(String(r[nameKey]||'').trim()||null):null,
+        email:emailKey?(String(r[emailKey]||'').trim().toLowerCase()||null):null
+      });
+    });
+
+    if(!toInsert.length){
+      statusEl.textContent='Nothing to import — '+skipped+' row(s) were already on the list.';
+      statusEl.style.color='var(--amber)';
+      event.target.value='';
+      return;
+    }
+
+    await sb('league_captains',{method:'POST',prefer:'return=minimal',body:JSON.stringify(toInsert)});
+    statusEl.textContent='\u2713 Imported '+toInsert.length+' team'+(toInsert.length!==1?'s':'')+(skipped?' \u00b7 '+skipped+' skipped (already on the list)':'');
+    statusEl.style.color='var(--gl)';
+    loadCaptainContacts(leagueId);
+  }catch(e){
+    statusEl.textContent='Error reading file: '+e.message;
+    statusEl.style.color='var(--red)';
+  }
+  event.target.value='';
+}
+
+async function toggleCaptains(leagueId){
+  var panel=document.getElementById('captains-panel-'+leagueId);
+  if(!panel)return;
+  panel.classList.toggle('open');
+  if(panel.classList.contains('open')){
+    await loadCaptainContacts(leagueId);
+    if(document.getElementById('claims-list-'+leagueId))await loadClaimRequests(leagueId);
+  }
+}
+
+async function loadClaimRequests(leagueId){
+  var el=document.getElementById('claims-list-'+leagueId);
+  if(!el)return;
+  el.innerHTML='<div class="lh"><span class="spin"></span> Loading…</div>';
+  try{
+    var rows=await sb('team_claim_requests?league_id=eq.'+leagueId+'&status=eq.pending&order=created_at.asc&select=*');
+    if(!rows||!rows.length){el.innerHTML='<div class="nh">No pending requests.</div>';return;}
+    el.innerHTML=rows.map(function(r){
+      var players=[];try{players=JSON.parse(r.players||'[]');}catch(e){}
+      return '<div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:.6rem .75rem;margin-bottom:.5rem">'
+        +'<div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">'
+        +'<div style="flex:1;font-weight:600;font-size:.88rem">'+esc(r.team_name)+'</div>'
+        +'<button onclick="approveClaimRequest(&quot;'+r.id+'&quot;,&quot;'+leagueId+'&quot;)" style="background:none;border:1px solid var(--green);border-radius:4px;color:var(--gl);font-size:.72rem;padding:2px 10px;cursor:pointer">Approve</button>'
+        +'<button onclick="rejectClaimRequest(&quot;'+r.id+'&quot;,&quot;'+leagueId+'&quot;)" style="background:none;border:1px solid #5c2020;border-radius:4px;color:#ff8080;font-size:.72rem;padding:2px 10px;cursor:pointer">Reject</button>'
+        +'</div>'
+        +'<div style="font-size:.78rem;color:var(--dim);margin-top:.3rem">Requested by '+esc(r.captain_name||'—')+' · '+esc(r.email||'—')+'</div>'
+        +'<div style="font-size:.78rem;color:var(--dim);margin-top:.2rem">Players: '+esc(players.join(', ')||'—')+'</div>'
+        +'</div>';
+    }).join('');
+  }catch(e){el.innerHTML='<div class="nh">Error: '+esc(e.message)+'</div>';}
+}
+
+async function approveClaimRequest(id,leagueId){
+  try{
+    var reqs=await sb('team_claim_requests?id=eq.'+id+'&select=*');
+    var r=reqs&&reqs[0];
+    if(!r){toast('Request not found — it may have already been handled.',true);return;}
+    if(!confirm('Approve '+r.team_name+'? This creates the team and player roster.'))return;
+    var existing=await sb('teams?team_name=eq.'+encodeURIComponent(r.team_name)+'&league_id=eq.'+leagueId+'&select=id');
+    if(existing&&existing.length){toast('That team name has already been claimed by another registration.',true);return;}
+    var teamRes=await sb('teams',{method:'POST',prefer:'return=representation',body:JSON.stringify({
+      team_name:r.team_name,pin:r.pin,league_id:leagueId,secret_word:r.secret_word,score_threshold:r.score_threshold||80
+    })});
+    var teamId=teamRes[0].id;
+    var players=[];try{players=JSON.parse(r.players||'[]');}catch(e){}
+    for(var i=0;i<players.length;i++){
+      await sb('team_players',{method:'POST',prefer:'return=minimal',body:JSON.stringify({team_id:teamId,name:players[i]})});
+    }
+    await sb('team_claim_requests?id=eq.'+id,{method:'DELETE'});
+    toast(r.team_name+' approved and registered!');
+    loadClaimRequests(leagueId);
+    loadTeamList(leagueId);
+    loadLeagues();
+  }catch(e){toast('Error: '+e.message,true);}
+}
+
+async function rejectClaimRequest(id,leagueId){
+  if(!confirm('Reject this claim request? The requester will need to be told separately — Flight Chalker won\'t notify them.'))return;
+  try{
+    await sb('team_claim_requests?id=eq.'+id,{method:'DELETE'});
+    toast('Request rejected');
+    loadClaimRequests(leagueId);
+  }catch(e){toast('Error: '+e.message,true);}
+}
+
+async function loadCaptainContacts(leagueId){
+  var el=document.getElementById('captains-list-'+leagueId);
+  if(!el)return;
+  el.innerHTML='<div class="lh"><span class="spin"></span> Loading…</div>';
+  try{
+    var rows=await sb('league_captains?league_id=eq.'+leagueId+'&order=team_name.asc&select=*');
+    if(!rows||!rows.length){el.innerHTML='<div class="nh">No captain contacts recorded yet — add them below.</div>';return;}
+    el.innerHTML=rows.map(function(r){
+      return '<div style="display:flex;align-items:center;gap:.5rem;padding:.4rem 0;border-bottom:1px solid var(--border);font-size:.82rem;flex-wrap:wrap">'
+        +'<div style="flex:1;min-width:110px;font-weight:600">'+esc(r.team_name)+'</div>'
+        +'<div style="flex:1;min-width:110px;color:var(--dim)">'+esc(r.captain_name||'—')+'</div>'
+        +'<div style="flex:1.4;min-width:140px;color:var(--dim)">'+esc(r.email||'—')+'</div>'
+        +'<button onclick="deleteCaptainContact(&quot;'+r.id+'&quot;,&quot;'+leagueId+'&quot;)" style="background:none;border:1px solid #5c2020;border-radius:4px;color:#ff8080;font-size:.7rem;padding:2px 8px;cursor:pointer">Remove</button>'
+        +'</div>';
+    }).join('');
+  }catch(e){el.innerHTML='<div class="nh">Error: '+esc(e.message)+'</div>';}
+}
+
+async function addCaptainContact(leagueId){
+  var teamEl=document.getElementById('cc-team-'+leagueId);
+  var nameEl=document.getElementById('cc-name-'+leagueId);
+  var emailEl=document.getElementById('cc-email-'+leagueId);
+  var team=teamEl.value.trim();
+  var name=nameEl.value.trim();
+  var email=emailEl.value.trim().toLowerCase();
+  if(!team){toast('Team name is required',true);return;}
+  if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){toast('That doesn\'t look like a valid email',true);return;}
+  try{
+    await sb('league_captains',{method:'POST',prefer:'return=minimal',
+      body:JSON.stringify({league_id:leagueId,team_name:team,captain_name:name||null,email:email||null})});
+    teamEl.value='';nameEl.value='';emailEl.value='';
+    toast(team+' added');
+    loadCaptainContacts(leagueId);
+  }catch(e){toast('Error: '+e.message,true);}
+}
+
+async function deleteCaptainContact(id,leagueId){
+  if(!confirm('Remove this contact?'))return;
+  try{
+    await sb('league_captains?id=eq.'+id,{method:'DELETE'});
+    toast('Contact removed');
+    loadCaptainContacts(leagueId);
+  }catch(e){toast('Error: '+e.message,true);}
+}
+
+// Generic invite letter for a league's registration code. BCCs every stored
+// captain contact email so nobody sees the others' addresses; if no contacts
+// are on file yet it falls back to a blank To field for the admin to fill in.
+// The registration steps adapt depending on whether the league has fixed
+// team names (captains pick from a list) or free-text names (captains type
+// their own) - this doesn't track or persist anything sent.
+async function emailCaptainsInvite(leagueId,leagueName,code){
+  var fixedNames=false;
+  try{
+    var league=await sb('leagues?id=eq.'+leagueId+'&select=fixed_team_names');
+    fixedNames=!!(league&&league[0]&&league[0].fixed_team_names);
+  }catch(e){}
+  var bcc='';
+  try{
+    var contacts=await sb('league_captains?league_id=eq.'+leagueId+'&email=not.is.null&select=email');
+    bcc=(contacts||[]).map(function(c){return c.email;}).filter(Boolean).join(',');
+  }catch(e){}
+  if(!bcc)toast('No captain emails on file yet — add contacts first, or fill in recipients manually.');
+  var teamStep=fixedNames
+    ? '4. Select your team name from the list (this has been set by your league admin \u2014 if your team isn\'t listed, contact them first)'
+    : '4. Enter your team name, add at least 2 players, and set a PIN + secret word (the secret word lets you recover your PIN if you ever forget it)';
+  var subject=encodeURIComponent('Register your team for '+leagueName+' on Flight Chalker');
+  var body='Hi,\n\n'
+    +'You\'re invited to register your team for '+leagueName+' on Flight Chalker \u2014 '
+    +'a free app for recording match results, tracking stats, and managing your squad.\n\n'
+    +'HOW TO REGISTER YOUR TEAM:\n'
+    +'1. Go to https://flightchalker.co.uk\n'
+    +'2. Scroll down to "Starting a New League Team?" and tap "Register Team"\n'
+    +'3. Enter your league code: '+code+'\n'
+    +teamStep+'\n'
+    +'5. You\'ll be given a 4-digit PIN \u2014 this is what your team uses to log back in each week\n\n'
+    +'ONCE YOUR TEAM IS REGISTERED:\n'
+    +'\u2022 Log in any time at flightchalker.co.uk with your team name and PIN\n'
+    +'\u2022 Record match results, check fixtures, view the league table, and download match report PDFs\n'
+    +'\u2022 Head to the Squad tab to find your team\'s join code \u2014 share this with your players so they '
+    +'can create their own free account at flightchalker.co.uk/join and link it to the team. '
+    +'This lets each player see their own personal stats.\n\n'
+    +'Any questions, just reply to this email.\n\n'
+    +'See you on the oche!\n'
+    +leagueName;
+  window.location.href='mailto:?bcc='+encodeURIComponent(bcc)+'&subject='+subject+'&body='+encodeURIComponent(body);
+}
+
+// General-purpose bulletin (cancelled fixtures, weekly results, etc.) - BCCs
+// every stored captain email with a blank body for the admin to fill in.
+async function emailBulletin(leagueId,leagueName){
+  var bcc='';
+  try{
+    var contacts=await sb('league_captains?league_id=eq.'+leagueId+'&email=not.is.null&select=email');
+    bcc=(contacts||[]).map(function(c){return c.email;}).filter(Boolean).join(',');
+  }catch(e){}
+  if(!bcc){toast('No captain emails on file yet — add contacts first, or fill in recipients manually.');}
+  var subject=encodeURIComponent(leagueName+' — League Update');
+  window.location.href='mailto:?bcc='+encodeURIComponent(bcc)+'&subject='+subject+'&body=';
 }
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
