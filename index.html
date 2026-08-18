@@ -2130,6 +2130,7 @@ async function saveMatch(){
   if(md.team4){if(md.team4.result==='win')mw++;else if(md.team4.result==='loss')ml++;}
   var rec={team_id:currentTeam.id,match_date:date,opponent:opp,venue:document.getElementById('mvenue').value,wins:mw,losses:ml,eighties:total8(),season:(currentLeague.current_season||1),data:{singles:JSON.parse(JSON.stringify(md.singles)),doubles:JSON.parse(JSON.stringify(md.doubles)),team4:md.team4?JSON.parse(JSON.stringify(md.team4)):null}};
   document.getElementById('savespin').style.display='inline-block';
+  var savedNow=false;
   try{
     // Check for existing result for same team/opponent/date to prevent duplicates
     var existing=await sb('team_matches?team_id=eq.'+currentTeam.id+'&match_date=eq.'+date+'&opponent=eq.'+encodeURIComponent(opp)+'&select=id,wins,losses,eighties');
@@ -2147,11 +2148,13 @@ async function saveMatch(){
         }
         await sbPatch('team_matches','id=eq.'+existing[0].id,rec);
         toast('Match result updated!');
+        savedNow=true;
       }
     } else {
       // Create new record
       await sb('team_matches',{method:'POST',prefer:'return=minimal',body:JSON.stringify(rec)});
       toast('Match saved and submitted!');localStorage.removeItem('dart_draft');
+      savedNow=true;
     // Delete any live draft for this match
     try{await sb('team_matches?team_id=eq.'+currentTeam.id+'&match_date=eq.'+date+'&opponent=eq.'+encodeURIComponent(opp)+'&draft=eq.true',{method:'DELETE'});}catch(e){fcLogError('saveMatch:cleanupDraft',e,false);}
     }
@@ -2170,6 +2173,10 @@ async function saveMatch(){
         }
       }
     }catch(e){fcLogError('saveMatch:markFixturePlayed',e,true,'Result saved, but couldn\u2019t automatically link it to the scheduled fixture.');}
+    // Reset the form now the save has gone through, so leftover scores/players
+    // can't carry over into the next match recorded (whether via Fixtures'
+    // Record button or by manually changing the opponent on this tab).
+    if(savedNow)clearMatch();
   }catch(e){toast('Save failed: '+e.message,true);}
   document.getElementById('savespin').style.display='none';
 }
@@ -2342,6 +2349,15 @@ function editExistingResult(date,opp,venue){
   });
 }
 function loadFixtureToMatch(date,opp,venue){
+  // If there's a saved draft for this exact fixture, resume it instead of
+  // starting blank - only reset when there's no draft to pick back up.
+  var draft=null;
+  try{var raw=localStorage.getItem('dart_draft');if(raw)draft=JSON.parse(raw);}catch(e){}
+  if(draft&&draft.match_date===date&&draft.opponent===opp){
+    restoreDraft();
+    return;
+  }
+  buildRows(); // reset any leftover scores/players from a previous recording before loading this fixture
   document.getElementById('mdate').value=date;
   document.getElementById('mopp').value=opp;
   document.getElementById('mvenue').value=venue;
@@ -2441,7 +2457,7 @@ function openEdit(idx){
   h+='<div class="mf"><button class="btnp" onclick="saveEdit()"><span class="spin" id="espin" style="display:none"></span>Save</button><button class="mc" onclick="closeMo()">Cancel</button></div>';
   document.getElementById('mbody').innerHTML=h;document.getElementById('modal').classList.add('open');
 }
-function eOpts(sel){return '<option value="">— Select —</option>'+players.map(function(p){return '<option value="'+esc(p)+'" '+(p===sel?'selected':'')+'>'+esc(p)+'</option>';}).join('');}
+function eOpts(sel){return '<option value="">— Select —</option>'+players.map(function(p){var name=p.name||p;return '<option value="'+esc(name)+'" '+(name===sel?'selected':'')+'>'+esc(name)+'</option>';}).join('');}
 function ewlH(key,r,lf,la){
   var lFor=lf!==undefined?lf:0;
   var lAgainst=la!==undefined?la:0;
