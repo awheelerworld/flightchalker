@@ -795,10 +795,12 @@ html{scroll-behavior:smooth}
 
     <!-- STATS -->
     <div id="tab-stats" class="tc">
-      <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin-bottom:1.5rem">
+      <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin-bottom:.75rem">
         <label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--dim)">Player</label>
         <select id="spsel" onchange="renderStats()" style="background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:Barlow,sans-serif;font-size:.9rem;padding:.4rem .75rem"><option value="">— Select player —</option></select>
+        <button class="pr2" onclick="auditPlayerNames()" style="font-size:.72rem;margin-left:auto">🔍 Check Player Data</button>
       </div>
+      <div id="staudit" style="display:none;margin-bottom:1.5rem"></div>
       <div id="scontent"><div class="nh">Select a player to see their stats.</div></div>
     </div>
 
@@ -2526,26 +2528,116 @@ function renderStats(){
   if(!player){el.innerHTML='<div class="nh">Select a player to see their stats.</div>';return;}
   if(!matchHistory.length){el.innerHTML='<div class="nh">No match data available.</div>';return;}
   var pm=[];
+  var cat={
+    singles:{gw:0,gl:0,lw:0,ll:0},
+    doubles:{gw:0,gl:0,lw:0,ll:0},
+    team:{gw:0,gl:0}
+  };
   matchHistory.slice().reverse().forEach(function(m){
     var mdata=m.data||{};var s=mdata.singles||[];var db=mdata.doubles||[];var t4=mdata.team4||{};
     var date=new Date(m.match_date+'T00:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
-    var w=0,l=0,sc=[];
-    s.forEach(function(x){if(x.player===player){if(x.result==='win')w++;else if(x.result==='loss')l++;sc.push.apply(sc,x.scores||[]);}});
-    db.forEach(function(x){if(x.p1===player){if(x.result==='win')w++;else if(x.result==='loss')l++;sc.push.apply(sc,x.scores1||[]);}if(x.p2===player){if(x.result==='win')w++;else if(x.result==='loss')l++;sc.push.apply(sc,x.scores2||[]);}});
-    for(var pi=1;pi<=6;pi++){if(t4['p'+pi]===player){if(t4.result==='win')w++;else if(t4.result==='loss')l++;sc.push.apply(sc,(t4.scores&&t4.scores[pi-1])||[]);break;}}
-    if(w>0||l>0||sc.length>0)pm.push({date,wins:w,losses:l,scores:sc});
+    var w=0,l=0,sc=[],legsW=0,legsL=0;
+    s.forEach(function(x){if(x.player===player){if(x.result==='win'){w++;cat.singles.gw++;}else if(x.result==='loss'){l++;cat.singles.gl++;}sc.push.apply(sc,x.scores||[]);legsW+=(x.legsFor||0);legsL+=(x.legsAgainst||0);cat.singles.lw+=(x.legsFor||0);cat.singles.ll+=(x.legsAgainst||0);}});
+    db.forEach(function(x){if(x.p1===player){if(x.result==='win'){w++;cat.doubles.gw++;}else if(x.result==='loss'){l++;cat.doubles.gl++;}sc.push.apply(sc,x.scores1||[]);legsW+=(x.legsFor||0);legsL+=(x.legsAgainst||0);cat.doubles.lw+=(x.legsFor||0);cat.doubles.ll+=(x.legsAgainst||0);}if(x.p2===player){if(x.result==='win'){w++;cat.doubles.gw++;}else if(x.result==='loss'){l++;cat.doubles.gl++;}sc.push.apply(sc,x.scores2||[]);legsW+=(x.legsFor||0);legsL+=(x.legsAgainst||0);cat.doubles.lw+=(x.legsFor||0);cat.doubles.ll+=(x.legsAgainst||0);}});
+    for(var pi=1;pi<=6;pi++){if(t4['p'+pi]===player){if(t4.result==='win'){w++;cat.team.gw++;}else if(t4.result==='loss'){l++;cat.team.gl++;}sc.push.apply(sc,(t4.scores&&t4.scores[pi-1])||[]);break;}}
+    if(w>0||l>0||sc.length>0)pm.push({date,wins:w,losses:l,scores:sc,legsW,legsL});
   });
   if(!pm.length){el.innerHTML='<div class="nh">'+esc(player)+' has not played in any recorded matches.</div>';return;}
   var tw=pm.reduce(function(a,b){return a+b.wins;},0);var tl=pm.reduce(function(a,b){return a+b.losses;},0);
-  var tot=tw+tl;var allSc=pm.flatMap(function(m){return m.scores;});var hi=allSc.length?Math.max.apply(null,allSc):0;var wp=tot?Math.round(tw/tot*100):0;
+  var gp=(tw+tl)?Math.round(tw/(tw+tl)*100):0;
+  var tlw=pm.reduce(function(a,b){return a+b.legsW;},0);var tll=pm.reduce(function(a,b){return a+b.legsL;},0);
+  var tot=tlw+tll;var allSc=pm.flatMap(function(m){return m.scores;});var hi=allSc.length?Math.max.apply(null,allSc):0;var wp=tot?Math.round(tlw/tot*100):0;
   var cw=0,cl=0,wlL=[],wlW=[],wlL2=[];
   pm.forEach(function(m){cw+=m.wins;cl+=m.losses;wlL.push(m.date);wlW.push(cw);wlL2.push(cl);});
   var hsL=pm.map(function(m){return m.date;});var hsC=pm.map(function(m){return m.scores.length;});var hsM=pm.map(function(m){return m.scores.length?Math.max.apply(null,m.scores):0;});
-  el.innerHTML='<div class="sg"><div class="scard"><div class="v g">'+tw+'</div><div class="lb">Legs Won</div></div><div class="scard"><div class="v r">'+tl+'</div><div class="lb">Legs Lost</div></div><div class="scard"><div class="v '+(wp>=50?'g':'r')+'">'+wp+'%</div><div class="lb">Win Rate</div></div><div class="scard"><div class="v a">'+allSc.length+'</div><div class="lb">80+ Scores</div></div><div class="scard"><div class="v a">'+(hi||'—')+'</div><div class="lb">Highest</div></div><div class="scard"><div class="v">'+pm.length+'</div><div class="lb">Matches</div></div></div><div class="cc"><h3>Cumulative Wins &amp; Losses</h3><div class="cw"><canvas id="cwl"></canvas></div></div><div class="cc"><h3>80+ Scores Per Match</h3><div class="cw"><canvas id="chs"></canvas></div></div><div class="cc"><h3>All 80+ Scores</h3><div class="scl">'+(allSc.sort(function(a,b){return b-a;}).map(function(s){return s===180?'<span class="sp2" style="background:#5a3000;border-color:#e8c840;color:#fff">&#9733; 180</span>':'<span class="sp2">'+s+'</span>';}).join('')||'<span style="color:var(--dim)">None yet</span>')+'</div></div>';
+  function catRow(label,c,hasLegs){
+    var gp=(c.gw+c.gl)?Math.round(c.gw/(c.gw+c.gl)*100):null;
+    var cTot=c.lw+c.ll;
+    if(!c.gw&&!c.gl)return '<tr><td style="padding:.4rem 0;text-align:left">'+label+'</td><td colspan="'+(hasLegs?6:3)+'" style="color:var(--dim);padding:.4rem 0">Not played</td></tr>';
+    return '<tr><td style="padding:.4rem 0;text-align:left">'+label+'</td>'
+      +'<td style="padding:.4rem 0;color:var(--gl)">'+c.gw+'</td><td style="padding:.4rem 0;color:var(--red)">'+c.gl+'</td>'
+      +(hasLegs?('<td style="padding:.4rem 0;color:var(--gl)">'+c.lw+'</td><td style="padding:.4rem 0;color:var(--red)">'+c.ll+'</td><td style="padding:.4rem 0;color:var(--dim)">'+cTot+'</td>'):'<td colspan="3" style="color:var(--dim);padding:.4rem 0">—</td>')
+      +'<td style="padding:.4rem 0">'+(gp!==null?gp+'%':'—')+'</td></tr>';
+  }
+  var breakdown='<div class="cc"><h3>Breakdown by Discipline</h3><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.82rem"><thead><tr style="color:var(--dim);text-transform:uppercase;font-size:.65rem;letter-spacing:.08em"><th style="text-align:left;padding:.35rem 0">Discipline</th><th style="text-align:center;padding:.35rem 0">Games W</th><th style="text-align:center;padding:.35rem 0">Games L</th><th style="text-align:center;padding:.35rem 0">Legs W</th><th style="text-align:center;padding:.35rem 0">Legs L</th><th style="text-align:center;padding:.35rem 0">Legs Played</th><th style="text-align:center;padding:.35rem 0">Game Win%</th></tr></thead><tbody style="color:var(--text);text-align:center">'
+    +catRow('Singles',cat.singles,true)
+    +catRow('Doubles',cat.doubles,true)
+    +catRow('Team Game',cat.team,false)
+    +'</tbody></table></div><p style="font-size:.72rem;color:var(--dim);margin-top:.5rem">Team Game legs aren\u2019t tracked individually — it\u2019s recorded as a single win/loss per match.</p></div>';
+  var noteHtml='<p style="font-size:.72rem;color:var(--dim);margin:-.75rem 0 1.25rem;line-height:1.5"><strong>Win Rate (Games)</strong> covers every format — Singles, Doubles and Team Game. <strong>Win Rate (Legs)</strong> covers Singles and Doubles only, since the Team Game isn\u2019t scored leg-by-leg.</p>';
+  el.innerHTML='<div class="sg"><div class="scard"><div class="v g">'+tw+'</div><div class="lb">Games Won</div></div><div class="scard"><div class="v r">'+tl+'</div><div class="lb">Games Lost</div></div><div class="scard"><div class="v '+(gp>=50?'g':'r')+'">'+gp+'%</div><div class="lb">Win Rate (Games)</div></div><div class="scard"><div class="v g">'+tlw+' / '+tot+'</div><div class="lb">Legs Won</div></div><div class="scard"><div class="v r">'+tll+'</div><div class="lb">Legs Lost</div></div><div class="scard"><div class="v">'+tot+'</div><div class="lb">Legs Played</div></div><div class="scard"><div class="v '+(wp>=50?'g':'r')+'">'+wp+'%</div><div class="lb">Win Rate (Legs)</div></div><div class="scard"><div class="v a">'+allSc.length+'</div><div class="lb">80+ Scores</div></div><div class="scard"><div class="v a">'+(hi||'—')+'</div><div class="lb">Highest</div></div><div class="scard"><div class="v">'+pm.length+'</div><div class="lb">Matches</div></div></div>'+noteHtml+breakdown+'<div class="cc"><h3>Cumulative Wins &amp; Losses</h3><div class="cw"><canvas id="cwl"></canvas></div></div><div class="cc"><h3>80+ Scores Per Match</h3><div class="cw"><canvas id="chs"></canvas></div></div><div class="cc"><h3>All 80+ Scores</h3><div class="scl">'+(allSc.sort(function(a,b){return b-a;}).map(function(s){return s===180?'<span class="sp2" style="background:#5a3000;border-color:#e8c840;color:#fff">&#9733; 180</span>':'<span class="sp2">'+s+'</span>';}).join('')||'<span style="color:var(--dim)">None yet</span>')+'</div></div>';
   ['cwl','chs'].forEach(function(id){if(charts[id]){charts[id].destroy();delete charts[id];}});
   var go={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8a9080',font:{family:"'Barlow Condensed',sans-serif",size:11}}}},scales:{x:{ticks:{color:'#8a9080',font:{family:"'Barlow Condensed',sans-serif",size:10}},grid:{color:'#2a3a2a'}},y:{ticks:{color:'#8a9080',font:{family:"'Barlow Condensed',sans-serif",size:10}},grid:{color:'#2a3a2a'},beginAtZero:true}}};
   charts['cwl']=new Chart(document.getElementById('cwl'),{type:'line',data:{labels:wlL,datasets:[{label:'Wins',data:wlW,borderColor:'#4a8855',backgroundColor:'rgba(74,136,85,0.15)',tension:.3,fill:true,pointBackgroundColor:'#4a8855'},{label:'Losses',data:wlL2,borderColor:'#c0392b',backgroundColor:'rgba(192,57,43,0.1)',tension:.3,fill:true,pointBackgroundColor:'#c0392b'}]},options:go});
   charts['chs']=new Chart(document.getElementById('chs'),{type:'bar',data:{labels:hsL,datasets:[{label:'Count',data:hsC,backgroundColor:'rgba(232,200,64,0.5)',borderColor:'#e8c840',borderWidth:1},{label:'Highest',data:hsM,type:'line',borderColor:'#e8c840',backgroundColor:'transparent',tension:.3,pointBackgroundColor:'#e8c840',yAxisID:'y1'}]},options:Object.assign({},go,{scales:Object.assign({},go.scales,{y1:{position:'right',ticks:{color:'#8a9080',font:{family:"'Barlow Condensed',sans-serif",size:10}},grid:{drawOnChartArea:false},beginAtZero:true}})})});
+}
+
+// ── Player data audit ──────────────────────────────────────────────────────────
+// Diagnostic for "stats don't add up" reports: scans every recorded match for
+// player-name strings that don't exactly match the current roster (e.g. a
+// player was renamed on the roster, or typed slightly differently when
+// recording an old match) - these silently drop out of that player's stats
+// since renderStats() matches on an exact string. Offers a one-click merge to
+// reassign a stray name's legs onto a current roster name.
+function auditPlayerNames(){
+  var el=document.getElementById('staudit');
+  if(!matchHistory.length){el.style.display='block';el.innerHTML='<div class="nh">No match data to check yet.</div>';return;}
+  var rosterNames={};players.forEach(function(p){rosterNames[p.name||p]=true;});
+  var found={}; // name -> {wins,losses,matches:Set}
+  function bump(name,result,matchKey){
+    if(!name)return;
+    if(!found[name])found[name]={wins:0,losses:0,matches:{}};
+    if(result==='win')found[name].wins++;else if(result==='loss')found[name].losses++;
+    found[name].matches[matchKey]=true;
+  }
+  matchHistory.forEach(function(m){
+    var d=m.data||{};var key=m.match_date+' vs '+m.opponent;
+    (d.singles||[]).forEach(function(x){bump(x.player,x.result,key);});
+    (d.doubles||[]).forEach(function(x){bump(x.p1,x.result,key);bump(x.p2,x.result,key);});
+    if(d.team4){for(var pi=1;pi<=6;pi++){bump(d.team4['p'+pi],d.team4.result,key);}}
+  });
+  var stray=Object.keys(found).filter(function(n){return !rosterNames[n];});
+  if(!stray.length){
+    el.style.display='block';
+    el.innerHTML='<div class="cc"><h3>Player Data Check</h3><p style="font-size:.85rem;color:var(--gl)">✓ Every player name found in your match history matches a current roster name. Nothing looks orphaned.</p></div>';
+    return;
+  }
+  var rosterOpts='<option value="">— Reassign to… —</option>'+Object.keys(rosterNames).map(function(n){return '<option value="'+esc(n)+'">'+esc(n)+'</option>';}).join('');
+  el.style.display='block';
+  el.innerHTML='<div class="cc"><h3>Player Data Check</h3>'
+    +'<p style="font-size:.82rem;color:var(--dim);margin-bottom:.75rem;line-height:1.5">These player names appear in recorded matches but don\u2019t match anyone currently on your roster — usually because a player was renamed after matches were already recorded. Their legs won\u2019t show up in that player\u2019s stats until reassigned to the correct current name.</p>'
+    +stray.map(function(n){
+      var f=found[n];var mc=Object.keys(f.matches).length;
+      return '<div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;padding:.6rem 0;border-bottom:1px solid var(--border)">'
+        +'<div style="flex:1;min-width:140px"><strong style="color:var(--amber)">'+esc(n)+'</strong><div style="font-size:.75rem;color:var(--dim)">'+f.wins+'W-'+f.losses+'L across '+mc+' match'+(mc!==1?'es':'')+'</div></div>'
+        +'<select id="merge-sel-'+esc(n).replace(/[^a-zA-Z0-9]/g,'')+'" style="background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:Barlow,sans-serif;font-size:.8rem;padding:.35rem .5rem">'+rosterOpts+'</select>'
+        +'<button class="pr2" onclick="mergePlayerName(&quot;'+esc(n).replace(/"/g,'&quot;')+'&quot;,document.getElementById(&quot;merge-sel-'+esc(n).replace(/[^a-zA-Z0-9]/g,'')+'&quot;).value)">Merge</button>'
+        +'</div>';
+    }).join('')
+    +'</div>';
+}
+
+async function mergePlayerName(oldName,newName){
+  if(!newName){toast('Pick a roster name to merge into first',true);return;}
+  if(!confirm('Reassign all legs recorded under "'+oldName+'" to "'+newName+'"? This updates the saved match records and can\'t be undone.'))return;
+  var toPatch=[];
+  matchHistory.forEach(function(m){
+    var d=m.data;if(!d)return;
+    var changed=false;
+    (d.singles||[]).forEach(function(x){if(x.player===oldName){x.player=newName;changed=true;}});
+    (d.doubles||[]).forEach(function(x){if(x.p1===oldName){x.p1=newName;changed=true;}if(x.p2===oldName){x.p2=newName;changed=true;}});
+    if(d.team4){for(var pi=1;pi<=6;pi++){if(d.team4['p'+pi]===oldName){d.team4['p'+pi]=newName;changed=true;}}}
+    if(changed)toPatch.push(m);
+  });
+  if(!toPatch.length){toast('Nothing to merge — that name wasn\'t found in any match.',true);return;}
+  try{
+    for(var i=0;i<toPatch.length;i++){
+      await sbPatch('team_matches','id=eq.'+toPatch[i].id,{data:toPatch[i].data});
+    }
+    toast('Merged '+oldName+' into '+newName+' across '+toPatch.length+' match'+(toPatch.length!==1?'es':''));
+    auditPlayerNames();
+    renderStats();
+  }catch(e){toast('Error merging: '+e.message,true);fcLogError('mergePlayerName',e,true,'Some matches may not have updated — please check and try again.');}
 }
 
 // ── PDF ───────────────────────────────────────────────────────────────────────
