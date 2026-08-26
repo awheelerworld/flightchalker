@@ -29,6 +29,15 @@
   --green:#4a7c59;--gl:#5a9469;--amber:#e8c840;--red:#c0392b;
   --text:#e0d8c8;--dim:#8a9080;--border:#3a4a3a;
 }
+/* Light theme - see index.html for why --wb/--lb/--blue-bg style chips are
+   deliberately left out here if this page doesn't use them. */
+[data-theme="light"]{
+  --bg:#ffffff;--s2:#e9ece4;--s3:#dde1d6;
+  --green:#3f6b4c;--gl:#2f6b3d;--amber:#a06f00;--red:#b3362a;
+  --text:#1c211a;--dim:#5c6356;--border:#d3d7cc;
+}
+.theme-toggle{background:none;border:1px solid var(--border);border-radius:4px;color:var(--dim);font-family:'Barlow Condensed',sans-serif;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;cursor:pointer}
+.theme-toggle:hover{border-color:var(--gl);color:var(--gl)}
 html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh}
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap');
 
@@ -277,7 +286,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
       <a href="/dashboard" class="hdr-logo" style="text-decoration:none;color:inherit">Flight <span>Chalker</span></a>
       <div class="hdr-sub">Darts Scorer</div>
     </div>
-    <a href="/dashboard" style="text-decoration:none"><button class="hbtn">← Home</button></a><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button>
+    <a href="/dashboard" style="text-decoration:none"><button class="hbtn">← Home</button></a><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button><button class="theme-toggle theme-toggle-instance" onclick="toggleTheme()" style="margin-left:.4rem">☀️ Light</button>
   </div>
   <div class="setup-wrap">
     <div class="setup-title">🎯 Play Darts</div>
@@ -417,7 +426,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
     <div style="display:flex;gap:.5rem;align-items:center">
       <button class="rules-btn" onclick="showRules('x01')">❓</button>
       <button class="hbtn" onclick="undoLast()">↩ Undo</button>
-      <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button>
+      <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button><button class="theme-toggle theme-toggle-instance" onclick="toggleTheme()" style="margin-left:.4rem">☀️ Light</button>
     </div>
   </div>
   <div class="game-wrap">
@@ -464,7 +473,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
     <div style="display:flex;gap:.5rem;align-items:center">
       <button class="rules-btn" onclick="showRules('cricket')">❓</button>
       <button class="hbtn" onclick="cricketUndo()">↩ Undo</button>
-      <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button>
+      <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button><button class="theme-toggle theme-toggle-instance" onclick="toggleTheme()" style="margin-left:.4rem">☀️ Light</button>
     </div>
   </div>
   <div class="game-wrap">
@@ -488,7 +497,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
     <div style="display:flex;gap:.5rem;align-items:center">
       <button class="rules-btn" onclick="showRules('killer')">❓</button>
       <button class="hbtn" onclick="killerUndo()">↩ Undo</button>
-      <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button>
+      <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button><button class="theme-toggle theme-toggle-instance" onclick="toggleTheme()" style="margin-left:.4rem">☀️ Light</button>
     </div>
   </div>
   <div class="game-wrap">
@@ -513,7 +522,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
     <div style="display:flex;gap:.5rem;align-items:center">
       <button class="rules-btn" onclick="showRules('shanghai')">❓</button>
       <button class="hbtn" onclick="shanghaiUndo()">↩ Undo</button>
-      <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button>
+      <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button><button class="theme-toggle theme-toggle-instance" onclick="toggleTheme()" style="margin-left:.4rem">☀️ Light</button>
     </div>
   </div>
   <div class="game-wrap">
@@ -542,7 +551,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
     <div style="display:flex;gap:.5rem;align-items:center">
       <button class="rules-btn" onclick="showRules('halveit')">❓</button>
       <button class="hbtn" onclick="halveitUndo()">↩ Undo</button>
-      <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button>
+      <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button><button class="theme-toggle theme-toggle-instance" onclick="toggleTheme()" style="margin-left:.4rem">☀️ Light</button>
     </div>
   </div>
   <div class="game-wrap">
@@ -576,7 +585,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
       <a href="/dashboard" class="hdr-logo" style="text-decoration:none;color:inherit">Flight <span>Chalker</span></a>
       <div class="hdr-sub">Game Over</div>
     </div>
-    <a href="/dashboard" style="text-decoration:none"><button class="hbtn">← Home</button></a><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button>
+    <a href="/dashboard" style="text-decoration:none"><button class="hbtn">← Home</button></a><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button><button class="theme-toggle theme-toggle-instance" onclick="toggleTheme()" style="margin-left:.4rem">☀️ Light</button>
   </div>
   <div class="win-wrap">
     <div class="win-emoji">🏆</div>
@@ -644,6 +653,25 @@ async function fcInit(){
   }
 }
 fcInit();
+// ── Theme (light/dark) ──────────────────────────────────────────────────────
+// Shared localStorage key so the choice carries over from/to the team app,
+// /training, and /party, since they're all on the same origin.
+function updateThemeLabels(isLight){
+  document.querySelectorAll('.theme-toggle-instance').forEach(function(btn){btn.textContent=isLight?'🌙 Dark':'☀️ Light';});
+}
+function initTheme(){
+  var saved=localStorage.getItem('fc_theme');
+  if(saved==='light')document.documentElement.setAttribute('data-theme','light');
+  updateThemeLabels(saved==='light');
+}
+function toggleTheme(){
+  var isLight=document.documentElement.getAttribute('data-theme')==='light';
+  if(isLight){document.documentElement.removeAttribute('data-theme');localStorage.setItem('fc_theme','dark');}
+  else{document.documentElement.setAttribute('data-theme','light');localStorage.setItem('fc_theme','light');}
+  updateThemeLabels(!isLight);
+}
+initTheme();
+
 document.addEventListener('DOMContentLoaded', function(){
   updateCallerButton();
 });
