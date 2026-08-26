@@ -43,6 +43,18 @@
   --blue:#2a5a8c;--blue-l:#3a7abf;--blue-bg:#0a1a2a;
   --text:#e0d8c8;--dim:#8a9080;--wb:#4a8855;--lb:#7a2828;--border:#3a4a3a;
 }
+/* Light theme override for pages where recording/reading scores matters most.
+   Badge/tag chips (--wb, --lb, --blue-bg) deliberately stay dark since they
+   pair with hardcoded light text colours elsewhere in the CSS - flipping
+   those specific ones would make that text unreadable. */
+[data-theme="light"]{
+  --bg:#ffffff;--surface:#f3f5f0;--s2:#e9ece4;--s3:#dde1d6;
+  --green:#3f6b4c;--gl:#2f6b3d;--amber:#a06f00;--red:#b3362a;
+  --blue:#2a5a8c;--blue-l:#1f4a73;--blue-bg:#0a1a2a;
+  --text:#1c211a;--dim:#5c6356;--wb:#4a8855;--lb:#7a2828;--border:#d3d7cc;
+}
+.theme-toggle{background:none;border:1px solid var(--border);border-radius:4px;color:var(--dim);font-family:'Barlow Condensed',sans-serif;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;cursor:pointer}
+.theme-toggle:hover{border-color:var(--gl);color:var(--gl)}
 body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh}
 .screen{display:none;min-height:100vh}
 .screen.active{display:block}
@@ -703,6 +715,7 @@ html{scroll-behavior:smooth}
     </div>
     <div class="hright">
       <div class="hteam"><strong id="hscore">— : —</strong><span id="hvs">vs —</span></div>
+      <button class="theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()">☀️ Light</button>
       <button class="logout-btn" onclick="logout()">Log Out</button>
     </div>
   </div>
@@ -1322,6 +1335,24 @@ function adminLogout(){
 }
 
 // ── Session ───────────────────────────────────────────────────────────────────
+// ── Theme (light/dark) ──────────────────────────────────────────────────────
+// Shared localStorage key so the choice carries over to /scorer, /training,
+// and /party too, since they're all on the same origin.
+function initTheme(){
+  var saved=localStorage.getItem('fc_theme');
+  if(saved==='light')document.documentElement.setAttribute('data-theme','light');
+  var btn=document.getElementById('theme-toggle-btn');
+  if(btn)btn.textContent=(saved==='light')?'🌙 Dark':'☀️ Light';
+}
+function toggleTheme(){
+  var isLight=document.documentElement.getAttribute('data-theme')==='light';
+  if(isLight){document.documentElement.removeAttribute('data-theme');localStorage.setItem('fc_theme','dark');}
+  else{document.documentElement.setAttribute('data-theme','light');localStorage.setItem('fc_theme','light');}
+  var btn=document.getElementById('theme-toggle-btn');
+  if(btn)btn.textContent=isLight?'☀️ Light':'🌙 Dark';
+}
+initTheme();
+
 document.addEventListener('DOMContentLoaded',async function(){
   // Set date field if it exists
   var mdateEl=document.getElementById('mdate');
@@ -2686,7 +2717,7 @@ function renderStats(){
     +catRow('Team Game',cat.team,false)
     +'</tbody></table></div><p style="font-size:.72rem;color:var(--dim);margin-top:.5rem">Team Game legs aren\u2019t tracked individually — it\u2019s recorded as a single win/loss per match.</p></div>';
   var noteHtml='<p style="font-size:.72rem;color:var(--dim);margin:-.75rem 0 1.25rem;line-height:1.5"><strong>Win Rate (Games)</strong> covers every format — Singles, Doubles and Team Game. <strong>Win Rate (Legs)</strong> covers Singles and Doubles only, since the Team Game isn\u2019t scored leg-by-leg.</p>';
-  el.innerHTML='<div style="display:flex;justify-content:flex-end;margin-bottom:.75rem"><button class="pr2" onclick="downloadPlayerStatsPDF(&quot;'+esc(player).replace(/"/g,'&quot;')+'&quot;)" style="font-size:.72rem">📄 Download PDF</button></div><div class="sg"><div class="scard"><div class="v g">'+tw+'</div><div class="lb">Games Won</div></div><div class="scard"><div class="v r">'+tl+'</div><div class="lb">Games Lost</div></div><div class="scard"><div class="v '+(gp>=50?'g':'r')+'">'+gp+'%</div><div class="lb">Win Rate (Games)</div></div><div class="scard"><div class="v g">'+tlw+' / '+tot+'</div><div class="lb">Legs Won</div></div><div class="scard"><div class="v r">'+tll+'</div><div class="lb">Legs Lost</div></div><div class="scard"><div class="v">'+tot+'</div><div class="lb">Legs Played</div></div><div class="scard"><div class="v '+(wp>=50?'g':'r')+'">'+wp+'%</div><div class="lb">Win Rate (Legs)</div></div><div class="scard"><div class="v a">'+allSc.length+'</div><div class="lb">80+ Scores</div></div><div class="scard"><div class="v a">'+(hi||'—')+'</div><div class="lb">Highest</div></div><div class="scard"><div class="v a">'+(hiCheckout||'—')+'</div><div class="lb">Highest Checkout</div></div><div class="scard"><div class="v">'+pm.length+'</div><div class="lb">Matches</div></div></div>'+noteHtml+breakdown+'<div class="cc"><h3>Cumulative Wins &amp; Losses</h3><div class="cw"><canvas id="cwl"></canvas></div></div><div class="cc"><h3>80+ Scores Per Match</h3><div class="cw"><canvas id="chs"></canvas></div></div><div class="cc"><h3>All 80+ Scores</h3><div class="scl">'+(allSc.sort(function(a,b){return b-a;}).map(function(s){return s===180?'<span class="sp2" style="background:#5a3000;border-color:#e8c840;color:#fff">&#9733; 180</span>':'<span class="sp2">'+s+'</span>';}).join('')||'<span style="color:var(--dim)">None yet</span>')+'</div></div>'+(allCos.length?'<div class="cc"><h3>All Checkouts</h3><div class="scl">'+allCos.sort(function(a,b){return b-a;}).map(function(v){return '<span class="sp2">'+v+'</span>';}).join('')+'</div></div>':'');
+  el.innerHTML='<div style="display:flex;justify-content:flex-end;gap:.5rem;margin-bottom:.75rem"><button class="pr2" onclick="sharePlayerStatsPDF(&quot;'+esc(player).replace(/"/g,'&quot;')+'&quot;)" style="font-size:.72rem">📤 Share</button><button class="pr2" onclick="downloadPlayerStatsPDF(&quot;'+esc(player).replace(/"/g,'&quot;')+'&quot;)" style="font-size:.72rem">📄 Download PDF</button></div><div class="sg"><div class="scard"><div class="v g">'+tw+'</div><div class="lb">Games Won</div></div><div class="scard"><div class="v r">'+tl+'</div><div class="lb">Games Lost</div></div><div class="scard"><div class="v '+(gp>=50?'g':'r')+'">'+gp+'%</div><div class="lb">Win Rate (Games)</div></div><div class="scard"><div class="v g">'+tlw+' / '+tot+'</div><div class="lb">Legs Won</div></div><div class="scard"><div class="v r">'+tll+'</div><div class="lb">Legs Lost</div></div><div class="scard"><div class="v">'+tot+'</div><div class="lb">Legs Played</div></div><div class="scard"><div class="v '+(wp>=50?'g':'r')+'">'+wp+'%</div><div class="lb">Win Rate (Legs)</div></div><div class="scard"><div class="v a">'+allSc.length+'</div><div class="lb">80+ Scores</div></div><div class="scard"><div class="v a">'+(hi||'—')+'</div><div class="lb">Highest</div></div><div class="scard"><div class="v a">'+(hiCheckout||'—')+'</div><div class="lb">Highest Checkout</div></div><div class="scard"><div class="v">'+pm.length+'</div><div class="lb">Matches</div></div></div>'+noteHtml+breakdown+'<div class="cc"><h3>Cumulative Wins &amp; Losses</h3><div class="cw"><canvas id="cwl"></canvas></div></div><div class="cc"><h3>80+ Scores Per Match</h3><div class="cw"><canvas id="chs"></canvas></div></div><div class="cc"><h3>All 80+ Scores</h3><div class="scl">'+(allSc.sort(function(a,b){return b-a;}).map(function(s){return s===180?'<span class="sp2" style="background:#5a3000;border-color:#e8c840;color:#fff">&#9733; 180</span>':'<span class="sp2">'+s+'</span>';}).join('')||'<span style="color:var(--dim)">None yet</span>')+'</div></div>'+(allCos.length?'<div class="cc"><h3>All Checkouts</h3><div class="scl">'+allCos.sort(function(a,b){return b-a;}).map(function(v){return '<span class="sp2">'+v+'</span>';}).join('')+'</div></div>':'');
   ['cwl','chs'].forEach(function(id){if(charts[id]){charts[id].destroy();delete charts[id];}});
   var go={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8a9080',font:{family:"'Barlow Condensed',sans-serif",size:11}}}},scales:{x:{ticks:{color:'#8a9080',font:{family:"'Barlow Condensed',sans-serif",size:10}},grid:{color:'#2a3a2a'}},y:{ticks:{color:'#8a9080',font:{family:"'Barlow Condensed',sans-serif",size:10}},grid:{color:'#2a3a2a'},beginAtZero:true}}};
   charts['cwl']=new Chart(document.getElementById('cwl'),{type:'line',data:{labels:wlL,datasets:[{label:'Wins',data:wlW,borderColor:'#4a8855',backgroundColor:'rgba(74,136,85,0.15)',tension:.3,fill:true,pointBackgroundColor:'#4a8855'},{label:'Losses',data:wlL2,borderColor:'#c0392b',backgroundColor:'rgba(192,57,43,0.1)',tension:.3,fill:true,pointBackgroundColor:'#c0392b'}]},options:go});
@@ -2889,25 +2920,41 @@ async function mergePlayerName(oldName,newName){
 }
 
 // ── Player Stats PDF ────────────────────────────────────────────────────────
-function downloadPlayerStatsPDF(player){
+// Builds the player stats PDF document. Returns {doc, filename} so both the
+// direct-download and share flows can reuse the exact same rendering.
+// Colour palette here is deliberately different from the in-app dark theme:
+// on a printed/white PDF page, the app's pale text (designed for a dark
+// background) becomes nearly invisible, so body text uses darker, higher-
+// contrast variants. The header bar keeps the bright colours since that part
+// is drawn on a dark fill, not white.
+function buildPlayerStatsDoc(player){
   var st=computePlayerStats(player);
-  if(!st){toast('No stats to export for '+player,true);return;}
+  if(!st)return null;
   var jsPDF=window.jspdf.jsPDF;
   var doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
   var W=210,pad=12;
   var y=10;
-  var C={bg:[26,37,26],dim:[100,120,100],text:[224,216,200],amber:[232,200,64],
-    green:[74,124,89],win:[60,120,70],loss:[120,40,40],
-    winTxt:[168,255,184],lossTxt:[255,140,140],white:[255,255,255],border:[60,74,60]};
+  var C={
+    bg:[26,37,26],              // dark header bar fill only
+    headerAmber:[232,200,64],   // bright amber - used only inside the dark header bar
+    headerDim:[150,168,150],    // light dim - used only inside the dark header bar
+    dim:[85,95,85],             // secondary text on the white page body
+    text:[32,38,32],            // primary text on the white page body
+    amber:[145,105,10],         // amber on the white page body (darkened for print)
+    green:[35,80,50],           // section headers/labels on the white page body
+    winTxt:[15,110,45],         // win figures on the white page body
+    lossTxt:[165,30,30],        // loss figures on the white page body
+    border:[60,74,60]
+  };
   function setC(a){doc.setTextColor(a[0],a[1],a[2]);}
   function setF(a){doc.setFillColor(a[0],a[1],a[2]);}
   function setD(a){doc.setDrawColor(a[0],a[1],a[2]);}
 
   // Header
   setF(C.bg);doc.rect(0,0,W,18,'F');
-  doc.setFont('helvetica','bold');doc.setFontSize(13);setC(C.amber);
+  doc.setFont('helvetica','bold');doc.setFontSize(13);setC(C.headerAmber);
   doc.text('FLIGHT CHALKER',pad,12);
-  doc.setFont('helvetica','normal');doc.setFontSize(7);setC(C.dim);
+  doc.setFont('helvetica','normal');doc.setFontSize(7);setC(C.headerDim);
   doc.text('flightchalker.co.uk',W-pad,12,'right');
   y=26;
 
@@ -2949,7 +2996,7 @@ function downloadPlayerStatsPDF(player){
   doc.setFont('helvetica','bold');doc.setFontSize(9);setC(C.green);
   doc.text('BREAKDOWN BY DISCIPLINE',pad,y);y+=5;
   setF(C.bg);doc.rect(pad,y,W-pad*2,6,'F');
-  doc.setFont('helvetica','bold');doc.setFontSize(6.5);setC(C.dim);
+  doc.setFont('helvetica','bold');doc.setFontSize(6.5);setC(C.headerDim);
   doc.text('DISCIPLINE',pad+2,y+4);
   doc.text('GAMES W',pad+55,y+4);
   doc.text('GAMES L',pad+80,y+4);
@@ -3010,7 +3057,38 @@ function downloadPlayerStatsPDF(player){
   doc.text('Flight Chalker · flightchalker.co.uk',W/2,y,'center');
 
   var safe=player.replace(/[^a-z0-9]/gi,'_').toLowerCase();
-  doc.save('stats-'+safe+'-'+new Date().toISOString().split('T')[0]+'.pdf');
+  var filename='stats-'+safe+'-'+new Date().toISOString().split('T')[0]+'.pdf';
+  return {doc,filename};
+}
+
+function downloadPlayerStatsPDF(player){
+  var built=buildPlayerStatsDoc(player);
+  if(!built){toast('No stats to export for '+player,true);return;}
+  built.doc.save(built.filename);
+}
+
+// Uses the Web Share API (with a file attachment) where the browser supports
+// it - this is what surfaces the native share sheet on mobile, letting
+// someone send the PDF straight to WhatsApp, Mail, Messages, etc. Falls back
+// to a normal download if the device/browser doesn't support sharing files,
+// so this is never a dead end.
+async function sharePlayerStatsPDF(player){
+  var built=buildPlayerStatsDoc(player);
+  if(!built){toast('No stats to export for '+player,true);return;}
+  try{
+    var blob=built.doc.output('blob');
+    var file=new File([blob],built.filename,{type:'application/pdf'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],title:player+' — Flight Chalker Stats',text:player+'\u2019s stats from Flight Chalker'});
+      return;
+    }
+  }catch(e){
+    if(e && e.name==='AbortError')return; // user cancelled the share sheet - not an error
+    fcLogError('sharePlayerStatsPDF',e,false);
+  }
+  // Fallback: sharing isn't supported here, just download instead
+  built.doc.save(built.filename);
+  toast('Sharing isn\u2019t supported on this browser — downloaded the PDF instead.');
 }
 
 
@@ -3896,6 +3974,6 @@ if(!navigator.onLine){
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 </script>
 <div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-logout-fix</div>
-<div style="position:fixed;bottom:6px;right:8px;font-family:monospace;font-size:.65rem;color:#3a4a3a;background:#141814;padding:2px 6px;border-radius:4px;z-index:9999;pointer-events:none">v54-stats-pdf</div>
+<div style="position:fixed;bottom:6px;right:8px;font-family:monospace;font-size:.65rem;color:#3a4a3a;background:#141814;padding:2px 6px;border-radius:4px;z-index:9999;pointer-events:none">v56-light-theme</div>
 </body>
 </html>
