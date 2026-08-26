@@ -29,6 +29,13 @@
   --green:#4a7c59;--gl:#5a9469;--amber:#e8c840;--red:#c0392b;
   --blue:#2a5a8c;--text:#e0d8c8;--dim:#8a9080;--border:#3a4a3a;
 }
+[data-theme="light"]{
+  --bg:#ffffff;--s2:#e9ece4;--s3:#dde1d6;
+  --green:#3f6b4c;--gl:#2f6b3d;--amber:#a06f00;--red:#b3362a;
+  --blue:#2a5a8c;--text:#1c211a;--dim:#5c6356;--border:#d3d7cc;
+}
+.theme-toggle{background:none;border:1px solid var(--border);border-radius:4px;color:var(--dim);font-family:'Barlow Condensed',sans-serif;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;cursor:pointer}
+.theme-toggle:hover{border-color:var(--gl);color:var(--gl)}
 html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh}
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap');
 
@@ -204,6 +211,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
   <div style="display:flex;gap:.5rem">
     <button class="hbtn" id="btn-back-menu" onclick="showMenu()" style="display:none">← Games</button>
     <button class="hbtn" id="btn-caller-toggle" onclick="toggleCaller()">🔊 Caller On</button>
+    <button class="theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()">☀️ Light</button>
     <a href="/dashboard" style="text-decoration:none"><button class="hbtn">🏠 Home</button></a>
   </div>
 </div>
@@ -764,6 +772,24 @@ function toggleCaller(){
   ScoreCaller.setEnabled(!ScoreCaller.isEnabled());
   updateCallerBtn();
 }
+// ── Theme (light/dark) ──────────────────────────────────────────────────────
+// Shared localStorage key so the choice carries over from/to the team app,
+// /scorer, and /party, since they're all on the same origin.
+function initTheme(){
+  var saved=localStorage.getItem('fc_theme');
+  if(saved==='light')document.documentElement.setAttribute('data-theme','light');
+  var btn=document.getElementById('theme-toggle-btn');
+  if(btn)btn.textContent=(saved==='light')?'🌙 Dark':'☀️ Light';
+}
+function toggleTheme(){
+  var isLight=document.documentElement.getAttribute('data-theme')==='light';
+  if(isLight){document.documentElement.removeAttribute('data-theme');localStorage.setItem('fc_theme','dark');}
+  else{document.documentElement.setAttribute('data-theme','light');localStorage.setItem('fc_theme','light');}
+  var btn=document.getElementById('theme-toggle-btn');
+  if(btn)btn.textContent=isLight?'☀️ Light':'🌙 Dark';
+}
+initTheme();
+
 document.addEventListener('DOMContentLoaded',updateCallerBtn);
 
 // Wrap every ScoreCaller.call* invocation so that if caller.js fails to load,
