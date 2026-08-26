@@ -2686,7 +2686,7 @@ function renderStats(){
     +catRow('Team Game',cat.team,false)
     +'</tbody></table></div><p style="font-size:.72rem;color:var(--dim);margin-top:.5rem">Team Game legs aren\u2019t tracked individually — it\u2019s recorded as a single win/loss per match.</p></div>';
   var noteHtml='<p style="font-size:.72rem;color:var(--dim);margin:-.75rem 0 1.25rem;line-height:1.5"><strong>Win Rate (Games)</strong> covers every format — Singles, Doubles and Team Game. <strong>Win Rate (Legs)</strong> covers Singles and Doubles only, since the Team Game isn\u2019t scored leg-by-leg.</p>';
-  el.innerHTML='<div class="sg"><div class="scard"><div class="v g">'+tw+'</div><div class="lb">Games Won</div></div><div class="scard"><div class="v r">'+tl+'</div><div class="lb">Games Lost</div></div><div class="scard"><div class="v '+(gp>=50?'g':'r')+'">'+gp+'%</div><div class="lb">Win Rate (Games)</div></div><div class="scard"><div class="v g">'+tlw+' / '+tot+'</div><div class="lb">Legs Won</div></div><div class="scard"><div class="v r">'+tll+'</div><div class="lb">Legs Lost</div></div><div class="scard"><div class="v">'+tot+'</div><div class="lb">Legs Played</div></div><div class="scard"><div class="v '+(wp>=50?'g':'r')+'">'+wp+'%</div><div class="lb">Win Rate (Legs)</div></div><div class="scard"><div class="v a">'+allSc.length+'</div><div class="lb">80+ Scores</div></div><div class="scard"><div class="v a">'+(hi||'—')+'</div><div class="lb">Highest</div></div><div class="scard"><div class="v a">'+(hiCheckout||'—')+'</div><div class="lb">Highest Checkout</div></div><div class="scard"><div class="v">'+pm.length+'</div><div class="lb">Matches</div></div></div>'+noteHtml+breakdown+'<div class="cc"><h3>Cumulative Wins &amp; Losses</h3><div class="cw"><canvas id="cwl"></canvas></div></div><div class="cc"><h3>80+ Scores Per Match</h3><div class="cw"><canvas id="chs"></canvas></div></div><div class="cc"><h3>All 80+ Scores</h3><div class="scl">'+(allSc.sort(function(a,b){return b-a;}).map(function(s){return s===180?'<span class="sp2" style="background:#5a3000;border-color:#e8c840;color:#fff">&#9733; 180</span>':'<span class="sp2">'+s+'</span>';}).join('')||'<span style="color:var(--dim)">None yet</span>')+'</div></div>'+(allCos.length?'<div class="cc"><h3>All Checkouts</h3><div class="scl">'+allCos.sort(function(a,b){return b-a;}).map(function(v){return '<span class="sp2">'+v+'</span>';}).join('')+'</div></div>':'');
+  el.innerHTML='<div style="display:flex;justify-content:flex-end;margin-bottom:.75rem"><button class="pr2" onclick="downloadPlayerStatsPDF(&quot;'+esc(player).replace(/"/g,'&quot;')+'&quot;)" style="font-size:.72rem">📄 Download PDF</button></div><div class="sg"><div class="scard"><div class="v g">'+tw+'</div><div class="lb">Games Won</div></div><div class="scard"><div class="v r">'+tl+'</div><div class="lb">Games Lost</div></div><div class="scard"><div class="v '+(gp>=50?'g':'r')+'">'+gp+'%</div><div class="lb">Win Rate (Games)</div></div><div class="scard"><div class="v g">'+tlw+' / '+tot+'</div><div class="lb">Legs Won</div></div><div class="scard"><div class="v r">'+tll+'</div><div class="lb">Legs Lost</div></div><div class="scard"><div class="v">'+tot+'</div><div class="lb">Legs Played</div></div><div class="scard"><div class="v '+(wp>=50?'g':'r')+'">'+wp+'%</div><div class="lb">Win Rate (Legs)</div></div><div class="scard"><div class="v a">'+allSc.length+'</div><div class="lb">80+ Scores</div></div><div class="scard"><div class="v a">'+(hi||'—')+'</div><div class="lb">Highest</div></div><div class="scard"><div class="v a">'+(hiCheckout||'—')+'</div><div class="lb">Highest Checkout</div></div><div class="scard"><div class="v">'+pm.length+'</div><div class="lb">Matches</div></div></div>'+noteHtml+breakdown+'<div class="cc"><h3>Cumulative Wins &amp; Losses</h3><div class="cw"><canvas id="cwl"></canvas></div></div><div class="cc"><h3>80+ Scores Per Match</h3><div class="cw"><canvas id="chs"></canvas></div></div><div class="cc"><h3>All 80+ Scores</h3><div class="scl">'+(allSc.sort(function(a,b){return b-a;}).map(function(s){return s===180?'<span class="sp2" style="background:#5a3000;border-color:#e8c840;color:#fff">&#9733; 180</span>':'<span class="sp2">'+s+'</span>';}).join('')||'<span style="color:var(--dim)">None yet</span>')+'</div></div>'+(allCos.length?'<div class="cc"><h3>All Checkouts</h3><div class="scl">'+allCos.sort(function(a,b){return b-a;}).map(function(v){return '<span class="sp2">'+v+'</span>';}).join('')+'</div></div>':'');
   ['cwl','chs'].forEach(function(id){if(charts[id]){charts[id].destroy();delete charts[id];}});
   var go={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8a9080',font:{family:"'Barlow Condensed',sans-serif",size:11}}}},scales:{x:{ticks:{color:'#8a9080',font:{family:"'Barlow Condensed',sans-serif",size:10}},grid:{color:'#2a3a2a'}},y:{ticks:{color:'#8a9080',font:{family:"'Barlow Condensed',sans-serif",size:10}},grid:{color:'#2a3a2a'},beginAtZero:true}}};
   charts['cwl']=new Chart(document.getElementById('cwl'),{type:'line',data:{labels:wlL,datasets:[{label:'Wins',data:wlW,borderColor:'#4a8855',backgroundColor:'rgba(74,136,85,0.15)',tension:.3,fill:true,pointBackgroundColor:'#4a8855'},{label:'Losses',data:wlL2,borderColor:'#c0392b',backgroundColor:'rgba(192,57,43,0.1)',tension:.3,fill:true,pointBackgroundColor:'#c0392b'}]},options:go});
@@ -2888,7 +2888,133 @@ async function mergePlayerName(oldName,newName){
   }catch(e){toast('Error merging: '+e.message,true);fcLogError('mergePlayerName',e,true,'Some matches may not have updated — please check and try again.');}
 }
 
-// ── PDF ───────────────────────────────────────────────────────────────────────
+// ── Player Stats PDF ────────────────────────────────────────────────────────
+function downloadPlayerStatsPDF(player){
+  var st=computePlayerStats(player);
+  if(!st){toast('No stats to export for '+player,true);return;}
+  var jsPDF=window.jspdf.jsPDF;
+  var doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  var W=210,pad=12;
+  var y=10;
+  var C={bg:[26,37,26],dim:[100,120,100],text:[224,216,200],amber:[232,200,64],
+    green:[74,124,89],win:[60,120,70],loss:[120,40,40],
+    winTxt:[168,255,184],lossTxt:[255,140,140],white:[255,255,255],border:[60,74,60]};
+  function setC(a){doc.setTextColor(a[0],a[1],a[2]);}
+  function setF(a){doc.setFillColor(a[0],a[1],a[2]);}
+  function setD(a){doc.setDrawColor(a[0],a[1],a[2]);}
+
+  // Header
+  setF(C.bg);doc.rect(0,0,W,18,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(13);setC(C.amber);
+  doc.text('FLIGHT CHALKER',pad,12);
+  doc.setFont('helvetica','normal');doc.setFontSize(7);setC(C.dim);
+  doc.text('flightchalker.co.uk',W-pad,12,'right');
+  y=26;
+
+  var league=(currentLeague&&currentLeague.name)||'';
+  var team=(currentTeam&&currentTeam.team_name)||'';
+  doc.setFont('helvetica','bold');doc.setFontSize(7);setC(C.green);
+  doc.text((team+' · '+league).toUpperCase(),pad,y);y+=6;
+  doc.setFont('helvetica','bold');doc.setFontSize(16);setC(C.text);
+  doc.text(player,pad,y);y+=5;
+  doc.setFont('helvetica','normal');doc.setFontSize(8);setC(C.dim);
+  doc.text('Player Stats Report · generated '+new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}),pad,y);
+  y+=8;
+
+  // Summary stat rows: [label, value] pairs, two per row
+  function statBox(x,w,label,val,color){
+    setD(C.border);doc.setLineWidth(0.2);doc.rect(x,y,w,14);
+    doc.setFont('helvetica','bold');doc.setFontSize(13);setC(color||C.text);
+    doc.text(String(val),x+w/2,y+7,'center');
+    doc.setFont('helvetica','normal');doc.setFontSize(6);setC(C.dim);
+    doc.text(label.toUpperCase(),x+w/2,y+11.5,'center');
+  }
+  var boxW=(W-pad*2-4*3)/5;
+  var stats=[
+    ['Games Won',st.tw,C.winTxt],['Games Lost',st.tl,C.lossTxt],['Win% Games',st.gp+'%',st.gp>=50?C.winTxt:C.lossTxt],
+    ['Legs Won',st.tlw,C.winTxt],['Legs Lost',st.tll,C.lossTxt]
+  ];
+  stats.forEach(function(s,i){statBox(pad+i*(boxW+3),boxW,s[0],s[1],s[2]);});
+  y+=17;
+  var stats2=[
+    ['Legs Played',st.tot,C.text],['Win% Legs',st.wp+'%',st.wp>=50?C.winTxt:C.lossTxt],['80+ Scores',st.allSc.length,C.amber],
+    ['Highest',st.hi||'—',C.amber],['Highest CO',st.hiCheckout||'—',C.amber]
+  ];
+  stats2.forEach(function(s,i){statBox(pad+i*(boxW+3),boxW,s[0],s[1],s[2]);});
+  y+=17;
+  doc.setFont('helvetica','normal');doc.setFontSize(7);setC(C.dim);
+  doc.text('Matches Played: '+st.matches,pad,y);y+=8;
+
+  // Breakdown by discipline table
+  doc.setFont('helvetica','bold');doc.setFontSize(9);setC(C.green);
+  doc.text('BREAKDOWN BY DISCIPLINE',pad,y);y+=5;
+  setF(C.bg);doc.rect(pad,y,W-pad*2,6,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(6.5);setC(C.dim);
+  doc.text('DISCIPLINE',pad+2,y+4);
+  doc.text('GAMES W',pad+55,y+4);
+  doc.text('GAMES L',pad+80,y+4);
+  doc.text('LEGS W',pad+105,y+4);
+  doc.text('LEGS L',pad+128,y+4);
+  doc.text('WIN%',W-pad-8,y+4);
+  y+=6;
+  function discRow(label,c,hasLegs){
+    setD(C.border);doc.setLineWidth(0.1);doc.line(pad,y+6,W-pad,y+6);
+    doc.setFont('helvetica','normal');doc.setFontSize(8);setC(C.text);
+    doc.text(label,pad+2,y+4.5);
+    if(!c.gw&&!c.gl){setC(C.dim);doc.text('Not played',pad+55,y+4.5);y+=6;return;}
+    var gpPct=(c.gw+c.gl)?Math.round(c.gw/(c.gw+c.gl)*100):null;
+    setC(C.winTxt);doc.text(String(c.gw),pad+55,y+4.5);
+    setC(C.lossTxt);doc.text(String(c.gl),pad+80,y+4.5);
+    if(hasLegs){setC(C.winTxt);doc.text(String(c.lw),pad+105,y+4.5);setC(C.lossTxt);doc.text(String(c.ll),pad+128,y+4.5);}
+    else{setC(C.dim);doc.text('—',pad+105,y+4.5);doc.text('—',pad+128,y+4.5);}
+    setC(C.text);doc.text(gpPct!==null?gpPct+'%':'—',W-pad-8,y+4.5);
+    y+=6;
+  }
+  discRow('Singles',st.cat.singles,true);
+  discRow('Doubles',st.cat.doubles,true);
+  discRow('Team Game',st.cat.team,false);
+  y+=6;
+
+  // 80+ scores list
+  if(st.allSc.length){
+    doc.setFont('helvetica','bold');doc.setFontSize(9);setC(C.green);
+    doc.text('80+ SCORES ('+st.allSc.length+')',pad,y);y+=5;
+    doc.setFont('helvetica','normal');doc.setFontSize(8);setC(C.text);
+    var scText=st.allSc.slice().sort(function(a,b){return b-a;}).join('   ');
+    var scLines=doc.splitTextToSize(scText,W-pad*2);
+    scLines.forEach(function(line){
+      if(y>275){doc.addPage();y=14;}
+      doc.text(line,pad,y);y+=5;
+    });
+    y+=3;
+  }
+
+  // Checkouts list
+  if(st.allCos&&st.allCos.length){
+    if(y>265){doc.addPage();y=14;}
+    doc.setFont('helvetica','bold');doc.setFontSize(9);setC(C.green);
+    doc.text('CHECKOUTS ('+st.allCos.length+')',pad,y);y+=5;
+    doc.setFont('helvetica','normal');doc.setFontSize(8);setC(C.text);
+    var coText=st.allCos.slice().sort(function(a,b){return b-a;}).join('   ');
+    var coLines=doc.splitTextToSize(coText,W-pad*2);
+    coLines.forEach(function(line){
+      if(y>275){doc.addPage();y=14;}
+      doc.text(line,pad,y);y+=5;
+    });
+  }
+
+  if(y+8>282){doc.addPage();y=14;}
+  y=Math.max(y+4,282);
+  setD(C.green);doc.setLineWidth(0.3);doc.line(pad,y,W-pad,y);y+=4;
+  doc.setFont('helvetica','normal');doc.setFontSize(7);setC(C.dim);
+  doc.text('Flight Chalker · flightchalker.co.uk',W/2,y,'center');
+
+  var safe=player.replace(/[^a-z0-9]/gi,'_').toLowerCase();
+  doc.save('stats-'+safe+'-'+new Date().toISOString().split('T')[0]+'.pdf');
+}
+
+
+// ── Match PDF ─────────────────────────────────────────────────────────────────
 function downloadPDF(idx,mode){
   closePdfChoice();
   mode=mode||'team';
@@ -3770,6 +3896,6 @@ if(!navigator.onLine){
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 </script>
 <div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-logout-fix</div>
-<div style="position:fixed;bottom:6px;right:8px;font-family:monospace;font-size:.65rem;color:#3a4a3a;background:#141814;padding:2px 6px;border-radius:4px;z-index:9999;pointer-events:none">v53-checkouts</div>
+<div style="position:fixed;bottom:6px;right:8px;font-family:monospace;font-size:.65rem;color:#3a4a3a;background:#141814;padding:2px 6px;border-radius:4px;z-index:9999;pointer-events:none">v54-stats-pdf</div>
 </body>
 </html>
