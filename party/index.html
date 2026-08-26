@@ -20,6 +20,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#141814;--surface:#1e251e;--s3:#2e382e;--green:#4a7c59;--gl:#5a9469;--amber:#e8c840;--red:#c0392b;--text:#e0d8c8;--dim:#8a9080;--border:#3a4a3a}
+[data-theme="light"]{--bg:#ffffff;--surface:#f3f5f0;--s3:#dde1d6;--green:#3f6b4c;--gl:#2f6b3d;--amber:#a06f00;--red:#b3362a;--text:#1c211a;--dim:#5c6356;--border:#d3d7cc}
+.theme-toggle{background:none;border:1px solid var(--border);border-radius:4px;color:var(--dim);font-family:'Barlow Condensed',sans-serif;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;cursor:pointer}
+.theme-toggle:hover{border-color:var(--gl);color:var(--gl)}
 body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh}
 header{background:var(--surface);border-bottom:2px solid var(--green);padding:0 1.25rem;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100}
 .logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.2rem;letter-spacing:.05em;text-transform:uppercase;text-decoration:none;color:var(--text)}
@@ -114,7 +117,10 @@ tr:last-child td{border-bottom:none}
 
 <header>
   <a href="/party" class="logo" onclick="return goHome(event)">Flight <span>Chalker</span></a>
-  <button class="hbtn" onclick="goHome(event)">← Home</button>
+  <div style="display:flex;gap:.5rem;align-items:center">
+    <button class="theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()">☀️ Light</button>
+    <button class="hbtn" onclick="goHome(event)">← Home</button>
+  </div>
 </header>
 
 <main>
@@ -256,6 +262,24 @@ tr:last-child td{border-bottom:none}
 <div class="toast" id="toast"></div>
 
 <script>
+// ── Theme (light/dark) ──────────────────────────────────────────────────────
+// Shared localStorage key so the choice carries over from/to the team app,
+// /scorer, and /training, since they're all on the same origin.
+function initTheme(){
+  var saved=localStorage.getItem('fc_theme');
+  if(saved==='light')document.documentElement.setAttribute('data-theme','light');
+  var btn=document.getElementById('theme-toggle-btn');
+  if(btn)btn.textContent=(saved==='light')?'🌙 Dark':'☀️ Light';
+}
+function toggleTheme(){
+  var isLight=document.documentElement.getAttribute('data-theme')==='light';
+  if(isLight){document.documentElement.removeAttribute('data-theme');localStorage.setItem('fc_theme','dark');}
+  else{document.documentElement.setAttribute('data-theme','light');localStorage.setItem('fc_theme','light');}
+  var btn=document.getElementById('theme-toggle-btn');
+  if(btn)btn.textContent=isLight?'☀️ Light':'🌙 Dark';
+}
+initTheme();
+
 const sbClient = window.supabase.createClient(
   'https://xkovqamknwyjzlgijcel.supabase.co',
   'sb_publishable_1zeVlEGjUdGNwA-i8pktHg_nSjRXYEQ'
