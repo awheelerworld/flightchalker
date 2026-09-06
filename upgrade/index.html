@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzE0MTgxNCIvPgogIDxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YTdjNTkiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNGE3YzU5IiBzdHJva2Utd2lkdGg9IjEiLz4KICA8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI0IiBmaWxsPSIjZThjODQwIi8+Cjwvc3ZnPg==">
+  <meta name="description" content="Flight Chalker Premium — unlock the training zone, custom caller voices and saved stats.">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="canonical" href="https://flightchalker.co.uk/upgrade">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flight Chalker Premium</title>
+<script src="/subscription-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#141814;--surface:#1e251e;--s3:#2e382e;--green:#4a7c59;--gl:#5a9469;--amber:#e8c840;--red:#c0392b;--text:#e0d8c8;--dim:#8a9080;--border:#3a4a3a}
+body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem}
+.logo{text-align:center;margin-bottom:2rem}
+.logo-title{font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:900;letter-spacing:.05em;text-transform:uppercase}
+.logo-title span{color:var(--amber)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2rem;width:100%;max-width:420px}
+.card h1{font-family:'Barlow Condensed',sans-serif;font-size:1.5rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:var(--amber);margin-bottom:.5rem;text-align:center}
+.price{text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:2.2rem;font-weight:900;color:var(--text);margin:.5rem 0}
+.price span{font-size:1rem;color:var(--dim);font-weight:600;text-transform:none;letter-spacing:0}
+.sub{text-align:center;font-size:.85rem;color:var(--dim);margin-bottom:1.5rem}
+.features{list-style:none;margin-bottom:1.5rem}
+.features li{display:flex;gap:.6rem;align-items:flex-start;font-size:.9rem;padding:.4rem 0;border-bottom:1px solid var(--border)}
+.features li:last-child{border-bottom:none}
+.features li::before{content:'✓';color:var(--gl);font-weight:700;flex-shrink:0}
+.field{display:flex;flex-direction:column;gap:4px;margin-bottom:.75rem}
+.field label{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--dim)}
+.field input{background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.95rem;padding:.55rem .75rem}
+.field input:focus{outline:none;border-color:var(--green)}
+.btn-submit{width:100%;background:var(--green);border:none;border-radius:8px;color:white;font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.75rem;cursor:pointer;margin-top:.25rem}
+.btn-submit:hover{background:var(--gl)}
+.note{font-size:.78rem;color:var(--dim);text-align:center;margin-top:.75rem;line-height:1.5}
+.error{font-size:.8rem;color:var(--red);margin-top:.5rem;display:none;text-align:center}
+.success{display:none;text-align:center}
+.success .tick{font-size:2.5rem;margin-bottom:.5rem}
+.back{display:block;text-align:center;margin-top:1.5rem;color:var(--dim);text-decoration:none;font-size:.85rem}
+</style>
+</head>
+<body>
+
+<div class="logo">
+  <a href="/" style="text-decoration:none;color:inherit">
+    <div class="logo-title">Flight <span>Chalker</span></div>
+  </a>
+</div>
+
+<div class="card" id="not-live-card" style="display:none;text-align:center">
+  <div style="font-size:2rem;margin-bottom:.5rem">🚧</div>
+  <h1>Premium Isn't Live Yet</h1>
+  <div class="sub" style="margin-bottom:0">The site's still in testing — everything is free for everyone right now, Training Zone included. Check back soon.</div>
+</div>
+
+<div class="card" id="offer-card">
+  <div id="offer-view">
+    <h1>🎯 Premium</h1>
+    <div class="price">£1.99<span>/month or £14.99/yr</span></div>
+    <div class="sub">Premium is launching soon. Leave your email and we'll let you know the moment it's live — early sign-ups get first access.</div>
+    <ul class="features">
+      <li>Full Training Zone — checkout challenges, around the clock, doubles training and drills</li>
+      <li>Saved stats and progress tracking across devices</li>
+      <li>Custom score-caller voices</li>
+      <li>Priority on new feature requests</li>
+    </ul>
+    <div class="field">
+      <label>Email Address</label>
+      <input type="email" id="wl-email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')joinWaitlist()">
+    </div>
+    <button class="btn-submit" id="wl-btn" onclick="joinWaitlist()">Notify Me</button>
+    <div class="error" id="wl-error"></div>
+    <div class="note">The core scorer and Party Mode stay free — Premium only unlocks Training Zone and the extras above.</div>
+  </div>
+
+  <div class="success" id="success-view">
+    <div class="tick">✅</div>
+    <h1>You're on the list!</h1>
+    <div class="sub" style="margin-bottom:0">We'll email you the moment Premium is ready. Thanks for your interest — it genuinely helps us prioritise.</div>
+  </div>
+</div>
+
+<div class="card" id="promo-card" style="margin-top:1rem">
+  <div id="promo-view">
+    <h1 style="font-size:1.1rem">Got a Code?</h1>
+    <div class="sub" style="margin-bottom:1rem">Friends & family codes give free Premium access — no charge.</div>
+    <div class="field">
+      <label>Promo Code</label>
+      <input type="text" id="promo-input" placeholder="e.g. DARTSMATE" style="text-transform:uppercase" onkeydown="if(event.key==='Enter')redeemPromo()">
+    </div>
+    <button class="btn-submit" id="promo-btn" onclick="redeemPromo()" style="background:#2a5a8c">Apply Code</button>
+    <div class="error" id="promo-error"></div>
+  </div>
+  <div class="success" id="promo-success">
+    <div class="tick">🎉</div>
+    <h1>Premium Unlocked!</h1>
+    <div class="sub" style="margin-bottom:0">You've got free Premium access. Enjoy the Training Zone and everything else.</div>
+  </div>
+</div>
+
+<a href="/dashboard" class="back">← Back to Dashboard</a>
+
+<script>
+const sb = window.supabase.createClient(
+  'https://xkovqamknwyjzlgijcel.supabase.co',
+  'sb_publishable_1zeVlEGjUdGNwA-i8pktHg_nSjRXYEQ'
+);
+
+if(!SUBSCRIPTIONS_ENABLED){
+  document.getElementById('not-live-card').style.display='block';
+  document.getElementById('offer-card').style.display='none';
+  document.getElementById('promo-card').style.display='none';
+}
+
+async function redeemPromo(){
+  var codeInp=document.getElementById('promo-input');
+  var code=codeInp.value.trim().toUpperCase();
+  var err=document.getElementById('promo-error');
+  var btn=document.getElementById('promo-btn');
+  err.style.display='none';
+  if(!code){err.textContent='Please enter a code.';err.style.display='block';return;}
+
+  btn.disabled=true;btn.textContent='Checking…';
+  try{
+    const { data:{ session } } = await sb.auth.getSession();
+    if(!session){
+      var params=new URLSearchParams(window.location.search);
+      window.location.href='/login?redirect=/upgrade'+(params.get('redirect')?'%3Fredirect%3D'+encodeURIComponent(params.get('redirect')):'');
+      return;
+    }
+
+    var { data:rows } = await sb.from('promo_codes').select('*').eq('code',code).limit(1);
+    var promo=rows&&rows[0];
+    var today=new Date().toISOString().slice(0,10);
+    if(!promo||!promo.active){
+      err.textContent='That code isn\'t valid.';err.style.display='block';
+      btn.disabled=false;btn.textContent='Apply Code';return;
+    }
+    if(promo.expires_at&&promo.expires_at<today){
+      err.textContent='That code has expired.';err.style.display='block';
+      btn.disabled=false;btn.textContent='Apply Code';return;
+    }
+    if(promo.max_uses!==null&&promo.uses_count>=promo.max_uses){
+      err.textContent='That code has already been fully redeemed.';err.style.display='block';
+      btn.disabled=false;btn.textContent='Apply Code';return;
+    }
+
+    await sb.from('users').update({
+      subscription_tier:'premium',
+      subscription_started_at:new Date().toISOString(),
+      subscription_expires_at:promo.grants_expires_at||null,
+      subscription_source:'promo:'+code
+    }).eq('id',session.user.id);
+
+    await sb.from('promo_codes').update({uses_count:(promo.uses_count||0)+1}).eq('id',promo.id);
+
+    document.getElementById('promo-view').style.display='none';
+    document.getElementById('promo-success').style.display='block';
+    document.getElementById('offer-view').style.display='none';
+  }catch(e){
+    err.textContent='Something went wrong: '+e.message;err.style.display='block';
+    btn.disabled=false;btn.textContent='Apply Code';
+  }
+}
+
+async function joinWaitlist(){
+  var emailInp=document.getElementById('wl-email');
+  var email=emailInp.value.trim();
+  var err=document.getElementById('wl-error');
+  var btn=document.getElementById('wl-btn');
+  err.style.display='none';
+  if(!email||!email.includes('@')){err.textContent='Please enter a valid email address.';err.style.display='block';return;}
+  btn.disabled=true;btn.textContent='Submitting…';
+  try{
+    var userId=null;
+    try{
+      const { data:{ session } } = await sb.auth.getSession();
+      if(session)userId=session.user.id;
+    }catch(e){/* not signed in — that's fine, waitlist doesn't require an account */}
+    await sb.from('premium_waitlist').insert({email:email,user_id:userId});
+    document.getElementById('offer-view').style.display='none';
+    document.getElementById('success-view').style.display='block';
+  }catch(e){
+    err.textContent='Something went wrong: '+e.message;err.style.display='block';
+    btn.disabled=false;btn.textContent='Notify Me';
+  }
+}
+</script>
+</body>
+</html>
