@@ -44,6 +44,11 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
 .hdr-logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.1rem;letter-spacing:.05em;text-transform:uppercase}
 .hdr-logo span{color:var(--amber)}
 .hdr-sub{font-family:'Barlow Condensed',sans-serif;font-size:.65rem;color:var(--green);letter-spacing:.08em;text-transform:uppercase}
+.sec-title{font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--green);margin-bottom:.75rem}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.75rem;margin-bottom:1.5rem}
+.stat-card{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:1rem;text-align:center}
+.stat-card .val{font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:900;color:var(--amber);line-height:1}
+.stat-card .lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-top:4px}
 .hbtn{background:none;border:1px solid var(--border);border-radius:4px;color:var(--dim);font-family:'Barlow Condensed',sans-serif;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;cursor:pointer}
 .hbtn:hover{border-color:var(--green);color:var(--text)}
 
@@ -221,6 +226,15 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
   <div class="menu-wrap">
     <div class="menu-title">🎯 Training Zone</div>
     <div class="menu-sub">Sharpen your game with targeted practice drills</div>
+
+    <div class="sec-title">Your Training Stats</div>
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card"><div class="val" id="stat-sessions">—</div><div class="lbl">Games Played</div></div>
+      <div class="stat-card"><div class="val" id="stat-training">—</div><div class="lbl">Training Sessions</div></div>
+      <div class="stat-card"><div class="val" id="stat-best">—</div><div class="lbl">Best Score</div></div>
+      <div class="stat-card"><div class="val" id="stat-180s">—</div><div class="lbl">180s Hit</div></div>
+    </div>
+
     <div class="game-cards">
       <div class="game-card" onclick="startGame('checkout')">
         <div class="game-card-icon">🎯</div>
@@ -667,7 +681,25 @@ async function fcInit(){
     return false;
   }
 }
-fcInit();
+fcInit().then(function(ok){
+  if(ok) loadTrainingStats();
+});
+
+// Same get_player_stats RPC the dashboard uses — keeps both pages in sync
+// without needing two separate sources of truth.
+async function loadTrainingStats(){
+  try{
+    var { data:statsRows, error:statsErr } = await sb.rpc('get_player_stats');
+    if(statsErr) throw statsErr;
+    var s = (statsRows && statsRows[0]) || {};
+    document.getElementById('stat-sessions').textContent = s.games_played||'—';
+    document.getElementById('stat-training').textContent = s.training_sessions||'—';
+    document.getElementById('stat-best').textContent = (s.best_score!=null?s.best_score:'—');
+    document.getElementById('stat-180s').textContent = s.total_180s||'—';
+  }catch(e){
+    console.error('Could not load training stats:',e);
+  }
+}
 </script>
 <script>
 // ── Checkout table ─────────────────────────────────────────────────────────────
