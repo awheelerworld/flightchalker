@@ -593,6 +593,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
         <button class="btn-hit" onclick="cpuSubmitScore()">Submit Turn</button>
         <button class="btn-miss" onclick="cpuQuickScore(0)">No Score</button>
       </div>
+      <button class="btn-next" style="margin-top:.5rem" onclick="cpuUndo()">↺ Undo Last Turn</button>
     </div>
     <div class="history-list" id="cpu-history"></div>
   </div>
@@ -607,6 +608,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
       <div class="result-stat" id="res-stat"></div>
       <div id="res-stats-grid" class="stats-bar" style="margin-bottom:1.5rem"></div>
       <button class="btn-again" id="btn-play-again" onclick="playAgain()">Play Again 🎯</button>
+      <button class="btn-next" id="btn-undo-finish" style="display:none;margin:.5rem 0" onclick="cpuUndoFinish()">↺ Wrong score? Undo &amp; continue</button>
       <button class="btn-menu" onclick="showMenu()">← Back to Training Zone</button>
     </div>
   </div>
@@ -784,7 +786,7 @@ function showScreen(id){
   document.getElementById('btn-back-menu').style.display=id==='screen-menu'?'none':'block';
 }
 
-function showMenu(){showScreen('screen-menu');document.getElementById('hdr-sub').textContent='Training Zone';}
+function showMenu(){cpuCommitResult();showScreen('screen-menu');document.getElementById('hdr-sub').textContent='Training Zone';}
 
 function toggleFaq(q){
   var item=q.closest('.faq-item');
@@ -847,7 +849,7 @@ function startGame(game){
   else if(game==='cpu'){initCpu();}
 }
 
-function playAgain(){startGame(currentGame);}
+function playAgain(){cpuCommitResult();startGame(currentGame);}
 
 // ── CHECKOUT RANDOMISER ────────────────────────────────────────────────────────
 var co={hits:0,misses:0,target:0,history:[]};
@@ -1354,7 +1356,7 @@ function cpuStartGame(){
     yourTurn:true,history:[],
     yourDartsThrown:0,yourScoredTotal:0,
     cpuDartsThrown:0,cpuScoredTotal:0,
-    input:''
+    input:'',pendingTimeout:null
   };
   fcBegin('cpu_race');
   document.getElementById('cpu-name-label').textContent='🤖 CPU ('+CPU_SKILLS[cpu.skill].name+')';
@@ -1389,11 +1391,12 @@ function cpuSubmitScore(){
 }
 
 function applyYourTurn(score){
+  var prevYou=cpu.you,prevDarts=cpu.yourDartsThrown,prevScored=cpu.yourScoredTotal;
   var newR=cpu.you-score;
   var bust = newR<0 || newR===1;
   if(!bust){cpu.you=newR;cpu.yourScoredTotal+=score;}
   cpu.yourDartsThrown+=3;
-  cpuAddHistory('You',bust?0:score,bust);
+  cpuAddHistory('You',bust?0:score,bust,null,{prevYou:prevYou,prevYourDartsThrown:prevDarts,prevYourScoredTotal:prevScored});
   cpuUpdateDisplay();
 
   if(typeof ScoreCaller!=='undefined'){
@@ -1408,20 +1411,21 @@ function applyYourTurn(score){
   }
   cpu.yourTurn=false;
   cpuUpdateTurnUI();
-  setTimeout(cpuTakeTurn,1100);
+  cpu.pendingTimeout=setTimeout(cpuTakeTurn,1100);
 }
 
 function cpuTakeTurn(){
   var banner=document.getElementById('cpu-turn-banner');
   banner.textContent='🤖 CPU throwing...';
   banner.classList.add('cpu-thinking');
-  setTimeout(function(){
+  cpu.pendingTimeout=setTimeout(function(){
+    var prevCpuScore=cpu.cpuScore,prevDarts=cpu.cpuDartsThrown,prevScored=cpu.cpuScoredTotal;
     var result=simulateCpuTurn(cpu.cpuScore,cpu.skill);
     cpu.cpuScore=result.remaining;
     cpu.cpuDartsThrown+=3;
     cpu.cpuScoredTotal+=result.turnScore;
     var label=result.darts.map(function(d){return d.label;}).join(' ');
-    cpuAddHistory('CPU',result.turnScore,result.darts.some(function(d){return d.bust;}),label);
+    cpuAddHistory('CPU',result.turnScore,result.darts.some(function(d){return d.bust;}),label,{prevCpuScore:prevCpuScore,prevCpuDartsThrown:prevDarts,prevCpuScoredTotal:prevScored});
     cpuUpdateDisplay();
     if(result.checkedOut){
       cpuFinish('CPU');
@@ -1430,6 +1434,63 @@ function cpuTakeTurn(){
     cpu.yourTurn=true;
     cpuUpdateTurnUI();
   },1300);
+}
+
+// Shared by cpuUndo (mid-leg) and cpuUndoFinish (after a checkout) — rewinds
+// whatever's on top of the history stack. One tap always lands back on
+// "your turn, re-enter your score": if the CPU already replied to your last
+// turn (or checked out off the back of it), both halves are undone together.
+function cpuRewindLastTurn(){
+  if(cpu.pendingTimeout){clearTimeout(cpu.pendingTimeout);cpu.pendingTimeout=null;}
+  if(cpu.history[0].who==='CPU'){
+    var cpuTurn=cpu.history.shift();
+    cpu.cpuScore=cpuTurn.prevCpuScore;
+    cpu.cpuDartsThrown=cpuTurn.prevCpuDartsThrown;
+    cpu.cpuScoredTotal=cpuTurn.prevCpuScoredTotal;
+  }
+  if(cpu.history.length&&cpu.history[0].who==='You'){
+    var yourTurn=cpu.history.shift();
+    cpu.you=yourTurn.prevYou;
+    cpu.yourDartsThrown=yourTurn.prevYourDartsThrown;
+    cpu.yourScoredTotal=yourTurn.prevYourScoredTotal;
+  }
+  cpu.yourTurn=true;
+  cpu.input='';
+}
+
+function cpuUndo(){
+  if(!cpu||!cpu.history.length){toast('Nothing to undo',true);return;}
+  cpuRewindLastTurn();
+  cpuRenderHistory();
+  cpuUpdateDisplay();
+  cpuUpdateTurnUI();
+  toast('Last turn undone');
+}
+
+// Called from the result screen when a leg finished on a bad tap. The
+// analytics write is deferred until the result is actually left standing
+// (see cpuCommitResult), so there's no stray "finished" record to clean up —
+// undoing here just discards the pending result and drops back into the leg.
+function cpuUndoFinish(){
+  if(!cpu||!cpu.history.length){toast('Nothing to undo',true);return;}
+  cpu.pendingResult=null;
+  cpuRewindLastTurn();
+  showScreen('screen-cpu');
+  cpuRenderHistory();
+  cpuUpdateDisplay();
+  cpuUpdateTurnUI();
+  toast('Result undone — back in the leg');
+}
+
+// Fires the deferred game_sessions write once a finished CPU leg is actually
+// left standing (Play Again / Back to Training Zone), never at the moment of
+// checkout — so an undone result never reaches the database. Safe to call
+// after any training game finishes; it's a no-op unless a CPU leg is pending.
+function cpuCommitResult(){
+  if(cpu&&cpu.pendingResult){
+    fcEnd('cpu_race',cpu.pendingResult);
+    cpu.pendingResult=null;
+  }
 }
 
 function cpuUpdateDisplay(){
@@ -1457,8 +1518,13 @@ function cpuUpdateTurnUI(){
   }
 }
 
-function cpuAddHistory(who,score,bust,detail){
-  cpu.history.unshift({who:who,score:score,bust:bust,detail:detail});
+function cpuAddHistory(who,score,bust,detail,snapshot){
+  var entry={who:who,score:score,bust:bust,detail:detail};
+  if(snapshot)for(var k in snapshot)entry[k]=snapshot[k];
+  cpu.history.unshift(entry);
+  cpuRenderHistory();
+}
+function cpuRenderHistory(){
   document.getElementById('cpu-history').innerHTML=cpu.history.slice(0,8).map(function(h){
     var txt=h.bust?'BUST':(h.detail?h.detail+' ('+h.score+')':String(h.score));
     return '<div class="history-item"><span>'+h.who+'</span>'
@@ -1468,7 +1534,9 @@ function cpuAddHistory(who,score,bust,detail){
 
 function cpuFinish(winner){
   var youWon=winner==='You';
-  fcEnd('cpu_race',{winner:winner,best:cpu.start-Math.min(cpu.you,cpu.cpuScore)});
+  // Deferred, not fired here — see cpuCommitResult. Lets the player undo a
+  // checkout that came from a mis-tapped score before it's ever written.
+  cpu.pendingResult={winner:winner,best:cpu.start-Math.min(cpu.you,cpu.cpuScore)};
   if(typeof ScoreCaller!=='undefined'){
     callerSay(function(){ScoreCaller.callComplete(youWon?'You win!':'CPU wins');});
   }
@@ -1478,14 +1546,16 @@ function cpuFinish(winner){
     [
       {val:cpu.yourDartsThrown?Math.round(cpu.yourScoredTotal/cpu.yourDartsThrown*3):0,lbl:'Your Avg',cls:'g'},
       {val:cpu.cpuDartsThrown?Math.round(cpu.cpuScoredTotal/cpu.cpuDartsThrown*3):0,lbl:'CPU Avg',cls:'a'}
-    ]
+    ],
+    true
   );
 }
 
 // ── RESULT ─────────────────────────────────────────────────────────────────────
-function showResult(title,stat,stats){
+function showResult(title,stat,stats,allowUndo){
   document.getElementById('res-title').textContent=title;
   document.getElementById('res-stat').innerHTML=stat||'';
+  document.getElementById('btn-undo-finish').style.display=allowUndo?'block':'none';
   var grid=document.getElementById('res-stats-grid');
   if(stats&&stats.length){
     grid.style.display='grid';
