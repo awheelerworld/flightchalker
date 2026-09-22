@@ -1109,6 +1109,20 @@ html{scroll-behavior:smooth}
   </div>
 </div>
 
+<!-- Overwrite confirmation modal — replaces the old browser confirm() so the
+     person scoring can actually see what's already saved vs what this save
+     will change, instead of a vague native pop-up. -->
+<div class="co2" id="overwrite-modal">
+  <div class="cb" style="max-width:420px">
+    <h3 style="color:var(--amber)">Result Already Saved</h3>
+    <p id="ow-summary" style="color:var(--text);font-size:.9rem;line-height:1.5;margin-bottom:1.25rem"></p>
+    <div style="display:flex;flex-direction:column;gap:.6rem;margin-bottom:1.25rem">
+      <button class="btnp" id="ow-continue" style="background:#1a3a1e;border:1px solid var(--green);color:var(--gl)">Save — keep what's not entered here</button>
+    </div>
+    <button class="btns" id="ow-cancel" style="width:100%">Cancel</button>
+  </div>
+</div>
+
 <!-- PDF Choice Modal -->
 <div class="co2" id="pdf-choice-modal">
   <div class="cb" style="max-width:400px">
@@ -1922,6 +1936,87 @@ function total8(){
   return n;
 }
 
+// ── Save-merge helpers ──────────────────────────────────────────────────────
+// Used when overwriting an existing team_matches row so that reopening a
+// fixture to add just one rubber (e.g. the Gallon) can never wipe rubbers
+// that were entered and saved earlier in a previous session.
+function isSinglesFilled(s){return !!(s&&(s.result||s.player||(s.scores&&s.scores.length)));}
+function isDoublesFilled(d){return !!(d&&(d.result||d.p1||d.p2||(d.scores1&&d.scores1.length)||(d.scores2&&d.scores2.length)));}
+function isTeam4Filled(t){return !!(t&&(t.result||t.p1||t.p2||t.p3||t.p4));}
+function mergeRubbers(newArr,oldArr,isFilled){
+  newArr=newArr||[];oldArr=oldArr||[];
+  return newArr.map(function(item,i){return isFilled(item)?item:(oldArr[i]||item);});
+}
+function statsFromData(data){
+  var w=0,l=0,n=0;
+  (data.singles||[]).forEach(function(m){if(m.result==='win')w++;else if(m.result==='loss')l++;n+=(m.scores||[]).length;});
+  (data.doubles||[]).forEach(function(m){if(m.result==='win')w++;else if(m.result==='loss')l++;n+=(m.scores1||[]).length+(m.scores2||[]).length;});
+  if(data.team4){
+    if(data.team4.result==='win')w++;else if(data.team4.result==='loss')l++;
+    if(data.team4.scores)data.team4.scores.forEach(function(a){n+=(a||[]).length;});
+  }
+  return {wins:w,losses:l,eighties:n};
+}
+
+// A proper in-app confirm for the overwrite case, so the person scoring can
+// actually read what's changing instead of a vague native confirm() dialog.
+// Resolves true/false the same way window.confirm() would.
+function confirmOverwrite(msg){
+  return new Promise(function(resolve){
+    var mo=document.getElementById('overwrite-modal');
+    document.getElementById('ow-summary').textContent=msg;
+    mo.classList.add('open');
+    var cont=document.getElementById('ow-continue');
+    var cancel=document.getElementById('ow-cancel');
+    function cleanup(result){
+      mo.classList.remove('open');
+      cont.removeEventListener('click',onCont);
+      cancel.removeEventListener('click',onCancel);
+      resolve(result);
+    }
+    function onCont(){cleanup(true);}
+    function onCancel(){cleanup(false);}
+    cont.addEventListener('click',onCont);
+    cancel.addEventListener('click',onCancel);
+  });
+}
+
+// ── Load an already-saved result into the form ─────────────────────────────
+// If the opponent/date picked on the scoring tab already has a saved result,
+// load it in so the person is editing the real thing rather than a blank
+// form — the save-time merge in saveMatch() is a safety net, this is what
+// stops anyone reaching it by surprise in the first place.
+var existingLoadedFor=null;
+async function checkExistingForOpponent(){
+  var oppEl=document.getElementById('mopp'),dateEl=document.getElementById('mdate');
+  if(!oppEl||!dateEl||!currentTeam||!currentTeam.id)return;
+  var opp=oppEl.value.trim(),date=dateEl.value;
+  if(!opp||!date)return;
+  var key=date+'|'+opp;
+  if(existingLoadedFor===key)return;
+  var hasUnsavedWork=md.singles.some(isSinglesFilled)||md.doubles.some(isDoublesFilled)||isTeam4Filled(md.team4);
+  try{
+    var rows=await sb('team_matches?team_id=eq.'+currentTeam.id+'&match_date=eq.'+date+'&opponent=eq.'+encodeURIComponent(opp)+'&select=id,wins,losses,data,draft');
+    var existing=(rows||[]).filter(function(r){return !r.draft;});
+    if(existing.length){
+      if(hasUnsavedWork){
+        toast('This fixture already has a saved result ('+existing[0].wins+'-'+existing[0].losses+') — clear the form first if you want to load it',true);
+        return;
+      }
+      buildRows();
+      var d=existing[0].data||{};
+      if(d.singles&&d.singles.length)md.singles=d.singles;
+      if(d.doubles)md.doubles=d.doubles;
+      if(d.team4)md.team4=d.team4;
+      setTimeout(function(){applyDraftToForm(d);updateBar();},100);
+      existingLoadedFor=key;
+      toast('Loaded existing result ('+existing[0].wins+'-'+existing[0].losses+') — edit and save to update it');
+    } else {
+      existingLoadedFor=null;
+    }
+  }catch(e){fcLogError('checkExistingForOpponent',e,false);}
+}
+
 // ── W/L team game ─────────────────────────────────────────────────────────────
 function setRes(type,idx,result){
   if(type==='t'){md.team4.result=result;styleWL('tw',result);styleRow('t4',result);}
@@ -1951,7 +2046,23 @@ function updateBar(){
 }
 document.addEventListener('DOMContentLoaded',function(){
   var el=document.getElementById('mopp');
-  if(el)el.addEventListener('input',updateBar);
+  if(el){
+    el.addEventListener('input',updateBar);
+    el.addEventListener('change',checkExistingForOpponent);
+  }
+  var dateEl=document.getElementById('mdate');
+  if(dateEl)dateEl.addEventListener('change',checkExistingForOpponent);
+  // Autosave: any score, result or leg-count change inside the scoring rows
+  // resets the 30s draft-save timer. Delegated on the container (rebuilt by
+  // buildRows()) rather than wired into every individual row handler.
+  var container=document.getElementById('match-rows-container');
+  if(container){
+    container.addEventListener('input',scheduleDraftSave);
+    container.addEventListener('change',scheduleDraftSave);
+    container.addEventListener('click',function(e){
+      if(e.target&&e.target.closest&&e.target.closest('button'))scheduleDraftSave();
+    });
+  }
 });
 
 // ── Save match ────────────────────────────────────────────────────────────────
@@ -1967,20 +2078,34 @@ async function saveDraft(){
   var opp=document.getElementById('mopp')?document.getElementById('mopp').value.trim():'';
   var date=document.getElementById('mdate')?document.getElementById('mdate').value:'';
   if(!opp||!date)return;
-  var draft={
-    match_date:date,opponent:opp,
-    venue:document.getElementById('mvenue')?document.getElementById('mvenue').value:'home',
-    data:{
-      singles:JSON.parse(JSON.stringify(md.singles)),
-      doubles:JSON.parse(JSON.stringify(md.doubles)),
-      team4:JSON.parse(JSON.stringify(md.team4))
-    }
+  var venue=document.getElementById('mvenue')?document.getElementById('mvenue').value:'home';
+  var data={
+    singles:JSON.parse(JSON.stringify(md.singles)),
+    doubles:JSON.parse(JSON.stringify(md.doubles)),
+    team4:JSON.parse(JSON.stringify(md.team4))
   };
-  try{
-    localStorage.setItem('dart_draft',JSON.stringify(draft));
-    var now=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-    showDraftStatus('Draft saved at '+now,'var(--gl)');
-  }catch(e){showDraftStatus('Draft save failed','var(--red)');}
+  var draft={match_date:date,opponent:opp,venue:venue,data:data};
+  var localOk=true;
+  try{localStorage.setItem('dart_draft',JSON.stringify(draft));}catch(e){localOk=false;}
+  // Also save to the database, not just this device's local storage — a
+  // browser-only draft is no help if the match is finished on a different
+  // phone, or that phone's storage never gets checked afterward.
+  var dbOk=false;
+  if(currentTeam&&currentTeam.id){
+    try{
+      await sb('team_matches?team_id=eq.'+currentTeam.id+'&opponent=eq.'+encodeURIComponent(opp)+'&match_date=eq.'+date+'&draft=eq.true',{method:'DELETE'});
+      await sb('team_matches',{method:'POST',prefer:'return=minimal',body:JSON.stringify({
+        team_id:currentTeam.id,match_date:date,opponent:opp,venue:venue,
+        season:(currentLeague&&currentLeague.current_season)||1,
+        wins:0,losses:0,eighties:0,draft:true,data:data
+      })});
+      dbOk=true;
+    }catch(e){fcLogError('saveDraft:db',e,false);}
+  }
+  var now=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  if(dbOk)showDraftStatus('Draft saved at '+now,'var(--gl)');
+  else if(localOk)showDraftStatus('Draft saved on this device only at '+now,'var(--amber)');
+  else showDraftStatus('Draft save failed','var(--red)');
 }
 
 function showDraftStatus(msg,color){
@@ -2166,26 +2291,36 @@ async function saveMatchDraft(){
   var opp=document.getElementById('mopp').value.trim();
   if(!opp){toast('Please enter opponent name',true);return;}
   if(!date){toast('Please set a date',true);return;}
-  var draft={
-    match_date:date,opponent:opp,
-    venue:document.getElementById('mvenue').value,
-    data:{
-      singles:JSON.parse(JSON.stringify(md.singles)),
-      doubles:JSON.parse(JSON.stringify(md.doubles)),
-      team4:JSON.parse(JSON.stringify(md.team4))
-    }
+  var venue=document.getElementById('mvenue').value;
+  var data={
+    singles:JSON.parse(JSON.stringify(md.singles)),
+    doubles:JSON.parse(JSON.stringify(md.doubles)),
+    team4:JSON.parse(JSON.stringify(md.team4))
   };
+  var draft={match_date:date,opponent:opp,venue:venue,data:data};
   var sp=document.getElementById('draftspin');
   if(sp)sp.style.display='inline-block';
+  var localOk=true;
   try{
     localStorage.setItem('dart_draft',JSON.stringify(draft));
     localStorage.setItem('dart_draft_time',new Date().toISOString());
-    var now=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-    toast('Draft saved at '+now);
-    showDraftStatus('Draft saved at '+now,'var(--amber)');
-  }catch(e){
-    toast('Could not save draft',true);
+  }catch(e){localOk=false;}
+  var dbOk=false;
+  if(currentTeam&&currentTeam.id){
+    try{
+      await sb('team_matches?team_id=eq.'+currentTeam.id+'&opponent=eq.'+encodeURIComponent(opp)+'&match_date=eq.'+date+'&draft=eq.true',{method:'DELETE'});
+      await sb('team_matches',{method:'POST',prefer:'return=minimal',body:JSON.stringify({
+        team_id:currentTeam.id,match_date:date,opponent:opp,venue:venue,
+        season:(currentLeague&&currentLeague.current_season)||1,
+        wins:0,losses:0,eighties:0,draft:true,data:data
+      })});
+      dbOk=true;
+    }catch(e){fcLogError('saveMatchDraft:db',e,false);}
   }
+  var now=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  if(dbOk){toast('Draft saved at '+now);showDraftStatus('Draft saved at '+now,'var(--amber)');}
+  else if(localOk){toast('Draft saved on this device only');showDraftStatus('Draft saved on this device only at '+now,'var(--amber)');}
+  else{toast('Could not save draft',true);}
   if(sp)sp.style.display='none';
 }
 
@@ -2204,7 +2339,7 @@ async function saveMatch(){
   var savedNow=false;
   try{
     // Check for existing result for same team/opponent/date to prevent duplicates
-    var existing=await sb('team_matches?team_id=eq.'+currentTeam.id+'&match_date=eq.'+date+'&opponent=eq.'+encodeURIComponent(opp)+'&select=id,wins,losses,eighties');
+    var existing=await sb('team_matches?team_id=eq.'+currentTeam.id+'&match_date=eq.'+date+'&opponent=eq.'+encodeURIComponent(opp)+'&select=id,wins,losses,eighties,data');
     if(existing&&existing.length){
       // Existing result found - only update if user has entered new data
       var hasData=mw>0||ml>0||total8()>0||md.singles.some(function(s){return s.result||s.scores.length;});
@@ -2212,14 +2347,34 @@ async function saveMatch(){
         // No new data entered - just mark fixture as played without touching result
         toast('Fixture marked as played — existing result preserved');
       } else {
-        // User has entered data - confirm before overwriting
-        if(!confirm('A result already exists for this fixture ('+existing[0].wins+'-'+existing[0].losses+'). Do you want to overwrite it with the new result?')){
+        // Merge this session's rubbers into whatever's already saved, rather
+        // than replacing the whole record — so reopening a fixture just to
+        // add one rubber (e.g. the Gallon) can never wipe rubbers that were
+        // already entered and saved earlier.
+        var oldData=existing[0].data||{};
+        var mergedData={
+          singles:mergeRubbers(rec.data.singles,oldData.singles,isSinglesFilled),
+          doubles:mergeRubbers(rec.data.doubles,oldData.doubles,isDoublesFilled),
+          team4:isTeam4Filled(rec.data.team4)?rec.data.team4:(oldData.team4||rec.data.team4)
+        };
+        var stats=statsFromData(mergedData);
+        var oldFilled={s:(oldData.singles||[]).filter(isSinglesFilled).length,d:(oldData.doubles||[]).filter(isDoublesFilled).length,t:isTeam4Filled(oldData.team4)};
+        var newFilled={s:rec.data.singles.filter(isSinglesFilled).length,d:rec.data.doubles.filter(isDoublesFilled).length,t:isTeam4Filled(rec.data.team4)};
+        var msg='This fixture already has a saved result ('+existing[0].wins+'-'+existing[0].losses+').\n\n'+
+          'Currently saved: '+oldFilled.s+' singles, '+oldFilled.d+' doubles'+(oldFilled.t?', Gallon':'')+'.\n'+
+          'This save enters: '+newFilled.s+' singles, '+newFilled.d+' doubles'+(newFilled.t?', Gallon':'')+'.\n\n'+
+          'Anything not entered here will be kept from the existing record — nothing will be deleted.';
+        var proceed=await confirmOverwrite(msg);
+        if(!proceed){
           document.getElementById('savespin').style.display='none';
           return;
         }
+        rec.data=mergedData;
+        rec.wins=stats.wins;rec.losses=stats.losses;rec.eighties=stats.eighties;
         await sbPatch('team_matches','id=eq.'+existing[0].id,rec);
-        toast('Match result updated!');
+        toast('Match result updated!');localStorage.removeItem('dart_draft');
         savedNow=true;
+        try{await sb('team_matches?team_id=eq.'+currentTeam.id+'&match_date=eq.'+date+'&opponent=eq.'+encodeURIComponent(opp)+'&draft=eq.true',{method:'DELETE'});}catch(e){fcLogError('saveMatch:cleanupDraft',e,false);}
       }
     } else {
       // Create new record
@@ -2251,7 +2406,7 @@ async function saveMatch(){
   }catch(e){toast('Save failed: '+e.message,true);}
   document.getElementById('savespin').style.display='none';
 }
-function clearMatch(){document.getElementById('mopp').value='';buildRows();updateBar();}
+function clearMatch(){document.getElementById('mopp').value='';existingLoadedFor=null;buildRows();updateBar();}
 
 // ── Email results ─────────────────────────────────────────────────────────────
 function emailResultsQuick(){
