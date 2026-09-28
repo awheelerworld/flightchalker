@@ -176,6 +176,12 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
 .quick-scores{display:grid;grid-template-columns:repeat(5,1fr);gap:.35rem;margin-bottom:.6rem}
 .qs-btn{background:var(--s3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;padding:.4rem;cursor:pointer;text-align:center}
 .qs-btn:hover{background:var(--green);border-color:var(--green);color:#fff}
+.checkout-box{background:#2a2000;border:1px solid #6a5200;border-radius:8px;padding:.75rem 1rem;margin-top:.75rem}
+.checkout-title{font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--amber);margin-bottom:.4rem}
+.checkout-route{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;color:var(--text)}
+.checkout-note{font-size:.75rem;color:var(--dim);margin-top:.25rem}
+.checkout-alt-btn{background:var(--s3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.8rem;font-weight:700;padding:.4rem .8rem;cursor:pointer;margin-top:.6rem}
+.checkout-alt-btn:hover{border-color:var(--amber)}
 </style>
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-WQRGJRFF1Q"></script>
@@ -594,6 +600,12 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
         <button class="btn-miss" onclick="cpuQuickScore(0)">No Score</button>
       </div>
       <button class="btn-next" style="margin-top:.5rem" onclick="cpuUndo()">↺ Undo Last Turn</button>
+      <div id="checkout-box" style="display:none" class="checkout-box">
+        <div class="checkout-title">🎯 Checkout</div>
+        <div class="checkout-route" id="checkout-route"></div>
+        <div class="checkout-note" id="checkout-note"></div>
+        <button id="checkout-alt-btn" class="checkout-alt-btn" style="display:none" onclick="cycleCheckoutRoute()">🔀 Alt Route</button>
+      </div>
     </div>
     <div class="history-list" id="cpu-history"></div>
   </div>
@@ -735,6 +747,63 @@ const CO={
   26:'D13',24:'D12',22:'D11',20:'D10',18:'D9',16:'D8',14:'D7',
   12:'D6',10:'D5',8:'D4',6:'D3',4:'D2',2:'D1'
 };
+
+// ── Alternate checkout routes ────────────────────────────────────────────────
+// CO above gives the one traditional/preferred route per number. This works
+// out every other valid way to finish (1, 2 or 3 darts, always ending on a
+// double or Bull) so the "Alt Route" button has real alternatives to cycle
+// through for any number, not just the ones anyone hand-picked.
+var ALL_SHOTS=(function(){
+  var shots=[];
+  for(var i=1;i<=20;i++){
+    shots.push({v:i,l:'S'+i,fin:false});
+    shots.push({v:i*2,l:'D'+i,fin:true});
+    shots.push({v:i*3,l:'T'+i,fin:false});
+  }
+  shots.push({v:25,l:'25',fin:false});
+  shots.push({v:50,l:'Bull',fin:true});
+  return shots;
+})();
+var coRoutes=[],coRouteIdx=0;
+function findRoutes(remaining,maxAlts){
+  maxAlts=maxAlts||6;
+  var found=[],seen={};
+  function add(arr){
+    var key=arr.map(function(s){return s.l;}).join(' ');
+    if(seen[key])return;
+    seen[key]=true;found.push(arr);
+  }
+  ALL_SHOTS.forEach(function(a){
+    if(a.fin&&a.v===remaining)add([a]);
+  });
+  ALL_SHOTS.forEach(function(a){
+    if(a.v>=remaining)return;
+    var rem2=remaining-a.v;
+    ALL_SHOTS.forEach(function(b){if(b.fin&&b.v===rem2)add([a,b]);});
+  });
+  if(remaining<=170){
+    ALL_SHOTS.forEach(function(a){
+      if(a.v>=remaining)return;
+      ALL_SHOTS.forEach(function(b){
+        var rem2=remaining-a.v-b.v;
+        if(rem2<=1)return;
+        ALL_SHOTS.forEach(function(c){if(c.fin&&c.v===rem2)add([a,b,c]);});
+      });
+    });
+  }
+  found.sort(function(x,y){
+    if(x.length!==y.length)return x.length-y.length;
+    var tx=x.filter(function(s){return s.l[0]==='T';}).length;
+    var ty=y.filter(function(s){return s.l[0]==='T';}).length;
+    return ty-tx;
+  });
+  return found.slice(0,maxAlts).map(function(r){return r.map(function(s){return s.l;}).join(' ');});
+}
+function cycleCheckoutRoute(){
+  if(!coRoutes.length)return;
+  coRouteIdx=(coRouteIdx+1)%coRoutes.length;
+  document.getElementById('checkout-route').textContent=coRoutes[coRouteIdx];
+}
 
 var currentGame='';
 
@@ -1500,6 +1569,21 @@ function cpuUpdateDisplay(){
   var cAvg=cpu.cpuDartsThrown?Math.round(cpu.cpuScoredTotal/cpu.cpuDartsThrown*3):0;
   document.getElementById('cpu-you-avg').textContent='Avg '+(yAvg||'—');
   document.getElementById('cpu-cpu-avg').textContent='Avg '+(cAvg||'—');
+
+  // Checkout suggestion — only for your own throw, in the space below the
+  // buttons, same idea as the Play Darts scorer.
+  var checkoutBox=document.getElementById('checkout-box');
+  if(cpu.yourTurn&&cpu.you<=170&&cpu.you>=2&&CO[cpu.you]){
+    coRoutes=[CO[cpu.you]].concat(findRoutes(cpu.you).filter(function(r){return r!==CO[cpu.you];})).slice(0,5);
+    coRouteIdx=0;
+    checkoutBox.style.display='block';
+    document.getElementById('checkout-route').textContent=coRoutes[0];
+    document.getElementById('checkout-note').textContent='Checkout available — must finish on a double';
+    document.getElementById('checkout-alt-btn').style.display=coRoutes.length>1?'inline-block':'none';
+  } else {
+    checkoutBox.style.display='none';
+    coRoutes=[];coRouteIdx=0;
+  }
 }
 
 function cpuUpdateTurnUI(){
