@@ -431,11 +431,6 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
   </div>
   <div class="game-wrap">
     <div class="players-row" id="players-row"></div>
-    <div id="checkout-box" style="display:none" class="checkout-box">
-      <div class="checkout-title">🎯 Checkout</div>
-      <div class="checkout-route" id="checkout-route"></div>
-      <div class="checkout-note" id="checkout-note"></div>
-    </div>
     <div class="throw-area">
       <div class="throw-title" id="throw-title">Player 1's turn — enter 3-dart total</div>
       <input type="number" id="score-input" class="throw-input" placeholder="0" min="0" max="180" readonly
@@ -445,6 +440,12 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
         <button class="btn-undo" onclick="undoLast()">↩ Undo</button>
         <button class="btn-bust" onclick="markBust()">BUST</button>
         <button class="btn-next" onclick="submitScore()">Submit →</button>
+      </div>
+      <div id="checkout-box" style="display:none" class="checkout-box">
+        <div class="checkout-title">🎯 Checkout</div>
+        <div class="checkout-route" id="checkout-route"></div>
+        <div class="checkout-note" id="checkout-note"></div>
+        <button id="checkout-alt-btn" class="hbtn" style="display:none;margin-top:.6rem" onclick="cycleCheckoutRoute()">🔀 Alt Route</button>
       </div>
     </div>
 
@@ -711,6 +712,63 @@ const CHECKOUTS={
   24:'D12',22:'D11',20:'D10',18:'D9',16:'D8',14:'D7',12:'D6',
   10:'D5',8:'D4',6:'D3',4:'D2',2:'D1'
 };
+
+// ── Alternate checkout routes ────────────────────────────────────────────────
+// CHECKOUTS above gives the one traditional/preferred route per number. This
+// works out every other valid way to finish (1, 2 or 3 darts, always ending
+// on a double or Bull) so the "Alt Route" button has real alternatives to
+// cycle through for any number, not just the ones anyone hand-picked.
+var ALL_SHOTS=(function(){
+  var shots=[];
+  for(var i=1;i<=20;i++){
+    shots.push({v:i,l:'S'+i,fin:false});
+    shots.push({v:i*2,l:'D'+i,fin:true});
+    shots.push({v:i*3,l:'T'+i,fin:false});
+  }
+  shots.push({v:25,l:'25',fin:false});
+  shots.push({v:50,l:'Bull',fin:true});
+  return shots;
+})();
+var coRoutes=[],coRouteIdx=0;
+function findRoutes(remaining,maxAlts){
+  maxAlts=maxAlts||6;
+  var found=[],seen={};
+  function add(arr){
+    var key=arr.map(function(s){return s.l;}).join(' ');
+    if(seen[key])return;
+    seen[key]=true;found.push(arr);
+  }
+  ALL_SHOTS.forEach(function(a){
+    if(a.fin&&a.v===remaining)add([a]);
+  });
+  ALL_SHOTS.forEach(function(a){
+    if(a.v>=remaining)return;
+    var rem2=remaining-a.v;
+    ALL_SHOTS.forEach(function(b){if(b.fin&&b.v===rem2)add([a,b]);});
+  });
+  if(remaining<=170){
+    ALL_SHOTS.forEach(function(a){
+      if(a.v>=remaining)return;
+      ALL_SHOTS.forEach(function(b){
+        var rem2=remaining-a.v-b.v;
+        if(rem2<=1)return;
+        ALL_SHOTS.forEach(function(c){if(c.fin&&c.v===rem2)add([a,b,c]);});
+      });
+    });
+  }
+  found.sort(function(x,y){
+    if(x.length!==y.length)return x.length-y.length;
+    var tx=x.filter(function(s){return s.l[0]==='T';}).length;
+    var ty=y.filter(function(s){return s.l[0]==='T';}).length;
+    return ty-tx;
+  });
+  return found.slice(0,maxAlts).map(function(r){return r.map(function(s){return s.l;}).join(' ');});
+}
+function cycleCheckoutRoute(){
+  if(!coRoutes.length)return;
+  coRouteIdx=(coRouteIdx+1)%coRoutes.length;
+  document.getElementById('checkout-route').textContent=coRoutes[coRouteIdx];
+}
 
 // ── Game state ─────────────────────────────────────────────────────────────────
 var gs={};
@@ -983,29 +1041,31 @@ function renderGame(){
     var score=gs.scores[i];
     var isActive=i===gs.currentPlayer;
     var scoreClass=score<=40?'danger':score<=170?'finishing':'';
-    var checkout=gs.doubleFinish&&score<=170&&CHECKOUTS[score]?
-      '<div class="pc-checkout">→ '+CHECKOUTS[score]+'</div>':'';
     return '<div class="player-card'+(isActive?' active-player':'')+'">'
       +(isActive?'<div class="pc-turn">🎯</div>':'')
       +'<div class="pc-name" onclick="fcRenamePlayer(&quot;x01&quot;,'+i+')" style="cursor:pointer" title="Tap to rename">'+esc(name)+' ✎</div>'
       +'<div class="pc-score '+scoreClass+'">'+score+'</div>'
       +'<div class="pc-legs">Legs: '+gs.legs[i]+'</div>'
-      +checkout
       +'</div>';
   }).join('');
 
   // Throw title
   document.getElementById('throw-title').textContent=gs.players[gs.currentPlayer]+"'s turn — enter 3-dart total";
 
-  // Checkout suggestion
+  // Checkout suggestion — shown once, in the space below the scoring
+  // buttons, rather than repeated inline on every player's card.
   var remaining=gs.scores[gs.currentPlayer];
   var checkoutBox=document.getElementById('checkout-box');
   if(gs.doubleFinish&&remaining<=170&&remaining>=2&&CHECKOUTS[remaining]){
+    coRoutes=[CHECKOUTS[remaining]].concat(findRoutes(remaining).filter(function(r){return r!==CHECKOUTS[remaining];})).slice(0,5);
+    coRouteIdx=0;
     checkoutBox.style.display='block';
-    document.getElementById('checkout-route').textContent=CHECKOUTS[remaining];
+    document.getElementById('checkout-route').textContent=coRoutes[0];
     document.getElementById('checkout-note').textContent='Checkout available — must finish on a double';
+    document.getElementById('checkout-alt-btn').style.display=coRoutes.length>1?'inline-block':'none';
   } else {
     checkoutBox.style.display='none';
+    coRoutes=[];coRouteIdx=0;
   }
 
   // Leg history
