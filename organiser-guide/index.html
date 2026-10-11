@@ -1,1 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>League Organiser Guide — Flight Chalker</title>
+<meta name="description" content="How to set up, edit and manage a darts league on Flight Chalker: teams, fixtures, venues, calendars, notices and player enquiries.">
+<link rel="canonical" href="https://flightchalker.co.uk/organiser-guide">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#141814;--surface:#1e251e;--s2:#252e25;--green:#4a7c59;--gl:#5a9469;--amber:#e8c840;--text:#e0d8c8;--dim:#9aa090;--border:#3a4a3a}
+@media (prefers-color-scheme: light){:root{--bg:#f4f1e8;--surface:#fff;--s2:#efeadb;--green:#3d7a52;--gl:#2f6a44;--amber:#8a6d00;--text:#222;--dim:#555;--border:#cfc8b4}}
+body{background:var(--bg);color:var(--text);font-family:Barlow,sans-serif;line-height:1.6;font-size:1rem}
+header{background:var(--surface);border-bottom:2px solid var(--green);padding:.8rem 1rem;display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap}
+.logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.2rem;letter-spacing:.05em;text-transform:uppercase;color:var(--text);text-decoration:none}
+.logo span{color:var(--amber)}
+.btn{display:inline-block;background:var(--s2);border:1px solid var(--green);border-radius:6px;padding:.45rem .9rem;font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gl);text-decoration:none}
+.btn:hover{border-color:var(--amber);color:var(--amber)}
+main{max-width:760px;margin:0 auto;padding:1.5rem 1rem 4rem}
+h1{font-family:'Barlow Condensed',sans-serif;font-size:2.1rem;font-weight:900;text-transform:uppercase;color:var(--amber);line-height:1.1;margin-bottom:.5rem}
+.lead{color:var(--dim);margin-bottom:1.25rem}
+h2{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:900;text-transform:uppercase;letter-spacing:.05em;margin:2rem 0 .75rem;color:var(--gl)}
+.toc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.25rem;margin-bottom:1rem}
+.toc a{display:block;color:var(--text);text-decoration:none;padding:.2rem 0}
+.toc a:hover{color:var(--amber)}
+details{background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:.6rem}
+summary{cursor:pointer;padding:.85rem 1.1rem;font-weight:600;list-style:none;display:flex;justify-content:space-between;gap:.5rem}
+summary::-webkit-details-marker{display:none}
+summary::after{content:'+';color:var(--amber);font-weight:700}
+details[open] summary::after{content:'–'}
+details[open] summary{border-bottom:1px solid var(--border)}
+.body{padding:.9rem 1.1rem 1rem}
+.body p{margin-bottom:.7rem}
+.body ol,.body ul{margin:0 0 .8rem 1.3rem}
+.body li{margin-bottom:.35rem}
+.tip{background:var(--s2);border-left:3px solid var(--amber);border-radius:4px;padding:.6rem .9rem;margin:.7rem 0;font-size:.92rem}
+.warn{background:var(--s2);border-left:3px solid #c0392b;border-radius:4px;padding:.6rem .9rem;margin:.7rem 0;font-size:.92rem}
+code{background:var(--s2);border-radius:4px;padding:1px 5px;font-size:.9em}
+b,strong{font-weight:600}
+</style>
+</head>
+<body>
+<header>
+  <a href="/" class="logo">Flight <span>Chalker</span></a>
+  <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+    <a class="btn" href="/dashboard">My Dashboard</a>
+    <a class="btn" href="/admin">League Admin →</a>
+  </div>
+</header>
+<main>
+<h1>League Organiser Guide</h1>
+<p class="lead">Everything you need to set up a darts league, keep it running and help new players find it. Tap a heading to open it.</p>
 
+<div class="toc">
+  <strong>Jump to</strong>
+  <a href="#setup">1. Setting up a new league</a>
+  <a href="#manage">2. Managing your league day to day</a>
+  <a href="#edit">3. Editing your league</a>
+  <a href="#players">4. Helping players find your league</a>
+  <a href="#access">5. Accounts, sharing access and getting help</a>
+</div>
+
+<h2 id="setup">1. Setting up a new league</h2>
+
+<details open><summary>Step 1 — Sign in</summary><div class="body">
+<ol>
+<li>Go to <a href="/admin?new=1">flightchalker.co.uk/admin</a>, or tap <b>Run a League</b> on your dashboard.</li>
+<li>Sign in with your normal Flight Chalker account (email and password, or Google). No account yet? Create a free one first at <a href="/join">Join</a>.</li>
+</ol>
+<div class="tip">The same account works for playing and for running leagues. One account can run several leagues.</div>
+</div></details>
+
+<details open><summary>Step 2 — Create the league</summary><div class="body">
+<ol>
+<li>On the <b>My Leagues</b> screen choose <b>Create New League</b> (you'll be taken straight there if you came from a "Create a League" button).</li>
+<li>Fill in the details:
+  <ul>
+  <li><b>League name</b> — it must be unique on the site.</li>
+  <li><b>County</b> and <b>Town / City</b> — required, so players nearby can find you.</li>
+  <li><b>About the league</b> — optional short description (up to 1,000 characters).</li>
+  <li><b>Start time</b> and <b>Match night</b> — used for calendar entries.</li>
+  <li><b>Fix team names</b> — tick this if captains should choose their team from a list you set (for example pub or club names) instead of typing their own.</li>
+  <li><b>Match format</b> — number of singles and doubles, whether there's a team game, starting scores, best-of legs, and the points for a win, draw and loss.</li>
+  <li><b>Helper password</b> — optional, only if you want a co-organiser to log in without their own account (see section 5).</li>
+  </ul></li>
+<li>Press <b>Create League</b>. You'll get a <b>registration code</b> (8 letters/numbers). Give this to your team captains so they can register their teams.</li>
+<li>Press <b>Open this league →</b> to start managing it.</li>
+</ol>
+<div class="tip">You can change almost every setting later (section 3), so don't worry about getting it perfect first time.</div>
+</div></details>
+
+<details><summary>Step 3 — Add your teams</summary><div class="body">
+<p>There are two ways teams join, depending on whether you fixed the team names:</p>
+<ul>
+<li><b>Captains register themselves.</b> Send them your registration code. They register on the Flight Chalker home page and their team appears under <b>Manage Teams</b>.</li>
+<li><b>Fixed team names.</b> Add your teams and captains in <b>Captain Contacts</b> (type them in, or import an Excel / CSV file; a template is provided). Captains then claim their team, and you approve each request under <b>Team Claim Requests</b>.</li>
+</ul>
+<p>Open <b>Manage Teams</b> on your league to see every team, its PIN, and its home venue.</p>
+</div></details>
+
+<details><summary>Step 4 — Set each team's home venue</summary><div class="body">
+<ol>
+<li>Open <b>Manage Teams</b>.</li>
+<li>Under each team, enter the <b>Home venue</b> name and address, then save. Use <b>Check map ↗</b> to confirm Google Maps finds it.</li>
+</ol>
+<p>A fixture's venue is simply the <b>home team's</b> venue, so you never enter it per match. Players see the venue with a <b>Directions</b> link that opens Google Maps in a new tab.</p>
+</div></details>
+
+<details><summary>Step 5 — Add your fixtures</summary><div class="body">
+<p>Go to the <b>Fixtures</b> tab. You can import the whole season at once, or add matches one at a time.</p>
+<p><b>Importing a spreadsheet</b></p>
+<ol>
+<li>Press <b>Download Template</b> and fill it in. Team names must match your registered teams exactly.</li>
+<li>Choose the league under <b>Import to League</b>, then <b>Upload Fixture List</b> (.xlsx, .xls or .csv).</li>
+<li>You'll see a summary of what will be added or changed. Confirm to apply it.</li>
+</ol>
+<div class="tip"><b>Safe to re-upload.</b> If you upload the same file again, or a corrected version, matching fixtures (same season, home and away team) are updated rather than duplicated. Fixtures already played are never changed, and nothing is deleted.</div>
+<p><b>Adding one fixture</b> — use <b>Add Single Fixture</b>: pick the league, season, date, home team and away team.</p>
+</div></details>
+
+<details><summary>Step 6 — Tell everyone</summary><div class="body">
+<ul>
+<li>Captains and players can see the league table, fixtures and top scorers on the public league page.</li>
+<li>Post a message with the <b>Notices</b> tab (see section 2).</li>
+<li>Players can add fixtures to their phone or Google Calendar from the fixtures page (section 2).</li>
+</ul>
+</div></details>
+
+<h2 id="manage">2. Managing your league day to day</h2>
+
+<details><summary>Finding your leagues</summary><div class="body">
+<p>Your dashboard shows a <b>Your Leagues</b> panel with every league you run. Press <b>Manage →</b> to open one. A badge on <b>Enquiries</b> shows how many new player enquiries are waiting. You can also go to <a href="/admin">/admin</a> any time. Inside a league, <b>← My Leagues</b> switches to another.</p>
+</div></details>
+
+<details><summary>Teams, PINs and captains</summary><div class="body">
+<ul>
+<li><b>Manage Teams</b> lists every team with its PIN. Captains use the PIN to record results for their team.</li>
+<li>Players can request to join a team. Approve or reject these under the team.</li>
+<li>If a team wants a new captain, the request appears under the team for you to approve or reject.</li>
+<li>You can remove a team from the same panel.</li>
+</ul>
+<div class="warn">Treat team PINs as private. Only share a PIN with that team's captain.</div>
+</div></details>
+
+<details><summary>Captain Contacts, invitations and bulletins</summary><div class="body">
+<p><b>Captain Contacts</b> is your address book of team captains, only visible to you.</p>
+<ul>
+<li><b>Import from Excel</b> or add contacts one at a time (team, captain name, email).</li>
+<li><b>Invite to Register</b> opens an email to all captains with your registration code.</li>
+<li><b>Send Bulletin</b> opens an email to all captains, for fixture changes, results round-ups and announcements.</li>
+</ul>
+</div></details>
+
+<details><summary>Fixtures: changing and checking them</summary><div class="body">
+<ul>
+<li>The <b>Existing Fixtures</b> list on the Fixtures tab shows every fixture with its home venue and a Directions link. Pick a league to filter it.</li>
+<li>To fix a date or a team, upload a corrected spreadsheet. It updates the matching fixture rather than creating a duplicate.</li>
+</ul>
+</div></details>
+
+<details><summary>Notices</summary><div class="body">
+<p>Use the <b>📢 Notices</b> tab to post a message to your league (for example "Fixture moved to Thursday"). Players see it on the league page. Choose the league, write the notice and post it. You can delete old ones.</p>
+</div></details>
+
+<details><summary>Sharing fixtures to calendars</summary><div class="body">
+<p>On the fixtures page, players and captains can:</p>
+<ul>
+<li><b>Download</b> a calendar file (.ics) for all upcoming fixtures. It opens in Google Calendar, Apple Calendar, Outlook and others.</li>
+<li><b>Share</b> it using their phone's share menu, e.g. send it to the team WhatsApp group. People who aren't on Flight Chalker can still use it.</li>
+<li>Add a single match to <b>Google Calendar</b> with the 📅 link on that fixture.</li>
+</ul>
+<p>Each entry includes the opponent, date, start time (from your league's start time), the venue, and a Directions link.</p>
+</div></details>
+
+<h2 id="edit">3. Editing your league</h2>
+
+<details><summary>Change league settings</summary><div class="body">
+<ol>
+<li>Open the league, then on the <b>Leagues</b> (or <b>My League</b>) tab press <b>✎ Edit</b>.</li>
+<li>Change anything: name, match night, start time, match format, scoring, or fixed team names.</li>
+<li>Press <b>Save</b>.</li>
+</ol>
+<div class="tip">Changing scoring (points for a win, draw or loss) affects how the table is calculated from then on, so make changes between seasons where you can.</div>
+</div></details>
+
+<details><summary>Change location, description and directory listing</summary><div class="body">
+<p>In the same <b>Edit</b> panel, scroll to <b>Public Directory Profile</b>:</p>
+<ul>
+<li><b>County</b> and <b>Town / City</b></li>
+<li><b>Looking for</b> — new players, new teams, both, or not recruiting. This shows as a badge in the league list.</li>
+<li><b>About the league</b> — your description.</li>
+<li><b>List this league in the public directory</b> — untick to hide the league from the All Leagues list.</li>
+<li><b>Allow people to send enquiries to me</b> — untick to remove the enquiry form.</li>
+</ul>
+</div></details>
+
+
+<details><summary>Rename a team's home venue, or fix a venue address</summary><div class="body">
+<p>Open <b>Manage Teams</b>, change the venue name or address under the team and save. Every fixture hosted by that team updates automatically.</p>
+</div></details>
+
+<h2 id="players">4. Helping players find your league</h2>
+
+<details><summary>How the directory works</summary><div class="body">
+<p>The <b>All Leagues</b> page on the home page lets people filter by county, then town or city, search by name, and tick <b>only leagues looking for players or teams</b>. Your league appears there once it has a location and is listed.</p>
+</div></details>
+
+<details><summary>Answering enquiries</summary><div class="body">
+<ol>
+<li>Open the <b>✉️ Enquiries</b> tab (a badge shows how many are new).</li>
+<li>Choose your league. Each message shows the person's name, email and message.</li>
+<li>Press <b>Reply by email</b> to answer from your own email app.</li>
+<li>Press <b>Mark handled</b> when done, or <b>Delete</b> to remove it.</li>
+</ol>
+<div class="tip">Enquiries are only visible to you and your helper-login co-organisers. The person's email address is never shown publicly. Replies come from your own email, so check the Enquiries tab regularly.</div>
+</div></details>
+
+<h2 id="access">5. Accounts, sharing access and getting help</h2>
+
+<details><summary>Letting a co-organiser help (helper password)</summary><div class="body">
+<p>If a secretary or co-organiser needs to manage the league without their own account, press <b>🔑 Helper password</b> on your league and set a password (at least 6 characters). They open the admin page and choose <b>League helper? Log in with a league name + password</b>, then enter the league's exact name and that password. Leave the password blank to switch this off.</p>
+<div class="warn">Anyone with the helper password can manage that league's teams, fixtures and notices. Change it if it's shared more widely than intended.</div>
+</div></details>
+
+<details><summary>I have an older league created before accounts</summary><div class="body">
+<p>Sign in, then on <b>My Leagues</b> choose <b>Add an existing league</b>, enter the league's name and its old password, and the league is added to your account.</p>
+</div></details>
+
+<details><summary>Google sign-in or login problems</summary><div class="body">
+<ul>
+<li>Use the same sign-in method every time (Google or email and password).</li>
+<li>If your league isn't listed, check you're signed into the right account. Your email shows at the top of your dashboard.</li>
+<li>If you see "Session expired", log out and back in.</li>
+</ul>
+</div></details>
+
+<details><summary>Something not working?</summary><div class="body">
+<p>Take a screenshot including the address bar and any error message, and send it to the Flight Chalker administrator. Site administrators can open any league to help troubleshoot.</p>
+</div></details>
+
+<p style="margin-top:2rem;text-align:center"><a class="btn" href="/admin">Open League Admin →</a></p>
+</main>
+</body>
+</html>
