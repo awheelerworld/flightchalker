@@ -222,12 +222,23 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
     <button class="tab" id="tab-create" onclick="showTab('create')">Create League</button>
     <button class="tab" id="tab-fixtures" onclick="showTab('fixtures')">Fixtures</button>
     <button class="tab" id="tab-notices" onclick="showTab('notices')">📢 Notices</button>
+    <button class="tab" id="tab-enquiries" onclick="showTab('enquiries')">✉️ Enquiries <span id="enq-badge" style="display:none;background:var(--amber);color:#000;border-radius:10px;padding:0 6px;font-size:.7rem;margin-left:3px"></span></button>
   </div>
 
   <!-- LEAGUES PANEL (shows every league in platform-admin mode, or just the
        logged-in league body's own league in league-scoped mode) -->
   <div id="panel-leagues" class="panel active">
     <div id="leagues-list"><div class="lh"><span class="spin"></span> Loading leagues…</div></div>
+  </div>
+
+  <!-- ENQUIRIES PANEL -->
+  <div id="panel-enquiries" class="panel">
+    <div class="card">
+      <h2>Player Enquiries</h2>
+      <p style="font-size:.82rem;color:var(--dim);margin-bottom:.75rem;line-height:1.5">Messages from people who found your league in the Flight Chalker directory. Reply by email using the button. Their details are only visible to you.</p>
+      <div class="field" style="margin-bottom:1rem"><label>League</label><select id="enq-league" onchange="loadEnquiries()"><option value="">— Select league —</option></select></div>
+      <div id="enq-list"><div class="nh">Select a league to see its enquiries</div></div>
+    </div>
   </div>
 
   <!-- FIXTURES PANEL -->
@@ -293,6 +304,11 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
     <div class="card">
       <h2>Create New League</h2>
       <div class="field"><label>League Name</label><input type="text" id="cl-name" placeholder="e.g. Monday Night Darts 2026"></div>
+      <div class="grid">
+        <div class="field"><label>County</label><select id="cl-county"><option value="">— Select county —</option></select></div>
+        <div class="field"><label>Town / City</label><input type="text" id="cl-town" maxlength="60" placeholder="e.g. Guildford"></div>
+      </div>
+      <div class="field"><label>About the league <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional - shown to people looking for a league)</span></label><textarea id="cl-desc" maxlength="1000" rows="3" placeholder="e.g. Friendly Monday night pub league, 12 teams, all abilities welcome." style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:Barlow,sans-serif;font-size:.9rem;padding:.5rem"></textarea></div>
       <div class="field"><label>Helper Password <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label><input type="password" id="cl-pw" placeholder="Leave blank unless you want a co-organiser to log in" autocomplete="new-password"><span style="font-size:.72rem;color:var(--dim)">You manage this league through your own account. This is only for sharing limited access with a co-organiser (league name + this password). Minimum 6 characters. You can change it later.</span></div>
       <div class="field"><label>Start Time <span style="font-weight:400;text-transform:none;letter-spacing:0">(used for calendar entries)</span></label><input type="time" id="cl-time" value="20:00"></div>
       <div class="field"><label>Match Night</label>
@@ -713,13 +729,14 @@ async function sbPatch(table,filter,body){
 
 function showTab(name){
   document.querySelectorAll('.tab').forEach(function(t,i){
-    t.classList.toggle('active',['leagues','create','fixtures','notices'][i]===name);
+    t.classList.toggle('active',['leagues','create','fixtures','notices','enquiries'][i]===name);
   });
   document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
   document.getElementById('panel-'+name).classList.add('active');
   if(name==='leagues')loadLeagues();
   if(name==='fixtures')populateFixtureLeagueDropdowns();
   if(name==='notices')populateNoticeDropdowns();
+  if(name==='enquiries')populateEnquiryLeagues();
 }
 
 async function populateNoticeDropdowns(){
@@ -749,8 +766,11 @@ async function loadLeagues(){
     // Explicit columns: select=* would fail now that leagues.admin_password is not readable by the browser.
     var leagueCols='id,created_at,name,match_night,num_singles,num_doubles,team_game,team_game_players,starting_score,best_of_singles,best_of_doubles,points_win,points_draw,points_loss,current_season,starting_score_doubles,starting_score_team,fixed_team_names';
     var leagues;
-    try{ leagues=await sb('leagues?order=created_at.desc&select='+leagueCols+',match_time'+leagueScope()); }
-    catch(e){ leagues=await sb('leagues?order=created_at.desc&select='+leagueCols+leagueScope()); } // match_time column not added yet (migration_03)
+    try{ leagues=await sb('leagues?order=created_at.desc&select='+leagueCols+',match_time,county,town,description,listed,recruiting,accepts_enquiries'+leagueScope()); }
+    catch(e){
+      try{ leagues=await sb('leagues?order=created_at.desc&select='+leagueCols+',match_time'+leagueScope()); }
+      catch(e2){ leagues=await sb('leagues?order=created_at.desc&select='+leagueCols+leagueScope()); } // newer columns not added yet (migrations 03/04)
+    }
     var teams=await sb('teams?select=id,league_id'+(scopedLeagueId?'&league_id=eq.'+scopedLeagueId:''));
     if(!leagues||!leagues.length){el.innerHTML='<div class="nh">No leagues yet. Create one using the Create League tab.</div>';return;}
     el.innerHTML=leagues.map(function(l){
@@ -758,7 +778,7 @@ async function loadLeagues(){
       var code=l.id.replace(/-/g,'').toUpperCase().slice(0,8);
       return '<div class="league-item">'
         +'<div class="league-name">'+esc(l.name)+'</div>'
-        +'<div class="league-meta">'+l.match_night+'s &middot; '+l.num_singles+' singles &middot; '+l.num_doubles+' doubles &middot; '+(l.starting_score||501)+' starting</div>'
+        +'<div class="league-meta">'+(l.town||l.county?esc([l.town,l.county].filter(Boolean).join(', '))+' &middot; ':'<span style="color:var(--amber)">Location not set</span> &middot; ')+l.match_night+'s &middot; '+l.num_singles+' singles &middot; '+l.num_doubles+' doubles &middot; '+(l.starting_score||501)+' starting</div>'
         +'<div class="league-actions">'
         +'<span class="code-badge">Code: '+code+'</span>'
         +'<span class="code-badge" style="color:var(--amber);border-color:#6a5200;background:#2a2000">'+count+' team'+(count!==1?'s':'')+' registered</span>'
@@ -785,6 +805,15 @@ async function loadLeagues(){
         +'<div class="field"><label>Points Loss</label><input type="number" id="epl-'+l.id+'" value="'+(l.points_loss||0)+'"></div>'
         +'<div class="field" style="grid-column:1/-1"><label style="display:flex;align-items:center;gap:.5rem;font-weight:400;text-transform:none;letter-spacing:0"><input type="checkbox" id="eftn-'+l.id+'" '+(l.fixed_team_names?'checked':'')+' style="width:auto"> Fix team names — captains must pick from the Captain Contacts list instead of typing their own</label></div>'
         +'</div>'
+        +'<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#5a9abf;margin:.9rem 0 .5rem">Public Directory Profile</div>'
+        +'<div class="grid">'
+        +'<div class="field"><label>County</label><select id="epc-'+l.id+'">'+countyOptions(l.county)+'</select></div>'
+        +'<div class="field"><label>Town / City</label><input type="text" id="ept-'+l.id+'" maxlength="60" value="'+esc(l.town||'')+'"></div>'
+        +'<div class="field"><label>Looking for</label><select id="epr-'+l.id+'"><option value="" '+(!l.recruiting?'selected':'')+'>Not recruiting</option><option value="players" '+(l.recruiting==='players'?'selected':'')+'>New players</option><option value="teams" '+(l.recruiting==='teams'?'selected':'')+'>New teams</option><option value="both" '+(l.recruiting==='both'?'selected':'')+'>Players and teams</option></select></div>'
+        +'</div>'
+        +'<div class="field"><label>About the league</label><textarea id="epd2-'+l.id+'" maxlength="1000" rows="3" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:Barlow,sans-serif;font-size:.9rem;padding:.5rem">'+esc(l.description||'')+'</textarea></div>'
+        +'<div class="field"><label style="display:flex;align-items:center;gap:.5rem;font-weight:400;text-transform:none;letter-spacing:0"><input type="checkbox" id="epl2-'+l.id+'" '+(l.listed===false?'':'checked')+' style="width:auto"> List this league in the public directory</label></div>'
+        +'<div class="field"><label style="display:flex;align-items:center;gap:.5rem;font-weight:400;text-transform:none;letter-spacing:0"><input type="checkbox" id="epe-'+l.id+'" '+(l.accepts_enquiries===false?'':'checked')+' style="width:auto"> Allow people to send enquiries to me</label></div>'
         +'<div style="display:flex;gap:.5rem;margin-top:.75rem">'
         +'<button class="btn-admin" onclick="saveEdit(\''+l.id+'\')">Save</button>'
         +'<button class="btns" onclick="toggleEdit(\''+l.id+'\')">Cancel</button>'
@@ -857,6 +886,16 @@ async function saveEdit(id){
   st.textContent='Saving…';st.className='st';
   try{
     await sbPatch('leagues','id=eq.'+id,data);
+    var tok=await tokenForLeague(id);
+    var r=await sb('rpc/update_league_profile',{method:'POST',body:JSON.stringify({
+      p_token:tok,
+      p_county:document.getElementById('epc-'+id).value,
+      p_town:document.getElementById('ept-'+id).value,
+      p_description:document.getElementById('epd2-'+id).value,
+      p_listed:document.getElementById('epl2-'+id).checked,
+      p_recruiting:document.getElementById('epr-'+id).value,
+      p_accepts_enquiries:document.getElementById('epe-'+id).checked
+    })});
     st.textContent='✓ Saved!';st.className='st ok';
     setTimeout(function(){toggleEdit(id);loadLeagues();},1000);
   }catch(e){st.textContent='Error: '+e.message;st.className='st err';}
@@ -868,6 +907,8 @@ async function createLeague(){
   var st=document.getElementById('cl-status');
   var sp=document.getElementById('cl-spin');
   if(!name){st.textContent='Please enter a league name.';st.className='st err';return;}
+  var county=document.getElementById('cl-county').value, town=document.getElementById('cl-town').value.trim();
+  if(!county||!town){st.textContent='Please choose the county and enter the town or city, so players can find your league.';st.className='st err';return;}
   if(pw&&pw.length<6){st.textContent='Helper password must be at least 6 characters (or leave it blank).';st.className='st err';return;}
   if(!organiserUser){st.textContent='Please sign in first.';st.className='st err';return;}
   sp.style.display='inline-block';st.textContent='';
@@ -890,7 +931,10 @@ async function createLeague(){
       p_points_loss:parseInt(document.getElementById('cl-ploss').value),
       p_fixed_team_names:document.getElementById('cl-fixedteams').checked,
       p_helper_password:pw||null,
-      p_match_time:document.getElementById('cl-time').value||'20:00'
+      p_match_time:document.getElementById('cl-time').value||'20:00',
+      p_county:county,
+      p_town:town,
+      p_description:document.getElementById('cl-desc').value.trim()||null
     });
     if(error) throw error;
     var code=String(newId).replace(/-/g,'').toUpperCase().slice(0,8);
@@ -901,10 +945,100 @@ async function createLeague(){
     document.getElementById('cl-name').value='';
     document.getElementById('cl-fixedteams').checked=false;
     document.getElementById('cl-pw').value='';
+    document.getElementById('cl-town').value='';document.getElementById('cl-desc').value='';document.getElementById('cl-county').value='';
     if(isPlatformAdmin)loadLeagues();
   }catch(e){st.textContent='Error: '+e.message;st.className='st err';}
   sp.style.display='none';
 }
+
+// ── Directory profile + enquiries (migration_04) ─────────────────────────────
+var UK_COUNTIES=['Aberdeenshire','Angus','Antrim','Argyll and Bute','Armagh','Avon','Ayrshire','Bedfordshire','Berkshire','Bristol','Buckinghamshire','Cambridgeshire','Cardiff','Carmarthenshire','Ceredigion','Cheshire','Clwyd','Cornwall','County Durham','Cumbria','Denbighshire','Derbyshire','Devon','Dorset','Down','Dumfries and Galloway','East Sussex','East Yorkshire','Essex','Fife','Flintshire','Glasgow','Gloucestershire','Greater London','Greater Manchester','Gwent','Gwynedd','Hampshire','Herefordshire','Hertfordshire','Highland','Isle of Wight','Kent','Lanarkshire','Lancashire','Leicestershire','Lincolnshire','Londonderry','Merseyside','Midlothian','Norfolk','North Yorkshire','Northamptonshire','Northumberland','Nottinghamshire','Oxfordshire','Pembrokeshire','Perth and Kinross','Powys','Rutland','Shropshire','Somerset','South Yorkshire','Staffordshire','Suffolk','Surrey','Swansea','Tyne and Wear','Tyrone','Warwickshire','West Midlands','West Sussex','West Yorkshire','Wiltshire','Worcestershire','Other'];
+function countyOptions(sel){
+  var h='<option value="">— Select county —</option>';
+  var found=!sel||UK_COUNTIES.indexOf(sel)>-1;
+  if(!found)h+='<option selected>'+esc(sel)+'</option>';
+  return h+UK_COUNTIES.map(function(c){return '<option'+(c===sel?' selected':'')+'>'+esc(c)+'</option>';}).join('');
+}
+document.addEventListener('DOMContentLoaded',function(){
+  var c=document.getElementById('cl-county'); if(c)c.innerHTML=countyOptions('');
+});
+
+// A session token for a specific league. In league mode it is the one we hold;
+// in platform / My Leagues mode we mint one for the chosen league.
+async function tokenForLeague(id){
+  if(scopedLeagueToken&&scopedLeagueId===id)return scopedLeagueToken;
+  if(!paClient)throw new Error('Please sign in again.');
+  var r=await paClient.rpc('open_my_league',{p_league_id:id});
+  if(r.error)throw r.error;
+  var row=Array.isArray(r.data)?r.data[0]:r.data;
+  if(!row||!row.token)throw new Error('Could not open that league.');
+  return row.token;
+}
+
+async function populateEnquiryLeagues(){
+  try{
+    var leagues=await sb('leagues?order=name.asc&select=id,name'+leagueScope());
+    var sel=document.getElementById('enq-league'); var prev=sel.value;
+    sel.innerHTML='<option value="">— Select league —</option>'+leagues.map(function(l){return '<option value="'+l.id+'">'+esc(l.name)+'</option>';}).join('');
+    if(leagues.length===1){sel.value=leagues[0].id;}
+    else if(prev){sel.value=prev;}
+    loadEnquiries();
+  }catch(e){toast('Error: '+e.message,true);}
+}
+
+async function loadEnquiries(){
+  var id=document.getElementById('enq-league').value;
+  var el=document.getElementById('enq-list');
+  if(!id){el.innerHTML='<div class="nh">Select a league to see its enquiries</div>';return;}
+  el.innerHTML='<div class="lh"><span class="spin"></span> Loading…</div>';
+  try{
+    var tok=await tokenForLeague(id);
+    var rows=await sb('rpc/list_league_enquiries',{method:'POST',body:JSON.stringify({p_token:tok})});
+    var n=rows.filter(function(r){return r.status==='new';}).length;
+    var b=document.getElementById('enq-badge');
+    if(b){b.style.display=n?'inline-block':'none';b.textContent=n;}
+    if(!rows.length){el.innerHTML='<div class="nh">No enquiries yet.</div>';return;}
+    el.innerHTML=rows.map(function(r){
+      var d=new Date(r.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+      var subj=encodeURIComponent('Your enquiry about our darts league');
+      var isNew=r.status==='new';
+      return '<div class="league-item" style="'+(isNew?'border-color:var(--amber)':'')+'">'
+        +'<div class="league-name">'+esc(r.name)+(isNew?' <span style="font-size:.7rem;color:var(--amber)">NEW</span>':'')+'</div>'
+        +'<div class="league-meta">'+esc(r.email)+' &middot; '+d+'</div>'
+        +'<div style="font-size:.88rem;line-height:1.5;margin:.5rem 0;white-space:pre-wrap">'+esc(r.message)+'</div>'
+        +'<div class="league-actions">'
+        +'<a class="btn-admin" style="text-decoration:none;font-size:.75rem;padding:3px 10px" href="mailto:'+encodeURIComponent(r.email)+'?subject='+subj+'">✉️ Reply by email</a>'
+        +'<button class="btn-admin" style="font-size:.72rem;padding:3px 10px" onclick="setEnquiryStatus(\''+r.id+'\',\''+(isNew?'handled':'new')+'\')">'+(isNew?'✓ Mark handled':'↺ Mark as new')+'</button>'
+        +'<button class="btn-admin" style="font-size:.72rem;padding:3px 10px;background:none;color:#e08080;border-color:#7a3a3a" onclick="deleteEnquiry(\''+r.id+'\')">🗑 Delete</button>'
+        +'</div></div>';
+    }).join('');
+  }catch(e){el.innerHTML='<div class="nh">Error: '+esc(e.message||String(e))+'</div>';}
+}
+async function setEnquiryStatus(eid,status){
+  try{
+    var tok=await tokenForLeague(document.getElementById('enq-league').value);
+    await sb('rpc/set_league_enquiry_status',{method:'POST',body:JSON.stringify({p_token:tok,p_enquiry_id:eid,p_status:status})});
+    loadEnquiries();
+  }catch(e){toast('Error: '+e.message,true);}
+}
+async function deleteEnquiry(eid){
+  if(!confirm('Delete this enquiry? This cannot be undone.'))return;
+  try{
+    var tok=await tokenForLeague(document.getElementById('enq-league').value);
+    await sb('rpc/delete_league_enquiry',{method:'POST',body:JSON.stringify({p_token:tok,p_enquiry_id:eid})});
+    loadEnquiries();
+  }catch(e){toast('Error: '+e.message,true);}
+}
+// Show the "new enquiries" count on the tab as soon as a league is open.
+async function refreshEnquiryBadge(){
+  try{
+    if(!scopedLeagueId||!scopedLeagueToken)return;
+    var rows=await sb('rpc/list_league_enquiries',{method:'POST',body:JSON.stringify({p_token:scopedLeagueToken})});
+    var n=rows.filter(function(r){return r.status==='new';}).length;
+    var b=document.getElementById('enq-badge'); if(b){b.style.display=n?'inline-block':'none';b.textContent=n;}
+  }catch(e){}
+}
+window.addEventListener('load',function(){setTimeout(refreshEnquiryBadge,1500);});
 
 // ── Captain contacts ─────────────────────────────────────────────────────────
 function downloadCaptainTemplate(){
