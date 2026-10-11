@@ -405,7 +405,7 @@ function showGateSignin(){ showGateView('signin'); }
 function showGateLeagueLogin(){ showGateView('league-login'); }
 
 function clearLeagueSession(){
-  scopedLeagueId=null;scopedLeagueName=null;scopedLeagueToken=null;
+  scopedLeagueId=null;scopedLeagueName=null;scopedLeagueToken=null;leagueTokenCache={};
   sessionStorage.removeItem('fc_admin_mode');
   sessionStorage.removeItem('fc_league_id');
   sessionStorage.removeItem('fc_league_name');
@@ -619,7 +619,7 @@ function enterLeagueMode(id,name,token){
 }
 
 function enterPlatformMode(){
-  scopedLeagueId=null;scopedLeagueName=null;scopedLeagueToken=null;
+  scopedLeagueId=null;scopedLeagueName=null;scopedLeagueToken=null;leagueTokenCache={};
   sessionStorage.setItem('fc_admin_mode','platform');
   sessionStorage.removeItem('fc_league_id');
   sessionStorage.removeItem('fc_league_name');
@@ -965,13 +965,17 @@ document.addEventListener('DOMContentLoaded',function(){
 
 // A session token for a specific league. In league mode it is the one we hold;
 // in platform / My Leagues mode we mint one for the chosen league.
+var leagueTokenCache={};
 async function tokenForLeague(id){
   if(scopedLeagueToken&&scopedLeagueId===id)return scopedLeagueToken;
-  if(!paClient)throw new Error('Please sign in again.');
+  var c=leagueTokenCache[id];
+  if(c&&Date.now()-c.t<10*3600*1000)return c.token;
+  if(!paClient)throw new Error('Session expired - please sign in again.');
   var r=await paClient.rpc('open_my_league',{p_league_id:id});
   if(r.error)throw r.error;
   var row=Array.isArray(r.data)?r.data[0]:r.data;
   if(!row||!row.token)throw new Error('Could not open that league.');
+  leagueTokenCache[id]={token:row.token,t:Date.now()};
   return row.token;
 }
 
@@ -1132,7 +1136,7 @@ async function loadClaimRequests(leagueId){
   if(!el)return;
   el.innerHTML='<div class="lh"><span class="spin"></span> Loading…</div>';
   try{
-    var rows=await sb('rpc/list_pending_claims',{method:'POST',body:JSON.stringify({p_token:scopedLeagueToken})});
+    var rows=await sb('rpc/list_pending_claims',{method:'POST',body:JSON.stringify({p_token:await tokenForLeague(leagueId)})});
     if(!rows||!rows.length){el.innerHTML='<div class="nh">No pending requests.</div>';return;}
     el.innerHTML=rows.map(function(r){
       var players=[];try{players=JSON.parse(r.players||'[]');}catch(e){}
@@ -1156,7 +1160,7 @@ async function approveClaimRequest(id,leagueId){
   // or secret word at any point.
   if(!confirm('Approve this team? This creates the team and player roster.'))return;
   try{
-    await sb('rpc/approve_team_claim',{method:'POST',body:JSON.stringify({p_request_id:id,p_token:scopedLeagueToken})});
+    await sb('rpc/approve_team_claim',{method:'POST',body:JSON.stringify({p_request_id:id,p_token:await tokenForLeague(leagueId)})});
     toast('Team approved and registered!');
     loadClaimRequests(leagueId);
     loadTeamList(leagueId);
@@ -1167,7 +1171,7 @@ async function approveClaimRequest(id,leagueId){
 async function rejectClaimRequest(id,leagueId){
   if(!confirm('Reject this claim request? The requester will need to be told separately — Flight Chalker won\'t notify them.'))return;
   try{
-    await sb('rpc/reject_team_claim',{method:'POST',body:JSON.stringify({p_request_id:id,p_token:scopedLeagueToken})});
+    await sb('rpc/reject_team_claim',{method:'POST',body:JSON.stringify({p_request_id:id,p_token:await tokenForLeague(leagueId)})});
     toast('Request rejected');
     loadClaimRequests(leagueId);
   }catch(e){toast('Error: '+e.message,true);}
@@ -1393,19 +1397,19 @@ async function loadTeamList(leagueId){
     // - fetched separately via the token-gated RPC and merged in here.
     var pinMap={};
     try{
-      var withPins=await sb('rpc/list_league_teams_with_pins',{method:'POST',body:JSON.stringify({p_token:scopedLeagueToken})});
+      var withPins=await sb('rpc/list_league_teams_with_pins',{method:'POST',body:JSON.stringify({p_token:await tokenForLeague(leagueId)})});
       (withPins||[]).forEach(function(t){pinMap[t.id]=t.pin;});
     }catch(e){ /* non-fatal - team rows below just show no PIN if this fails */ }
     teams.forEach(function(t){t.pin=pinMap[t.id];});
 
     var teamIds=teams.map(function(t){return t.id;});
-    var pending=await sb('rpc/list_league_team_memberships',{method:'POST',body:JSON.stringify({p_token:scopedLeagueToken,p_status:'pending'})});
+    var pending=await sb('rpc/list_league_team_memberships',{method:'POST',body:JSON.stringify({p_token:await tokenForLeague(leagueId),p_status:'pending'})});
     var pendingUserIds=pending.map(function(p){return p.user_id;});
 
-    var approvedMembers=await sb('rpc/list_league_team_memberships',{method:'POST',body:JSON.stringify({p_token:scopedLeagueToken,p_status:'approved'})});
+    var approvedMembers=await sb('rpc/list_league_team_memberships',{method:'POST',body:JSON.stringify({p_token:await tokenForLeague(leagueId),p_status:'approved'})});
     var approvedUserIds=approvedMembers.map(function(p){return p.user_id;});
 
-    var changeRequests=await sb('rpc/list_league_captain_change_requests',{method:'POST',body:JSON.stringify({p_token:scopedLeagueToken})});
+    var changeRequests=await sb('rpc/list_league_captain_change_requests',{method:'POST',body:JSON.stringify({p_token:await tokenForLeague(leagueId)})});
     var changeUserIds=[];
     changeRequests.forEach(function(c){changeUserIds.push(c.requested_by,c.proposed_captain_id);});
 
@@ -1527,7 +1531,7 @@ async function assignCaptain(teamId,userId,leagueId){
 
 async function approveMembership(membershipId,leagueId){
   try{
-    await sb('rpc/admin_set_membership_status',{method:'POST',body:JSON.stringify({p_token:scopedLeagueToken,p_membership_id:membershipId,p_status:'approved'})});
+    await sb('rpc/admin_set_membership_status',{method:'POST',body:JSON.stringify({p_token:await tokenForLeague(leagueId),p_membership_id:membershipId,p_status:'approved'})});
     toast('Request approved!');
     loadTeamList(leagueId);
   }catch(e){toast('Error: '+e.message,true);}
@@ -1536,7 +1540,7 @@ async function approveMembership(membershipId,leagueId){
 async function rejectMembership(membershipId,leagueId){
   if(!confirm('Reject this join request?'))return;
   try{
-    await sb('rpc/admin_set_membership_status',{method:'POST',body:JSON.stringify({p_token:scopedLeagueToken,p_membership_id:membershipId,p_status:'rejected'})});
+    await sb('rpc/admin_set_membership_status',{method:'POST',body:JSON.stringify({p_token:await tokenForLeague(leagueId),p_membership_id:membershipId,p_status:'rejected'})});
     toast('Request rejected');
     loadTeamList(leagueId);
   }catch(e){toast('Error: '+e.message,true);}
@@ -1546,7 +1550,7 @@ async function approveCaptainChange(requestId,teamId,proposedCaptainId,leagueId)
   if(!confirm('Change this team\'s captain? The previous captain will lose captain access.'))return;
   try{
     await sb('rpc/admin_set_captain_change_status',{method:'POST',body:JSON.stringify({
-      p_token:scopedLeagueToken,p_request_id:requestId,p_status:'approved',p_team_id:teamId,p_new_captain_id:proposedCaptainId
+      p_token:await tokenForLeague(leagueId),p_request_id:requestId,p_status:'approved',p_team_id:teamId,p_new_captain_id:proposedCaptainId
     })});
     toast('Captain changed!');
     loadTeamList(leagueId);
@@ -1556,7 +1560,7 @@ async function approveCaptainChange(requestId,teamId,proposedCaptainId,leagueId)
 async function rejectCaptainChange(requestId,leagueId){
   if(!confirm('Reject this captain change request?'))return;
   try{
-    await sb('rpc/admin_set_captain_change_status',{method:'POST',body:JSON.stringify({p_token:scopedLeagueToken,p_request_id:requestId,p_status:'rejected'})});
+    await sb('rpc/admin_set_captain_change_status',{method:'POST',body:JSON.stringify({p_token:await tokenForLeague(leagueId),p_request_id:requestId,p_status:'rejected'})});
     toast('Request rejected');
     loadTeamList(leagueId);
   }catch(e){toast('Error: '+e.message,true);}
