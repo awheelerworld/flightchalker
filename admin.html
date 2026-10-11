@@ -87,6 +87,18 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
 .toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1rem;padding:.6rem 1.5rem;border-radius:6px;transition:transform .3s;z-index:999;pointer-events:none}
 .toast.show{transform:translateX(-50%) translateY(0)}
 .toast.err{background:var(--red)}
+#ss-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9000;overflow-y:auto;padding:1rem}
+#ss-overlay.open{display:block}
+#ss-box{max-width:640px;margin:2vh auto;background:var(--surface,#1e251e);border:1px solid var(--blue,#2a6aa0);border-radius:12px;padding:1.25rem}
+#ss-box h2{font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;font-weight:900;text-transform:uppercase;letter-spacing:.05em;color:var(--amber);margin-bottom:.25rem}
+.ss-steps{display:flex;gap:.4rem;margin:.5rem 0 1rem}
+.ss-steps span{flex:1;height:4px;border-radius:2px;background:var(--border,#3a4a3a)}
+.ss-steps span.on{background:var(--amber)}
+.ss-q{font-size:.95rem;line-height:1.5;margin-bottom:.75rem}
+.ss-team{display:flex;gap:.5rem;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:.5rem 0;border-bottom:1px solid var(--border,#3a4a3a)}
+.ss-team select{background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:.3rem;font-size:.8rem;max-width:180px}
+.ss-note{background:#2a2000;border-left:3px solid var(--amber);border-radius:4px;padding:.6rem .8rem;font-size:.85rem;line-height:1.5;margin:.75rem 0;color:var(--text)}
+.ss-nav{display:flex;gap:.5rem;justify-content:space-between;margin-top:1.1rem;flex-wrap:wrap}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -203,6 +215,7 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
   </div>
 </div>
 
+<div id="ss-overlay" role="dialog" aria-modal="true" aria-label="Start a new season"><div id="ss-box"></div></div>
 <div id="admin-real-content" style="display:none">
 
 <div id="header">
@@ -795,7 +808,7 @@ async function loadLeagues(){
       var code=l.id.replace(/-/g,'').toUpperCase().slice(0,8);
       return '<div class="league-item">'
         +'<div class="league-name">'+esc(l.name)+'</div>'
-        +'<div class="league-meta">'+(l.town||l.county?esc([l.town,l.county].filter(Boolean).join(', '))+' &middot; ':'<span style="color:var(--amber)">Location not set</span> &middot; ')+l.match_night+'s &middot; '+l.num_singles+' singles &middot; '+l.num_doubles+' doubles &middot; '+(l.starting_score||501)+' starting</div>'
+        +'<div class="league-meta">'+(l.town||l.county?esc([l.town,l.county].filter(Boolean).join(', '))+' &middot; ':'<span style="color:var(--amber)">Location not set</span> &middot; ')+l.match_night+'s &middot; '+l.num_singles+' singles &middot; '+l.num_doubles+' doubles &middot; '+(l.starting_score||501)+' starting &middot; <strong style="color:var(--amber)">Season '+(l.current_season||1)+'</strong></div>'
         +'<div class="league-actions">'
         +'<span class="code-badge">Code: '+code+'</span>'
         +'<span class="code-badge" style="color:var(--amber);border-color:#6a5200;background:#2a2000">'+count+' team'+(count!==1?'s':'')+' registered</span>'
@@ -840,6 +853,7 @@ async function loadLeagues(){
         +'<div style="margin-top:.4rem;display:flex;gap:.4rem;flex-wrap:wrap">'
         +'<button class="btn-admin" style="font-size:.72rem;padding:3px 10px;background:#1a2a1e;border-color:var(--green)" onclick="toggleTeams(&quot;'+l.id+'&quot;)">👥 Manage Teams</button>'
         +'<button class="btn-admin" style="font-size:.72rem;padding:3px 10px;background:#1a2a1e;border-color:var(--amber);color:var(--amber)" onclick="toggleCaptains(&quot;'+l.id+'&quot;)">📇 Captain Contacts</button>'
+        +'<button class="btn-admin" style="font-size:.72rem;padding:3px 10px;background:#2a2000;border-color:var(--amber);color:var(--amber)" onclick="openSeasonWizard(&quot;'+l.id+'&quot;)">🗓 Start New Season</button>'
         +'</div>'
         +'<div class="edit-panel" id="teams-panel-'+l.id+'" style="border-color:var(--green);margin-top:.4rem">'
         +'<h3 style="color:var(--gl)">Registered Teams</h3>'
@@ -1060,6 +1074,133 @@ async function refreshEnquiryBadge(){
   }catch(e){}
 }
 window.addEventListener('load',function(){setTimeout(refreshEnquiryBadge,1500);});
+
+// ── Start a new season (guided) ─────────────────────────────────────────────
+var ss=null;
+function ssClose(){ document.getElementById('ss-overlay').classList.remove('open'); ss=null; }
+function ssSteps(n){ return '<div class="ss-steps">'+[1,2,3].map(function(i){return '<span class="'+(i<=n?'on':'')+'"></span>';}).join('')+'</div>'; }
+
+async function openSeasonWizard(leagueId){
+  try{
+    var rows=await sb('leagues?id=eq.'+leagueId+'&select=id,name,current_season,match_night,match_time,num_singles,num_doubles,team_game_players,points_win,points_draw,points_loss,starting_score,fixed_team_names');
+    if(!rows||!rows[0])throw new Error('League not found.');
+    var l=rows[0];
+    ss={id:leagueId,league:l,season:l.current_season||1,step:1,dests:[],ack:false,msg:''};
+    if(organiserUser&&paClient){
+      try{
+        var r=await paClient.rpc('my_leagues');
+        if(!r.error&&r.data)ss.dests=r.data.filter(function(x){return x.id!==leagueId;});
+      }catch(e){}
+    }
+    document.getElementById('ss-overlay').classList.add('open');
+    await ssRender();
+  }catch(e){toast('Error: '+e.message,true);}
+}
+
+async function ssRender(){
+  var box=document.getElementById('ss-box'); if(!ss)return;
+  var l=ss.league, n=ss.season;
+  if(ss.step===1){
+    box.innerHTML='<h2>Start Season '+(n+1)+'</h2><div style="font-size:.8rem;color:var(--dim)">'+esc(l.name)+'</div>'+ssSteps(1)
+      +'<div class="ss-q"><strong>Step 1 of 3 — Teams.</strong> Has anything changed in who is playing next season? For example: teams promoted or relegated to another league, teams leaving, or new teams joining.</div>'
+      +'<div id="ss-teams"><div class="lh"><span class="spin"></span> Loading teams…</div></div>'
+      +'<div class="ss-note"><strong>New teams joining?</strong> Give their captains your league registration code: <strong style="color:var(--amber);letter-spacing:.1em">'+ssCode()+'</strong>. They can register at any time, including after you start the new season. '
+      +(l.fixed_team_names?'Because your team names are fixed, add them to <em>Captain Contacts</em> first.':'')+'</div>'
+      +'<div class="ss-nav"><button class="btns" onclick="ssClose()">Cancel</button><button class="btn-admin" onclick="ss.step=2;ssRender()">No more team changes — Next →</button></div>';
+    ssLoadTeams();
+  } else if(ss.step===2){
+    box.innerHTML='<h2>Start Season '+(n+1)+'</h2><div style="font-size:.8rem;color:var(--dim)">'+esc(l.name)+'</div>'+ssSteps(2)
+      +'<div class="ss-q"><strong>Step 2 of 3 — League settings.</strong> Do any of these need to change for the new season?</div>'
+      +'<div class="ss-team" style="display:block;line-height:1.7;font-size:.9rem">'
+      +'<div><span style="color:var(--dim)">Match night:</span> '+esc(l.match_night)+'s at '+esc(l.match_time||'20:00')+'</div>'
+      +'<div><span style="color:var(--dim)">Format:</span> '+l.num_singles+' singles, '+l.num_doubles+' doubles'+(l.team_game_players?', team game ('+l.team_game_players+' players)':'')+', starting score '+(l.starting_score||501)+'</div>'
+      +'<div><span style="color:var(--dim)">Points:</span> win '+(l.points_win==null?2:l.points_win)+', draw '+(l.points_draw==null?1:l.points_draw)+', loss '+(l.points_loss||0)+'</div>'
+      +'<div><span style="color:var(--dim)">Team names:</span> '+(l.fixed_team_names?'fixed list':'captains choose')+'</div></div>'
+      +'<div class="ss-note">If you want to change these, press <strong>Change settings</strong>. Your progress here isn\'t lost, just choose <em>Start New Season</em> again afterwards. Changes apply to the whole league from now on, so it is best to make them before the new season starts.</div>'
+      +'<div class="ss-nav"><button class="btns" onclick="ss.step=1;ssRender()">← Back</button>'
+      +'<button class="btn-admin" style="background:transparent" onclick="ssChangeSettings()">Change settings</button>'
+      +'<button class="btn-admin" onclick="ss.step=3;ssRender()">No changes — Next →</button></div>';
+  } else if(ss.step===3){
+    var cnt=await sb('teams?league_id=eq.'+ss.id+'&select=id');
+    box.innerHTML='<h2>Start Season '+(n+1)+'</h2><div style="font-size:.8rem;color:var(--dim)">'+esc(l.name)+'</div>'+ssSteps(3)
+      +'<div class="ss-q"><strong>Step 3 of 3 — Confirm.</strong> You are about to move <strong>'+esc(l.name)+'</strong> from <strong>Season '+n+'</strong> to <strong>Season '+(n+1)+'</strong> with <strong>'+(cnt?cnt.length:0)+' teams</strong>.</div>'
+      +'<ul style="margin:0 0 .5rem 1.2rem;font-size:.9rem;line-height:1.6"><li>The league table, top scorers and match recording start fresh for Season '+(n+1)+'.</li>'
+      +'<li>Season '+n+' stays available. Anyone can still view it using the season selector.</li>'
+      +'<li>Teams keep their PINs, captains and players.</li>'
+      +'<li>Season '+(n+1)+' will have <strong>no fixtures</strong> until you add them (next step after starting).</li></ul>'
+      +'<label style="display:flex;gap:.5rem;align-items:flex-start;font-size:.9rem;margin:.75rem 0"><input type="checkbox" id="ss-ack" style="width:auto;margin-top:.25rem" onchange="document.getElementById(\'ss-go\').disabled=!this.checked"> <span>I have checked the teams and settings for the new season.</span></label>'
+      +'<div id="ss-err" class="st err" style="min-height:1rem"></div>'
+      +'<div class="ss-nav"><button class="btns" onclick="ss.step=2;ssRender()">← Back</button><button class="btn-admin" id="ss-go" disabled onclick="ssStart()">Start Season '+(n+1)+'</button></div>';
+  } else {
+    box.innerHTML='<h2>Season '+ss.season+' has started 🎯</h2><div style="font-size:.8rem;color:var(--dim)">'+esc(l.name)+'</div>'
+      +'<div class="ss-q" style="margin-top:1rem">The league table is now fresh for Season '+ss.season+'. Next, add its fixtures — you can upload a spreadsheet, and it will be set to Season '+ss.season+' automatically.</div>'
+      +'<div class="ss-nav"><button class="btns" onclick="ssClose();loadLeagues()">Done</button><button class="btn-admin" onclick="ssGoFixtures()">Add fixtures for Season '+ss.season+' →</button></div>';
+  }
+}
+
+function ssCode(){ return String(ss.id).replace(/-/g,'').toUpperCase().slice(0,8); }
+
+async function ssLoadTeams(){
+  var el=document.getElementById('ss-teams'); if(!el||!ss)return;
+  try{
+    var teams=await sb('teams?league_id=eq.'+ss.id+'&order=team_name.asc&select=id,team_name');
+    if(!teams.length){el.innerHTML='<div class="nh">No teams in this league yet.</div>';return;}
+    var opts='<option value="">Move to…</option>'+ss.dests.map(function(d){return '<option value="'+d.id+'">'+esc(d.name)+'</option>';}).join('');
+    el.innerHTML=teams.map(function(t){
+      return '<div class="ss-team"><div style="font-weight:600;overflow-wrap:anywhere">'+esc(t.team_name)+'</div><div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap">'
+        +(ss.dests.length?'<select id="ssd-'+t.id+'" aria-label="Move '+esc(t.team_name)+' to another league">'+opts+'</select><button class="btn-admin" style="font-size:.72rem;padding:3px 10px" onclick="ssMove(\''+t.id+'\')">Move</button>':'')
+        +'<button class="btn-admin" style="font-size:.72rem;padding:3px 10px;background:none;color:#e08080;border-color:#7a3a3a" onclick="ssRemove(\''+t.id+'\')">Remove</button></div></div>';
+    }).join('')
+      +'<div style="font-size:.75rem;color:var(--dim);margin-top:.5rem;line-height:1.5">'
+      +(ss.dests.length?'<strong>Move</strong> sends a team to another league you run (promotion or relegation). Its PIN, captain, players and match results go with it, and its fixtures here are removed. ':'To move teams between leagues, sign in with your Flight Chalker account and own both leagues. ')
+      +'<strong>Remove</strong> deletes a team, its players and <em>all</em> its results (including past seasons). It cannot be undone.</div>';
+  }catch(e){el.innerHTML='<div class="nh">Error: '+esc(e.message)+'</div>';}
+}
+
+async function ssMove(teamId){
+  var sel=document.getElementById('ssd-'+teamId); var dest=sel&&sel.value;
+  if(!dest){toast('Choose which league to move this team to',true);return;}
+  var destName=sel.options[sel.selectedIndex].text;
+  if(!confirm('Move this team to "'+destName+'"?\n\nIts match results move with it, so they will no longer appear in this league\'s past-season tables. Its fixtures in this league are removed.'))return;
+  try{
+    var r=await paClient.rpc('move_team_to_league',{p_team_id:teamId,p_to_league_id:dest});
+    if(r.error)throw r.error;
+    toast('Team moved to '+destName);
+    ssLoadTeams();
+  }catch(e){toast('Error: '+(e.message||e),true);}
+}
+async function ssRemove(teamId){
+  var rows=await sb('teams?id=eq.'+teamId+'&select=team_name');
+  var nm=rows&&rows[0]?rows[0].team_name:'this team';
+  await deleteTeam(teamId,nm,ss.id);
+  if(ss)ssLoadTeams();
+}
+function ssChangeSettings(){
+  var id=ss.id; ssClose();
+  showTab('leagues');
+  setTimeout(function(){ var p=document.getElementById('ep-'+id); if(p&&!p.classList.contains('open'))p.classList.add('open'); if(p)p.scrollIntoView({behavior:'smooth',block:'start'}); },700);
+}
+async function ssStart(){
+  var err=document.getElementById('ss-err'), btn=document.getElementById('ss-go');
+  btn.disabled=true; err.textContent='Starting…'; err.className='st';
+  try{
+    var tok=await tokenForLeague(ss.id);
+    var newSeason=await sb('rpc/start_new_season',{method:'POST',body:JSON.stringify({p_token:tok,p_expected_season:ss.season})});
+    ss.season=parseInt(newSeason)||ss.season+1; ss.step=4; ssRender();
+  }catch(e){ err.textContent='Error: '+(e.message||e); err.className='st err'; btn.disabled=false; }
+}
+async function ssGoFixtures(){
+  var id=ss.id, season=ss.season; ssClose();
+  showTab('fixtures');
+  await populateFixtureLeagueDropdowns();
+  document.getElementById('fx-import-league').value=id;
+  document.getElementById('fx-league').value=id;
+  document.getElementById('fx-filter-league').value=id;
+  await loadFixtureTeams();
+  document.getElementById('fx-season').value=season;
+  loadFixtureList();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
 
 // ── Captain contacts ─────────────────────────────────────────────────────────
 function downloadCaptainTemplate(){
@@ -1304,6 +1445,7 @@ async function loadFixtureTeams(){
   away.innerHTML='<option value="">— Select —</option>';
   if(!leagueId)return;
   try{
+    try{ var lgs=await sb('leagues?id=eq.'+leagueId+'&select=current_season'); if(lgs&&lgs[0])document.getElementById('fx-season').value=lgs[0].current_season||1; }catch(e){}
     var teams=await sb('teams?league_id=eq.'+leagueId+'&order=team_name.asc&select=id,team_name');
     teams.forEach(function(t){
       home.innerHTML+='<option value="'+t.id+'">'+esc(t.team_name)+'</option>';
