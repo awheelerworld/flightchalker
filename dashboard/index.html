@@ -1,4 +1,4 @@
-<!-- VERSION: v22-organiser-link -->
+<!-- VERSION: v23-my-leagues -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -42,6 +42,13 @@ main{max-width:900px;margin:0 auto;padding:1.5rem 1rem 4rem}
 .free-badge{background:#1a2a1e;border:1px solid var(--green);border-radius:20px;padding:.3rem .9rem;font-family:'Barlow Condensed',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gl)}
 
 /* Section headers */
+.lg-row{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.75rem 0;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.lg-row:last-child{border-bottom:none}
+.lg-name{font-weight:600;font-size:1rem;overflow-wrap:anywhere}
+.lg-meta{font-size:.78rem;color:var(--dim);margin-top:2px}
+.lg-btn{display:inline-block;background:#1a2a1e;border:1px solid var(--green);border-radius:6px;padding:.4rem .9rem;font-family:'Barlow Condensed',sans-serif;font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gl);text-decoration:none}
+.lg-btn:hover{border-color:var(--amber);color:var(--amber)}
+.lg-badge{display:inline-block;background:var(--amber);color:#000;border-radius:10px;padding:0 7px;font-size:.72rem;font-weight:700;margin-left:6px}
 .sec-title{font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--green);margin-bottom:.75rem}
 
 /* Game cards */
@@ -160,6 +167,19 @@ input:checked+.slider::before{transform:translateX(18px);background:white}
     <div id="captain-teams-list"></div>
   </div>
 
+  <!-- Your Leagues (league organisers) -->
+  <div id="my-leagues-section" style="display:none;margin-bottom:1.5rem">
+    <div class="sec-title">Your Leagues</div>
+    <div class="team-card" style="border-color:var(--amber)">
+      <div id="my-leagues-list"></div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.75rem">
+        <a href="/admin?new=1" class="lg-btn">＋ Create a new league</a>
+        <a href="/organiser-guide" class="lg-btn">📖 Organiser guide</a>
+        <a href="/admin" class="lg-btn" id="lg-all-link" style="display:none">⚙️ Platform admin: all leagues</a>
+      </div>
+    </div>
+  </div>
+
   <!-- Quick access -->
   <div class="sec-title">Quick Access</div>
   <div class="game-grid">
@@ -192,6 +212,12 @@ input:checked+.slider::before{transform:translateX(18px);background:white}
       <h3>Run a League</h3>
       <p>Create a league, add teams and fixtures, and manage results. Your leagues all live in one place.</p>
       <div class="go">League admin →</div>
+    </a>
+    <a href="/organiser-guide" class="game-card">
+      <div class="icon">📖</div>
+      <h3>Organiser Guide</h3>
+      <p>How to set up a league, add teams and fixtures, and manage it.</p>
+      <div class="go">Read the guide →</div>
     </a>
   </div>
 
@@ -881,6 +907,31 @@ async function submitUsernameChange(){
   }
 }
 
+// Leagues this account organises (shown only if there are any, or for platform admins).
+function escH(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+async function loadMyLeagues(userId){
+  try{
+    var { data, error } = await sb.rpc('my_leagues_dashboard');
+    if(error) throw error;
+    var rows=data||[];
+    var mine=rows.filter(function(r){return r.is_mine;});
+    var isAdmin=rows.some(function(r){return !r.is_mine;});
+    if(!isAdmin){ try{ var u=await sb.from('users').select('is_platform_admin').eq('id',userId).single(); isAdmin=!!(u.data&&u.data.is_platform_admin); }catch(e){} }
+    if(!mine.length && !isAdmin) return; // plain player: show nothing extra
+    document.getElementById('my-leagues-list').innerHTML = mine.length ? mine.map(function(l){
+      var loc=[l.town,l.county].filter(Boolean).join(', ');
+      var n=Number(l.new_enquiries)||0;
+      return '<div class="lg-row"><div><div class="lg-name">'+escH(l.name)+'</div>'
+        +'<div class="lg-meta">'+(loc?escH(loc)+' · ':'')+escH(l.match_night)+'s · '+l.team_count+' team'+(Number(l.team_count)===1?'':'s')+'</div></div>'
+        +'<div style="display:flex;gap:.4rem;flex-wrap:wrap">'
+        +(n?'<a class="lg-btn" href="/admin?league='+encodeURIComponent(l.id)+'&tab=enquiries">✉️ Enquiries<span class="lg-badge">'+n+'</span></a>':'')
+        +'<a class="lg-btn" href="/admin?league='+encodeURIComponent(l.id)+'">Manage →</a></div></div>';
+    }).join('') : '<div style="color:var(--dim);font-size:.85rem">You don\'t own any leagues yet.</div>';
+    if(isAdmin) document.getElementById('lg-all-link').style.display='inline-block';
+    document.getElementById('my-leagues-section').style.display='block';
+  }catch(e){ console.error('Could not load leagues (non-fatal):',e); }
+}
+
 // Init
 window.addEventListener('load', async function(){
   try{
@@ -930,12 +981,13 @@ window.addEventListener('load', async function(){
     window.currentUser = adaptedUser;
     await loadDashboard(adaptedUser);
     await loadCaptainTeams(adaptedUser);
+    loadMyLeagues(su.id); // not awaited - never blocks the dashboard
   }catch(e){
     console.error('Dashboard error:',e);
     document.getElementById('loading-screen').innerHTML = '<div style="color:var(--red)">Error loading dashboard. <a href="/" style="color:var(--gl)">Go home</a></div>';
   }
 });
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v22-organiser-link</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v23-my-leagues</div>
 </body>
 </html>
