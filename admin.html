@@ -164,6 +164,7 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
         <a class="g-link" href="/forgot-password">Forgot password?</a>
         <a class="g-link" href="/join">Create a free account →</a>
       </div>
+      <div style="text-align:center;margin-bottom:.75rem"><a class="g-link" href="/organiser-guide" target="_blank" rel="noopener">📖 New here? Read the organiser guide</a></div>
       <div style="text-align:center;border-top:1px solid var(--border,#3a4a3a);padding-top:1rem">
         <a class="g-link" style="font-size:.75rem;color:var(--dim,#8a9080)" onclick="showGateLeagueLogin()">League helper? Log in with a league name + password →</a>
       </div>
@@ -211,6 +212,7 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
   </div>
   <div style="display:flex;gap:.5rem;align-items:center">
     <button class="logout-btn" id="btn-my-leagues" onclick="leaveLeague()" style="display:none">← My Leagues</button>
+    <a href="/organiser-guide" target="_blank" rel="noopener" class="logout-btn" style="text-decoration:none;display:inline-block">📖 Help</a>
     <a href="/" class="logout-btn" style="text-decoration:none;display:inline-block">← Back to Site</a>
     <button class="logout-btn" onclick="adminLogout()">Log Out</button>
   </div>
@@ -389,6 +391,9 @@ var scopedLeagueToken=null; // session token from open_my_league()/login_league(
 var organiserUser=null;     // signed-in account, if any (null for helper-password logins)
 var isPlatformAdmin=false;
 var wantsCreate=/[?&]new=1(&|$)/.test(window.location.search);
+var _lm=/[?&]league=([0-9a-fA-F-]{36})(&|$)/.exec(window.location.search);
+var wantsLeagueId=_lm?_lm[1]:null;   // /admin?league=<id> - deep link from the dashboard
+var wantsTab=/[?&]tab=enquiries(&|$)/.test(window.location.search)?'enquiries':null;
 
 // Used by every league query below: in single-league mode, only that league.
 function leagueScope(){ return scopedLeagueId ? '&id=eq.'+scopedLeagueId : ''; }
@@ -676,6 +681,17 @@ window.addEventListener('DOMContentLoaded',async function(){
   try{ var r=await paClient.auth.getSession(); session=r&&r.data&&r.data.session; }catch(e){}
   if(session){ organiserUser=session.user; }
 
+  // Deep link from the dashboard: open that specific league straight away.
+  if(session && wantsLeagueId){
+    if(wantsTab)sessionStorage.setItem('fc_open_tab',wantsTab);
+    if(!(mode==='league' && sessionStorage.getItem('fc_league_id')===wantsLeagueId && sessionStorage.getItem('fc_league_token'))){
+      try{ isPlatformAdmin=await checkPlatformAccess(session.user); }catch(e){}
+      var lid=wantsLeagueId; wantsLeagueId=null;
+      await openMyLeague(lid);   // enters the league and reloads /admin cleanly
+      return;
+    }
+  }
+
   if(mode==='league' && sessionStorage.getItem('fc_league_token')){
     scopedLeagueId=sessionStorage.getItem('fc_league_id');
     scopedLeagueName=sessionStorage.getItem('fc_league_name');
@@ -686,7 +702,8 @@ window.addEventListener('DOMContentLoaded',async function(){
     document.getElementById('tab-leagues').textContent='My League';
     document.getElementById('tab-create').style.display='none';
     showMyLeaguesButton(!!organiserUser);
-    showTab('leagues');
+    var ot=sessionStorage.getItem('fc_open_tab'); sessionStorage.removeItem('fc_open_tab');
+    showTab(ot==='enquiries'?'enquiries':'leagues');
     return;
   }
 
