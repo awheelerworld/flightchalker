@@ -1,0 +1,6 @@
+# /player/<username> is a client-side route: player/index.html reads the
+# username from window.location.pathname itself. Without this rewrite,
+# Cloudflare Pages looks for a literal file at /player/<username> and 404s
+# before the page's own JS ever runs. 200 (not 301/302) keeps the URL intact
+# so that path-parsing still works.
+/player/*  /player/index.html  200

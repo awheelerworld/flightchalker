@@ -102,66 +102,49 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
 <body>
 
 <!-- ═══ ADMIN GATE ═══
-     Two access tiers:
-     1. LEAGUE LOGIN — a league body signs in with their league name +
-        the admin password they set when creating their league. Once in,
-        they only ever see/edit their own league (teams, fixtures,
-        notices) — never other leagues on the platform.
-     2. PLATFORM ADMIN — the site owner (or anyone else you grant access
-        to) signs in with a real Flight Chalker account. Access is
-        controlled by an is_platform_admin flag on that account's row in
-        public.users, checked fresh on every login and every page load —
-        not by a shared password. This also means real password reset
-        (via /forgot-password) works for platform admin, since there's
-        an actual account and email address to send it to.
-     New leagues are created without any login (self-service), same as
-     team registration elsewhere on the site — the league body sets
-     their own password at that point.
+     Organisers sign in with their normal Flight Chalker account (email +
+     password, or Google). They then see "My Leagues": every league they own,
+     with Manage / Create new / Add an existing league.
 
-     SECURITY NOTE (read before deploying): League Login still works by
-     fetching the stored league password via the Supabase anon key and
-     comparing it in the browser — anyone who reads the page source can
-     see how the check works, and anyone with the anon key (visible in
-     every page's source, by design) could query the `leagues` table
-     directly and bypass this UI entirely. This matches the same model
-     already used for team PIN login elsewhere in the app. Platform Admin
-     no longer has this weakness (it's real Supabase Auth), but the
-     is_platform_admin flag on public.users is still just a column
-     anyone with the anon key can currently read — restricting who can
-     read/write it needs Row Level Security. See the security
-     instructions provided alongside this file. -->
-<div id="admin-gate" style="position:fixed;inset:0;background:#141814;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;z-index:9999;overflow-y:auto">
+     Platform admins (is_platform_admin = true on public.users) go straight
+     to the all-leagues view instead, so they can troubleshoot any league.
+
+     A league can also still be opened with the old league name + helper
+     password ("Helper login" - for a co-organiser who has no account).
+     See migration_02_organiser_accounts.sql. -->
+<style>
+  #header .logout-btn{white-space:nowrap;padding-left:.55rem;padding-right:.55rem}
+  .g-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:var(--amber,#e8c840);margin-bottom:.4rem}
+  .g-sub{font-size:.85rem;color:var(--dim,#8a9080);margin-bottom:1.25rem;line-height:1.5}
+  .g-field{display:flex;flex-direction:column;gap:4px;margin-bottom:.75rem}
+  .g-field label{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--dim,#8a9080)}
+  .g-field input{background:#141814;border:1px solid var(--border,#3a4a3a);border-radius:6px;color:#e0d8c8;font-family:'Barlow',sans-serif;font-size:.95rem;padding:.6rem .75rem}
+  .g-btn{width:100%;background:var(--green,#4a7c59);border:none;border-radius:8px;color:white;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.65rem;cursor:pointer;margin-bottom:1rem}
+  .g-btn.blue{background:#2a5a8c}
+  .g-btn:disabled{opacity:.6;cursor:default}
+  .g-err{font-size:.8rem;color:var(--red,#c0392b);margin-bottom:.75rem;display:none}
+  .g-link{color:var(--gl,#5a9469);text-decoration:none;font-size:.82rem;cursor:pointer}
+  .g-divider{display:flex;align-items:center;gap:.75rem;margin-bottom:1rem}
+  .g-divider div{flex:1;height:1px;background:var(--border,#3a4a3a)}
+  .g-divider span{font-size:.75rem;color:var(--dim,#8a9080)}
+  .ml-card{background:#141814;border:1px solid var(--border,#3a4a3a);border-radius:8px;padding:.8rem .9rem;margin-bottom:.6rem;display:flex;gap:.75rem;align-items:center;justify-content:space-between}
+  .ml-name{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:.03em;color:#e0d8c8}
+  .ml-meta{font-size:.74rem;color:var(--dim,#8a9080);margin-top:2px}
+  .ml-open{background:var(--green,#4a7c59);border:none;border-radius:6px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.5rem .9rem;cursor:pointer;white-space:nowrap}
+</style>
+<div id="admin-gate" style="position:fixed;inset:0;background:#141814;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:1.5rem;z-index:9999;overflow-y:auto">
   <a href="/" style="color:var(--dim,#8a9080);text-decoration:none;font-size:.82rem;margin-bottom:1rem;display:inline-block">← Back to flightchalker.co.uk</a>
-  <div style="background:var(--surface,#1e251e);border:1px solid var(--border,#3a4a3a);border-radius:12px;padding:2rem;max-width:380px;width:100%">
+  <div id="gate-card" style="background:var(--surface,#1e251e);border:1px solid var(--border,#3a4a3a);border-radius:12px;padding:2rem;max-width:380px;width:100%;margin:auto 0">
 
-    <!-- LEAGUE LOGIN (default view) -->
-    <div id="gate-league-login">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:var(--amber,#e8c840);margin-bottom:.4rem">League Administration</div>
-      <div style="font-size:.85rem;color:var(--dim,#8a9080);margin-bottom:1.25rem">Sign in with your league name and admin password to manage your league.</div>
-      <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:.75rem">
-        <label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--dim,#8a9080)">League Name</label>
-        <input type="text" id="ll-name" placeholder="e.g. Monday Night Darts 2026" autocomplete="off" style="background:#141814;border:1px solid var(--border,#3a4a3a);border-radius:6px;color:#e0d8c8;font-family:'Barlow',sans-serif;font-size:.95rem;padding:.6rem .75rem">
+    <!-- ORGANISER SIGN-IN (default view) -->
+    <div id="gate-signin">
+      <div class="g-title">League Organiser</div>
+      <div class="g-sub">Sign in with your Flight Chalker account to manage your leagues or create a new one.</div>
+      <div id="gate-create-hint" style="display:none;background:#1a2a1e;border:1px solid var(--green,#4a7c59);border-radius:6px;padding:.6rem .8rem;margin-bottom:1rem;font-size:.82rem;color:var(--dim,#8a9080);line-height:1.5">
+        <strong style="color:var(--gl,#5a9469)">Setting up a new league?</strong> Sign in, or create a free account below, and you'll go straight to the league set-up form.
       </div>
-      <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:.75rem">
-        <label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--dim,#8a9080)">Admin Password</label>
-        <input type="password" id="ll-pw" placeholder="Your league's admin password" autocomplete="off" onkeydown="if(event.key==='Enter')checkLeagueLogin()" style="background:#141814;border:1px solid var(--border,#3a4a3a);border-radius:6px;color:#e0d8c8;font-family:'Barlow',sans-serif;font-size:.95rem;padding:.6rem .75rem">
-      </div>
-      <div id="ll-err" style="font-size:.8rem;color:var(--red,#c0392b);margin-bottom:.75rem;display:none">League not found or incorrect password.</div>
-      <button onclick="checkLeagueLogin()" style="width:100%;background:var(--green,#4a7c59);border:none;border-radius:8px;color:white;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.65rem;cursor:pointer;margin-bottom:1rem">Log In</button>
-      <div style="text-align:center;font-size:.82rem;border-top:1px solid var(--border,#3a4a3a);padding-top:1rem">
-        <a href="javascript:void(0)" onclick="showGateCreate()" style="color:var(--gl,#5a9469);text-decoration:none">New league? Create one here →</a>
-      </div>
-      <div style="text-align:center;font-size:.75rem;margin-top:.75rem">
-        <a href="javascript:void(0)" onclick="showGatePlatform()" style="color:var(--dim,#8a9080);text-decoration:none">Platform admin? Sign in here →</a>
-      </div>
-    </div>
 
-    <!-- PLATFORM ADMIN LOGIN (hidden by default) -->
-    <div id="gate-platform-login" style="display:none">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:#8ac4ff;margin-bottom:.4rem">Platform Admin</div>
-      <div style="font-size:.85rem;color:var(--dim,#8a9080);margin-bottom:1.25rem">Site-wide access — every league on Flight Chalker. Sign in with your Flight Chalker account.</div>
-
-      <button onclick="signInWithGooglePlatform()" style="display:flex;align-items:center;justify-content:center;gap:.75rem;width:100%;background:white;border:none;border-radius:8px;color:#333;font-family:'Barlow',sans-serif;font-size:.95rem;font-weight:600;padding:.65rem;cursor:pointer;margin-bottom:1rem">
+      <button onclick="signInWithGoogleOrganiser()" style="display:flex;align-items:center;justify-content:center;gap:.75rem;width:100%;background:white;border:none;border-radius:8px;color:#333;font-family:'Barlow',sans-serif;font-size:.95rem;font-weight:600;padding:.65rem;cursor:pointer;margin-bottom:1rem">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:20px;height:20px;flex-shrink:0">
           <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
           <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -170,38 +153,50 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
         </svg>
         Continue with Google
       </button>
-      <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem">
-        <div style="flex:1;height:1px;background:var(--border,#3a4a3a)"></div>
-        <span style="font-size:.75rem;color:var(--dim,#8a9080)">or sign in with email</span>
-        <div style="flex:1;height:1px;background:var(--border,#3a4a3a)"></div>
-      </div>
+      <div class="g-divider"><div></div><span>or sign in with email</span><div></div></div>
 
-      <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:.75rem">
-        <label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--dim,#8a9080)">Email</label>
-        <input type="email" id="pa-email" placeholder="you@example.com" autocomplete="off" style="background:#141814;border:1px solid var(--border,#3a4a3a);border-radius:6px;color:#e0d8c8;font-family:'Barlow',sans-serif;font-size:.95rem;padding:.6rem .75rem">
+      <div class="g-field"><label>Email</label><input type="email" id="pa-email" placeholder="you@example.com" autocomplete="email"></div>
+      <div class="g-field"><label>Password</label><input type="password" id="pa-password" placeholder="Your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')organiserLogin()"></div>
+      <div class="g-err" id="gate-err">Incorrect password.</div>
+      <button class="g-btn" id="pa-login-btn" onclick="organiserLogin()">Sign In</button>
+
+      <div style="display:flex;justify-content:space-between;margin-bottom:1rem">
+        <a class="g-link" href="/forgot-password">Forgot password?</a>
+        <a class="g-link" href="/join">Create a free account →</a>
       </div>
-      <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:.75rem">
-        <label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--dim,#8a9080)">Password</label>
-        <input type="password" id="pa-password" placeholder="Your password" autocomplete="off" onkeydown="if(event.key==='Enter')platformLogin()" style="background:#141814;border:1px solid var(--border,#3a4a3a);border-radius:6px;color:#e0d8c8;font-family:'Barlow',sans-serif;font-size:.95rem;padding:.6rem .75rem">
-      </div>
-      <div id="gate-err" style="font-size:.8rem;color:var(--red,#c0392b);margin-bottom:.75rem;display:none">Incorrect password.</div>
-      <button onclick="platformLogin()" id="pa-login-btn" style="width:100%;background:#2a5a8c;border:none;border-radius:8px;color:white;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.65rem;cursor:pointer;margin-bottom:1rem">Enter</button>
-      <div style="text-align:center;font-size:.82rem;margin-bottom:.75rem">
-        <a href="/forgot-password" style="color:var(--gl,#5a9469);text-decoration:none">Forgot password? →</a>
-      </div>
-      <div style="text-align:center;font-size:.82rem">
-        <a href="javascript:void(0)" onclick="showGateLeagueLogin()" style="color:var(--gl,#5a9469);text-decoration:none">← Back to league login</a>
+      <div style="text-align:center;border-top:1px solid var(--border,#3a4a3a);padding-top:1rem">
+        <a class="g-link" style="font-size:.75rem;color:var(--dim,#8a9080)" onclick="showGateLeagueLogin()">League helper? Log in with a league name + password →</a>
       </div>
     </div>
 
-    <!-- CREATE LEAGUE (hidden by default; reveals the real Create League panel below) -->
-    <div id="gate-create-prompt" style="display:none">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:var(--amber,#e8c840);margin-bottom:.4rem">Create Your League</div>
-      <div style="font-size:.85rem;color:var(--dim,#8a9080);margin-bottom:1.25rem">Set up your own darts league. You'll choose an admin password here — keep it safe, you'll use it to log back in and manage your league.</div>
-      <button onclick="enterCreateMode()" style="width:100%;background:var(--green,#4a7c59);border:none;border-radius:8px;color:white;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.65rem;cursor:pointer;margin-bottom:1rem">Continue →</button>
-      <div style="text-align:center;font-size:.82rem">
-        <a href="javascript:void(0)" onclick="showGateLeagueLogin()" style="color:var(--gl,#5a9469);text-decoration:none">← Back to league login</a>
+    <!-- HELPER LOGIN (league name + helper password) -->
+    <div id="gate-league-login" style="display:none">
+      <div class="g-title">Helper Login</div>
+      <div class="g-sub">For co-organisers and secretaries. Enter the league name and the helper password the league owner gave you.</div>
+      <div class="g-field"><label>League Name</label><input type="text" id="ll-name" placeholder="e.g. Monday Night Darts 2026" autocomplete="off"></div>
+      <div class="g-field"><label>Helper Password</label><input type="password" id="ll-pw" placeholder="Helper password" autocomplete="off" onkeydown="if(event.key==='Enter')checkLeagueLogin()"></div>
+      <div class="g-err" id="ll-err">League not found or incorrect password.</div>
+      <button class="g-btn" onclick="checkLeagueLogin()">Log In</button>
+      <div style="text-align:center"><a class="g-link" onclick="showGateSignin()">← Back to organiser sign-in</a></div>
+    </div>
+
+    <!-- MY LEAGUES -->
+    <div id="gate-my-leagues" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;flex-wrap:wrap;margin-bottom:.25rem">
+        <div class="g-title" style="margin-bottom:0">Your Leagues</div>
+        <a class="g-link" style="font-size:.75rem;color:var(--dim,#8a9080)" onclick="organiserSignOut()">Sign out</a>
       </div>
+      <div class="g-sub" style="margin-bottom:1rem">Signed in as <span id="ml-who" style="color:#e0d8c8"></span></div>
+      <div class="g-err" id="ml-msg"></div>
+      <div id="ml-list"></div>
+      <button class="g-btn blue" style="margin-top:.5rem" onclick="startCreateLeague()">＋ Create a New League</button>
+      <details id="ml-claim" style="border-top:1px solid var(--border,#3a4a3a);padding-top:.9rem">
+        <summary style="cursor:pointer;font-size:.82rem;color:var(--gl,#5a9469)">Already run a league on Flight Chalker? Add it to your account</summary>
+        <div style="font-size:.78rem;color:var(--dim,#8a9080);margin:.7rem 0;line-height:1.5">Enter the league name and its current admin password, once. The league then belongs to your account and you won't need the password again.</div>
+        <div class="g-field"><label>League Name</label><input type="text" id="ml-claim-name" autocomplete="off"></div>
+        <div class="g-field"><label>Admin Password</label><input type="password" id="ml-claim-pw" autocomplete="off" onkeydown="if(event.key==='Enter')claimLeague()"></div>
+        <button class="g-btn" id="ml-claim-btn" onclick="claimLeague()">Add This League</button>
+      </details>
     </div>
 
   </div>
@@ -215,6 +210,7 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
     <div class="logo-sub" id="header-sub">League Administration</div>
   </div>
   <div style="display:flex;gap:.5rem;align-items:center">
+    <button class="logout-btn" id="btn-my-leagues" onclick="leaveLeague()" style="display:none">← My Leagues</button>
     <a href="/" class="logout-btn" style="text-decoration:none;display:inline-block">← Back to Site</a>
     <button class="logout-btn" onclick="adminLogout()">Log Out</button>
   </div>
@@ -238,7 +234,8 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
   <div id="panel-fixtures" class="panel">
     <div class="card">
       <h2>Import Fixture List</h2>
-      <p style="font-size:.82rem;color:var(--dim);margin-bottom:.75rem">Download the template, fill in your fixtures, then upload to bulk-import a full season.</p>
+      <p style="font-size:.82rem;color:var(--dim);margin-bottom:.5rem;line-height:1.5">Download the template, fill in your fixtures, then upload to bulk-import a full season. Teams must already be registered in the league, with names matching exactly.</p>
+      <p style="font-size:.78rem;color:var(--dim);margin-bottom:.75rem;line-height:1.5"><strong style="color:var(--gl)">Safe to re-upload.</strong> If you upload the same file again, or a corrected version, existing fixtures are matched by teams and updated — you won't get duplicates. You'll see a summary and confirm before anything changes. Fixtures that have already been played are never altered.</p>
       <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:center">
         <button class="btn-admin" onclick="downloadFixtureTemplate()">⬇ Download Template</button>
         <div style="flex:1;min-width:200px">
@@ -296,7 +293,8 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
     <div class="card">
       <h2>Create New League</h2>
       <div class="field"><label>League Name</label><input type="text" id="cl-name" placeholder="e.g. Monday Night Darts 2026"></div>
-      <div class="field"><label>Admin Password</label><input type="password" id="cl-pw" placeholder="Password for this league"></div>
+      <div class="field"><label>Helper Password <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label><input type="password" id="cl-pw" placeholder="Leave blank unless you want a co-organiser to log in" autocomplete="new-password"><span style="font-size:.72rem;color:var(--dim)">You manage this league through your own account. This is only for sharing limited access with a co-organiser (league name + this password). Minimum 6 characters. You can change it later.</span></div>
+      <div class="field"><label>Start Time <span style="font-weight:400;text-transform:none;letter-spacing:0">(used for calendar entries)</span></label><input type="time" id="cl-time" value="20:00"></div>
       <div class="field"><label>Match Night</label>
         <select id="cl-night"><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Sunday</option></select>
       </div>
@@ -356,97 +354,103 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
 
 <script>
 // ── Admin session ──────────────────────────────────────────────────────────
-// League Login below is still a client-side speed bump (see warning comment
-// near the top of this file) — same caveats as before, unchanged.
-//
-// Platform Admin now uses a REAL Flight Chalker account (Supabase Auth)
-// instead of a shared password. Only accounts with is_platform_admin=true
-// on their public.users row can get past this gate. This is what makes a
-// genuine "forgot password" possible for platform admin — a shared string
-// has no account and nowhere to send a reset email, but a real account
-// does, so /forgot-password (already built for players) works here too.
+// Organisers sign in with a REAL Flight Chalker account (Supabase Auth: email
+// + password, or Google). Ownership of each league is stored on the league
+// (leagues.owner_user_id) and enforced in the database: open_my_league()
+// only hands out a league-admin session token to the league's owner, or to a
+// platform admin (is_platform_admin = true), who can open any league.
+// The same 12-hour token powers every league-admin RPC. A league can also be
+// opened with its helper password (league name + password) - no account.
+// See migration_01_security.sql and migration_02_organiser_accounts.sql.
 const paClient = window.supabase.createClient(
   'https://xkovqamknwyjzlgijcel.supabase.co',
   'sb_publishable_1zeVlEGjUdGNwA-i8pktHg_nSjRXYEQ'
 );
 
-var scopedLeagueId=null;   // set when a league body is logged in — null in platform-admin mode
+var scopedLeagueId=null;    // set while a single league is open - null in platform-admin mode
 var scopedLeagueName=null;
+var scopedLeagueToken=null; // session token from open_my_league()/login_league() - needed by every league-admin RPC
+var organiserUser=null;     // signed-in account, if any (null for helper-password logins)
+var isPlatformAdmin=false;
+var wantsCreate=/[?&]new=1(&|$)/.test(window.location.search);
 
-function showGateLeagueLogin(){
-  document.getElementById('gate-league-login').style.display='block';
-  document.getElementById('gate-platform-login').style.display='none';
-  document.getElementById('gate-create-prompt').style.display='none';
+// Used by every league query below: in single-league mode, only that league.
+function leagueScope(){ return scopedLeagueId ? '&id=eq.'+scopedLeagueId : ''; }
+
+function showGateView(name){
+  ['signin','league-login','my-leagues'].forEach(function(v){
+    document.getElementById('gate-'+v).style.display=(v===name)?'block':'none';
+  });
+  document.getElementById('gate-card').style.maxWidth=(name==='my-leagues')?'520px':'380px';
+  document.getElementById('admin-gate').style.display='flex';
+  document.getElementById('admin-real-content').style.display='none';
 }
-function showGatePlatform(){
-  document.getElementById('gate-league-login').style.display='none';
-  document.getElementById('gate-platform-login').style.display='block';
-  document.getElementById('gate-create-prompt').style.display='none';
-}
-function showGateCreate(){
-  document.getElementById('gate-league-login').style.display='none';
-  document.getElementById('gate-platform-login').style.display='none';
-  document.getElementById('gate-create-prompt').style.display='block';
+function showGateSignin(){ showGateView('signin'); }
+function showGateLeagueLogin(){ showGateView('league-login'); }
+
+function clearLeagueSession(){
+  scopedLeagueId=null;scopedLeagueName=null;scopedLeagueToken=null;
+  sessionStorage.removeItem('fc_admin_mode');
+  sessionStorage.removeItem('fc_league_id');
+  sessionStorage.removeItem('fc_league_name');
+  sessionStorage.removeItem('fc_league_token');
 }
 
-// League body login — looks their league up by name and checks its own
-// admin_password (the one they set when they created the league).
+// Helper login: league name + helper password, checked in the database by
+// login_league(), which hands back a short-lived session token.
 async function checkLeagueLogin(){
   var name=document.getElementById('ll-name').value.trim();
   var pw=document.getElementById('ll-pw').value;
   var err=document.getElementById('ll-err');
   err.style.display='none';
-  if(!name||!pw){err.textContent='Please enter your league name and password.';err.style.display='block';return;}
+  if(!name||!pw){err.textContent='Please enter the league name and helper password.';err.style.display='block';return;}
   try{
-    var rows=await sb('leagues?name=ilike.'+encodeURIComponent(name)+'&select=id,name,admin_password');
-    var league=rows&&rows.find(function(l){return l.name.toLowerCase()===name.toLowerCase();});
-    if(!league||league.admin_password!==pw){
+    var rows=await sb('rpc/login_league',{method:'POST',body:JSON.stringify({p_name:name,p_password:pw})});
+    var league=rows&&rows[0];
+    if(!league){
       err.textContent='League not found or incorrect password.';err.style.display='block';return;
     }
-    enterLeagueMode(league.id,league.name);
+    enterLeagueMode(league.id,league.name,league.token);
   }catch(e){
-    err.textContent='Error: '+e.message;err.style.display='block';
+    err.textContent='League not found or incorrect password.';err.style.display='block';
   }
 }
 
-// Shared by password login, Google login, and session-restore-on-reload.
-// Some accounts (anyone who signed up via "Continue with Google" on /join
-// or /login) never got a row in public.users — that insert only happens
-// on the email/password signup path elsewhere on the site. Without a row
-// there, is_platform_admin has nowhere to live, so this creates one
-// on-the-fly (defaulting to is_platform_admin=false) if it's missing,
-// then returns whether that account has platform admin access.
+// Some accounts (anyone who signed up via "Continue with Google") never got a
+// row in public.users, so is_platform_admin has nowhere to live. This creates
+// one on the fly if missing, then returns whether the account is a platform
+// admin (a "superuser" who can open every league).
 async function checkPlatformAccess(user){
   var { data:profile } = await paClient.from('users').select('is_platform_admin').eq('id',user.id).single();
   if(!profile){
-    var username=(user.user_metadata&&(user.user_metadata.username||user.user_metadata.full_name))||user.email.split('@')[0];
+    // No username passed on purpose - the database assigns a random
+    // "chalkerN" default (see migration_01_security.sql).
     try{
-      await paClient.from('users').insert({ id:user.id, email:user.email, username:username });
-    }catch(e){ /* row may already exist from a race with another tab - fine either way */ }
+      await paClient.from('users').insert({ id:user.id, email:user.email });
+    }catch(e){ /* row may already exist from a race with another tab - fine */ }
     var { data:retry } = await paClient.from('users').select('is_platform_admin').eq('id',user.id).single();
     profile=retry;
   }
   return !!(profile&&profile.is_platform_admin);
 }
 
-async function signInWithGooglePlatform(){
+async function signInWithGoogleOrganiser(){
   var err=document.getElementById('gate-err');
   err.style.display='none';
   try{
     const { error } = await paClient.auth.signInWithOAuth({
       provider:'google',
-      options:{ redirectTo:'https://flightchalker.co.uk/admin' }
+      options:{ redirectTo:'https://flightchalker.co.uk/admin'+(wantsCreate?'?new=1':'') }
     });
     if(error) throw error;
-    // Browser now redirects to Google, then back to /admin — the
-    // page-load handler further down picks up the session from there.
+    // Browser now redirects to Google, then back to /admin - the page-load
+    // handler further down picks up the session from there.
   }catch(e){
     err.textContent='Google sign in failed: '+e.message;err.style.display='block';
   }
 }
 
-// Platform admin — real account sign-in, then check is_platform_admin.
-async function platformLogin(){
+async function organiserLogin(){
   var email=document.getElementById('pa-email').value.trim();
   var pw=document.getElementById('pa-password').value;
   var err=document.getElementById('gate-err');
@@ -457,115 +461,227 @@ async function platformLogin(){
   try{
     const { data, error } = await paClient.auth.signInWithPassword({ email:email, password:pw });
     if(error) throw error;
-
-    var allowed=await checkPlatformAccess(data.user);
-    if(!allowed){
-      await paClient.auth.signOut();
-      err.textContent='This account doesn\'t have platform admin access.';err.style.display='block';
-      btn.disabled=false;btn.textContent='Enter';
-      return;
-    }
-    enterPlatformMode();
+    await afterOrganiserSignIn(data.user);
   }catch(e){
     err.textContent = e.message==='Invalid login credentials' ? 'Incorrect email or password.' : e.message;
     err.style.display='block';
-    btn.disabled=false;btn.textContent='Enter';
+  }
+  btn.disabled=false;btn.textContent='Sign In';
+}
+
+// Where to go once we know who's signed in.
+//  * platform admin  -> all-leagues view (troubleshooting)
+//  * ?new=1 link     -> straight to the create-league form
+//  * everyone else   -> My Leagues
+async function afterOrganiserSignIn(user){
+  organiserUser=user;
+  isPlatformAdmin=await checkPlatformAccess(user);
+  if(isPlatformAdmin){
+    enterPlatformMode();
+    if(wantsCreate){ wantsCreate=false; showTab('create'); }
+    return;
+  }
+  if(wantsCreate){ wantsCreate=false; startCreateLeague(); return; }
+  await showMyLeagues();
+}
+
+async function organiserSignOut(){
+  clearLeagueSession();
+  organiserUser=null;isPlatformAdmin=false;
+  try{ await paClient.auth.signOut(); }catch(e){}
+  showGateSignin();
+}
+
+// ── My Leagues ──────────────────────────────────────────────────────────────
+function mlMsg(text){
+  var el=document.getElementById('ml-msg');
+  el.textContent=text||'';el.style.display=text?'block':'none';
+}
+
+async function showMyLeagues(){
+  clearLeagueSession();
+  showGateView('my-leagues');
+  mlMsg('');
+  document.getElementById('ml-who').textContent=organiserUser&&organiserUser.email?organiserUser.email:'';
+  var el=document.getElementById('ml-list');
+  el.innerHTML='<div style="font-size:.85rem;color:var(--dim,#8a9080);padding:.5rem 0">Loading your leagues…</div>';
+  try{
+    var { data, error } = await paClient.rpc('my_leagues');
+    if(error) throw error;
+    var rows=data||[];
+    var claim=document.getElementById('ml-claim');
+    if(!rows.length){
+      el.innerHTML='<div style="font-size:.88rem;color:var(--dim,#8a9080);line-height:1.5;padding:.25rem 0 1rem">You don\'t have any leagues yet. Create your first one below'
+        +'. If you already run a league on Flight Chalker, add it to your account instead.</div>';
+      claim.open=true;
+      return;
+    }
+    claim.open=false;
+    el.innerHTML=rows.map(function(l){
+      var code=l.id.replace(/-/g,'').toUpperCase().slice(0,8);
+      var n=Number(l.team_count)||0;
+      return '<div class="ml-card">'
+        +'<div style="min-width:0"><div class="ml-name">'+esc(l.name)+'</div>'
+        +'<div class="ml-meta">'+esc(l.match_night||'')+'s &middot; '+n+' team'+(n!==1?'s':'')+' &middot; Code '+code+'</div></div>'
+        +'<button class="ml-open" onclick="openMyLeague(\''+l.id+'\')">Manage →</button>'
+        +'</div>';
+    }).join('');
+  }catch(e){
+    el.innerHTML='';
+    mlMsg('Could not load your leagues: '+e.message);
   }
 }
 
-function enterLeagueMode(id,name){
-  scopedLeagueId=id;scopedLeagueName=name;
+async function openMyLeague(id){
+  mlMsg('');
+  try{
+    var { data, error } = await paClient.rpc('open_my_league',{p_league_id:id});
+    if(error) throw error;
+    var row=Array.isArray(data)?data[0]:data;
+    if(!row) throw new Error('Could not open that league.');
+    enterLeagueMode(row.id,row.name,row.token);
+  }catch(e){
+    // The gate may be hidden (e.g. called from the create screen), so fall
+    // back to the My Leagues screen to show the message.
+    await showMyLeagues();
+    mlMsg('Could not open that league: '+e.message);
+  }
+}
+
+async function claimLeague(){
+  var name=document.getElementById('ml-claim-name').value.trim();
+  var pw=document.getElementById('ml-claim-pw').value;
+  var btn=document.getElementById('ml-claim-btn');
+  mlMsg('');
+  if(!name||!pw){mlMsg('Please enter the league name and its admin password.');return;}
+  btn.disabled=true;btn.textContent='Adding…';
+  try{
+    var { error } = await paClient.rpc('claim_league',{p_name:name,p_password:pw});
+    if(error) throw error;
+    document.getElementById('ml-claim-name').value='';
+    document.getElementById('ml-claim-pw').value='';
+    await showMyLeagues();
+  }catch(e){
+    mlMsg(e.message);
+  }
+  btn.disabled=false;btn.textContent='Add This League';
+}
+
+// Owner (or platform admin) sets / clears the helper-login password.
+async function setHelperPassword(leagueId){
+  var pw=prompt('Helper password for this league (at least 6 characters).\n\nGive this, with the league name, to a co-organiser so they can log in without your account.\n\nLeave blank and press OK to switch helper login OFF.');
+  if(pw===null)return;
+  try{
+    var { error } = await paClient.rpc('set_league_helper_password',{p_league_id:leagueId,p_password:pw});
+    if(error) throw error;
+    toast(pw.trim()?'Helper password updated':'Helper login switched off');
+  }catch(e){ toast('Error: '+e.message,true); }
+}
+
+// ── Entering a league / platform view ───────────────────────────────────────
+function showMyLeaguesButton(on){
+  var b=document.getElementById('btn-my-leagues');
+  if(b)b.style.display=on?'inline-block':'none';
+}
+
+function enterLeagueMode(id,name,token){
+  scopedLeagueId=id;scopedLeagueName=name;scopedLeagueToken=token;
   sessionStorage.setItem('fc_admin_mode','league');
   sessionStorage.setItem('fc_league_id',id);
   sessionStorage.setItem('fc_league_name',name);
+  sessionStorage.setItem('fc_league_token',token);
   document.getElementById('admin-gate').style.display='none';
   document.getElementById('admin-real-content').style.display='block';
   document.getElementById('header-sub').textContent=name+' · League Admin';
-  // League-scoped bodies manage only their own league: no cross-league
-  // "Leagues" browser and no separate "Create League" tab (they already
-  // have one). "Leagues" tab is relabelled to show just their league.
+  // Single-league view: no cross-league "Leagues" browser and no "Create League"
+  // tab. The tab row may have been hidden by the create screen, so reset it first.
+  document.querySelectorAll('.tabs .tab').forEach(function(t){t.style.display='';});
   document.getElementById('tab-leagues').textContent='My League';
   document.getElementById('tab-create').style.display='none';
+  showMyLeaguesButton(!!organiserUser&&!isPlatformAdmin);
   showTab('leagues');
 }
 
 function enterPlatformMode(){
-  scopedLeagueId=null;scopedLeagueName=null;
+  scopedLeagueId=null;scopedLeagueName=null;scopedLeagueToken=null;
   sessionStorage.setItem('fc_admin_mode','platform');
   sessionStorage.removeItem('fc_league_id');
   sessionStorage.removeItem('fc_league_name');
+  sessionStorage.removeItem('fc_league_token');
   document.getElementById('admin-gate').style.display='none';
   document.getElementById('admin-real-content').style.display='block';
   document.getElementById('header-sub').textContent='Platform Admin · All Leagues';
+  document.querySelectorAll('.tabs .tab').forEach(function(t){t.style.display='';});
   document.getElementById('tab-leagues').textContent='Leagues';
-  document.getElementById('tab-create').style.display='';
+  showMyLeaguesButton(false);
   showTab('leagues');
 }
 
-// Reveals the existing "Create League" panel with no tabs/nav around it —
-// used for brand-new league bodies who don't have a login yet. On success
-// createLeague() below transitions straight into enterLeagueMode().
+// Shows the Create League form on its own (no tabs) for an organiser who is
+// setting up a league. After creating, "Open this league" takes them in.
 function enterCreateMode(){
+  clearLeagueSession();
   document.getElementById('admin-gate').style.display='none';
   document.getElementById('admin-real-content').style.display='block';
   document.getElementById('header-sub').textContent='Create Your League';
   document.querySelectorAll('.tabs .tab').forEach(function(t){t.style.display='none';});
   document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
   document.getElementById('panel-create').classList.add('active');
+  document.getElementById('cl-status').textContent='';
+  showMyLeaguesButton(true);
+}
+function startCreateLeague(){ enterCreateMode(); }
+
+// Leave the open league (ending its session) and go back to My Leagues.
+async function leaveLeague(){
+  if(scopedLeagueToken){
+    try{ await sb('rpc/logout_league',{method:'POST',body:JSON.stringify({p_token:scopedLeagueToken})}); }catch(e){}
+  }
+  await showMyLeagues();
 }
 
 async function adminLogout(){
-  sessionStorage.removeItem('fc_admin_mode');
-  sessionStorage.removeItem('fc_league_id');
-  sessionStorage.removeItem('fc_league_name');
+  if(scopedLeagueToken){
+    try{ await sb('rpc/logout_league',{method:'POST',body:JSON.stringify({p_token:scopedLeagueToken})}); }catch(e){}
+  }
+  clearLeagueSession();
   try{ await paClient.auth.signOut(); }catch(e){}
   window.location.href='/admin';
 }
 
-// Restore an existing session on reload, AND handle landing back here
-// straight after a Google OAuth redirect (supabase-js picks the session
-// up from the URL automatically — we just need to check it once loaded).
-// League mode is per-tab (sessionStorage only). Platform mode always
-// re-verifies the real Supabase Auth session AND the is_platform_admin
-// flag — so if you're signed out elsewhere, or the flag gets revoked,
-// the gate re-appears instead of trusting a stale local flag.
-(async function(){
+// Page load: restore an open league after a refresh, or - if there's a signed-in
+// account (including coming back from Google) - route them on. Platform-admin
+// status is always re-checked against the database, never trusted from storage.
+// Runs on DOMContentLoaded (not immediately) because it uses helpers - sb(),
+// esc(), toast(), showTab() - that are defined in the script further down.
+window.addEventListener('DOMContentLoaded',async function(){
   var mode=sessionStorage.getItem('fc_admin_mode');
-  if(mode==='league'){
+  var session=null;
+  try{ var r=await paClient.auth.getSession(); session=r&&r.data&&r.data.session; }catch(e){}
+  if(session){ organiserUser=session.user; }
+
+  if(mode==='league' && sessionStorage.getItem('fc_league_token')){
     scopedLeagueId=sessionStorage.getItem('fc_league_id');
     scopedLeagueName=sessionStorage.getItem('fc_league_name');
+    scopedLeagueToken=sessionStorage.getItem('fc_league_token');
     document.getElementById('admin-gate').style.display='none';
     document.getElementById('admin-real-content').style.display='block';
     document.getElementById('header-sub').textContent=scopedLeagueName+' · League Admin';
     document.getElementById('tab-leagues').textContent='My League';
     document.getElementById('tab-create').style.display='none';
+    showMyLeaguesButton(!!organiserUser);
+    showTab('leagues');
     return;
   }
 
-  // Covers both: (a) mode==='platform' from a previous visit this tab,
-  // and (b) just landed back from Google with no sessionStorage flag yet.
-  try{
-    const { data:{ session } } = await paClient.auth.getSession();
-    if(!session)throw new Error('no session');
-    var allowed=await checkPlatformAccess(session.user);
-    if(!allowed)throw new Error('not platform admin');
-    enterPlatformMode();
-  }catch(e){
-    if(mode)sessionStorage.removeItem('fc_admin_mode');
-    // If we got here via a Google redirect with a real (but unauthorized)
-    // session, sign out cleanly and surface why, rather than leaving them
-    // stuck signed-in-but-blocked with no explanation.
-    try{
-      const { data:{ session } } = await paClient.auth.getSession();
-      if(session){
-        await paClient.auth.signOut();
-        showGatePlatform();
-        document.getElementById('gate-err').textContent="Signed in, but that account doesn't have platform admin access yet.";
-        document.getElementById('gate-err').style.display='block';
-      }
-    }catch(e2){}
+  if(session){
+    try{ await afterOrganiserSignIn(session.user); return; }
+    catch(e){ console.error('Admin routing failed:',e); }
   }
-})();
+  if(mode)sessionStorage.removeItem('fc_admin_mode');
+  if(wantsCreate){ document.getElementById('gate-create-hint').style.display='block'; }
+  showGateSignin();
+});
 </script>
 <script>
 const SB='https://xkovqamknwyjzlgijcel.supabase.co';
@@ -608,7 +724,7 @@ function showTab(name){
 
 async function populateNoticeDropdowns(){
   try{
-    var leagues=await sb('leagues?order=name.asc&select=id,name');
+    var leagues=await sb('leagues?order=name.asc&select=id,name'+leagueScope());
     var opts='<option value="">— Select league —</option>'+leagues.map(function(l){return '<option value="'+l.id+'">'+esc(l.name)+'</option>';}).join('');
     document.getElementById('notice-league').innerHTML=opts;
     document.getElementById('notice-filter').innerHTML=opts;
@@ -617,7 +733,7 @@ async function populateNoticeDropdowns(){
 
 async function populateFixtureLeagueDropdowns(){
   try{
-    var leagues=await sb('leagues?order=name.asc&select=id,name');
+    var leagues=await sb('leagues?order=name.asc&select=id,name'+leagueScope());
     var opts='<option value="">— Select league —</option>'+leagues.map(function(l){return '<option value="'+l.id+'">'+esc(l.name)+'</option>';}).join('');
     var fopts='<option value="">— All leagues —</option>'+leagues.map(function(l){return '<option value="'+l.id+'">'+esc(l.name)+'</option>';}).join('');
     document.getElementById('fx-league').innerHTML=opts;
@@ -630,8 +746,12 @@ async function loadLeagues(){
   var el=document.getElementById('leagues-list');
   el.innerHTML='<div class="lh"><span class="spin"></span> Loading…</div>';
   try{
-    var leagues=await sb('leagues?order=created_at.desc&select=*');
-    var teams=await sb('teams?select=id,league_id');
+    // Explicit columns: select=* would fail now that leagues.admin_password is not readable by the browser.
+    var leagueCols='id,created_at,name,match_night,num_singles,num_doubles,team_game,team_game_players,starting_score,best_of_singles,best_of_doubles,points_win,points_draw,points_loss,current_season,starting_score_doubles,starting_score_team,fixed_team_names';
+    var leagues;
+    try{ leagues=await sb('leagues?order=created_at.desc&select='+leagueCols+',match_time'+leagueScope()); }
+    catch(e){ leagues=await sb('leagues?order=created_at.desc&select='+leagueCols+leagueScope()); } // match_time column not added yet (migration_03)
+    var teams=await sb('teams?select=id,league_id'+(scopedLeagueId?'&league_id=eq.'+scopedLeagueId:''));
     if(!leagues||!leagues.length){el.innerHTML='<div class="nh">No leagues yet. Create one using the Create League tab.</div>';return;}
     el.innerHTML=leagues.map(function(l){
       var count=teams.filter(function(t){return t.league_id===l.id;}).length;
@@ -644,12 +764,14 @@ async function loadLeagues(){
         +'<span class="code-badge" style="color:var(--amber);border-color:#6a5200;background:#2a2000">'+count+' team'+(count!==1?'s':'')+' registered</span>'
         +'<span class="code-badge" style="'+(l.fixed_team_names?'color:var(--amber);border-color:#6a5200;background:#2a2000':'color:var(--dim)')+'">'+(l.fixed_team_names?'🔒 Fixed team names':'✎ Captains choose team name')+'</span>'
         +'<button class="btn-admin" style="font-size:.72rem;padding:3px 10px" onclick="toggleEdit(\''+l.id+'\')">✎ Edit</button>'
+        +(organiserUser?'<button class="btn-admin" style="font-size:.72rem;padding:3px 10px" onclick="setHelperPassword(\''+l.id+'\')">🔑 Helper password</button>':'')
         +'</div>'
         +'<div class="edit-panel" id="ep-'+l.id+'">'
         +'<h3>Edit League</h3>'
         +'<div class="grid">'
         +'<div class="field"><label>Name</label><input type="text" id="en-'+l.id+'" value="'+esc(l.name)+'"></div>'
         +'<div class="field"><label>Match Night</label><select id="eni-'+l.id+'"><option '+(l.match_night==="Monday"?"selected":"")+'>Monday</option><option '+(l.match_night==="Tuesday"?"selected":"")+'>Tuesday</option><option '+(l.match_night==="Wednesday"?"selected":"")+'>Wednesday</option><option '+(l.match_night==="Thursday"?"selected":"")+'>Thursday</option><option '+(l.match_night==="Friday"?"selected":"")+'>Friday</option><option '+(l.match_night==="Sunday"?"selected":"")+'>Sunday</option></select></div>'
+        +'<div class="field"><label>Start Time</label><input type="time" id="emt-'+l.id+'" value="'+esc(l.match_time||'20:00')+'"></div>'
         +'<div class="field"><label>Singles</label><input type="number" id="es-'+l.id+'" value="'+(l.num_singles||6)+'"></div>'
         +'<div class="field"><label>Doubles</label><input type="number" id="ed-'+l.id+'" value="'+(l.num_doubles||3)+'"></div>'
         +'<div class="field"><label>Team Game</label><select id="etg-'+l.id+'"><option value="0" '+(l.team_game_players===0?"selected":"")+'>None</option><option value="3" '+(l.team_game_players===3?"selected":"")+'>3 players</option><option value="4" '+(l.team_game_players===4?"selected":"")+'>4 players</option><option value="6" '+(l.team_game_players===6?"selected":"")+'>6 players</option></select></div>'
@@ -717,6 +839,7 @@ async function saveEdit(id){
   var data={
     name:document.getElementById('en-'+id).value.trim(),
     match_night:document.getElementById('eni-'+id).value,
+    match_time:(document.getElementById('emt-'+id).value||'20:00'),
     num_singles:parseInt(document.getElementById('es-'+id).value),
     num_doubles:parseInt(document.getElementById('ed-'+id).value),
     team_game_players:parseInt(document.getElementById('etg-'+id).value),
@@ -744,35 +867,41 @@ async function createLeague(){
   var pw=document.getElementById('cl-pw').value.trim();
   var st=document.getElementById('cl-status');
   var sp=document.getElementById('cl-spin');
-  if(!name||!pw){st.textContent='League name and password required.';st.className='st err';return;}
+  if(!name){st.textContent='Please enter a league name.';st.className='st err';return;}
+  if(pw&&pw.length<6){st.textContent='Helper password must be at least 6 characters (or leave it blank).';st.className='st err';return;}
+  if(!organiserUser){st.textContent='Please sign in first.';st.className='st err';return;}
   sp.style.display='inline-block';st.textContent='';
   try{
-    var res=await sb('leagues',{
-      method:'POST',prefer:'return=representation',
-      body:JSON.stringify({
-        name:name,
-        admin_password:pw,
-        match_night:document.getElementById('cl-night').value,
-        num_singles:parseInt(document.getElementById('cl-singles').value),
-        num_doubles:parseInt(document.getElementById('cl-doubles').value),
-        team_game_players:parseInt(document.getElementById('cl-teamgame').value),
-        starting_score:parseInt(document.getElementById('cl-sscore').value)||501,
-        starting_score_doubles:parseInt(document.getElementById('cl-dscore').value)||601,
-        starting_score_team:parseInt(document.getElementById('cl-tscore').value)||1001,
-        best_of_singles:parseInt(document.getElementById('cl-bosing').value),
-        best_of_doubles:parseInt(document.getElementById('cl-bodub').value),
-        points_win:parseInt(document.getElementById('cl-pwin').value),
-        points_draw:parseInt(document.getElementById('cl-pdraw').value),
-        points_loss:parseInt(document.getElementById('cl-ploss').value),
-        fixed_team_names:document.getElementById('cl-fixedteams').checked
-      })
+    // Created through a database function so the league is owned by the
+    // signed-in account (see migration_02_organiser_accounts.sql).
+    var { data:newId, error } = await paClient.rpc('create_my_league',{
+      p_name:name,
+      p_match_night:document.getElementById('cl-night').value,
+      p_num_singles:parseInt(document.getElementById('cl-singles').value),
+      p_num_doubles:parseInt(document.getElementById('cl-doubles').value),
+      p_team_game_players:parseInt(document.getElementById('cl-teamgame').value),
+      p_starting_score:parseInt(document.getElementById('cl-sscore').value)||501,
+      p_starting_score_doubles:parseInt(document.getElementById('cl-dscore').value)||601,
+      p_starting_score_team:parseInt(document.getElementById('cl-tscore').value)||1001,
+      p_best_of_singles:parseInt(document.getElementById('cl-bosing').value),
+      p_best_of_doubles:parseInt(document.getElementById('cl-bodub').value),
+      p_points_win:parseInt(document.getElementById('cl-pwin').value),
+      p_points_draw:parseInt(document.getElementById('cl-pdraw').value),
+      p_points_loss:parseInt(document.getElementById('cl-ploss').value),
+      p_fixed_team_names:document.getElementById('cl-fixedteams').checked,
+      p_helper_password:pw||null,
+      p_match_time:document.getElementById('cl-time').value||'20:00'
     });
-    var code=res[0].id.replace(/-/g,'').toUpperCase().slice(0,8);
-    st.innerHTML='<span style="color:var(--gl)">✓ League created!</span> Registration code: <strong style="color:var(--amber);font-size:1.1rem;letter-spacing:.1em">'+code+'</strong>';
+    if(error) throw error;
+    var code=String(newId).replace(/-/g,'').toUpperCase().slice(0,8);
+    st.innerHTML='<span style="color:var(--gl)">✓ League created!</span> Registration code: <strong style="color:var(--amber);font-size:1.1rem;letter-spacing:.1em">'+code+'</strong>'
+      +'<div style="font-size:.8rem;color:var(--dim);margin:.4rem 0 .6rem;line-height:1.5">Give this code to your team captains so they can register. The league is now saved in your account under <strong>My Leagues</strong>.</div>'
+      +(isPlatformAdmin?'':'<button class="btn-admin" onclick="openMyLeague(\''+newId+'\')">Open this league →</button>');
     st.className='st';
     document.getElementById('cl-name').value='';
     document.getElementById('cl-fixedteams').checked=false;
     document.getElementById('cl-pw').value='';
+    if(isPlatformAdmin)loadLeagues();
   }catch(e){st.textContent='Error: '+e.message;st.className='st err';}
   sp.style.display='none';
 }
@@ -869,7 +998,7 @@ async function loadClaimRequests(leagueId){
   if(!el)return;
   el.innerHTML='<div class="lh"><span class="spin"></span> Loading…</div>';
   try{
-    var rows=await sb('team_claim_requests?league_id=eq.'+leagueId+'&status=eq.pending&order=created_at.asc&select=*');
+    var rows=await sb('rpc/list_pending_claims',{method:'POST',body:JSON.stringify({p_token:scopedLeagueToken})});
     if(!rows||!rows.length){el.innerHTML='<div class="nh">No pending requests.</div>';return;}
     el.innerHTML=rows.map(function(r){
       var players=[];try{players=JSON.parse(r.players||'[]');}catch(e){}
@@ -887,23 +1016,14 @@ async function loadClaimRequests(leagueId){
 }
 
 async function approveClaimRequest(id,leagueId){
+  // The whole approval (creating the team + roster, copying the PIN and
+  // secret word across, deleting the request) happens server-side in the
+  // approve_team_claim() RPC — this client never sees the request's PIN
+  // or secret word at any point.
+  if(!confirm('Approve this team? This creates the team and player roster.'))return;
   try{
-    var reqs=await sb('team_claim_requests?id=eq.'+id+'&select=*');
-    var r=reqs&&reqs[0];
-    if(!r){toast('Request not found — it may have already been handled.',true);return;}
-    if(!confirm('Approve '+r.team_name+'? This creates the team and player roster.'))return;
-    var existing=await sb('teams?team_name=eq.'+encodeURIComponent(r.team_name)+'&league_id=eq.'+leagueId+'&select=id');
-    if(existing&&existing.length){toast('That team name has already been claimed by another registration.',true);return;}
-    var teamRes=await sb('teams',{method:'POST',prefer:'return=representation',body:JSON.stringify({
-      team_name:r.team_name,pin:r.pin,league_id:leagueId,secret_word:r.secret_word,score_threshold:r.score_threshold||80
-    })});
-    var teamId=teamRes[0].id;
-    var players=[];try{players=JSON.parse(r.players||'[]');}catch(e){}
-    for(var i=0;i<players.length;i++){
-      await sb('team_players',{method:'POST',prefer:'return=minimal',body:JSON.stringify({team_id:teamId,name:players[i]})});
-    }
-    await sb('team_claim_requests?id=eq.'+id,{method:'DELETE'});
-    toast(r.team_name+' approved and registered!');
+    await sb('rpc/approve_team_claim',{method:'POST',body:JSON.stringify({p_request_id:id,p_token:scopedLeagueToken})});
+    toast('Team approved and registered!');
     loadClaimRequests(leagueId);
     loadTeamList(leagueId);
     loadLeagues();
@@ -913,7 +1033,7 @@ async function approveClaimRequest(id,leagueId){
 async function rejectClaimRequest(id,leagueId){
   if(!confirm('Reject this claim request? The requester will need to be told separately — Flight Chalker won\'t notify them.'))return;
   try{
-    await sb('team_claim_requests?id=eq.'+id,{method:'DELETE'});
+    await sb('rpc/reject_team_claim',{method:'POST',body:JSON.stringify({p_request_id:id,p_token:scopedLeagueToken})});
     toast('Request rejected');
     loadClaimRequests(leagueId);
   }catch(e){toast('Error: '+e.message,true);}
@@ -1049,6 +1169,8 @@ async function addFixture(){
   if(homeId===awayId){st.textContent='Home and away teams must be different.';st.className='st err';return;}
   sp.style.display='inline-block';st.textContent='';
   try{
+    var dupe=await sb('league_fixtures?league_id=eq.'+leagueId+'&home_team_id=eq.'+homeId+'&away_team_id=eq.'+awayId+'&fixture_date=eq.'+date+'&season=eq.'+season+'&select=id&limit=1');
+    if(dupe&&dupe.length){st.textContent='That fixture is already in the league (same teams, date and season).';st.className='st err';sp.style.display='none';return;}
     await sb('league_fixtures',{
       method:'POST',prefer:'return=minimal',
       body:JSON.stringify({league_id:leagueId,home_team_id:homeId,away_team_id:awayId,fixture_date:date,season:season,played:false})
@@ -1069,8 +1191,10 @@ async function loadFixtureList(){
   el.innerHTML='<div class="lh"><span class="spin"></span> Loading…</div>';
   try{
     var fixtures=await sb('league_fixtures?league_id=eq.'+leagueId+'&order=fixture_date.asc&select=*');
-    var teams=await sb('teams?league_id=eq.'+leagueId+'&select=id,team_name');
-    var teamMap={};teams.forEach(function(t){teamMap[t.id]=t.team_name;});
+    var teams;
+    try{ teams=await sb('teams?league_id=eq.'+leagueId+'&select=id,team_name,venue_name,venue_address'); }
+    catch(e){ teams=await sb('teams?league_id=eq.'+leagueId+'&select=id,team_name'); } // venue columns not added yet (migration_03)
+    var teamMap={},teamById={};teams.forEach(function(t){teamMap[t.id]=t.team_name;teamById[t.id]=t;});
     if(!fixtures||!fixtures.length){el.innerHTML='<div class="nh">No fixtures yet for this league.</div>';return;}
     el.innerHTML=fixtures.map(function(f){
       var d=new Date(f.fixture_date+'T00:00:00');
@@ -1079,7 +1203,11 @@ async function loadFixtureList(){
       var statusText=f.played?'Played':'Upcoming';
       return '<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem .75rem;background:var(--bg);border:1px solid var(--border);border-radius:5px;margin-bottom:.4rem;flex-wrap:wrap">'
         +'<div style="font-size:.8rem;color:var(--dim);min-width:120px">'+fmt+'</div>'
-        +'<div style="flex:1;font-size:.9rem;font-weight:600">'+esc(teamMap[f.home_team_id]||'?')+' <span style="color:var(--dim);font-weight:400">vs</span> '+esc(teamMap[f.away_team_id]||'?')+'</div>'
+        +'<div style="flex:1;font-size:.9rem;font-weight:600">'+esc(teamMap[f.home_team_id]||'?')+' <span style="color:var(--dim);font-weight:400">vs</span> '+esc(teamMap[f.away_team_id]||'?')
+          +(function(){var h=teamById[f.home_team_id]||{};var u=mapsUrl(h.venue_name,h.venue_address);
+            return (h.venue_name||h.venue_address)?'<div style="font-size:.74rem;font-weight:400;color:var(--dim);margin-top:2px">📍 '+esc([h.venue_name,h.venue_address].filter(Boolean).join(' · '))+(u?' <a href="'+u+'" target="_blank" rel="noopener noreferrer" style="color:var(--gl)">Directions ↗</a>':'')+'</div>'
+              :'<div style="font-size:.74rem;font-weight:400;color:var(--amber);margin-top:2px">No home venue set for '+esc(teamMap[f.home_team_id]||'this team')+'</div>';})()
+          +'</div>'
         +'<div style="font-size:.75rem;padding:2px 8px;border-radius:3px;'+statusStyle+'">'+statusText+'</div>'
         +'<button onclick="deleteFixture(&quot;'+f.id+'&quot;)" style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--dim);font-size:.72rem;padding:2px 8px;cursor:pointer">Delete</button>'
         +'</div>';
@@ -1096,6 +1224,17 @@ async function deleteFixture(id){
   }catch(e){toast('Error: '+e.message,true);}
 }
 
+async function saveTeamVenue(teamId){
+  var st=document.getElementById('vst-'+teamId);
+  var name=document.getElementById('vn-'+teamId).value.trim();
+  var addr=document.getElementById('va-'+teamId).value.trim();
+  st.textContent='Saving…';st.className='st';
+  try{
+    await sbPatch('teams','id=eq.'+teamId,{venue_name:name||null,venue_address:addr||null});
+    st.textContent='✓ Venue saved'+(name||addr?'':' (cleared)');st.className='st ok';
+  }catch(e){st.textContent='Error: '+e.message+' — has migration_03 been run in Supabase?';st.className='st err';}
+}
+
 async function toggleTeams(leagueId){
   var panel=document.getElementById('teams-panel-'+leagueId);
   if(!panel)return;
@@ -1110,31 +1249,43 @@ async function loadTeamList(leagueId){
   if(!el)return;
   el.innerHTML='<div class="lh"><span class="spin"></span> Loading…</div>';
   try{
-    var teams=await sb('teams?league_id=eq.'+leagueId+'&order=team_name.asc&select=*');
+    var teamCols='id,team_name,league_id,score_threshold,captain_user_id,captain_code,join_code,created_at';
+    var teams;
+    try{ teams=await sb('teams?league_id=eq.'+leagueId+'&order=team_name.asc&select='+teamCols+',venue_name,venue_address'); }
+    catch(e){ teams=await sb('teams?league_id=eq.'+leagueId+'&order=team_name.asc&select='+teamCols); } // venue columns not added yet (migration_03)
     if(!teams||!teams.length){el.innerHTML='<div class="nh">No teams registered yet.</div>';return;}
 
+    // PINs are no longer readable directly (see migration_01_security.sql)
+    // - fetched separately via the token-gated RPC and merged in here.
+    var pinMap={};
+    try{
+      var withPins=await sb('rpc/list_league_teams_with_pins',{method:'POST',body:JSON.stringify({p_token:scopedLeagueToken})});
+      (withPins||[]).forEach(function(t){pinMap[t.id]=t.pin;});
+    }catch(e){ /* non-fatal - team rows below just show no PIN if this fails */ }
+    teams.forEach(function(t){t.pin=pinMap[t.id];});
+
     var teamIds=teams.map(function(t){return t.id;});
-    var pending=await sb('team_memberships?team_id=in.('+teamIds.join(',')+')&status=eq.pending&select=id,team_id,user_id');
+    var pending=await sb('rpc/list_league_team_memberships',{method:'POST',body:JSON.stringify({p_token:scopedLeagueToken,p_status:'pending'})});
     var pendingUserIds=pending.map(function(p){return p.user_id;});
 
-    var approvedMembers=await sb('team_memberships?team_id=in.('+teamIds.join(',')+')&status=eq.approved&select=id,team_id,user_id');
+    var approvedMembers=await sb('rpc/list_league_team_memberships',{method:'POST',body:JSON.stringify({p_token:scopedLeagueToken,p_status:'approved'})});
     var approvedUserIds=approvedMembers.map(function(p){return p.user_id;});
 
-    var changeRequests=await sb('captain_change_requests?team_id=in.('+teamIds.join(',')+')&status=eq.pending&select=id,team_id,requested_by,proposed_captain_id');
+    var changeRequests=await sb('rpc/list_league_captain_change_requests',{method:'POST',body:JSON.stringify({p_token:scopedLeagueToken})});
     var changeUserIds=[];
     changeRequests.forEach(function(c){changeUserIds.push(c.requested_by,c.proposed_captain_id);});
 
     var allUserIds=pendingUserIds.concat(approvedUserIds).concat(changeUserIds).filter(function(v,i,a){return a.indexOf(v)===i;});
     var userMap={};
     if(allUserIds.length){
-      var users=await sb('users?id=in.('+allUserIds.join(',')+')&select=id,username,email');
-      users.forEach(function(u){userMap[u.id]=u.username||u.email;});
+      var users=await sb('player_profiles?id=in.('+allUserIds.join(',')+')&select=id,username');
+      users.forEach(function(u){userMap[u.id]=u.username;});
     }
     var captainIds=teams.filter(function(t){return t.captain_user_id;}).map(function(t){return t.captain_user_id;});
     var captainMap={};
     if(captainIds.length){
-      var cUsers=await sb('users?id=in.('+captainIds.join(',')+')&select=id,username,email');
-      cUsers.forEach(function(u){captainMap[u.id]=u.username||u.email;});
+      var cUsers=await sb('player_profiles?id=in.('+captainIds.join(',')+')&select=id,username');
+      cUsers.forEach(function(u){captainMap[u.id]=u.username;});
     }
 
     el.innerHTML=teams.map(function(t){
@@ -1175,6 +1326,16 @@ async function loadTeamList(leagueId){
           +'<div style="flex:1;font-weight:600;font-size:.9rem">'+esc(t.team_name)+'</div>'
           +'<div style="font-size:.78rem;color:var(--dim)">PIN: '+t.pin+'</div>'
           +'<button onclick="deleteTeam(&quot;'+t.id+'&quot;,&quot;'+esc(t.team_name)+'&quot;,&quot;'+leagueId+'&quot;)" style="background:none;border:1px solid #5c2020;border-radius:4px;color:#ff8080;font-size:.72rem;padding:2px 8px;cursor:pointer">Remove</button>'
+        +'</div>'
+        +'<div style="margin-top:.4rem;padding-top:.4rem;border-top:1px solid var(--border)">'
+          +'<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin-bottom:.3rem">Home venue <span style="text-transform:none;letter-spacing:0">— shown on fixtures whenever this team is at home</span></div>'
+          +'<div style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center">'
+            +'<input type="text" id="vn-'+t.id+'" maxlength="120" value="'+esc(t.venue_name||'')+'" placeholder="Venue name, e.g. The Crown" style="flex:1;min-width:140px;background:var(--surface);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:.35rem .5rem;font-size:.82rem;font-family:inherit">'
+            +'<input type="text" id="va-'+t.id+'" maxlength="200" value="'+esc(t.venue_address||'')+'" placeholder="Address / postcode" style="flex:2;min-width:180px;background:var(--surface);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:.35rem .5rem;font-size:.82rem;font-family:inherit">'
+            +'<button onclick="saveTeamVenue(&quot;'+t.id+'&quot;)" style="background:none;border:1px solid var(--green);border-radius:4px;color:var(--gl);font-size:.72rem;padding:3px 10px;cursor:pointer">Save venue</button>'
+            +(mapsUrl(t.venue_name,t.venue_address)?'<a href="'+mapsUrl(t.venue_name,t.venue_address)+'" target="_blank" rel="noopener noreferrer" style="font-size:.74rem;color:var(--gl)">Check map ↗</a>':'')
+          +'</div>'
+          +'<div class="st" id="vst-'+t.id+'"></div>'
         +'</div>'
         +'<div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-top:.4rem;padding-top:.4rem;border-top:1px solid var(--border)">'
           +'<div style="font-size:.78rem;color:var(--dim)">Captain: <span style="color:var(--gl)">'+esc(captainLabel)+'</span></div>'
@@ -1232,7 +1393,7 @@ async function assignCaptain(teamId,userId,leagueId){
 
 async function approveMembership(membershipId,leagueId){
   try{
-    await sbPatch('team_memberships','id=eq.'+membershipId,{status:'approved'});
+    await sb('rpc/admin_set_membership_status',{method:'POST',body:JSON.stringify({p_token:scopedLeagueToken,p_membership_id:membershipId,p_status:'approved'})});
     toast('Request approved!');
     loadTeamList(leagueId);
   }catch(e){toast('Error: '+e.message,true);}
@@ -1241,7 +1402,7 @@ async function approveMembership(membershipId,leagueId){
 async function rejectMembership(membershipId,leagueId){
   if(!confirm('Reject this join request?'))return;
   try{
-    await sbPatch('team_memberships','id=eq.'+membershipId,{status:'rejected'});
+    await sb('rpc/admin_set_membership_status',{method:'POST',body:JSON.stringify({p_token:scopedLeagueToken,p_membership_id:membershipId,p_status:'rejected'})});
     toast('Request rejected');
     loadTeamList(leagueId);
   }catch(e){toast('Error: '+e.message,true);}
@@ -1250,8 +1411,9 @@ async function rejectMembership(membershipId,leagueId){
 async function approveCaptainChange(requestId,teamId,proposedCaptainId,leagueId){
   if(!confirm('Change this team\'s captain? The previous captain will lose captain access.'))return;
   try{
-    await sbPatch('teams','id=eq.'+teamId,{captain_user_id:proposedCaptainId});
-    await sbPatch('captain_change_requests','id=eq.'+requestId,{status:'approved'});
+    await sb('rpc/admin_set_captain_change_status',{method:'POST',body:JSON.stringify({
+      p_token:scopedLeagueToken,p_request_id:requestId,p_status:'approved',p_team_id:teamId,p_new_captain_id:proposedCaptainId
+    })});
     toast('Captain changed!');
     loadTeamList(leagueId);
   }catch(e){toast('Error: '+e.message,true);}
@@ -1260,7 +1422,7 @@ async function approveCaptainChange(requestId,teamId,proposedCaptainId,leagueId)
 async function rejectCaptainChange(requestId,leagueId){
   if(!confirm('Reject this captain change request?'))return;
   try{
-    await sbPatch('captain_change_requests','id=eq.'+requestId,{status:'rejected'});
+    await sb('rpc/admin_set_captain_change_status',{method:'POST',body:JSON.stringify({p_token:scopedLeagueToken,p_request_id:requestId,p_status:'rejected'})});
     toast('Request rejected');
     loadTeamList(leagueId);
   }catch(e){toast('Error: '+e.message,true);}
@@ -1298,97 +1460,191 @@ function downloadFixtureTemplate(){
   toast('Template downloaded');
 }
 
+// ── Fixture import (merge, never duplicate) ───────────────────────────────────
+// A fixture is identified by SEASON + HOME TEAM + AWAY TEAM. Re-uploading the same
+// file (or a corrected version) therefore updates the existing fixtures instead of
+// adding copies:
+//   * same teams + same date already in the league  -> unchanged
+//   * same teams, different date                      -> date corrected (if not yet played)
+//   * teams/season pairing not in the league yet      -> added
+//   * fixtures in the league but not in the file      -> left exactly as they are
+// Played fixtures are never changed. Nothing is written until you confirm.
+function fxNorm(s){return String(s==null?'':s).replace(/\s+/g,' ').trim().toLowerCase();}
+
+function parseCsvText(text){ // handles quoted fields, commas inside quotes, CRLF, BOM
+  var rows=[],row=[],cur='',inQ=false;
+  text=String(text).replace(/^﻿/,'');
+  for(var i=0;i<text.length;i++){
+    var c=text[i];
+    if(inQ){
+      if(c==='"'){ if(text[i+1]==='"'){cur+='"';i++;} else inQ=false; }
+      else cur+=c;
+    }else if(c==='"'){ inQ=true; }
+    else if(c===','){ row.push(cur);cur=''; }
+    else if(c==='\n'||c==='\r'){ if(c==='\r'&&text[i+1]==='\n')i++; row.push(cur);cur='';rows.push(row);row=[]; }
+    else cur+=c;
+  }
+  if(cur!==''||row.length){row.push(cur);rows.push(row);}
+  return rows;
+}
+
+// -> 'YYYY-MM-DD' or null. Accepts DD/MM/YYYY, D/M/YY, DD-MM-YYYY, DD.MM.YYYY,
+// YYYY-MM-DD and Excel date serial numbers. Rejects impossible dates (31/02).
+function parseFixtureDate(v){
+  if(v===null||v===undefined||String(v).trim()==='')return null;
+  var y,m,d,mm;
+  if(typeof v==='number'){
+    var dt=new Date(Math.round(v*86400000)+Date.UTC(1899,11,30));
+    y=dt.getUTCFullYear();m=dt.getUTCMonth()+1;d=dt.getUTCDate();
+  }else{
+    var s=String(v).trim();
+    if((mm=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/))){y=+mm[1];m=+mm[2];d=+mm[3];}
+    else if((mm=s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2}|\d{4})$/))){d=+mm[1];m=+mm[2];y=+mm[3];if(y<100)y+=2000;}
+    else return null;
+  }
+  var chk=new Date(Date.UTC(y,m-1,d));
+  if(chk.getUTCFullYear()!==y||chk.getUTCMonth()!==m-1||chk.getUTCDate()!==d)return null;
+  return y+'-'+('0'+m).slice(-2)+'-'+('0'+d).slice(-2);
+}
+function fxShowDate(iso){var p=iso.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
+
+function readFixtureFile(file){
+  return new Promise(function(resolve,reject){
+    var reader=new FileReader();
+    reader.onerror=function(){reject(new Error('Could not read that file.'));};
+    reader.onload=function(e){
+      try{
+        if(/\.csv$/i.test(file.name)){ resolve(parseCsvText(e.target.result)); }
+        else{
+          var wb=XLSX.read(e.target.result,{type:'array'});
+          var ws=wb.Sheets[wb.SheetNames[0]];
+          resolve(XLSX.utils.sheet_to_json(ws,{header:1,defval:''}));
+        }
+      }catch(err){reject(err);}
+    };
+    if(/\.csv$/i.test(file.name))reader.readAsText(file);else reader.readAsArrayBuffer(file);
+  });
+}
+
 async function importFixtures(input){
   var leagueId=document.getElementById('fx-import-league').value;
   var st=document.getElementById('import-status');
-  if(!leagueId){st.textContent='Please select a league first.';st.className='st err';return;}
+  st.style.whiteSpace='pre-line';
+  if(!leagueId){st.textContent='Please select a league first.';st.className='st err';input.value='';return;}
   var file=input.files[0];
   if(!file){return;}
   st.textContent='Reading file…';st.className='st';
+  try{
+    var teams=await sb('teams?league_id=eq.'+leagueId+'&select=id,team_name');
+    var teamMap={};
+    (teams||[]).forEach(function(t){teamMap[fxNorm(t.team_name)]=t;});
+    var lg=await sb('leagues?id=eq.'+leagueId+'&select=name,current_season');
+    var leagueName=(lg&&lg[0]&&lg[0].name)||'this league';
+    var defSeason=(lg&&lg[0]&&lg[0].current_season)||1;
 
-  // Get teams for this league to match names
-  var teams=await sb('teams?league_id=eq.'+leagueId+'&select=id,team_name');
-  var teamMap={};
-  teams.forEach(function(t){teamMap[t.team_name.toLowerCase().trim()]=t.id;});
-
-  var fixtures=[];
-  var errors=[];
-
-  // Parse file
-  var reader=new FileReader();
-  reader.onload=async function(e){
-    try{
-      var rows=[];
-      if(file.name.endsWith('.csv')){
-        // Parse CSV
-        var lines=e.target.result.split('\n');
-        lines.slice(1).forEach(function(line,i){
-          if(!line.trim())return;
-          var cols=line.split(',').map(function(c){return c.trim().replace(/"/g,'');});
-          if(cols.length>=3)rows.push({date:cols[0],home:cols[1],away:cols[2],season:cols[3]||'1'});
-        });
-      } else {
-        // Parse Excel
-        var wb=XLSX.read(e.target.result,{type:'array'});
-        var ws=wb.Sheets[wb.SheetNames[0]];
-        var data=XLSX.utils.sheet_to_json(ws,{header:1});
-        data.slice(1).forEach(function(row){
-          if(!row[0])return;
-          var dateVal=row[0];
-          // Handle Excel date serial numbers
-          if(typeof dateVal==='number'){
-            var d=new Date(Math.round((dateVal-25569)*86400*1000));
-            dateVal=d.toLocaleDateString('en-GB');
-          }
-          rows.push({date:String(dateVal),home:String(row[1]||''),away:String(row[2]||''),season:String(row[3]||'1')});
-        });
-      }
-
-      // Process rows
-      var added=0,skipped=0;
-      for(var i=0;i<rows.length;i++){
-        var row=rows[i];
-        if(!row.home||!row.away)continue;
-        var homeId=teamMap[row.home.toLowerCase().trim()];
-        var awayId=teamMap[row.away.toLowerCase().trim()];
-        if(!homeId){errors.push('Row '+(i+2)+': Team "'+row.home+'" not found');skipped++;continue;}
-        if(!awayId){errors.push('Row '+(i+2)+': Team "'+row.away+'" not found');skipped++;continue;}
-        if(homeId===awayId){errors.push('Row '+(i+2)+': Home and away are the same team');skipped++;continue;}
-        // Parse date DD/MM/YYYY to YYYY-MM-DD
-        var parts=row.date.split('/');
-        var isoDate;
-        if(parts.length===3){
-          isoDate=parts[2].padStart(4,'20')+'-'+parts[1].padStart(2,'0')+'-'+parts[0].padStart(2,'0');
-        } else {
-          errors.push('Row '+(i+2)+': Invalid date format "'+row.date+'" — use DD/MM/YYYY');
-          skipped++;continue;
-        }
-        try{
-          await sb('league_fixtures',{method:'POST',prefer:'return=minimal',
-            body:JSON.stringify({league_id:leagueId,home_team_id:homeId,away_team_id:awayId,fixture_date:isoDate,season:parseInt(row.season)||1,played:false})
-          });
-          added++;
-        }catch(e){errors.push('Row '+(i+2)+': '+e.message);skipped++;}
-      }
-
-      var msg=added+' fixture'+(added!==1?'s':'')+' imported successfully';
-      if(skipped)msg+=', '+skipped+' skipped';
-      if(errors.length){msg+='\nErrors:\n'+errors.slice(0,5).join('\n');}
-      st.textContent=msg;
-      st.className=skipped?'st err':'st ok';
-      input.value='';
-      loadFixtureList();
-      toast(added+' fixtures imported');
-    }catch(e){
-      st.textContent='Error reading file: '+e.message;
-      st.className='st err';
+    var raw=await readFixtureFile(file);
+    var errors=[],fileRows=[];
+    var start=(raw.length&&parseFixtureDate(raw[0][0])===null)?1:0; // first row is a header unless it starts with a date
+    for(var i=start;i<raw.length;i++){
+      var r=raw[i];
+      if(!r||r.every(function(c){return String(c==null?'':c).trim()==='';}))continue;
+      var line=i+1;
+      var date=parseFixtureDate(r[0]);
+      if(!date){errors.push('Row '+line+': date "'+r[0]+'" not understood — use DD/MM/YYYY');continue;}
+      var home=teamMap[fxNorm(r[1])],away=teamMap[fxNorm(r[2])];
+      if(!home){errors.push('Row '+line+': team "'+r[1]+'" is not registered in this league');continue;}
+      if(!away){errors.push('Row '+line+': team "'+r[2]+'" is not registered in this league');continue;}
+      if(home.id===away.id){errors.push('Row '+line+': home and away are the same team');continue;}
+      fileRows.push({line:line,date:date,home:home,away:away,season:parseInt(r[3])||defSeason});
     }
-  };
-  if(file.name.endsWith('.csv')){
-    reader.readAsText(file);
-  } else {
-    reader.readAsArrayBuffer(file);
+    if(!fileRows.length){
+      st.textContent='Nothing to import.'+(errors.length?'\n'+errors.slice(0,8).join('\n'):' Is the file empty?');
+      st.className='st err';input.value='';return;
+    }
+
+    // exact repeats inside the file itself
+    var seen={},rows=[];
+    fileRows.forEach(function(fr){
+      var k=[fr.season,fr.home.id,fr.away.id,fr.date].join('|');
+      if(seen[k]){errors.push('Row '+fr.line+': repeats row '+seen[k]+' (same teams, same date) — ignored');return;}
+      seen[k]=fr.line;rows.push(fr);
+    });
+
+    // compare with what's already in the league
+    var existing=await sb('league_fixtures?league_id=eq.'+leagueId+'&select=id,home_team_id,away_team_id,fixture_date,season,played')||[];
+    var exByKey={},frByKey={};
+    existing.forEach(function(e){var k=[e.season||1,e.home_team_id,e.away_team_id].join('|');(exByKey[k]=exByKey[k]||[]).push(e);});
+    rows.forEach(function(fr){var k=[fr.season,fr.home.id,fr.away.id].join('|');(frByKey[k]=frByKey[k]||[]).push(fr);});
+
+    var inserts=[],updates=[],locked=[],unchanged=0;
+    Object.keys(frByKey).forEach(function(k){
+      var ex=(exByKey[k]||[]).slice().sort(function(a,b){return a.fixture_date<b.fixture_date?-1:1;});
+      var fr=frByKey[k].slice().sort(function(a,b){return a.date<b.date?-1:1;});
+      // 1) identical date = already there
+      var exLeft=[],frLeft=[];
+      fr.forEach(function(f){
+        var idx=ex.findIndex(function(e){return e.fixture_date===f.date;});
+        if(idx>=0){ex.splice(idx,1);unchanged++;}else frLeft.push(f);
+      });
+      exLeft=ex;
+      // 2) remaining rows correct the remaining existing fixtures for that pairing, in date order
+      frLeft.forEach(function(f,n){
+        var e=exLeft[n];
+        if(!e){inserts.push(f);}
+        else if(e.played){locked.push({f:f,e:e});}
+        else{updates.push({f:f,e:e});}
+      });
+    });
+    var inFile=0;rows.forEach(function(){inFile++;});
+    var notInFile=existing.length-unchanged-updates.length-locked.length;
+
+    if(!inserts.length&&!updates.length){
+      var m0='Nothing to change — '+unchanged+' fixture'+(unchanged!==1?'s are':' is')+' already in '+leagueName+' exactly as in your file.';
+      if(locked.length)m0+='\n'+locked.length+' fixture'+(locked.length!==1?'s':'')+' in the file differ from fixtures already played, which are never changed.';
+      if(errors.length)m0+='\n\nSkipped:\n'+errors.slice(0,8).join('\n');
+      st.textContent=m0;st.className=errors.length?'st err':'st ok';input.value='';return;
+    }
+
+    // plan -> confirm
+    function label(f){return f.home.team_name+' v '+f.away.team_name;}
+    var plan='Import into "'+leagueName+'"\n\n'
+      +'• '+inserts.length+' new fixture'+(inserts.length!==1?'s':'')+' to add\n'
+      +'• '+updates.length+' existing fixture'+(updates.length!==1?'s':'')+' to correct (date changed)\n'
+      +'• '+unchanged+' already correct (no change)\n';
+    if(locked.length)plan+='• '+locked.length+' already played — left alone\n';
+    if(notInFile>0)plan+='• '+notInFile+' fixture'+(notInFile!==1?'s':'')+' in the league are not in your file — left as they are (nothing is deleted)\n';
+    if(errors.length)plan+='• '+errors.length+' row'+(errors.length!==1?'s':'')+' skipped (see below after import)\n';
+    if(updates.length){
+      plan+='\nDate corrections:\n'+updates.slice(0,8).map(function(u){return '  '+label(u.f)+': '+fxShowDate(u.e.fixture_date)+' → '+fxShowDate(u.f.date);}).join('\n');
+      if(updates.length>8)plan+='\n  …and '+(updates.length-8)+' more';
+    }
+    plan+='\n\nApply these changes?';
+    if(!confirm(plan)){st.textContent='Import cancelled — nothing was changed.';st.className='st';input.value='';return;}
+
+    st.textContent='Importing…';st.className='st';
+    var added=0,corrected=0,failed=[];
+    if(inserts.length){
+      try{
+        await sb('league_fixtures',{method:'POST',prefer:'return=minimal',body:JSON.stringify(inserts.map(function(f){
+          return {league_id:leagueId,home_team_id:f.home.id,away_team_id:f.away.id,fixture_date:f.date,season:f.season,played:false};
+        }))});
+        added=inserts.length;
+      }catch(e){failed.push('Adding new fixtures failed: '+e.message);}
+    }
+    for(var u=0;u<updates.length;u++){
+      try{ await sbPatch('league_fixtures','id=eq.'+updates[u].e.id,{fixture_date:updates[u].f.date}); corrected++; }
+      catch(e){failed.push('Row '+updates[u].f.line+': '+e.message);}
+    }
+    var msg='Done — '+added+' added, '+corrected+' corrected, '+unchanged+' unchanged.';
+    var problems=errors.concat(failed);
+    if(problems.length)msg+='\n\nNot imported:\n'+problems.slice(0,8).join('\n')+(problems.length>8?'\n…and '+(problems.length-8)+' more':'');
+    st.textContent=msg;st.className=problems.length?'st err':'st ok';
+    toast(added+' added, '+corrected+' corrected');
+    loadFixtureList();
+  }catch(e){
+    st.textContent='Error: '+e.message;st.className='st err';
   }
+  input.value='';
 }
 
 async function postNotice(){
@@ -1448,10 +1704,14 @@ function toast(msg,isErr){
   t.textContent=msg;t.className='toast'+(isErr?' err':'')+' show';
   setTimeout(function(){t.classList.remove('show');},2500);
 }
+// Google Maps directions link for a venue (opens in a new tab wherever it is used).
+function mapsUrl(name,addr){
+  var q=[name,addr].filter(function(x){return x&&String(x).trim();}).join(', ');
+  return q?'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(q):'';
+}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-// Init — only auto-loads if a session was already unlocked this tab
-if(sessionStorage.getItem('fc_admin_mode'))loadLeagues();
+// (Initial load is driven by the sign-in routing script near the top of the page.)
 </script>
 </body>
 </html>

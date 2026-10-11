@@ -483,6 +483,15 @@ html{scroll-behavior:smooth}
     <div style="margin-top:1.5rem">
       <a href="#" onclick="goTo('public');loadPublicLeagues();return false" style="font-size:.78rem;color:var(--dim);text-decoration:none;letter-spacing:.06em;text-transform:uppercase">🏆 View League Table</a>
     </div>
+
+    <!-- League organiser entry (above the fold) -->
+    <div style="margin-top:1.25rem;width:100%;max-width:320px;padding-top:1.1rem;border-top:1px solid var(--border);text-align:center">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--blue-l);margin-bottom:.6rem">Run a darts league?</div>
+      <div style="display:flex;gap:.5rem">
+        <a href="/admin?new=1" style="flex:1;display:block;text-align:center;background:var(--blue-bg);border:2px solid var(--blue);border-radius:8px;color:#8ac4ff;font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.65rem .5rem;text-decoration:none">⚙ Create a League</a>
+        <a href="/admin" style="flex:1;display:block;text-align:center;background:var(--blue-bg);border:2px solid var(--blue);border-radius:8px;color:#8ac4ff;font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.65rem .5rem;text-decoration:none">🔑 Admin Login</a>
+      </div>
+    </div>
   </div>
 
   <!-- Player benefits strip -->
@@ -501,6 +510,16 @@ html{scroll-behavior:smooth}
       <div style="font-size:1.6rem;margin-bottom:.35rem">🏅</div>
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text)">Track Stats</div>
       <div style="font-size:.75rem;color:var(--dim);margin-top:.2rem">Personal leaderboards &amp; history</div>
+    </div>
+  </div>
+
+  <!-- League organiser section -->
+  <div style="max-width:400px;margin:1.5rem auto 0;padding:1.25rem 1.5rem;background:#0d1e2e;border:1px solid var(--blue);border-radius:12px;text-align:center">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:.68rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#8ac4ff;margin-bottom:.4rem">For League Organisers</div>
+    <div style="font-size:.8rem;color:#a9bccd;line-height:1.5;margin-bottom:.85rem">Set up your league in minutes: teams, fixtures, captains, results and tables, all in one place. Free to start.</div>
+    <div style="display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap">
+      <a href="/admin?new=1" style="background:var(--blue-bg);border:2px solid var(--blue);border-radius:8px;color:#8ac4ff;font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.6rem 1.1rem;text-decoration:none">Create a League →</a>
+      <a href="/admin" style="background:var(--blue-bg);border:2px solid var(--blue);border-radius:8px;color:#8ac4ff;font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.6rem 1.1rem;text-decoration:none">Admin Login →</a>
     </div>
   </div>
 
@@ -615,7 +634,8 @@ html{scroll-behavior:smooth}
   <div style="margin-bottom:.6rem">General enquiries: <a href="/cdn-cgi/l/email-protection#b6dfd8d0d9f6d0dadfd1dec2d5ded7daddd3c498d5d998c3dd" style="color:#5a7a5a;text-decoration:none;letter-spacing:.04em"><span class="__cf_email__" data-cfemail="2b42454d446b4d47424c435f48434a47404e59054844055e40">[email&#160;protected]</span></a></div>
   <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
     <a href="#" onclick="goTo('forgot-pin');return false" style="color:#4a5a4a;text-decoration:none;letter-spacing:.04em">Forgot team PIN?</a>
-    <a href="/admin" style="color:#4a5a4a;text-decoration:none;letter-spacing:.04em">League Admin</a>
+    <a href="/admin" style="color:var(--blue-l);text-decoration:none;letter-spacing:.04em">League Admin Login</a>
+    <a href="/admin?new=1" style="color:var(--blue-l);text-decoration:none;letter-spacing:.04em">Create a League</a>
   </div>
 </footer>
 </div>
@@ -1234,13 +1254,13 @@ async function tryAutoLinkPlayer(){
 }
 
 async function loadTeamById(teamId){
-  var rows=await sb('teams?id=eq.'+teamId+'&select=*');
+  var rows=await sb('teams?id=eq.'+teamId+'&select=id,created_at,team_name,league_id,score_threshold,captain_user_id,captain_code,join_code');
   if(!rows||!rows.length){
     console.error('loadTeamById: no team row found for id', teamId);
     return false;
   }
   var team=rows[0];
-  var leagueRows=await sb('leagues?id=eq.'+team.league_id+'&select=*');
+  var leagueRows=await sb('leagues?id=eq.'+team.league_id+'&select=id,created_at,name,match_night,num_singles,num_doubles,team_game,team_game_players,starting_score,best_of_singles,best_of_doubles,points_win,points_draw,points_loss,current_season,starting_score_doubles,starting_score_team,fixed_team_names');
   if(!leagueRows||!leagueRows.length){
     console.error('loadTeamById: no league row found for league_id', team.league_id, 'on team', team);
     return false;
@@ -1398,7 +1418,15 @@ document.addEventListener('DOMContentLoaded',async function(){
 
   // Check for saved sessions
   var sess=localStorage.getItem('mld_session');
-  var adminSess=localStorage.getItem('mld_admin');
+  // SECURITY FIX: this used to also check localStorage's 'mld_admin' flag
+  // and, if present, show the full legacy league-admin screen (every
+  // league, every team's PIN, delete-team) with NO password check at all -
+  // anyone could open devtools, run
+  // localStorage.setItem('mld_admin','1'), reload, and be in. The real
+  // admin login (with an actual password/account check) lives at /admin
+  // (admin.html) - this legacy screen was leftover and unprotected, not a
+  // second supported entry point. Removed rather than patched, since
+  // nothing legitimate sets this flag anymore.
 
   if(sess){
     try{
@@ -1412,10 +1440,6 @@ document.addEventListener('DOMContentLoaded',async function(){
       var wname=currentTeam&&currentTeam.team_name?currentTeam.team_name:'';
       if(wname)setTimeout(function(){toast('Welcome back, '+wname+' 🎯');},600);
     }catch(e){localStorage.removeItem('mld_session');showScreen('screen-landing');}
-  } else if(adminSess){
-    showScreen('screen-admin');
-    swAdmin('leagues');
-    loadAdminData();
   } else {
     var autoLinked = await tryAutoLinkPlayer();
     if(!autoLinked) showScreen('screen-landing');
@@ -1428,7 +1452,7 @@ async function lookupLeague(){
   if(!code){toast('Please enter a league code',true);return;}
   try{
     // Load all leagues and find one whose ID (without dashes) starts with the code
-    var all=await sb('leagues?select=*');
+    var all=await sb('leagues?select=id,created_at,name,match_night,num_singles,num_doubles,team_game,team_game_players,starting_score,best_of_singles,best_of_doubles,points_win,points_draw,points_loss,current_season,starting_score_doubles,starting_score_team,fixed_team_names');
     var match=all.find(function(l){
       return l.id.replace(/-/g,'').toUpperCase().startsWith(code);
     });
@@ -1592,11 +1616,12 @@ async function loginTeam(){
   if(!teamName||!pin){st.textContent='Please enter team name and PIN.';st.className='ast err';return;}
   sp.style.display='inline-block';st.textContent='Checking…';st.className='ast';
   try{
-    const rows=await sb('teams?team_name=eq.'+encodeURIComponent(teamName)+'&select=*');
-    if(!rows||!rows.length){st.textContent='Team not found.';st.className='ast err';sp.style.display='none';return;}
+    // Verified server-side via login_team() - never reads the stored PIN
+    // into the browser to compare it here. See migration_01_security.sql.
+    const rows=await sb('rpc/login_team',{method:'POST',body:JSON.stringify({p_team_name:teamName,p_pin:pin})});
+    if(!rows||!rows.length){st.textContent='Team not found or incorrect PIN.';st.className='ast err';sp.style.display='none';return;}
     const team=rows[0];
-    if(team.pin!==pin){st.textContent='Incorrect PIN.';st.className='ast err';sp.style.display='none';return;}
-    const leagueRows=await sb('leagues?id=eq.'+team.league_id+'&select=*');
+    const leagueRows=await sb('leagues?id=eq.'+team.league_id+'&select=id,created_at,name,match_night,num_singles,num_doubles,team_game,team_game_players,starting_score,best_of_singles,best_of_doubles,points_win,points_draw,points_loss,current_season,starting_score_doubles,starting_score_team,fixed_team_names');
     if(!leagueRows||!leagueRows.length){st.textContent='League not found.';st.className='ast err';sp.style.display='none';return;}
     currentTeam=team;currentTeam.score_threshold=team.score_threshold||80;currentLeague=leagueRows[0];
     localStorage.setItem('mld_session',JSON.stringify({team:currentTeam,league:currentLeague}));
@@ -2516,6 +2541,134 @@ async function renderLeagueTable(){
   }catch(e){wrap.innerHTML='<div class="nh">Error loading table: '+esc(e.message)+'</div>';}
 }
 
+// ── Venues & calendar ─────────────────────────────────────────────────────────
+// A fixture's venue is its HOME team's venue (set per team by the league admin).
+// Calendar entries carry the opponent, the date + the league's usual start time,
+// the venue as the location, and a Google Maps directions link. The .ics file is
+// standard, so it works in Google / Apple / Outlook calendars and can be sent on
+// to players who don't use Flight Chalker (or loaded into a shared team calendar).
+var FX_DURATION_HOURS=3;
+var fxCal={team:{events:[],name:''},pub:{events:[],name:''}};
+
+function fxMapsUrl(name,addr){
+  var q=[name,addr].filter(function(x){return x&&String(x).trim();}).join(', ');
+  return q?'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(q):'';
+}
+async function fxFetchTeams(ids){
+  try{ return await sb('teams?id=in.('+ids.join(',')+')&select=id,team_name,venue_name,venue_address'); }
+  catch(e){ return await sb('teams?id=in.('+ids.join(',')+')&select=id,team_name'); } // venue columns not added yet (migration_03)
+}
+async function fxMatchTime(leagueId){
+  try{ var r=await sb('leagues?id=eq.'+leagueId+'&select=match_time'); return (r&&r[0]&&r[0].match_time)||'20:00'; }
+  catch(e){ return '20:00'; }
+}
+function fxVenueHtml(team,showMissing){
+  var venue=team?[team.venue_name,team.venue_address].filter(Boolean).join(' · '):'';
+  if(!venue)return showMissing?'<div style="flex-basis:100%;font-size:.76rem;color:var(--dim)">📍 Venue not added yet</div>':'';
+  var url=fxMapsUrl(team.venue_name,team.venue_address);
+  return '<div style="flex-basis:100%;font-size:.78rem;color:var(--dim)">📍 '+esc(venue)
+    +(url?' &nbsp;<a href="'+url+'" target="_blank" rel="noopener noreferrer" style="color:var(--gl);text-decoration:none;font-weight:600">Directions ↗</a>':'')+'</div>';
+}
+
+// event = {uid,date:'YYYY-MM-DD',time:'HH:MM',summary,location,description,url}
+function fxEventTimes(ev){
+  var p=ev.date.split('-').map(Number),t=ev.time.split(':').map(Number);
+  var start=new Date(Date.UTC(p[0],p[1]-1,p[2],t[0],t[1]));
+  var end=new Date(start.getTime()+FX_DURATION_HOURS*3600000);
+  function f(d){function z(n){return (n<10?'0':'')+n;}return d.getUTCFullYear()+z(d.getUTCMonth()+1)+z(d.getUTCDate())+'T'+z(d.getUTCHours())+z(d.getUTCMinutes())+'00';}
+  return {start:f(start),end:f(end)}; // "floating" local time: 8pm shows as 8pm wherever the calendar is
+}
+function fxBuildEvent(f,home,away,leagueName,time,myTeamId){
+  var venue=[home&&home.venue_name,home&&home.venue_address].filter(Boolean).join(', ');
+  var url=home?fxMapsUrl(home.venue_name,home.venue_address):'';
+  var homeName=(home&&home.team_name)||'Home',awayName=(away&&away.team_name)||'Away';
+  var summary,vsLine;
+  if(myTeamId){
+    var isHome=f.home_team_id===myTeamId;
+    summary='Darts: vs '+(isHome?awayName:homeName)+' ('+(isHome?'Home':'Away')+')';
+  }else{
+    summary='Darts: '+homeName+' v '+awayName;
+  }
+  var lines=[leagueName+' — '+homeName+' v '+awayName,'Start: '+time];
+  lines.push(venue?'Venue: '+venue:'Venue: to be confirmed');
+  if(url)lines.push('Directions: '+url);
+  return {uid:f.id+'@flightchalker.co.uk',date:f.fixture_date,time:time,summary:summary,location:venue,description:lines.join('\n'),url:url};
+}
+function fxGoogleCalUrl(ev){
+  var t=fxEventTimes(ev);
+  return 'https://calendar.google.com/calendar/render?action=TEMPLATE'
+    +'&text='+encodeURIComponent(ev.summary)
+    +'&dates='+t.start+'/'+t.end
+    +'&details='+encodeURIComponent(ev.description)
+    +(ev.location?'&location='+encodeURIComponent(ev.location):'');
+}
+function fxIcsEscape(s){return String(s||'').replace(/\\/g,'\\\\').replace(/;/g,'\;').replace(/,/g,'\\,').replace(/\r?\n/g,'\\n');}
+function fxIcsFold(line){ // RFC 5545: max 75 octets per line, continuation lines start with a space
+  var out=[],cur='',bytes=0;
+  for(var ch of line){
+    var b=unescape(encodeURIComponent(ch)).length;
+    if(bytes+b>74){out.push(cur);cur=' ';bytes=1;}
+    cur+=ch;bytes+=b;
+  }
+  out.push(cur);return out.join('\r\n');
+}
+function fxBuildIcs(events,calName){
+  function z(n){return (n<10?'0':'')+n;}
+  var n=new Date();
+  var stamp=n.getUTCFullYear()+z(n.getUTCMonth()+1)+z(n.getUTCDate())+'T'+z(n.getUTCHours())+z(n.getUTCMinutes())+z(n.getUTCSeconds())+'Z';
+  var L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Flight Chalker//Fixtures//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:'+fxIcsEscape(calName)];
+  events.forEach(function(ev){
+    var t=fxEventTimes(ev);
+    L.push('BEGIN:VEVENT','UID:'+ev.uid,'DTSTAMP:'+stamp,'DTSTART:'+t.start,'DTEND:'+t.end,
+      'SUMMARY:'+fxIcsEscape(ev.summary));
+    if(ev.location)L.push('LOCATION:'+fxIcsEscape(ev.location));
+    L.push('DESCRIPTION:'+fxIcsEscape(ev.description));
+    if(ev.url)L.push('URL:'+ev.url);
+    L.push('END:VEVENT');
+  });
+  L.push('END:VCALENDAR');
+  return L.map(fxIcsFold).join('\r\n')+'\r\n';
+}
+function fxCalFile(kind){
+  var c=fxCal[kind];
+  if(!c||!c.events.length)return null;
+  var slug=(c.name||'fixtures').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'fixtures';
+  return {name:slug+'-fixtures.ics',text:fxBuildIcs(c.events,c.name+' fixtures')};
+}
+function downloadCal(kind){
+  var f=fxCalFile(kind);
+  if(!f){toast('No upcoming fixtures to add yet');return;}
+  var blob=new Blob([f.text],{type:'text/calendar;charset=utf-8'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=f.name;
+  document.body.appendChild(a);a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1500);
+  toast('Calendar file downloaded — open it to add the fixtures');
+}
+async function shareCal(kind){
+  var f=fxCalFile(kind);
+  if(!f){toast('No upcoming fixtures to add yet');return;}
+  try{
+    var file=new File([f.text],f.name,{type:'text/calendar'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],title:fxCal[kind].name+' fixtures',text:'Fixtures for '+fxCal[kind].name+' — open the file to add them to your calendar.'});
+      return;
+    }
+  }catch(e){ if(e&&e.name==='AbortError')return; }
+  downloadCal(kind);
+}
+function fxCalBarHtml(kind){
+  var canShare=false;
+  try{ canShare=!!(navigator.canShare&&navigator.canShare({files:[new File(['x'],'x.ics',{type:'text/calendar'})]})); }catch(e){}
+  return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.7rem .9rem;margin-bottom:.75rem">'
+    +'<div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">'
+      +'<span style="font-size:.85rem;font-weight:600">📅 Add upcoming fixtures to a calendar</span>'
+      +'<button class="hb" onclick="downloadCal(\''+kind+'\')">Download .ics</button>'
+      +(canShare?'<button class="hb" onclick="shareCal(\''+kind+'\')">Share…</button>':'')
+    +'</div>'
+    +'<div style="font-size:.74rem;color:var(--dim);margin-top:.35rem;line-height:1.45">Each entry has the opponent, date, start time and a directions link. Works with Google, Apple and Outlook calendars — send the file to players who don\'t use Flight Chalker, or add it to a shared team calendar.</div>'
+    +'</div>';
+}
+
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 async function renderFixtures(){
   var el=document.getElementById('fxlist');
@@ -2524,14 +2677,16 @@ async function renderFixtures(){
     var rows=await sb('league_fixtures?league_id=eq.'+currentLeague.id+'&season=eq.'+(currentLeague.current_season||1)+'&order=fixture_date.asc');
     if(!rows||!rows.length){el.innerHTML='<div class="nh">No fixtures scheduled yet. Contact your league admin.</div>';return;}
     var teamIds=[...new Set(rows.flatMap(function(r){return[r.home_team_id,r.away_team_id];}))];
-    var teamRows=await sb('teams?id=in.('+teamIds.join(',')+')'+'&select=id,team_name');
-    var teamMap={};teamRows.forEach(function(t){teamMap[t.id]=t.team_name;});
+    var teamRows=await fxFetchTeams(teamIds);
+    var teamMap={},teamById={};teamRows.forEach(function(t){teamMap[t.id]=t.team_name;teamById[t.id]=t;});
+    var matchTime=await fxMatchTime(currentLeague.id);
     var today=new Date();today.setHours(0,0,0,0);
     // Load existing results to detect recorded fixtures
     var existingMatches=await sb('team_matches?team_id=eq.'+currentTeam.id+'&select=id,match_date,opponent,wins,losses');
     var myFixtures=rows.filter(function(r){return r.home_team_id===currentTeam.id||r.away_team_id===currentTeam.id;});
     if(!myFixtures.length){el.innerHTML='<div class="nh">No fixtures found for your team.</div>';return;}
-    el.innerHTML=myFixtures.map(function(f){
+    fxCal.team={name:currentTeam.team_name,events:[]};
+    el.innerHTML=fxCalBarHtml('team')+myFixtures.map(function(f){
       var d=new Date(f.fixture_date+'T00:00:00');
       var fmt=d.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
       var diff=Math.round((d-today)/(1000*60*60*24));
@@ -2548,6 +2703,12 @@ async function renderFixtures(){
         return m.match_date===f.fixture_date&&m.opponent===oppName;
       });
       var isPlayed=f.played||!!existing;
+      var calLink='';
+      if(!isPlayed&&diff>=0){
+        var ev=fxBuildEvent(f,teamById[f.home_team_id],teamById[f.away_team_id],currentLeague.name||'League',matchTime,currentTeam.id);
+        fxCal.team.events.push(ev);
+        calLink='<a class="hb" href="'+fxGoogleCalUrl(ev)+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;display:inline-block" title="Add this fixture to Google Calendar">📅 Calendar</a> ';
+      }
       var buttons='';
       if(existing){
         var scoreCol=existing.wins>existing.losses?'var(--gl)':existing.wins<existing.losses?'var(--red)':'var(--amber)';
@@ -2562,7 +2723,8 @@ async function renderFixtures(){
         +'<div class="fx-venue">'+venue+'</div>'
         +'<div class="'+dcls+'">'+dlbl+'</div>'
         +'<span class="fx-status '+(isPlayed?'played':'upcoming')+'">'+(isPlayed?'Played':'Upcoming')+'</span>'
-        +buttons+'</div>';
+        +calLink+buttons
+        +fxVenueHtml(teamById[f.home_team_id],true)+'</div>';
     }).join('');
   }catch(e){el.innerHTML='<div class="nh">Error: '+esc(e.message)+'</div>';}
 }
@@ -3460,7 +3622,9 @@ async function renderSquad(){
     var userMap={};
     if(userIds.length){
       var uq=userIds.map(function(id){return '"'+id+'"';}).join(',');
-      var users=await sb('users?id=in.('+uq+')&select=id,username,email');
+      // player_profiles is the public-safe view (id, username only -
+      // never email). See migration_01_security.sql.
+      var users=await sb('player_profiles?id=in.('+uq+')&select=id,username');
       (users||[]).forEach(function(u){userMap[u.id]=u;});
     }
     var pending=rows.filter(function(r){return r.status==='pending';});
@@ -3474,7 +3638,7 @@ async function renderSquad(){
       }else{
         pendingEl.innerHTML=pending.map(function(r){
           var u=userMap[r.user_id]||{};
-          var label=u.username?'@'+esc(u.username):(u.email||'Unknown player');
+          var label=u.username?'@'+esc(u.username):'Unknown player';
           return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.75rem 1rem;margin-bottom:.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">'
             +'<div><div style="font-weight:600;font-size:.9rem">'+label+'</div>'
             +'<div style="font-size:.75rem;color:var(--dim)">Requested '+new Date(r.created_at).toLocaleDateString('en-GB')+'</div></div>'
@@ -3492,7 +3656,7 @@ async function renderSquad(){
       }else{
         membersEl.innerHTML=approved.map(function(r){
           var u=userMap[r.user_id]||{};
-          var label=u.username?'@'+esc(u.username):(u.email||'Unknown player');
+          var label=u.username?'@'+esc(u.username):'Unknown player';
           return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.75rem 1rem;margin-bottom:.4rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">'
             +'<div><div style="font-weight:600;font-size:.9rem">'+label+'</div>'
             +'<div style="font-size:.75rem;color:var(--gl)">Active member</div></div>'
@@ -3518,11 +3682,17 @@ async function captainLinkPlayer(){
   if(!identifier){resultEl.textContent='Please enter their username or email';resultEl.style.color='var(--red)';return;}
   resultEl.textContent='Looking up account...';resultEl.style.color='var(--dim)';
   try{
-    // Look up the target account by username or email - checked on the
-    // original input (before the leading @ was stripped) so emails are
-    // correctly detected even though @ isn't valid in a username.
-    var lookupField = rawIdentifier.includes('@') ? 'email' : 'username';
-    var found=await sb('users?'+lookupField+'=ilike.'+encodeURIComponent(identifier)+'&select=id,username,email');
+    // Look the account up by USERNAME via the public name-only view
+    // (player_profiles). Emails are deliberately not searchable here any
+    // more - this screen has no signed-in account, and looking people up by
+    // email would let anyone check which emails have Flight Chalker accounts.
+    if(rawIdentifier.includes('@') && !/^@[A-Za-z0-9_.-]+$/.test(rawIdentifier)){
+      resultEl.textContent='Please enter their Flight Chalker username (not their email address). They can find it on their dashboard.';
+      resultEl.style.color='var(--red)';
+      return;
+    }
+    var candidates=await sb('player_profiles?username=ilike.'+encodeURIComponent(identifier)+'&select=id,username&limit=5');
+    var found=(candidates||[]).filter(function(u){return (u.username||'').toLowerCase()===identifier.toLowerCase();});
     if(!found||!found.length){
       resultEl.textContent='No Flight Chalker account found for "'+identifier+'". They need to create one first.';
       resultEl.style.color='var(--red)';
@@ -3597,13 +3767,13 @@ async function populateLinkSelector(){
     var userMap={};
     if(linkedIds.length){
       var uq=linkedIds.map(function(id){return '"'+id+'"';}).join(',');
-      var users=await sb('users?id=in.('+uq+')&select=id,username,email');
+      var users=await sb('player_profiles?id=in.('+uq+')&select=id,username');
       (users||[]).forEach(function(u){userMap[u.id]=u;});
     }
     statusEl.innerHTML=rows.map(function(r){
       var linked=r.linked_user_id?userMap[r.linked_user_id]:null;
       var statusHtml=linked
-        ? '<span style="color:var(--gl)">Linked to @'+esc(linked.username||linked.email||'account')+'</span> <button class="btns" style="font-size:.7rem;padding:2px 8px;margin-left:6px" onclick="unlinkPlayer(&quot;'+esc(r.name)+'&quot;)">Unlink</button>'
+        ? '<span style="color:var(--gl)">Linked to @'+esc(linked.username||'account')+'</span> <button class="btns" style="font-size:.7rem;padding:2px 8px;margin-left:6px" onclick="unlinkPlayer(&quot;'+esc(r.name)+'&quot;)">Unlink</button>'
         : '<span style="color:var(--dim)">Not linked</span>';
       return '<div style="display:flex;align-items:center;justify-content:space-between;padding:.35rem 0;border-bottom:1px solid var(--border);font-size:.82rem">'
         +'<span>'+esc(r.name)+'</span><span>'+statusHtml+'</span></div>';
@@ -3918,17 +4088,27 @@ async function loadPublicFixtures(){
     var rows=await sb('league_fixtures?league_id=eq.'+publicLeague.id+'&season=eq.'+season+'&order=fixture_date.asc');
     if(!rows||!rows.length){wrap.innerHTML='<div class="nh">No fixtures scheduled.</div>';return;}
     var teamIds=[...new Set(rows.flatMap(function(r){return[r.home_team_id,r.away_team_id];}))];
-    var teamRows=await sb('teams?id=in.('+teamIds.join(',')+')'+'&select=id,team_name');
-    var teamMap={};teamRows.forEach(function(t){teamMap[t.id]=t.team_name;});
+    var teamRows=await fxFetchTeams(teamIds);
+    var teamMap={},teamById={};teamRows.forEach(function(t){teamMap[t.id]=t.team_name;teamById[t.id]=t;});
+    var matchTime=await fxMatchTime(publicLeague.id);
     var today=new Date();today.setHours(0,0,0,0);
-    wrap.innerHTML=rows.map(function(f){
+    fxCal.pub={name:publicLeague.name||'League',events:[]};
+    wrap.innerHTML=fxCalBarHtml('pub')+rows.map(function(f){
       var d=new Date(f.fixture_date+'T00:00:00');
       var fmt=d.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
       var diff=Math.round((d-today)/(1000*60*60*24));
       var dlbl=diff===0?'Today!':diff===1?'Tomorrow':diff<0?Math.abs(diff)+'d ago':'In '+diff+'d';
+      var calLink='';
+      if(!f.played&&diff>=0){
+        var ev=fxBuildEvent(f,teamById[f.home_team_id],teamById[f.away_team_id],publicLeague.name||'League',matchTime,null);
+        fxCal.pub.events.push(ev);
+        calLink='<a class="hb" href="'+fxGoogleCalUrl(ev)+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;display:inline-block" title="Add this fixture to Google Calendar">📅 Calendar</a>';
+      }
       return '<div class="fx-entry'+(diff<0?' past':'')+(diff===0?' today':'')+'"><div class="fx-date">'+fmt+'</div>'
         +'<div class="fx-teams">'+esc(teamMap[f.home_team_id]||'?')+'<span class="vs">vs</span>'+esc(teamMap[f.away_team_id]||'?')+'</div>'
-        +'<span class="fx-status '+(f.played?'played':'upcoming')+'">'+(f.played?'Played':'Upcoming')+'</span></div>';
+        +'<span class="fx-status '+(f.played?'played':'upcoming')+'">'+(f.played?'Played':'Upcoming')+'</span>'
+        +calLink
+        +fxVenueHtml(teamById[f.home_team_id],false)+'</div>';
     }).join('');
   }catch(e){wrap.innerHTML='<div class="nh">Error: '+esc(e.message)+'</div>';}
 }
@@ -4006,11 +4186,11 @@ async function recoverPIN(){
   if(!teamName||!secret){st.textContent='Please enter both fields.';st.className='ast err';return;}
   sp.style.display='inline-block';
   try{
-    var rows=await sb('teams?team_name=eq.'+encodeURIComponent(teamName)+'&select=pin,secret_word');
-    if(!rows||!rows.length){st.textContent='Team not found.';st.className='ast err';sp.style.display='none';return;}
-    var team=rows[0];
-    if((team.secret_word||'').toLowerCase()!==secret){st.textContent='Secret word does not match.';st.className='ast err';sp.style.display='none';return;}
-    document.getElementById('fp-pin').textContent=team.pin;
+    // Checked server-side via recover_team_pin() - the secret word is
+    // never read into the browser to compare it here, only the resulting
+    // PIN is returned, and only on a match. See migration_01_security.sql.
+    var pin=await sb('rpc/recover_team_pin',{method:'POST',body:JSON.stringify({p_team_name:teamName,p_secret_word:secret})});
+    document.getElementById('fp-pin').textContent=pin;
     res.style.display='block';st.textContent='';
   }catch(e){st.textContent='Error: '+e.message;st.className='ast err';}
   sp.style.display='none';
