@@ -136,13 +136,14 @@ async function login(){
   try{
     var email=identifier;
     if(!identifier.includes('@')){
-      // Treat as username - look up the matching email first.
-      // NOTE: assumes a public.users table with username/email columns -
-      // adjust the table/column names below if yours differ.
-      var { data:profile, error:lookupErr } = await supabase
-        .from('users').select('email').eq('username', identifier).single();
-      if(lookupErr||!profile){ throw new Error('No account found with that username'); }
-      email = profile.email;
+      // Treat as username - resolve to an email via resolve_login_email()
+      // rather than a direct select, since public.users no longer allows
+      // reading other people's email directly. See
+      // migration_01_security.sql.
+      var { data:resolvedEmail, error:lookupErr } = await supabase
+        .rpc('resolve_login_email',{p_username:identifier});
+      if(lookupErr||!resolvedEmail){ throw new Error('No account found with that username'); }
+      email = resolvedEmail;
     }
     const { error } = await sb.auth.signInWithPassword({ email, password });
     if(error) throw error;
