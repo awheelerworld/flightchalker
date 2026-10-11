@@ -676,6 +676,11 @@ html{scroll-behavior:smooth}
   ⚠ You are offline — scores will be saved locally and synced when you reconnect
 </div>
 <main>
+    <div class="public-hero" id="pub-hero" style="padding:1.25rem 1rem 1rem;margin-bottom:1rem">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-bottom:.2rem">League</div>
+      <h1 id="pub-league-h1" style="overflow-wrap:anywhere"></h1>
+      <div class="meta" id="pub-league-meta"></div>
+    </div>
     <div class="tabs">
       <button class="tab active" onclick="swPublic('pub-table')">League Table</button>
       <button class="tab" onclick="swPublic('pub-fixtures')">Fixtures</button>
@@ -4014,12 +4019,25 @@ async function loadPublicLeagues(){
   }catch(e){el.innerHTML='<div class="nh">Error: '+esc(e.message)+'</div>';}
 }
 
+function setPublicLeagueTitle(l){
+  var name=(l&&l.name)||'League';
+  document.getElementById('pub-league-title').textContent=name;
+  document.getElementById('pub-league-h1').textContent=name;
+  var bits=[];
+  if(l&&l.match_night)bits.push(l.match_night+' nights');
+  if(l&&l.current_season)bits.push('Season '+l.current_season);
+  document.getElementById('pub-league-meta').textContent=bits.join(' · ');
+}
+
 async function openPublicLeague(leagueId,leagueName){
   publicLeague={id:leagueId,name:leagueName};
+  setPublicLeagueTitle(publicLeague); // show the name straight away, details follow once loaded
   try{
-    var rows=await sb('leagues?id=eq.'+leagueId+'&select=*');
-    publicLeague=rows[0];
+    // Explicit columns: select=* is refused now that leagues.admin_password is not readable by the browser.
+    var rows=await sb('leagues?id=eq.'+leagueId+'&select=id,created_at,name,match_night,num_singles,num_doubles,team_game,team_game_players,starting_score,best_of_singles,best_of_doubles,points_win,points_draw,points_loss,current_season,starting_score_doubles,starting_score_team,fixed_team_names');
+    if(rows&&rows[0])publicLeague=rows[0];
   }catch(e){fcLogError('openPublicLeague',e,false);}
+  setPublicLeagueTitle(publicLeague);
   goTo('public-league');
   document.getElementById('screen-public-league').classList.add('active');
   // Populate season selector
