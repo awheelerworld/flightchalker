@@ -1,4 +1,4 @@
-<!-- VERSION: v19-league-view-card -->
+<!-- VERSION: v22-organiser-link -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -187,6 +187,12 @@ input:checked+.slider::before{transform:translateX(18px);background:white}
       <p>Fixtures, league table and match recording for your team.</p>
       <div class="go">View league →</div>
     </a>
+    <a href="/admin" class="game-card">
+      <div class="icon">⚙️</div>
+      <h3>Run a League</h3>
+      <p>Create a league, add teams and fixtures, and manage results. Your leagues all live in one place.</p>
+      <div class="go">League admin →</div>
+    </a>
   </div>
 
   <!-- Stats -->
@@ -255,7 +261,19 @@ input:checked+.slider::before{transform:translateX(18px);background:white}
   <div class="profile-card">
     <div class="profile-row">
       <span class="label">Username</span>
-      <span id="profile-username" style="font-weight:600;font-family:'Barlow Condensed',sans-serif;font-size:1rem;color:var(--amber)"></span>
+      <span>
+        <span id="profile-username" style="font-weight:600;font-family:'Barlow Condensed',sans-serif;font-size:1rem;color:var(--amber)"></span>
+        <a href="#" onclick="toggleUsernameEdit();return false" style="font-size:.75rem;color:var(--dim);margin-left:.5rem">Change</a>
+      </span>
+    </div>
+    <div id="username-edit-row" style="display:none;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:.75rem;margin:.5rem 0">
+      <div style="font-size:.78rem;color:var(--amber);margin-bottom:.5rem">⚠ This name will be shown publicly to anyone on Flight Chalker — including on leaderboards and league pages.</div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+        <input type="text" id="username-edit-input" placeholder="3-20 characters, letters/numbers/underscore" maxlength="20" style="flex:1;min-width:160px">
+        <button class="code-btn" onclick="submitUsernameChange()">Save</button>
+        <button class="code-btn" onclick="toggleUsernameEdit()" style="background:none">Cancel</button>
+      </div>
+      <div id="username-edit-status" style="font-size:.78rem;margin-top:.4rem"></div>
     </div>
     <div class="profile-row">
       <span class="label">Email</span>
@@ -575,14 +593,16 @@ async function renderCaptainTeams(){
       var vcUserIds = (vcRows||[]).map(function(r){return r.user_id;});
       var vcNames = [];
       if(vcUserIds.length){
-        var { data:vcUsers } = await sb.from('users').select('id, username, email').in('id', vcUserIds);
+        // player_profiles is the public-safe view (id, username only -
+        // never email). See migration_01_security.sql.
+        var { data:vcUsers } = await sb.from('player_profiles').select('id, username').in('id', vcUserIds);
         vcNames = vcUsers||[];
       }
       vcHtml = '<div class="vc-section">'
         +'<div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:.4rem">Vice Captains</div>'
         +'<div class="vc-list">'
           + (vcNames.length ? vcNames.map(function(u){
-              return '<span class="vc-chip">'+(u.username||u.email||'Player')
+              return '<span class="vc-chip">'+(u.username||'Player')
                 +'<button onclick="removeViceCaptain(&quot;'+t.id+'&quot;,&quot;'+u.id+'&quot;)" title="Remove">×</button></span>';
             }).join('') : '<span style="font-size:.78rem;color:var(--dim)">None yet</span>')
         +'</div>'
@@ -611,9 +631,11 @@ async function addViceCaptain(teamId){
   var identifier = input.value.trim();
   if(!identifier){ toast('Enter an email or username first',true); return; }
   try{
-    var query = sb.from('users').select('id').limit(1);
-    query = identifier.includes('@') ? query.eq('email', identifier) : query.eq('username', identifier);
-    var { data:found, error:lookupErr } = await query.single();
+    // find_user_by_identifier() never returns the matched user's email -
+    // only id+username - even though the search can be BY email.
+    // See migration_01_security.sql.
+    var { data:foundRows, error:lookupErr } = await sb.rpc('find_user_by_identifier',{p_identifier:identifier});
+    var found = foundRows && foundRows[0];
     if(lookupErr || !found){ toast('No player found with that email/username',true); return; }
 
     var { error:insertErr } = await sb.from('team_vice_captains')
@@ -777,11 +799,11 @@ async function openCaptainChangeModal(teamId){
       membersEl.innerHTML = '<p style="color:var(--dim);font-size:.82rem">No squad members found to propose.</p>';
       return;
     }
-    var { data:users, error:userErr } = await sb.from('users').select('id, username, email').in('id', userIds);
+    var { data:users, error:userErr } = await sb.from('player_profiles').select('id, username').in('id', userIds);
     if(userErr) throw userErr;
     membersEl.innerHTML = (users||[]).map(function(u,i){
       var isSelf = u.id === window.currentUser.id;
-      var label = (u.username || u.email || 'Player') + (isSelf ? ' (you)' : '');
+      var label = (u.username || 'Player') + (isSelf ? ' (you)' : '');
       return '<label class="member-option">'
         +'<input type="radio" name="proposed-captain" value="'+u.id+'"'+(i===0?' checked':'')+'>'
         + label
@@ -821,6 +843,44 @@ function updateLeaderboardPref(checked){
   toast(checked?'Added to leaderboards':'Removed from leaderboards');
 }
 
+function toggleUsernameEdit(){
+  var row=document.getElementById('username-edit-row');
+  var open=row.style.display!=='none';
+  row.style.display=open?'none':'block';
+  document.getElementById('username-edit-status').textContent='';
+  if(!open){
+    var cur=document.getElementById('profile-username').textContent.replace(/^@/,'');
+    document.getElementById('username-edit-input').value=cur;
+    document.getElementById('username-edit-input').focus();
+  }
+}
+
+async function submitUsernameChange(){
+  var input=document.getElementById('username-edit-input');
+  var status=document.getElementById('username-edit-status');
+  var val=input.value.trim();
+  status.style.color='var(--dim)';
+  if(val.length<3||val.length>20){status.textContent='Must be 3-20 characters.';status.style.color='#ff8080';return;}
+  if(!/^[a-zA-Z0-9_]+$/.test(val)){status.textContent='Only letters, numbers and underscores allowed.';status.style.color='#ff8080';return;}
+  if(!confirm('"'+val+'" will be visible to everyone on Flight Chalker - leaderboards, league pages, everywhere your name is shown. Continue?'))return;
+  status.textContent='Saving…';
+  try{
+    // The real check (format, profanity, uniqueness) happens server-side
+    // in set_username() - the client-side checks above are just for
+    // instant feedback, not the actual protection. See
+    // migration_01_security.sql.
+    var { error } = await sb.rpc('set_username',{p_username:val});
+    if(error) throw error;
+    document.getElementById('profile-username').textContent='@'+val;
+    document.getElementById('profile-link').href='/player/'+val;
+    toggleUsernameEdit();
+    toast('Display name updated!');
+  }catch(e){
+    status.textContent=e.message||'Could not update - that name may already be taken.';
+    status.style.color='#ff8080';
+  }
+}
+
 // Init
 window.addEventListener('load', async function(){
   try{
@@ -837,23 +897,35 @@ window.addEventListener('load', async function(){
     // account-linking and subscription_tier all have nothing to read from.
     // Create it on-the-fly the first time we see this account, wherever
     // that happens to be (dashboard is where every Google sign-in lands).
+    var profileRow=null;
     try{
-      var { data:existingProfile } = await sb.from('users').select('id').eq('id',su.id).single();
+      var { data:existingProfile } = await sb.from('users').select('id,username,created_at').eq('id',su.id).single();
+      profileRow=existingProfile;
       if(!existingProfile){
-        var fallbackUsername=(su.user_metadata&&(su.user_metadata.username||su.user_metadata.full_name||su.user_metadata.name))||su.email.split('@')[0];
-        await sb.from('users').insert({ id:su.id, email:su.email, username:fallbackUsername });
+        // No username passed here on purpose - the database assigns a
+        // random "chalkerN" default automatically (see
+        // migration_01_security.sql), same as the email/password signup
+        // path. The player can pick their own from their profile anytime.
+        var { data:inserted } = await sb.from('users').insert({ id:su.id, email:su.email }).select('id,username,created_at').single();
+        profileRow=inserted;
       }
     }catch(profileErr){
       console.error('Profile row check/create failed (non-fatal):',profileErr);
     }
 
     // Adapter: keeps the same shape loadDashboard/loadTeams already expect,
-    // so none of that logic needs to change.
+    // so none of that logic needs to change. username/createdAt come from
+    // the public.users row (the real, DB-assigned values), never from
+    // auth metadata - FIX: a previous version of this read username from
+    // user_metadata, which is never populated anymore (see
+    // migration_01_security.sql), and omitted createdAt entirely, which
+    // broke the "Member Since" date on this page ("Invalid Date").
     var adaptedUser = {
       id: su.id,
-      username: su.user_metadata&&su.user_metadata.username,
+      username: profileRow&&profileRow.username,
       firstName: su.user_metadata&&su.user_metadata.firstName,
-      emailAddresses: [{ emailAddress: su.email }]
+      emailAddresses: [{ emailAddress: su.email }],
+      createdAt: profileRow&&profileRow.created_at
     };
     window.currentUser = adaptedUser;
     await loadDashboard(adaptedUser);
@@ -864,6 +936,6 @@ window.addEventListener('load', async function(){
   }
 });
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v19-league-view-card</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v22-organiser-link</div>
 </body>
 </html>
