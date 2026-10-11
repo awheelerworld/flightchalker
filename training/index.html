@@ -1570,10 +1570,17 @@ function cpuUpdateDisplay(){
   document.getElementById('cpu-you-avg').textContent='Avg '+(yAvg||'—');
   document.getElementById('cpu-cpu-avg').textContent='Avg '+(cAvg||'—');
 
-  // Checkout suggestion — only for your own throw, in the space below the
-  // buttons, same idea as the Play Darts scorer.
+  cpuUpdateCheckout();
+}
+
+// Checkout suggestion — only for your own throw, in the space below the
+// buttons. Called from BOTH cpuUpdateDisplay and cpuUpdateTurnUI: the CPU's
+// turn refreshes the display before it hands the turn back, so without the
+// second call the box was evaluated while it was still 'not your turn' and
+// never appeared.
+function cpuUpdateCheckout(){
   var checkoutBox=document.getElementById('checkout-box');
-  if(cpu.yourTurn&&cpu.you<=170&&cpu.you>=2&&CO[cpu.you]){
+  if(cpu&&cpu.yourTurn&&cpu.you<=170&&cpu.you>=2&&CO[cpu.you]){
     coRoutes=[CO[cpu.you]].concat(findRoutes(cpu.you).filter(function(r){return r!==CO[cpu.you];})).slice(0,5);
     coRouteIdx=0;
     checkoutBox.style.display='block';
@@ -1600,6 +1607,7 @@ function cpuUpdateTurnUI(){
     banner.textContent='🤖 CPU up next';
     inputArea.style.display='none';
   }
+  cpuUpdateCheckout();
 }
 
 function cpuAddHistory(who,score,bust,detail,snapshot){
