@@ -647,6 +647,15 @@ html{scroll-behavior:smooth}
       <h1>League Tables</h1>
       <p class="meta">Select a league to view the live table, fixtures and top scorers</p>
     </div>
+    <div id="pub-filters" style="display:none;margin-bottom:1rem">
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+        <select id="pf-county" onchange="pubCountyChanged()" aria-label="County" style="flex:1;min-width:140px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:Barlow,sans-serif;font-size:.9rem;padding:.55rem"><option value="">All counties</option></select>
+        <select id="pf-town" onchange="renderPublicLeagues()" aria-label="Town or city" style="flex:1;min-width:140px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:Barlow,sans-serif;font-size:.9rem;padding:.55rem"><option value="">All towns / cities</option></select>
+      </div>
+      <input type="search" id="pf-search" oninput="renderPublicLeagues()" placeholder="Search by league name" aria-label="Search leagues" style="width:100%;margin-top:.5rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:Barlow,sans-serif;font-size:.9rem;padding:.55rem">
+      <label style="display:flex;align-items:center;gap:.5rem;margin-top:.5rem;font-size:.85rem;color:var(--dim)"><input type="checkbox" id="pf-recruit" onchange="renderPublicLeagues()" style="width:auto"> Only show leagues looking for players or teams</label>
+      <div id="pf-count" style="font-size:.78rem;color:var(--dim);margin-top:.5rem"></div>
+    </div>
     <div id="public-leagues-list"><div class="lh"><span class="spin"></span> Loading leagues…</div></div>
     <span class="back-link" onclick="goTo('landing')">← Back</span>
   </div>
@@ -680,6 +689,19 @@ html{scroll-behavior:smooth}
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-bottom:.2rem">League</div>
       <h1 id="pub-league-h1" style="overflow-wrap:anywhere"></h1>
       <div class="meta" id="pub-league-meta"></div>
+      <div id="pub-league-about" style="display:none;max-width:560px;margin:.75rem auto 0;text-align:left;font-size:.88rem;line-height:1.5"></div>
+      <div id="pub-enq-wrap" style="display:none;margin-top:.75rem">
+        <button class="btns" id="pub-enq-btn" onclick="toggleEnquiryForm()" style="font-size:.85rem;padding:.45rem 1rem">✉️ Enquire about joining</button>
+        <form id="pub-enq-form" onsubmit="return submitEnquiry(event)" style="display:none;max-width:420px;margin:.75rem auto 0;text-align:left">
+          <p style="font-size:.78rem;color:var(--dim);margin-bottom:.5rem;line-height:1.4">Your message goes to this league's organiser. Your email is shared only with them, so they can reply.</p>
+          <input type="text" id="enq-name" maxlength="80" placeholder="Your name" autocomplete="name" required style="width:100%;margin-bottom:.4rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:Barlow,sans-serif;font-size:.9rem;padding:.55rem">
+          <input type="email" id="enq-email" maxlength="200" placeholder="Your email" autocomplete="email" required style="width:100%;margin-bottom:.4rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:Barlow,sans-serif;font-size:.9rem;padding:.55rem">
+          <textarea id="enq-msg" maxlength="1500" rows="4" placeholder="e.g. I'm looking for a team to join. I've played for 5 years..." required style="width:100%;margin-bottom:.4rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:Barlow,sans-serif;font-size:.9rem;padding:.55rem"></textarea>
+          <div style="position:absolute;left:-9999px" aria-hidden="true"><label>Website <input type="text" id="enq-website" tabindex="-1" autocomplete="off"></label></div>
+          <button type="submit" class="hb" id="enq-send" style="width:100%">Send enquiry</button>
+          <div id="enq-status" style="font-size:.85rem;margin-top:.5rem" role="status"></div>
+        </form>
+      </div>
     </div>
     <div class="tabs">
       <button class="tab active" onclick="swPublic('pub-table')">League Table</button>
@@ -4004,19 +4026,103 @@ function swAdmin(name){
 // ── Public league page ───────────────────────────────────────────────────────
 let publicLeague=null;
 
+var pubLeaguesAll=[];
 async function loadPublicLeagues(){
   var el=document.getElementById('public-leagues-list');
   el.innerHTML='<div class="lh"><span class="spin"></span> Loading…</div>';
   try{
-    var leagues=await sb('leagues?order=name.asc&select=id,name,match_night,num_singles,num_doubles,current_season');
-    if(!leagues.length){el.innerHTML='<div class="nh">No leagues available yet.</div>';return;}
-    el.innerHTML='<div class="public-league-list">'+leagues.map(function(l){
-      return '<button class="public-league-btn" onclick="openPublicLeague(&quot;'+l.id+'&quot;,&quot;'+esc(l.name)+'&quot;)">'
-        +'<div><div class="pub-league-name">'+esc(l.name)+'</div>'
-        +'<div class="pub-league-meta">'+l.match_night+'s · Season '+l.current_season+'</div></div>'
-        +'<span class="pub-league-arrow">›</span></button>';
-    }).join('')+'</div>';
+    var base='id,name,match_night,num_singles,num_doubles,current_season';
+    try{ pubLeaguesAll=await sb('leagues?listed=eq.true&order=name.asc&select='+base+',county,town,description,recruiting'); }
+    catch(e){ pubLeaguesAll=await sb('leagues?order=name.asc&select='+base); } // directory columns not added yet (migration_04)
+    if(!pubLeaguesAll.length){el.innerHTML='<div class="nh">No leagues available yet.</div>';return;}
+    var counties={};
+    pubLeaguesAll.forEach(function(l){if(l.county)counties[l.county]=1;});
+    var cs=Object.keys(counties).sort();
+    var cSel=document.getElementById('pf-county'), prev=cSel.value;
+    cSel.innerHTML='<option value="">All counties</option>'+cs.map(function(c){return '<option>'+esc(c)+'</option>';}).join('');
+    if(prev&&counties[prev])cSel.value=prev;
+    pubCountyChanged(true);
+    document.getElementById('pub-filters').style.display=(cs.length||pubLeaguesAll.length>8)?'block':'none';
   }catch(e){el.innerHTML='<div class="nh">Error: '+esc(e.message)+'</div>';}
+}
+function pubCountyChanged(keepTown){
+  var county=document.getElementById('pf-county').value;
+  var tSel=document.getElementById('pf-town'), prev=tSel.value;
+  var towns={};
+  pubLeaguesAll.forEach(function(l){if(l.town&&(!county||l.county===county))towns[l.town.trim()]=1;});
+  var ts=Object.keys(towns).sort(function(a,b){return a.localeCompare(b);});
+  tSel.innerHTML='<option value="">All towns / cities</option>'+ts.map(function(t){return '<option>'+esc(t)+'</option>';}).join('');
+  if(keepTown&&prev&&towns[prev])tSel.value=prev;
+  renderPublicLeagues();
+}
+var RECRUIT_LABEL={players:'Looking for players',teams:'Looking for teams',both:'Looking for players & teams'};
+function renderPublicLeagues(){
+  var el=document.getElementById('public-leagues-list');
+  var county=document.getElementById('pf-county').value;
+  var town=document.getElementById('pf-town').value;
+  var q=document.getElementById('pf-search').value.trim().toLowerCase();
+  var rec=document.getElementById('pf-recruit').checked;
+  var list=pubLeaguesAll.filter(function(l){
+    if(county&&l.county!==county)return false;
+    if(town&&(l.town||'').trim()!==town)return false;
+    if(q&&l.name.toLowerCase().indexOf(q)<0)return false;
+    if(rec&&!l.recruiting)return false;
+    return true;
+  });
+  document.getElementById('pf-count').textContent=list.length+' league'+(list.length===1?'':'s')+(county||town||q||rec?' match your filters':'');
+  if(!list.length){el.innerHTML='<div class="nh">No leagues match. Try a different county or town, or clear the search.</div>';return;}
+  el.innerHTML='<div class="public-league-list">'+list.map(function(l){
+    var loc=[l.town,l.county].filter(Boolean).join(', ');
+    return '<button class="public-league-btn" onclick="openPublicLeague(&quot;'+l.id+'&quot;,&quot;'+esc(l.name)+'&quot;)">'
+      +'<div><div class="pub-league-name">'+esc(l.name)+'</div>'
+      +'<div class="pub-league-meta">'+(loc?esc(loc)+' · ':'')+l.match_night+'s · Season '+l.current_season+'</div>'
+      +(l.recruiting?'<div class="pub-league-meta" style="color:var(--amber);font-weight:600">● '+RECRUIT_LABEL[l.recruiting]+'</div>':'')
+      +'</div>'
+      +'<span class="pub-league-arrow">›</span></button>';
+  }).join('')+'</div>';
+}
+
+// ── League profile + enquiry form (migration_04) ──
+function renderLeagueAbout(l){
+  var about=document.getElementById('pub-league-about');
+  var wrap=document.getElementById('pub-enq-wrap');
+  var loc=[l.town,l.county].filter(Boolean).join(', ');
+  var h='';
+  if(loc)h+='<div style="text-align:center;color:var(--dim);margin-bottom:.25rem">📍 '+esc(loc)+'</div>';
+  if(l.recruiting)h+='<div style="text-align:center;color:var(--amber);font-weight:700;margin-bottom:.25rem">● '+RECRUIT_LABEL[l.recruiting]+'</div>';
+  if(l.description)h+='<div style="white-space:pre-wrap;overflow-wrap:anywhere">'+esc(l.description)+'</div>';
+  about.innerHTML=h; about.style.display=h?'block':'none';
+  var can=l.listed!==false&&l.accepts_enquiries===true;
+  wrap.style.display=can?'block':'none';
+  document.getElementById('pub-enq-form').style.display='none';
+  document.getElementById('enq-status').textContent='';
+}
+function toggleEnquiryForm(){
+  var f=document.getElementById('pub-enq-form');
+  f.style.display=f.style.display==='none'?'block':'none';
+  if(f.style.display==='block')document.getElementById('enq-name').focus();
+}
+async function submitEnquiry(ev){
+  ev.preventDefault();
+  var st=document.getElementById('enq-status'), btn=document.getElementById('enq-send');
+  if(!publicLeague||!publicLeague.id)return false;
+  btn.disabled=true; st.style.color='var(--dim)'; st.textContent='Sending…';
+  try{
+    await sb('rpc/submit_league_enquiry',{method:'POST',body:JSON.stringify({
+      p_league_id:publicLeague.id,
+      p_name:document.getElementById('enq-name').value,
+      p_email:document.getElementById('enq-email').value,
+      p_message:document.getElementById('enq-msg').value,
+      p_website:document.getElementById('enq-website').value
+    })});
+    st.style.color='var(--green-l,#6fcf8f)';
+    st.textContent='✓ Thanks! Your enquiry has been sent to the league organiser. They will reply to you by email.';
+    document.getElementById('enq-msg').value='';
+  }catch(e){
+    st.style.color='#e08080'; st.textContent=e.message||'Sorry, that could not be sent. Please try again.';
+  }
+  btn.disabled=false;
+  return false;
 }
 
 function setPublicLeagueTitle(l){
@@ -4034,10 +4140,14 @@ async function openPublicLeague(leagueId,leagueName){
   setPublicLeagueTitle(publicLeague); // show the name straight away, details follow once loaded
   try{
     // Explicit columns: select=* is refused now that leagues.admin_password is not readable by the browser.
-    var rows=await sb('leagues?id=eq.'+leagueId+'&select=id,created_at,name,match_night,num_singles,num_doubles,team_game,team_game_players,starting_score,best_of_singles,best_of_doubles,points_win,points_draw,points_loss,current_season,starting_score_doubles,starting_score_team,fixed_team_names');
+    var pcols='id,created_at,name,match_night,num_singles,num_doubles,team_game,team_game_players,starting_score,best_of_singles,best_of_doubles,points_win,points_draw,points_loss,current_season,starting_score_doubles,starting_score_team,fixed_team_names';
+    var rows;
+    try{ rows=await sb('leagues?id=eq.'+leagueId+'&select='+pcols+',county,town,description,listed,recruiting,accepts_enquiries'); }
+    catch(e2){ rows=await sb('leagues?id=eq.'+leagueId+'&select='+pcols); } // migration_04 not run yet
     if(rows&&rows[0])publicLeague=rows[0];
   }catch(e){fcLogError('openPublicLeague',e,false);}
   setPublicLeagueTitle(publicLeague);
+  renderLeagueAbout(publicLeague);
   goTo('public-league');
   document.getElementById('screen-public-league').classList.add('active');
   // Populate season selector
