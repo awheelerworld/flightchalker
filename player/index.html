@@ -206,8 +206,12 @@ async function loadProfile(){
   if(!username || username==='player'){showNotFound();return;}
 
   try{
+    // player_profiles is the public-safe view (id, username, created_at -
+    // never email). This page is public, so it must never fetch email at
+    // all, even if it isn't rendered - it was sitting in this page's
+    // network response for anyone to see. See migration_01_security.sql.
     var { data:profiles, error:profileErr } = await sb
-      .from('users').select('id, username, email, created_at')
+      .from('player_profiles').select('id, username, created_at')
       .eq('username', username).limit(1);
     if(profileErr) throw profileErr;
     if(!profiles||!profiles.length){showNotFound();return;}
