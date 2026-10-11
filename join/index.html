@@ -102,10 +102,7 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-
 
   <!-- Email Registration Form -->
   <div class="field">
-    <label>Username</label>
-    <input type="text" id="username" placeholder="e.g. dartking99" maxlength="20" oninput="validateUsername()">
-    <div class="hint">3–20 characters, letters and numbers only. This is your public display name.</div>
-    <div class="error" id="username-error"></div>
+    <div class="hint">You'll get a random display name like <strong>chalker482</strong> to start — you can pick your own anytime from your profile once you're signed in, and we'll always check with you before making a chosen name public.</div>
   </div>
 
   <div class="field">
@@ -124,11 +121,6 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-
     <label>Date of Birth <span style="color:var(--dim);font-weight:400;text-transform:none;letter-spacing:0">(must be 18+)</span></label>
     <input type="date" id="dob" max="">
     <div class="error" id="dob-error"></div>
-  </div>
-
-  <div class="checkbox-row">
-    <input type="checkbox" id="leaderboard" checked>
-    <label for="leaderboard">Include me on public leaderboards. You can change this anytime in your profile.</label>
   </div>
 
   <div class="checkbox-row">
@@ -166,16 +158,6 @@ function showError(id, msg){
   if(el){el.textContent=msg;el.style.display=msg?'block':'none';}
 }
 
-function validateUsername(){
-  var val=document.getElementById('username').value;
-  if(val.length<3){showError('username-error','Username must be at least 3 characters');return false;}
-  if(val.length>20){showError('username-error','Username must be 20 characters or less');return false;}
-  if(!/^[a-zA-Z0-9_]+$/.test(val)){showError('username-error','Only letters, numbers and underscores allowed');return false;}
-  if(/@/.test(val)){showError('username-error','Username cannot contain @ symbol');return false;}
-  showError('username-error','');
-  return true;
-}
-
 function isOver18(dob){
   var today=new Date();
   var birth=new Date(dob);
@@ -203,16 +185,13 @@ async function signInWithGoogle(){
 }
 
 async function registerWithEmail(){
-  var username=document.getElementById('username').value.trim();
   var email=document.getElementById('email').value.trim();
   var password=document.getElementById('password').value;
   var dob=document.getElementById('dob').value;
-  var leaderboard=document.getElementById('leaderboard').checked;
   var terms=document.getElementById('terms').checked;
 
   // Validate
   var valid=true;
-  if(!validateUsername())valid=false;
   if(!email||!email.includes('@')){showError('email-error','Please enter a valid email address');valid=false;}else{showError('email-error','');}
   if(password.length<8){showError('password-error','Password must be at least 8 characters');valid=false;}else{showError('password-error','');}
   if(!dob){showError('dob-error','Please enter your date of birth');valid=false;}
@@ -230,22 +209,20 @@ async function registerWithEmail(){
       email:email,
       password:password,
       options:{
-        data:{ username:username, date_of_birth:dob },
+        data:{ date_of_birth:dob },
         emailRedirectTo:'https://flightchalker.co.uk/dashboard'
       }
     });
     if(error) throw error;
 
-    // Store leaderboard preference locally for now
-    localStorage.setItem('fc_leaderboard_opt',leaderboard?'1':'0');
-
     // Best-effort: create a matching row in the public users/profile table.
-    // NOTE: adjust table/column names here if yours differ.
+    // No username is passed here on purpose — the database assigns a
+    // random "chalkerN" default automatically. The player can pick their
+    // own from their profile once they're signed in.
     if(data.user){
       try{
         await sb.from('users').insert({
           id:data.user.id,
-          username:username,
           email:email
         });
       }catch(profileErr){
