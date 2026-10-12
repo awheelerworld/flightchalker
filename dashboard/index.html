@@ -787,23 +787,18 @@ async function claimCaptaincy(){
   var code = document.getElementById('captain-code').value.trim().toUpperCase();
   if(!code){toast('Please enter a captain code',true);return;}
   try{
-    var { data:team, error:teamErr } = await sb.from('teams')
-      .select('id, team_name, captain_user_id').eq('captain_code', code).single();
-    if(teamErr || !team){toast('No team found with that captain code',true);return;}
-    if(team.captain_user_id){
-      toast('This team already has a captain assigned. Contact your league admin if this seems wrong.',true);
-      return;
-    }
-    var { error:updateErr } = await sb.from('teams')
-      .update({ captain_user_id: window.currentUser.id }).eq('id', team.id);
-    if(updateErr) throw updateErr;
+    // Checked on the server: wrong codes are counted and lock after 5 tries.
+    var { data:claimed, error:claimErr } = await sb.rpc('claim_captaincy', { p_code: code });
+    if(claimErr) throw claimErr;
+    var team = claimed && claimed[0];
+    if(!team){toast('No team found with that captain code. (5 wrong tries locks this for 30 minutes.)',true);return;}
 
     document.getElementById('captain-code').value = '';
     toast('You are now captain of '+(team.team_name||'your team')+'! 🎯');
     await loadCaptainTeams(window.currentUser);
   }catch(e){
     console.error('claimCaptaincy error:',e);
-    toast('Could not claim captaincy: '+e.message,true);
+    toast('Could not claim captaincy: '+String(e.message||'').replace(/^LOCKED:\s*/,''),true);
   }
 }
 
