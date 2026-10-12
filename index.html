@@ -614,6 +614,17 @@ html{scroll-behavior:smooth}
         <div style="font-size:.75rem;color:var(--dim);margin-top:.5rem">Keep this safe!</div>
       </div>
       <div class="ast" id="fp-status"></div>
+      <div style="border-top:1px solid var(--border);margin-top:1.2rem;padding-top:1rem">
+        <div style="font-family:'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase;font-size:.9rem;margin-bottom:.4rem">Locked out, or forgotten the secret word?</div>
+        <p style="font-size:.8rem">The team captain can reset the PIN with a code emailed to the email address their Flight Chalker account was registered with. (Only works if the captain's account is linked to the team. Otherwise ask your league admin.)</p>
+        <div class="afield"><label>Captain's account email</label><input type="email" id="fp-email" placeholder="you@example.com" autocomplete="email"></div>
+        <div class="arow"><button class="btns" onclick="fpSendCode()">Email me a code</button></div>
+        <div id="fp-code-box" style="display:none">
+          <div class="afield"><label>6-digit code from the email</label><input type="text" id="fp-code" inputmode="numeric" maxlength="10" autocomplete="one-time-code"></div>
+          <div class="arow"><button class="btnp" onclick="fpVerifyCode()">Reset my team's PIN</button></div>
+        </div>
+        <div class="ast" id="fp-status2"></div>
+      </div>
       <div style="text-align:right;margin-top:1rem"><a href="#top" style="font-size:.75rem;color:var(--dim);text-decoration:none;font-family:'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase">↑ Back to top</a></div>
     </div>
   </div>
@@ -1283,7 +1294,7 @@ async function tryAutoLinkPlayer(){
 }
 
 async function loadTeamById(teamId){
-  var rows=await sb('teams?id=eq.'+teamId+'&select=id,created_at,team_name,league_id,score_threshold,captain_user_id,captain_code,join_code');
+  var rows=await sb('teams?id=eq.'+teamId+'&select=id,created_at,team_name,league_id,score_threshold,captain_user_id,join_code');
   if(!rows||!rows.length){
     console.error('loadTeamById: no team row found for id', teamId);
     return false;
@@ -1339,17 +1350,41 @@ let currentTeam=null,currentLeague=null,players=[],matchHistory=[],leagueFixture
 let regPlayers=[],regLeague=null,delId=null,confirmCb=null,editSt=null,charts={};
 
 // ── Supabase ──────────────────────────────────────────────────────────────────
+// Who is calling? Every request carries (a) the signed-in account's token, if
+// there is one, and (b) the team's secure session token (x-fc-token) from a
+// PIN login. The database decides what each of those is allowed to change.
+var fcAuthClient=null;
+function fcClient(){
+  if(!fcAuthClient&&window.supabase)fcAuthClient=window.supabase.createClient(SB,SK);
+  return fcAuthClient;
+}
+async function fcHeaders(){
+  var h={'apikey':SK,'Authorization':'Bearer '+SK};
+  try{
+    var c=fcClient();
+    if(c){var r=await c.auth.getSession();var sess=r&&r.data&&r.data.session;if(sess&&sess.access_token)h['Authorization']='Bearer '+sess.access_token;}
+  }catch(e){}
+  if(currentTeam&&currentTeam.token)h['x-fc-token']=currentTeam.token;
+  return h;
+}
+function fcFriendlyError(msg){
+  if(/row-level security|permission denied|42501/i.test(msg||''))return 'Your session has expired or you don\u2019t have permission for that. Please log out and log in again.';
+  return String(msg||'').replace(/^LOCKED:\s*/,'');
+}
 async function sb(path,opts={}){
-  const res=await fetch(SB+'/rest/v1/'+path,{...opts,headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json','Prefer':opts.prefer||'',...(opts.headers||{})}});
-  if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.message||e.error||'HTTP '+res.status);}
+  const res=await fetch(SB+'/rest/v1/'+path,{...opts,headers:{...(await fcHeaders()),'Content-Type':'application/json','Prefer':opts.prefer||'',...(opts.headers||{})}});
+  if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(fcFriendlyError(e.message||e.error||'HTTP '+res.status));}
   if(res.status===204)return null;
   const text=await res.text();
   if(!text||!text.trim())return null;
   try{return JSON.parse(text);}catch(e){return null;}
 }
 async function sbPatch(table,filter,body){
-  const res=await fetch(SB+'/rest/v1/'+table+'?'+filter,{method:'PATCH',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(body)});
-  if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.message||e.error||'HTTP '+res.status);}
+  const res=await fetch(SB+'/rest/v1/'+table+'?'+filter+'&select=id',{method:'PATCH',headers:{...(await fcHeaders()),'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(body)});
+  if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(fcFriendlyError(e.message||e.error||'HTTP '+res.status));}
+  // A blocked update changes 0 rows instead of erroring: treat that as a failure.
+  var done=await res.json().catch(()=>[]);
+  if(Array.isArray(done)&&done.length===0)throw new Error('That change wasn\u2019t allowed or nothing matched. Please log out and log in again.');
   return true;
 }
 
@@ -1460,6 +1495,15 @@ document.addEventListener('DOMContentLoaded',async function(){
   if(sess){
     try{
       var d=JSON.parse(sess);
+      var hasAccount=false;
+      try{var gs=await fcClient().auth.getSession();hasAccount=!!(gs&&gs.data&&gs.data.session);}catch(e){}
+      if(d.team&&!d.team.token&&!hasAccount){
+        // Saved before secure sessions existed: log in once more with the PIN.
+        localStorage.removeItem('mld_session');
+        showScreen('screen-landing');
+        setTimeout(function(){toast('We\u2019ve made logins more secure \u2014 please log in to your team again.');},600);
+        return;
+      }
       currentTeam=d.team;currentLeague=d.league;
       await loadTeamData();
       showScreen('screen-app');
@@ -1517,14 +1561,8 @@ async function setupTeamNameField(){
   claimNameField.style.display='';claimEmailField.style.display='';
   sel.innerHTML='<option value="">Loading team names…</option>';
   try{
-    var contacts=await sb('league_captains?league_id=eq.'+regLeague.id+'&select=team_name&order=team_name.asc');
-    var registered=await sb('teams?league_id=eq.'+regLeague.id+'&select=team_name');
-    var pendingReqs=await sb('team_claim_requests?league_id=eq.'+regLeague.id+'&status=eq.pending&select=team_name');
-    var taken={};
-    (registered||[]).forEach(function(t){taken[t.team_name]=true;});
-    (pendingReqs||[]).forEach(function(r){taken[r.team_name]=true;});
-    var names=(contacts||[]).map(function(c){return c.team_name;}).filter(function(n,i,a){return n&&a.indexOf(n)===i;});
-    var available=names.filter(function(n){return !taken[n];});
+    var open=await sb('rpc/league_claimable_team_names',{method:'POST',body:JSON.stringify({p_league_id:regLeague.id})});
+    var available=(open||[]).map(function(c){return c.team_name;});
     if(!available.length){
       sel.innerHTML='<option value="">No unclaimed team names available</option>';
       toast('All set team names for this league are already claimed or pending approval. Contact your league admin.',true);
@@ -1585,7 +1623,7 @@ async function registerTeam(){
   sp.style.display='inline-block';st.textContent='';
   const secret=document.getElementById('reg-secret').value.trim().toLowerCase();
   if(!secret){st.textContent='Please enter a secret word.';st.className='ast err';sp.style.display='none';return;}
-  const pin=String(Math.floor(1000+Math.random()*9000));
+  let pin=String(Math.floor(1000+Math.random()*9000));
   const threshold=parseInt(document.getElementById('reg-threshold').value)||80;
 
   if(regLeague.fixed_team_names){
@@ -1610,12 +1648,11 @@ async function registerTeam(){
   }
 
   try{
-    const existing=await sb('teams?team_name=eq.'+encodeURIComponent(teamName)+'&league_id=eq.'+regLeague.id+'&select=id');
-    if(existing&&existing.length){st.textContent='That team name is already registered in this league.';st.className='ast err';sp.style.display='none';return;}
-    const teamRes=await sb('teams',{method:'POST',prefer:'return=representation',body:JSON.stringify({team_name:teamName,pin,league_id:regLeague.id,secret_word:secret,score_threshold:threshold})});
-    const teamId=teamRes[0].id;
-    for(const name of regPlayers){await sb('team_players',{method:'POST',prefer:'return=minimal',body:JSON.stringify({team_id:teamId,name})});}
-    currentTeam={id:teamId,team_name:teamName,pin,league_id:regLeague.id,score_threshold:threshold};
+    // The server checks the details, makes the PIN and keeps the team's data safe.
+    const regRows=await sb('rpc/register_team',{method:'POST',body:JSON.stringify({p_league_id:regLeague.id,p_team_name:teamName,p_secret_word:secret,p_threshold:threshold,p_players:regPlayers})});
+    if(!regRows||!regRows.length)throw new Error('Could not register the team. Please try again.');
+    const teamId=regRows[0].team_id;pin=regRows[0].pin;
+    currentTeam={id:teamId,team_name:teamName,league_id:regLeague.id,score_threshold:threshold,token:regRows[0].token};
     currentLeague=regLeague;
     localStorage.setItem('mld_session',JSON.stringify({team:currentTeam,league:currentLeague}));
     document.getElementById('pin-display').textContent=pin;
@@ -1648,7 +1685,7 @@ async function loginTeam(){
     // Verified server-side via login_team() - never reads the stored PIN
     // into the browser to compare it here. See migration_01_security.sql.
     const rows=await sb('rpc/login_team',{method:'POST',body:JSON.stringify({p_team_name:teamName,p_pin:pin})});
-    if(!rows||!rows.length){st.textContent='Team not found or incorrect PIN.';st.className='ast err';sp.style.display='none';return;}
+    if(!rows||!rows.length){st.textContent='Team not found or incorrect PIN. After 5 wrong attempts the login locks for 30 minutes.';st.className='ast err';sp.style.display='none';return;}
     const team=rows[0];
     const leagueRows=await sb('leagues?id=eq.'+team.league_id+'&select=id,created_at,name,match_night,num_singles,num_doubles,team_game,team_game_players,starting_score,best_of_singles,best_of_doubles,points_win,points_draw,points_loss,current_season,starting_score_doubles,starting_score_team,fixed_team_names');
     if(!leagueRows||!leagueRows.length){st.textContent='League not found.';st.className='ast err';sp.style.display='none';return;}
@@ -1658,7 +1695,11 @@ async function loginTeam(){
     await loadTeamData();
     showScreen('screen-app');
     renderSquad();
-  }catch(e){st.textContent='Error: '+e.message;st.className='ast err';}
+  }catch(e){
+    var lm=String(e.message||'');
+    st.innerHTML=/Too many incorrect attempts/i.test(lm)?esc(lm)+' <a href="#" onclick="goTo(\'forgot-pin\');document.getElementById(\'section-forgot-pin\').style.display=\'flex\';document.getElementById(\'section-forgot-pin\').scrollIntoView();return false" style="color:var(--amber)">Reset your PIN \u2192</a>':'Error: '+esc(lm);
+    st.className='ast err';
+  }
   sp.style.display='none';
 }
 
@@ -1679,12 +1720,12 @@ async function loadTeamData(){
   document.getElementById('app-team-label').textContent=currentTeam.team_name+' · '+currentLeague.name;
   document.getElementById('mdate').value=new Date().toISOString().split('T')[0];
   try{
-    const rows=await sb('team_players?team_id=eq.'+currentTeam.id+'&order=name.asc');
+    const rows=await sb('rpc/team_roster',{method:'POST',body:JSON.stringify({p_team_id:currentTeam.id})});
     players=rows.map(function(r){return {name:r.name, email:r.email||null, linked:!!r.linked_user_id};});
   }catch(e){players=[];fcLogError('loadTeamData:players',e,true,'Couldn\u2019t load your player list — try refreshing the page.');}
   // Load all teams in the league for opponent dropdown
   try{
-    const rows=await sb('teams?league_id=eq.'+currentLeague.id+'&order=team_name.asc');
+    const rows=await sb('teams?league_id=eq.'+currentLeague.id+'&order=team_name.asc&select=id,team_name,league_id,score_threshold,venue_name,venue_address');
     leagueTeams=rows.filter(t=>t.id!==currentTeam.id);
   }catch(e){leagueTeams=[];fcLogError('loadTeamData:leagueTeams',e,true,'Couldn\u2019t load opponent teams — try refreshing, or type the opponent name in manually.');}
   populateOpponentDropdown();
@@ -4320,10 +4361,43 @@ async function recoverPIN(){
     // never read into the browser to compare it here, only the resulting
     // PIN is returned, and only on a match. See migration_01_security.sql.
     var pin=await sb('rpc/recover_team_pin',{method:'POST',body:JSON.stringify({p_team_name:teamName,p_secret_word:secret})});
+    if(!pin){st.textContent='Those details don\u2019t match. After 5 wrong attempts this locks for 30 minutes \u2014 you can then reset by emailed code below.';st.className='ast err';sp.style.display='none';return;}
     document.getElementById('fp-pin').textContent=pin;
     res.style.display='block';st.textContent='';
-  }catch(e){st.textContent='Error: '+e.message;st.className='ast err';}
+  }catch(e){st.textContent='Error: '+fcFriendlyError(e.message);st.className='ast err';}
   sp.style.display='none';
+}
+
+// Reset PIN with an emailed code (sent to the account's registered email).
+async function fpSendCode(){
+  var st=document.getElementById('fp-status2');
+  var email=document.getElementById('fp-email').value.trim().toLowerCase();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){st.textContent='Enter the email address of your Flight Chalker account.';st.className='ast err';return;}
+  try{
+    // shouldCreateUser:false - only existing accounts, so this never creates one.
+    var r=await fcClient().auth.signInWithOtp({email:email,options:{shouldCreateUser:false}});
+    if(r.error)throw r.error;
+    document.getElementById('fp-code-box').style.display='block';
+    st.textContent='If an account exists for that address, a code has been emailed. It can take a minute.';st.className='ast ok';
+  }catch(e){st.textContent='Could not send a code: '+e.message;st.className='ast err';}
+}
+async function fpVerifyCode(){
+  var st=document.getElementById('fp-status2');
+  var email=document.getElementById('fp-email').value.trim().toLowerCase();
+  var code=document.getElementById('fp-code').value.trim();
+  var team=document.getElementById('fp-team').value.trim();
+  if(!team){st.textContent='Type your team name in the Team Name box above first.';st.className='ast err';return;}
+  if(!code){st.textContent='Enter the code from the email.';st.className='ast err';return;}
+  try{
+    var v=await fcClient().auth.verifyOtp({email:email,token:code,type:'email'});
+    if(v.error)throw v.error;
+    var rows=await sb('rpc/reset_team_pin_by_name',{method:'POST',body:JSON.stringify({p_team_name:team})});
+    if(!rows||!rows.length)throw new Error('Could not reset the PIN.');
+    document.getElementById('fp-pin').textContent=rows[0].new_pin;
+    document.getElementById('fp-result').style.display='block';
+    st.textContent='Done \u2014 your new PIN is shown above. Any old team logins have been signed out.';st.className='ast ok';
+    try{await fcClient().auth.signOut();}catch(e){}
+  }catch(e){st.textContent='Error: '+fcFriendlyError(e.message);st.className='ast err';}
 }
 
 // ── Season management ─────────────────────────────────────────────────────────

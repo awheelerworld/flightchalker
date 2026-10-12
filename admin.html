@@ -442,11 +442,13 @@ async function checkLeagueLogin(){
     var rows=await sb('rpc/login_league',{method:'POST',body:JSON.stringify({p_name:name,p_password:pw})});
     var league=rows&&rows[0];
     if(!league){
-      err.textContent='League not found or incorrect password.';err.style.display='block';return;
+      err.textContent='League not found or incorrect password. After 5 wrong attempts this locks for 30 minutes.';err.style.display='block';return;
     }
     enterLeagueMode(league.id,league.name,league.token);
   }catch(e){
-    err.textContent='League not found or incorrect password.';err.style.display='block';
+    var m=String(e.message||'');
+    err.textContent=/Too many incorrect attempts/i.test(m)?m+' (The league owner can sign in with their Flight Chalker account instead, and set a new helper password.)':'League not found or incorrect password.';
+    err.style.display='block';
   }
 }
 
@@ -484,6 +486,22 @@ async function signInWithGoogleOrganiser(){
   }
 }
 
+// Sign-in lock-out (this browser): 5 wrong passwords in 30 minutes locks sign-in
+// for that account and points people to the emailed reset code instead.
+function fcLockState(id){
+  try{var a=JSON.parse(localStorage.getItem('fc_signin_fails')||'{}')[id.toLowerCase()];
+    if(a&&a.until&&a.until>Date.now())return Math.ceil((a.until-Date.now())/60000);}catch(e){}
+  return 0;
+}
+function fcLockFail(id){
+  try{var all=JSON.parse(localStorage.getItem('fc_signin_fails')||'{}');var k=id.toLowerCase();
+    var a=all[k]||{n:0,first:Date.now()};
+    if(Date.now()-a.first>30*60000)a={n:0,first:Date.now()};
+    a.n++;if(a.n>=5)a.until=Date.now()+30*60000;
+    all[k]=a;localStorage.setItem('fc_signin_fails',JSON.stringify(all));return a.n>=5;}catch(e){return false;}
+}
+function fcLockClear(id){try{var all=JSON.parse(localStorage.getItem('fc_signin_fails')||'{}');delete all[id.toLowerCase()];localStorage.setItem('fc_signin_fails',JSON.stringify(all));}catch(e){}}
+
 async function organiserLogin(){
   var email=document.getElementById('pa-email').value.trim();
   var pw=document.getElementById('pa-password').value;
@@ -491,13 +509,18 @@ async function organiserLogin(){
   var btn=document.getElementById('pa-login-btn');
   err.style.display='none';
   if(!email||!pw){err.textContent='Please enter your email and password.';err.style.display='block';return;}
+  var lm=fcLockState(email);
+  if(lm){err.innerHTML='Too many incorrect attempts. Sign-in is locked for about '+lm+' more minute(s). <a href="/forgot-password" style="color:inherit;text-decoration:underline">Request an emailed code to reset your password</a>.';err.style.display='block';return;}
   btn.disabled=true;btn.textContent='Signing in…';
   try{
     const { data, error } = await paClient.auth.signInWithPassword({ email:email, password:pw });
     if(error) throw error;
+    fcLockClear(email);
     await afterOrganiserSignIn(data.user);
   }catch(e){
-    err.textContent = e.message==='Invalid login credentials' ? 'Incorrect email or password.' : e.message;
+    if(e.message==='Invalid login credentials'&&fcLockFail(email)){
+      err.innerHTML='Too many incorrect attempts. Sign-in is locked for 30 minutes. <a href="/forgot-password" style="color:inherit;text-decoration:underline">Request an emailed code to reset your password</a>.';
+    } else err.textContent = e.message==='Invalid login credentials' ? 'Incorrect email or password.' : e.message;
     err.style.display='block';
   }
   btn.disabled=false;btn.textContent='Sign In';
@@ -590,13 +613,14 @@ async function claimLeague(){
   if(!name||!pw){mlMsg('Please enter the league name and its admin password.');return;}
   btn.disabled=true;btn.textContent='Adding…';
   try{
-    var { error } = await paClient.rpc('claim_league',{p_name:name,p_password:pw});
+    var { data:claimedId, error } = await paClient.rpc('claim_league',{p_name:name,p_password:pw});
     if(error) throw error;
+    if(!claimedId) throw new Error('League name or password not recognised. After 5 wrong attempts this locks for 30 minutes.');
     document.getElementById('ml-claim-name').value='';
     document.getElementById('ml-claim-pw').value='';
     await showMyLeagues();
   }catch(e){
-    mlMsg(e.message);
+    mlMsg(String(e.message||'').replace(/^LOCKED:\s*/,''));
   }
   btn.disabled=false;btn.textContent='Add This League';
 }
@@ -733,14 +757,30 @@ window.addEventListener('DOMContentLoaded',async function(){
 const SB='https://xkovqamknwyjzlgijcel.supabase.co';
 const SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhrb3ZxYW1rbnd5anpsZ2lqY2VsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0MzkxMTQsImV4cCI6MjA5NzAxNTExNH0.3KtXmzojAdvYbKLW0LP0BmfaqRz4oBEK7k0xFsGDmXI';
 
+// Every request says who is asking: the signed-in organiser account (if any)
+// and/or the league helper-login session token. The database checks both.
+async function fcHeaders(){
+  var h={'apikey':SK,'Authorization':'Bearer '+SK};
+  try{
+    var r=await paClient.auth.getSession();
+    var sess=r&&r.data&&r.data.session;
+    if(sess&&sess.access_token)h['Authorization']='Bearer '+sess.access_token;
+  }catch(e){}
+  if(scopedLeagueToken)h['x-fc-token']=scopedLeagueToken;
+  return h;
+}
+function fcFriendly(m){
+  if(/row-level security|permission denied|42501/i.test(m||''))return 'Not allowed \u2014 your session may have expired. Please sign in again.';
+  return String(m||'').replace(/^LOCKED:\s*/,'');
+}
 async function sb(path,opts){
   opts=opts||{};
   var res=await fetch(SB+'/rest/v1/'+path,{
     method:opts.method||'GET',
-    headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json','Prefer':opts.prefer||''},
+    headers:Object.assign(await fcHeaders(),{'Content-Type':'application/json','Prefer':opts.prefer||''}),
     body:opts.body||undefined
   });
-  if(!res.ok){var e=await res.json().catch(function(){return {};});throw new Error(e.message||'HTTP '+res.status);}
+  if(!res.ok){var e=await res.json().catch(function(){return {};});throw new Error(fcFriendly(e.message)||'HTTP '+res.status);}
   if(res.status===204)return null;
   var text=await res.text();
   if(!text||!text.trim())return null;
@@ -748,12 +788,14 @@ async function sb(path,opts){
 }
 
 async function sbPatch(table,filter,body){
-  var res=await fetch(SB+'/rest/v1/'+table+'?'+filter,{
+  var res=await fetch(SB+'/rest/v1/'+table+'?'+filter+'&select=id',{
     method:'PATCH',
-    headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json','Prefer':'return=minimal'},
+    headers:Object.assign(await fcHeaders(),{'Content-Type':'application/json','Prefer':'return=representation'}),
     body:JSON.stringify(body)
   });
-  if(!res.ok){var e=await res.json().catch(function(){return {};});throw new Error(e.message||'HTTP '+res.status);}
+  if(!res.ok){var e=await res.json().catch(function(){return {};});throw new Error(fcFriendly(e.message)||'HTTP '+res.status);}
+  var done=await res.json().catch(function(){return [];});
+  if(Array.isArray(done)&&done.length===0)throw new Error('That change was not allowed (or nothing matched). Please sign in again.');
   return true;
 }
 
@@ -1546,7 +1588,7 @@ async function loadTeamList(leagueId){
   if(!el)return;
   el.innerHTML='<div class="lh"><span class="spin"></span> Loading…</div>';
   try{
-    var teamCols='id,team_name,league_id,score_threshold,captain_user_id,captain_code,join_code,created_at';
+    var teamCols='id,team_name,league_id,score_threshold,captain_user_id,join_code,created_at';
     var teams;
     try{ teams=await sb('teams?league_id=eq.'+leagueId+'&order=team_name.asc&select='+teamCols+',venue_name,venue_address'); }
     catch(e){ teams=await sb('teams?league_id=eq.'+leagueId+'&order=team_name.asc&select='+teamCols); } // venue columns not added yet (migration_03)
@@ -1554,10 +1596,10 @@ async function loadTeamList(leagueId){
 
     // PINs are no longer readable directly (see migration_01_security.sql)
     // - fetched separately via the token-gated RPC and merged in here.
-    var pinMap={};
+    var pinMap={},codeMap={};
     try{
       var withPins=await sb('rpc/list_league_teams_with_pins',{method:'POST',body:JSON.stringify({p_token:await tokenForLeague(leagueId)})});
-      (withPins||[]).forEach(function(t){pinMap[t.id]=t.pin;});
+      (withPins||[]).forEach(function(t){pinMap[t.id]=t.pin;codeMap[t.id]=t.captain_code;});
     }catch(e){ /* non-fatal - team rows below just show no PIN if this fails */ }
     teams.forEach(function(t){t.pin=pinMap[t.id];});
 
@@ -1637,7 +1679,7 @@ async function loadTeamList(leagueId){
         +'<div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-top:.4rem;padding-top:.4rem;border-top:1px solid var(--border)">'
           +'<div style="font-size:.78rem;color:var(--dim)">Captain: <span style="color:var(--gl)">'+esc(captainLabel)+'</span></div>'
           +'<div style="font-size:.78rem;color:var(--dim);margin-left:auto">Captain code:</div>'
-          +'<span style="font-family:monospace;font-size:.85rem;color:var(--amber);background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:2px 8px">'+(t.captain_code||'—')+'</span>'
+          +'<span style="font-family:monospace;font-size:.85rem;color:var(--amber);background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:2px 8px">'+(codeMap[t.id]||'—')+'</span>'
           +'<button onclick="generateCaptainCode(&quot;'+t.id+'&quot;,&quot;'+leagueId+'&quot;)" style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--dim);font-size:.7rem;padding:2px 8px;cursor:pointer">'+(t.captain_code?'Regenerate':'Generate')+'</button>'
           + (t.captain_user_id ? '<button onclick="clearCaptain(&quot;'+t.id+'&quot;,&quot;'+leagueId+'&quot;)" style="background:none;border:1px solid #5c2020;border-radius:4px;color:#ff8080;font-size:.7rem;padding:2px 8px;cursor:pointer">Clear Captain</button>' : '')
         +'</div>'
@@ -1659,7 +1701,7 @@ function randomCode(len){
 async function generateCaptainCode(teamId,leagueId){
   var code=randomCode(6);
   try{
-    await sbPatch('teams','id=eq.'+teamId,{captain_code:code});
+    await sb('rpc/admin_set_captain_code',{method:'POST',body:JSON.stringify({p_token:await tokenForLeague(leagueId),p_team_id:teamId,p_code:code})});
     toast('Captain code generated: '+code);
     loadTeamList(leagueId);
   }catch(e){toast('Error: '+e.message,true);}
@@ -1668,7 +1710,7 @@ async function generateCaptainCode(teamId,leagueId){
 async function clearCaptain(teamId,leagueId){
   if(!confirm('Remove the current captain from this team? They can be re-assigned later with a new captain code.'))return;
   try{
-    await sbPatch('teams','id=eq.'+teamId,{captain_user_id:null});
+    await sb('rpc/admin_set_team_captain',{method:'POST',body:JSON.stringify({p_token:await tokenForLeague(leagueId),p_team_id:teamId,p_user_id:null})});
     toast('Captain cleared');
     loadTeamList(leagueId);
   }catch(e){toast('Error: '+e.message,true);}
@@ -1682,7 +1724,7 @@ async function assignCaptain(teamId,userId,leagueId){
     var users=await sb('users?id=eq.'+userId+'&select=username,email');
     var label = (users&&users[0]&&(users[0].username||users[0].email)) || 'this player';
     if(!confirm('Make '+label+' the captain of this team? Any existing captain will be replaced.'))return;
-    await sbPatch('teams','id=eq.'+teamId,{captain_user_id:userId});
+    await sb('rpc/admin_set_team_captain',{method:'POST',body:JSON.stringify({p_token:await tokenForLeague(leagueId),p_team_id:teamId,p_user_id:userId})});
     toast(label+' is now team captain');
     loadTeamList(leagueId);
   }catch(e){toast('Error: '+e.message,true);}
