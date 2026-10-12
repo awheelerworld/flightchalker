@@ -1,1 +1,91 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Security Check - Flight Chalker</title>
+<style>
+:root{--bg:#0b120c;--fg:#e8efe8;--dim:#8a9a8a;--ok:#4fd36b;--bad:#ff6b6b;--card:#142016;--bd:#243a27}
+@media (prefers-color-scheme: light){:root{--bg:#f4f7f4;--fg:#1a261c;--dim:#556;--ok:#1d8a3a;--bad:#c62828;--card:#fff;--bd:#cdd8cf}}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,sans-serif;padding:1rem}
+.w{max-width:760px;margin:0 auto}h1{font-size:1.4rem}h2{font-size:1.05rem;margin-top:1.6rem}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:1rem;margin:.8rem 0}
+button{background:#2e7d32;color:#fff;border:0;border-radius:8px;padding:.7rem 1.2rem;font-size:1rem;cursor:pointer}
+.r{display:flex;gap:.6rem;padding:.35rem 0;border-bottom:1px solid var(--bd);font-size:.92rem}
+.r b{min-width:3.6rem}.pass b{color:var(--ok)}.fail b{color:var(--bad)}.dim{color:var(--dim)}
+</style></head><body><div class="w">
+<h1>Flight Chalker security check</h1>
+<p class="dim">This page tries the things a stranger could try, using only the public key, and tells you whether the database blocked them. Nothing real is changed: every test uses made-up IDs.</p>
 
+<h2>Step 1 &mdash; Before the lock-down (migration 07b)</h2>
+<div class="card"><p>Checks that the secure session header reaches the database. This must say PASS before you run migration 07b.</p>
+<button onclick="probe()">Run header check</button><div id="probe"></div></div>
+
+<h2>Step 2 &mdash; After the lock-down</h2>
+<div class="card"><p>Every line below should say PASS. A FAIL means that door is still open. (Edits and deletes of existing rows can&rsquo;t be proven safe from a browser without touching real data, so those are checked by the server-side test suite instead.)</p>
+<button onclick="attack()">Run security tests</button><div id="attack"></div></div>
+</div>
+<script>
+const SB='https://xkovqamknwyjzlgijcel.supabase.co';
+const SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhrb3ZxYW1rbnd5anpsZ2lqY2VsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0MzkxMTQsImV4cCI6MjA5NzAxNTExNH0.3KtXmzojAdvYbKLW0LP0BmfaqRz4oBEK7k0xFsGDmXI';
+const ID='00000000-0000-4000-8000-00000000dead';
+function uuid(){return crypto.randomUUID?crypto.randomUUID():'11111111-1111-4111-8111-'+String(Date.now()).padStart(12,'0').slice(-12);}
+async function call(method,path,body,extra){
+  const r=await fetch(SB+path,{method:method,headers:Object.assign({'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json','Prefer':'return=representation'},extra||{}),body:body?JSON.stringify(body):undefined});
+  let t='';try{t=await r.text();}catch(e){}
+  return {status:r.status,text:t};
+}
+function row(el,ok,label,detail){el.insertAdjacentHTML('beforeend','<div class="r '+(ok?'pass':'fail')+'"><b>'+(ok?'PASS':'FAIL')+'</b><span>'+label+(detail?' <span class="dim">('+detail+')</span>':'')+'</span></div>');}
+async function probe(){
+  const el=document.getElementById('probe');el.innerHTML='';
+  const t=uuid();
+  try{
+    const r=await call('POST','/rest/v1/rpc/fc_header_probe',{}, {'x-fc-token':t});
+    let j=null;try{j=JSON.parse(r.text);}catch(e){}
+    if(r.status===404)row(el,false,'Migration 07a has not been run yet','run it first');
+    else row(el,!!j&&j.token_header===t,'The secure header reaches the database','HTTP '+r.status);
+  }catch(e){row(el,false,'Could not run the check',e.message);}
+}
+// "Blocked" = refused (401/403/permission/row-level security), or an update that touched nothing.
+function blocked(r,mode){
+  if(r.status===401||r.status===403)return true;
+  if(/row-level security|permission denied|42501/i.test(r.text))return true;
+  if(mode==='read'){ return r.status>=400 || r.text.trim()==='[]'; }
+  if(mode==='write'){ return r.status>=400 && r.status!==409 && r.status!==404 ? true : false; }
+  return false;
+}
+async function attack(){
+  const el=document.getElementById('attack');el.innerHTML='';
+  const tests=[
+   ['Cannot read team captain codes','read',()=>call('GET','/rest/v1/teams?select=captain_code&limit=1')],
+   ['Cannot read team PINs','read',()=>call('GET','/rest/v1/teams?select=pin&limit=1')],
+   ['Cannot read team secret words','read',()=>call('GET','/rest/v1/teams?select=secret_word&limit=1')],
+   ['Cannot read captain emails','read',()=>call('GET','/rest/v1/league_captains?select=email&limit=1')],
+   ['Cannot read player emails','read',()=>call('GET','/rest/v1/team_players?select=email&limit=1')],
+   ['Cannot read league passwords','read',()=>call('GET','/rest/v1/leagues?select=admin_password&limit=1')],
+   ['Cannot read PINs in pending team requests','read',()=>call('GET','/rest/v1/team_claim_requests?select=pin&limit=1')],
+   ['Cannot post a league notice','write',()=>call('POST','/rest/v1/league_notices',{league_id:ID,title:'x',body:'x'})],
+   ['Cannot add a fixture','write',()=>call('POST','/rest/v1/league_fixtures',{league_id:ID,home_team_id:ID,away_team_id:ID,fixture_date:'2030-01-01'})],
+   ['Cannot add a captain contact','write',()=>call('POST','/rest/v1/league_captains',{league_id:ID,team_name:'x'})],
+   ['Cannot create a team directly','write',()=>call('POST','/rest/v1/teams',{team_name:'x',league_id:ID,pin:'0000'})],
+   ['Cannot add a player','write',()=>call('POST','/rest/v1/team_players',{team_id:ID,name:'x'})],
+   ['Cannot add a match result','write',()=>call('POST','/rest/v1/team_matches',{team_id:ID,opponent:'x'})],
+   ['Cannot add a team fixture','write',()=>call('POST','/rest/v1/team_fixtures',{team_id:ID,opponent:'x'})],
+   ['Cannot join a team as someone else','write',()=>call('POST','/rest/v1/team_memberships',{team_id:ID,user_id:ID,status:'approved'})],
+   ['Cannot add a vice-captain','write',()=>call('POST','/rest/v1/team_vice_captains',{team_id:ID,user_id:ID})],
+   ['Cannot raise a captain-change request','write',()=>call('POST','/rest/v1/captain_change_requests',{team_id:ID,requested_by:ID,proposed_captain_id:ID})],
+   ['Cannot create a league directly','write',()=>call('POST','/rest/v1/leagues',{name:'x',admin_password:'x'})],
+   ['Cannot change a team PIN','write',()=>call('PATCH','/rest/v1/teams?id=eq.'+ID,{pin:'0000'})],
+   ['Cannot make yourself a team captain','write',()=>call('PATCH','/rest/v1/teams?id=eq.'+ID,{captain_user_id:ID})],
+   ['Cannot change a league password','write',()=>call('PATCH','/rest/v1/leagues?id=eq.'+ID,{admin_password:'x'})],
+   ['Cannot change who owns a league','write',()=>call('PATCH','/rest/v1/leagues?id=eq.'+ID,{owner_user_id:ID})],
+  ];
+  let pass=0;
+  for(const t of tests){
+    try{const r=await t[2]();let ok=blocked(r,t[1]);
+      // Updates/deletes that return 200/204 with nothing changed are not safe proof; require an explicit refusal.
+      if(t[1]==='write')ok=(r.status===401||r.status===403||/row-level security|permission denied|42501/i.test(r.text));
+      if(ok)pass++;row(el,ok,t[0],'HTTP '+r.status);}
+    catch(e){row(el,false,t[0],e.message);}
+  }
+  el.insertAdjacentHTML('afterbegin','<p><b>'+pass+' of '+tests.length+' tests passed.</b> '+(pass===tests.length?'All doors are closed.':'Some doors are still open - tell Claude which ones.')+'</p>');
+}
+</script></body></html>
