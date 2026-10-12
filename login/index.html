@@ -125,12 +125,30 @@ async function signInWithGoogle(){
   }
 }
 
+// Sign-in lock-out (this browser): 5 wrong passwords in 30 minutes locks sign-in
+// for that account and points people to the emailed reset code instead.
+function fcLockState(id){
+  try{var a=JSON.parse(localStorage.getItem('fc_signin_fails')||'{}')[id.toLowerCase()];
+    if(a&&a.until&&a.until>Date.now())return Math.ceil((a.until-Date.now())/60000);}catch(e){}
+  return 0;
+}
+function fcLockFail(id){
+  try{var all=JSON.parse(localStorage.getItem('fc_signin_fails')||'{}');var k=id.toLowerCase();
+    var a=all[k]||{n:0,first:Date.now()};
+    if(Date.now()-a.first>30*60000)a={n:0,first:Date.now()};
+    a.n++;if(a.n>=5)a.until=Date.now()+30*60000;
+    all[k]=a;localStorage.setItem('fc_signin_fails',JSON.stringify(all));return a.n>=5;}catch(e){return false;}
+}
+function fcLockClear(id){try{var all=JSON.parse(localStorage.getItem('fc_signin_fails')||'{}');delete all[id.toLowerCase()];localStorage.setItem('fc_signin_fails',JSON.stringify(all));}catch(e){}}
+
 async function login(){
   var identifier=document.getElementById('identifier').value.trim();
   var password=document.getElementById('password').value;
   var errEl=document.getElementById('login-error');
   errEl.style.display='none';
   if(!identifier||!password){errEl.textContent='Please enter your email/username and password';errEl.style.display='block';return;}
+  var lockMins=fcLockState(identifier);
+  if(lockMins){errEl.innerHTML='Too many incorrect attempts. Sign-in is locked for about '+lockMins+' more minute(s). <a href="/forgot-password" style="color:inherit;text-decoration:underline">Request an emailed code to reset your password</a>.';errEl.style.display='block';return;}
   var btn=document.getElementById('login-btn');
   btn.disabled=true;btn.innerHTML='<span class="spin"></span>Signing in...';
   try{
@@ -147,10 +165,13 @@ async function login(){
     }
     const { error } = await sb.auth.signInWithPassword({ email, password });
     if(error) throw error;
+    fcLockClear(identifier);
     toast('Welcome back! \uD83C\uDFAF');
     setTimeout(function(){window.location.href='/dashboard';},800);
   }catch(e){
-    errEl.textContent = e.message || 'Sign in failed. Please check your details.';
+    var nowLocked=/invalid login|credentials|No account found/i.test(e.message||'')&&fcLockFail(identifier);
+    if(nowLocked){errEl.innerHTML='Too many incorrect attempts. Sign-in is locked for 30 minutes. <a href="/forgot-password" style="color:inherit;text-decoration:underline">Request an emailed code to reset your password</a>.';}
+    else errEl.textContent = e.message || 'Sign in failed. Please check your details.';
     errEl.style.display='block';
     btn.disabled=false;btn.innerHTML='Sign In';
   }
