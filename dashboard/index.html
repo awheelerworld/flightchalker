@@ -140,11 +140,47 @@ input:checked+.slider::before{transform:translateX(18px);background:white}
 }
 </style>
 <link rel="stylesheet" href="/fc-theme.css">
+<style id="fc-dash">
+/* Dashboard layout (fc design) */
+header{background:var(--bg) !important;border-bottom:1px solid var(--s3) !important;height:auto !important;min-height:64px;padding:8px 32px !important;gap:16px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--fc-head) !important;font-weight:800 !important;font-size:20px !important}
+.logo span{color:var(--text) !important}
+.fc-hnav{display:flex;gap:24px;align-items:center;flex-wrap:wrap;color:var(--dim);font-weight:500;margin-left:auto}
+.fc-hnav a{text-decoration:none;min-height:44px;display:flex;align-items:center}
+.fc-hnav a:hover{color:var(--text)}
+.hright{margin-left:8px}
+.btn-signout{border-radius:999px !important;min-height:40px;padding:0 16px !important;font-weight:600 !important;color:var(--text) !important;border:1.5px solid #4a6353 !important}
+.btn-signout:hover{border-color:var(--amber) !important;color:var(--amber) !important}
+.username-badge{font-weight:600 !important}
+main{max-width:1100px !important;padding:48px 32px 72px !important}
+.welcome{background:none !important;border:none !important;padding:0 !important;margin-bottom:40px !important}
+.welcome-text h2{font-family:var(--fc-head) !important;font-weight:800 !important;font-size:clamp(32px,5vw,46px) !important;line-height:1.05;letter-spacing:-0.03em !important}
+.welcome-text p{font-size:18px !important;color:#b7c7bb !important;margin-top:8px !important}
+.free-badge{display:none !important}
+.sec-title{font-family:var(--fc-head) !important;font-size:26px !important;font-weight:700 !important;color:var(--text) !important;letter-spacing:-0.01em !important;margin:0 0 14px !important}
+.team-card{background:none !important;border:1.5px solid #34503e !important;border-radius:16px !important;padding:22px 24px !important;margin-bottom:44px !important}
+.game-grid{grid-template-columns:repeat(3,1fr) !important;gap:16px !important;margin-bottom:44px !important}
+.game-card{background:var(--surface) !important;border:1px solid var(--s3) !important;border-radius:16px !important;padding:22px !important;gap:6px}
+.game-card:hover{border-color:var(--amber) !important}
+.game-card .icon{display:none}
+.game-card h3{font-family:var(--fc-head) !important;font-size:21px !important;font-weight:700 !important}
+.game-card p{font-size:15px !important;color:var(--dim) !important}
+.game-card .go{font-size:15px !important;font-weight:600 !important;color:var(--amber) !important}
+.stats-grid{gap:0 !important;border:1.5px solid #2c4132;border-radius:16px;margin-bottom:44px !important;overflow:hidden}
+.stat-card{background:none !important;border:none !important;border-right:1px solid var(--s3) !important;border-radius:0 !important;padding:20px 24px !important;text-align:left !important}
+.stat-card:last-child{border-right:none !important}
+.stat-card .val{font-family:var(--fc-head) !important;font-size:36px !important;font-weight:800 !important;color:var(--text) !important}
+.stat-card .lbl{font-size:15px !important;color:var(--dim) !important}
+.lg-btn{background:transparent !important;border:1.5px solid #4a6353 !important;border-radius:999px !important;padding:.55rem 1.1rem !important;font-size:15px !important}
+.lg-badge{background:var(--amber) !important;color:var(--fc-ink) !important;border-radius:999px !important}
+@media (max-width:820px){header{padding:8px 16px !important}main{padding:32px 16px 56px !important}.game-grid{grid-template-columns:1fr !important}.fc-hnav{display:none}.stat-card{border-right:none !important;border-bottom:1px solid var(--s3) !important}}
+</style>
 </head>
 <body>
 
 <header>
-  <a href="/dashboard" class="logo">Flight <span>Chalker</span></a>
+  <a href="/dashboard" class="logo"><svg width="26" height="26" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="15" fill="none" stroke="#f1efe4" stroke-width="1.5"/><circle cx="17" cy="17" r="9" fill="none" stroke="#f1efe4" stroke-width="1.5"/><circle cx="17" cy="17" r="3" fill="#f2cf4a"/></svg><span>Flight Chalker</span></a>
+  <nav class="fc-hnav" aria-label="Main"><a href="/scorer">Scorer</a><a href="/training">Training</a><a href="/">Leagues</a><a href="/organiser-guide">Help</a></nav>
   <div class="hright">
     <span class="username-badge" id="username-display"></span>
     <button class="btn-signout" onclick="signOut()">Sign Out</button>
@@ -156,8 +192,8 @@ input:checked+.slider::before{transform:translateX(18px);background:white}
   <!-- Welcome -->
   <div class="welcome">
     <div class="welcome-text">
-      <h2>Welcome back, <span id="welcome-name">Player</span>! 🎯</h2>
-      <p>Ready to throw some darts?</p>
+      <h2>Welcome back, <span id="welcome-name">Player</span> 🎯</h2>
+      <p>Your teams, your leagues and your stats in one place.</p>
     </div>
     <div class="free-badge">✓ Free Member</div>
   </div>
