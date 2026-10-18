@@ -25,9 +25,9 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#141814;--s2:#1e251e;--s3:#2e382e;
-  --green:#4a7c59;--gl:#5a9469;--amber:#e8c840;--red:#c0392b;
-  --blue:#2a5a8c;--text:#e0d8c8;--dim:#8a9080;--border:#3a4a3a;
+  --bg:#0d1711;--s2:#142119;--s3:#243628;
+  --green:#4a7c59;--gl:#5a9469;--amber:#f2cf4a;--red:#c0392b;
+  --blue:#2a5a8c;--text:#f1efe4;--dim:#8a9080;--border:#34503e;
 }
 [data-theme="light"]{
   --bg:#ffffff;--s2:#e9ece4;--s3:#dde1d6;
@@ -194,6 +194,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
 <script src="/subscription-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/caller.js"></script>
+<link rel="stylesheet" href="/fc-theme.css">
 </head>
 <body>
 
@@ -201,11 +202,11 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
      covers the page until fcInit() confirms the signed-in player has an
      active subscription; free users get an upgrade prompt instead of the
      training content underneath. -->
-<div id="premium-gate" style="position:fixed;inset:0;background:#141814;z-index:9999;display:flex;align-items:center;justify-content:center;padding:1.5rem">
+<div id="premium-gate" style="position:fixed;inset:0;background:#0d1711;z-index:9999;display:flex;align-items:center;justify-content:center;padding:1.5rem">
   <div id="premium-gate-loading" style="color:#8a9080;font-family:'Barlow',sans-serif;font-size:.9rem">Loading…</div>
-  <div id="premium-gate-locked" style="display:none;background:#1e251e;border:1px solid #3a4a3a;border-radius:12px;padding:2rem;max-width:380px;width:100%;text-align:center">
+  <div id="premium-gate-locked" style="display:none;background:#142119;border:1px solid #34503e;border-radius:12px;padding:2rem;max-width:380px;width:100%;text-align:center">
     <div style="font-size:2rem;margin-bottom:.5rem">🎯</div>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:#e8c840;margin-bottom:.5rem">Training Zone is a Premium Feature</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:#f2cf4a;margin-bottom:.5rem">Training Zone is a Premium Feature</div>
     <div style="font-size:.88rem;color:#8a9080;margin-bottom:1.5rem;line-height:1.5">Checkout challenges, around the clock, doubles training and progress tracking — upgrade to unlock the full training zone.</div>
     <a href="/upgrade?redirect=/training" style="display:block;background:#4a7c59;border:none;border-radius:8px;color:white;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.75rem;text-decoration:none;margin-bottom:.75rem">See Premium →</a>
     <a href="/dashboard" style="color:#8a9080;font-size:.82rem;text-decoration:none">← Back to Dashboard</a>
