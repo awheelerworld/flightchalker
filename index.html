@@ -38,10 +38,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#141814;--surface:#1e251e;--s2:#262e26;--s3:#2e382e;
-  --green:#4a7c59;--gl:#5a9469;--amber:#e8c840;--red:#c0392b;
+  --bg:#0d1711;--surface:#142119;--s2:#1b2b20;--s3:#243628;
+  --green:#4a7c59;--gl:#5a9469;--amber:#f2cf4a;--red:#c0392b;
   --blue:#2a5a8c;--blue-l:#3a7abf;--blue-bg:#0a1a2a;
-  --text:#e0d8c8;--dim:#8a9080;--wb:#4a8855;--lb:#7a2828;--border:#3a4a3a;
+  --text:#f1efe4;--dim:#8a9080;--wb:#4a8855;--lb:#7a2828;--border:#34503e;
 }
 /* Light theme override for pages where recording/reading scores matters most.
    Badge/tag chips (--wb, --lb, --blue-bg) deliberately stay dark since they
@@ -211,7 +211,7 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
 .sab:hover{background:var(--amber);color:var(--bg)}
 .schips{display:flex;flex-wrap:wrap;gap:3px}
 .sc{background:#3a2e00;border:1px solid #6a5200;border-radius:3px;color:var(--amber);font-family:'Barlow Condensed',sans-serif;font-size:.82rem;font-weight:700;padding:1px 5px;display:flex;align-items:center;gap:3px}
-.sc.max180{background:linear-gradient(135deg,#7a4800,#3a2000);border:1px solid #e8c840;border-radius:4px;color:#fff;font-size:.88rem;box-shadow:0 0 6px rgba(232,200,64,.4);padding:2px 7px}
+.sc.max180{background:linear-gradient(135deg,#7a4800,#3a2000);border:1px solid #f2cf4a;border-radius:4px;color:#fff;font-size:.88rem;box-shadow:0 0 6px rgba(232,200,64,.4);padding:2px 7px}
 .cx{background:none;border:none;color:#6a5200;cursor:pointer;font-size:.75rem;line-height:1;padding:0}
 .cx:hover{color:var(--amber)}
 
@@ -314,7 +314,7 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
 .mb h3{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--amber);margin-bottom:1rem}
 .ms{margin-bottom:1rem}
 .mst{font-family:'Barlow Condensed',sans-serif;font-size:.68rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--green);border-bottom:1px solid var(--border);padding-bottom:3px;margin-bottom:.5rem}
-.mrow{display:flex;align-items:center;gap:.75rem;padding:4px 0;font-size:.875rem;border-bottom:1px solid #1e251e}
+.mrow{display:flex;align-items:center;gap:.75rem;padding:4px 0;font-size:.875rem;border-bottom:1px solid #142119}
 .mrow:last-child{border-bottom:none}
 .mrn{font-family:'Barlow Condensed',sans-serif;color:var(--dim);min-width:28px}
 .mrname{flex:1}.mrr{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.8rem}
@@ -326,7 +326,7 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
 .mc:hover{border-color:var(--green);color:var(--text)}
 
 /* ── Edit fields ── */
-.er{display:flex;flex-wrap:wrap;gap:6px;align-items:flex-start;padding:6px 0;border-bottom:1px solid #1e251e}
+.er{display:flex;flex-wrap:wrap;gap:6px;align-items:flex-start;padding:6px 0;border-bottom:1px solid #142119}
 .er:last-child{border-bottom:none}
 .erl{font-family:'Barlow Condensed',sans-serif;font-size:.75rem;color:var(--dim);min-width:28px;padding-top:5px}
 .esel{background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.82rem;padding:3px 5px;flex:1;min-width:110px;max-width:160px}
@@ -342,7 +342,7 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
 .eab{width:18px;height:18px;background:var(--s3);border:1px solid var(--border);border-radius:3px;color:var(--amber);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .eab:hover{background:var(--amber);color:var(--bg)}
 .ech{background:#3a2e00;border:1px solid #6a5200;border-radius:3px;color:var(--amber);font-family:'Barlow Condensed',sans-serif;font-size:.78rem;font-weight:700;padding:1px 4px;display:flex;align-items:center;gap:2px}
-.ech.max180{background:#5a3000;border-color:#e8c840;color:#fff;box-shadow:0 0 5px rgba(232,200,64,.35)}
+.ech.max180{background:#5a3000;border-color:#f2cf4a;color:#fff;box-shadow:0 0 5px rgba(232,200,64,.35)}
 .ecx{background:none;border:none;color:#6a5200;cursor:pointer;font-size:.7rem;padding:0}
 .ecx:hover{color:var(--amber)}
 
@@ -451,6 +451,7 @@ html{scroll-behavior:smooth}
   gtag('js', new Date());
   gtag('config', 'G-WQRGJRFF1Q');
 </script>
+<link rel="stylesheet" href="/fc-theme.css">
 </head>
 <body>
 
@@ -459,76 +460,71 @@ html{scroll-behavior:smooth}
 
   <div id="top"></div>
 
-  <!-- Hero -->
-  <div style="background:radial-gradient(ellipse at 60% 30%,#1e3a28 0%,var(--bg) 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem 1.5rem 2rem;text-align:center">
-    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:52px;height:52px;margin-bottom:1rem">
-      <circle cx="50" cy="50" r="48" stroke="#4a7c59" stroke-width="3"/>
-      <circle cx="50" cy="50" r="36" stroke="#4a7c59" stroke-width="2"/>
-      <circle cx="50" cy="50" r="24" stroke="#4a7c59" stroke-width="2"/>
-      <circle cx="50" cy="50" r="13" stroke="#e8c840" stroke-width="2"/>
-      <circle cx="50" cy="50" r="5" fill="#e8c840"/>
-      <line x1="75" y1="25" x2="54" y2="46" stroke="#e0d8c8" stroke-width="3" stroke-linecap="round"/>
-      <polygon points="54,46 77,22 84,30" fill="#e8c840"/>
-    </svg>
-    <div class="landing-title">Flight <span>Chalker</span></div>
-    <div class="landing-sub">Your darts. Your league. Your rules.</div>
-    <div class="landing-sub2" style="margin-bottom:1.75rem">Free scorer, training drills, stats &amp; leaderboards.</div>
+  <!-- Hero (fc-theme) -->
+  <div class="fc-wrap">
+    <nav class="fc-nav" aria-label="Main">
+      <a class="fc-brand" href="#top"><svg width="30" height="30" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="15" fill="none" stroke="#f1efe4" stroke-width="1.5"/><circle cx="17" cy="17" r="9" fill="none" stroke="#f1efe4" stroke-width="1.5"/><circle cx="17" cy="17" r="3" fill="#f2cf4a"/></svg><span>Flight Chalker</span></a>
+      <div class="fc-nav-links">
+        <a href="/scorer">Scorer</a><a href="/training">Training</a>
+        <a href="#" onclick="goTo('public');loadPublicLeagues();return false">Leagues</a>
+        <a href="/organiser-guide">Organiser guide</a><a href="/login">Sign in</a>
+      </div>
+    </nav>
+    <section class="fc-hero">
+      <div>
+        <h1>Score the night. Run the league.</h1>
+        <p class="lead">A free darts scorer with checkout hints for every player, and fixtures, results and tables for the people who run the league.</p>
+        <div class="fc-cta">
+          <a class="fc-btn primary" href="/scorer">Play free</a>
+          <a class="fc-btn" href="#organisers">Run a league</a>
+        </div>
+        <p style="margin:22px 0 0"><a class="fc-link" href="#" onclick="goTo('public');loadPublicLeagues();return false">View a league table</a></p>
+      </div>
+      <div class="fc-board">
+        <svg viewBox="0 0 400 400" role="img" aria-label="A dartboard with the treble 20 circled in chalk">
+          <circle cx="200" cy="200" r="197" fill="#091009" stroke="#2a3d31" stroke-width="2"/>
+          <circle cx="200" cy="200" r="178" fill="none" stroke="#3f7d58" stroke-width="24"/>
+          <circle cx="200" cy="200" r="178" fill="none" stroke="#b84a3a" stroke-width="24" stroke-dasharray="55.92 55.92" transform="rotate(-99 200 200)"/>
+          <circle cx="200" cy="200" r="140" fill="none" stroke="#e9e4cf" stroke-width="52"/>
+          <circle cx="200" cy="200" r="140" fill="none" stroke="#141c15" stroke-width="52" stroke-dasharray="43.98 43.98" transform="rotate(-99 200 200)"/>
+          <circle cx="200" cy="200" r="104" fill="none" stroke="#3f7d58" stroke-width="20"/>
+          <circle cx="200" cy="200" r="104" fill="none" stroke="#b84a3a" stroke-width="20" stroke-dasharray="32.67 32.67" transform="rotate(-99 200 200)"/>
+          <circle cx="200" cy="200" r="58" fill="none" stroke="#e9e4cf" stroke-width="72"/>
+          <circle cx="200" cy="200" r="58" fill="none" stroke="#141c15" stroke-width="72" stroke-dasharray="18.22 18.22" transform="rotate(-99 200 200)"/>
+          <circle cx="200" cy="200" r="16" fill="#3f7d58"/><circle cx="200" cy="200" r="8" fill="#b84a3a"/>
+          <ellipse cx="200" cy="96" rx="22" ry="30" fill="none" stroke="#f2cf4a" stroke-width="3" stroke-linecap="round" stroke-dasharray="130 6" transform="rotate(-6 200 96)"/>
+          <g stroke="#f1efe4" stroke-width="2.5" stroke-linecap="round"><line x1="196" y1="98" x2="168" y2="30"/><line x1="204" y1="96" x2="236" y2="26"/></g>
+          <path d="M168 30 l-9 -16 l14 3 z" fill="#f2cf4a"/><path d="M236 26 l8 -17 l9 12 z" fill="#f2cf4a"/>
+        </svg>
+        <div class="fc-slate"><div style="font-size:13px;color:var(--dim)">You left</div><div class="n">96</div><div style="margin-top:6px;font-size:14px;color:var(--dim)">Checkout <span style="color:#f2cf4a;font-weight:600">T20, D18</span></div></div>
+      </div>
+    </section>
+  </div>
 
-    <!-- Primary player CTAs -->
-    <div style="display:flex;flex-direction:column;gap:.6rem;width:100%;max-width:320px">
-      <a href="/join" style="display:block;text-align:center;background:var(--green);border-radius:8px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.8rem 2rem;text-decoration:none">🎯 Play Free</a>
-      <a href="/login" style="display:block;text-align:center;background:transparent;border:2px solid var(--border);border-radius:8px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.7rem 2rem;text-decoration:none">Sign In</a>
-    </div>
-
-    <div style="margin-top:1.5rem">
-      <a href="#" onclick="goTo('public');loadPublicLeagues();return false" style="font-size:.78rem;color:var(--dim);text-decoration:none;letter-spacing:.06em;text-transform:uppercase">🏆 View League Table</a>
-    </div>
-
-    <!-- League organiser entry (above the fold) -->
-    <div style="margin-top:1.25rem;width:100%;max-width:320px;padding-top:1.1rem;border-top:1px solid var(--border);text-align:center">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--blue-l);margin-bottom:.6rem">Run a darts league?</div>
-      <div style="display:flex;gap:.5rem">
-        <a href="/admin?new=1" style="flex:1;display:block;text-align:center;background:var(--blue-bg);border:2px solid var(--blue);border-radius:8px;color:#8ac4ff;font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.65rem .5rem;text-decoration:none">⚙ Create a League</a>
-        <a href="/admin" style="flex:1;display:block;text-align:center;background:var(--blue-bg);border:2px solid var(--blue);border-radius:8px;color:#8ac4ff;font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.65rem .5rem;text-decoration:none">🔑 Admin Login</a>
+  <div id="organisers" class="fc-band">
+    <div class="fc-wrap fc-two">
+      <div>
+        <h2>Playing tonight?</h2>
+        <p class="sub">Open the scorer and throw. No account needed for any game mode.</p>
+        <div class="fc-list">
+          <div><b>Free scorer</b><span>All game modes, with checkout hints as you go.</span></div>
+          <div><b>Training zone</b><span>Drills for doubles, finishing and consistency.</span></div>
+          <div><b>Your stats</b><span>Personal history and leaderboards once you sign in.</span></div>
+        </div>
+        <div class="fc-cta"><a class="fc-btn primary" href="/scorer">Open the scorer</a><a class="fc-btn" href="/training">Training zone</a></div>
+      </div>
+      <div>
+        <h2>Running a league?</h2>
+        <p class="sub">Free to start. Teams, fixtures, captains, results and tables in one place, with scores recorded from phones.</p>
+        <div class="fc-cta"><a class="fc-btn light" href="/admin?new=1">Create a league</a><a class="fc-btn" href="/admin">Organiser sign in</a></div>
+        <p style="margin:18px 0 0"><a class="fc-link" href="/organiser-guide">How to set up and run a league (guide)</a></p>
+        <div style="margin-top:34px;padding-top:26px;border-top:1px solid #2c4132">
+          <div style="font-weight:600;font-size:17px;margin-bottom:6px">Starting a new league team?</div>
+          <p style="color:var(--dim);margin:0 0 14px">Register your team to record match results, view fixtures and download reports. Already playing? Sign in to your player account and link to your team from your dashboard.</p>
+          <a class="fc-link" href="#" onclick="goTo('register');return false">Register team</a>
+        </div>
       </div>
     </div>
-  </div>
-
-  <!-- Player benefits strip -->
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;max-width:700px;margin:0 auto;padding:2rem 1rem 1rem;text-align:center">
-    <div>
-      <div style="font-size:1.6rem;margin-bottom:.35rem">🎯</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text)">Free Scorer</div>
-      <div style="font-size:.75rem;color:var(--dim);margin-top:.2rem">All game modes, no account limits</div>
-    </div>
-    <div>
-      <div style="font-size:1.6rem;margin-bottom:.35rem">📈</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text)">Training Zone</div>
-      <div style="font-size:.75rem;color:var(--dim);margin-top:.2rem">Drills to sharpen your game</div>
-    </div>
-    <div>
-      <div style="font-size:1.6rem;margin-bottom:.35rem">🏅</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text)">Track Stats</div>
-      <div style="font-size:.75rem;color:var(--dim);margin-top:.2rem">Personal leaderboards &amp; history</div>
-    </div>
-  </div>
-
-  <!-- League organiser section -->
-  <div style="max-width:400px;margin:1.5rem auto 0;padding:1.25rem 1.5rem;background:#0d1e2e;border:1px solid var(--blue);border-radius:12px;text-align:center">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:.68rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#8ac4ff;margin-bottom:.4rem">For League Organisers</div>
-    <div style="font-size:.8rem;color:#a9bccd;line-height:1.5;margin-bottom:.85rem">Set up your league in minutes: teams, fixtures, captains, results and tables, all in one place. Free to start.</div>
-    <div style="display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap">
-      <a href="/admin?new=1" style="background:var(--blue-bg);border:2px solid var(--blue);border-radius:8px;color:#8ac4ff;font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.6rem 1.1rem;text-decoration:none">Create a League →</a>
-      <a href="/admin" style="background:var(--blue-bg);border:2px solid var(--blue);border-radius:8px;color:#8ac4ff;font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.6rem 1.1rem;text-decoration:none">Admin Login →</a>
-    </div>
-    <div style="margin-top:.7rem"><a href="/organiser-guide" style="font-size:.8rem;color:#8ac4ff;text-decoration:underline">How to set up and run a league (guide)</a></div>
-  </div>
-
-  <!-- Team captain section (secondary) -->
-  <div style="max-width:400px;margin:1.5rem auto 0;padding:1.25rem 1.5rem;background:var(--surface);border:1px solid var(--border);border-radius:12px;text-align:center">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:.68rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);margin-bottom:.4rem">Starting a New League Team?</div>
-    <div style="font-size:.8rem;color:var(--dim);line-height:1.5;margin-bottom:.85rem">Register your team to record match results, view fixtures and download reports. Already playing? Log in to your player account and link to your team from your dashboard.</div>
-    <a href="#" onclick="goTo('register');return false" style="display:inline-block;font-size:.85rem;color:var(--amber);text-decoration:none;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.08em;text-transform:uppercase">Register Team →</a>
   </div>
 
   <!-- Register section -->
@@ -682,8 +678,8 @@ html{scroll-behavior:smooth}
         <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="18" cy="18" r="17" stroke="#4a7c59" stroke-width="1.5"/>
           <circle cx="18" cy="18" r="9" stroke="#4a7c59" stroke-width="1"/>
-          <circle cx="18" cy="18" r="5" stroke="#e8c840" stroke-width="1"/>
-          <circle cx="18" cy="18" r="2" fill="#e8c840"/>
+          <circle cx="18" cy="18" r="5" stroke="#f2cf4a" stroke-width="1"/>
+          <circle cx="18" cy="18" r="2" fill="#f2cf4a"/>
         </svg>
       </div>
       <a href="#top" onclick="goTo('landing')" style="text-decoration:none;color:inherit;cursor:pointer">
@@ -762,10 +758,10 @@ html{scroll-behavior:smooth}
           <circle cx="18" cy="18" r="17" stroke="#4a7c59" stroke-width="1.5"/>
           <circle cx="18" cy="18" r="13" stroke="#4a7c59" stroke-width="1"/>
           <circle cx="18" cy="18" r="9" stroke="#4a7c59" stroke-width="1"/>
-          <circle cx="18" cy="18" r="5" stroke="#e8c840" stroke-width="1"/>
-          <circle cx="18" cy="18" r="2" fill="#e8c840"/>
-          <line x1="27" y1="9" x2="19.5" y2="16.5" stroke="#e0d8c8" stroke-width="1.5" stroke-linecap="round"/>
-          <polygon points="19.5,16.5 28,8 30,11" fill="#e8c840"/>
+          <circle cx="18" cy="18" r="5" stroke="#f2cf4a" stroke-width="1"/>
+          <circle cx="18" cy="18" r="2" fill="#f2cf4a"/>
+          <line x1="27" y1="9" x2="19.5" y2="16.5" stroke="#f1efe4" stroke-width="1.5" stroke-linecap="round"/>
+          <polygon points="19.5,16.5 28,8 30,11" fill="#f2cf4a"/>
         </svg>
       </div>
       <a href="#" onclick="logout();return false;" style="text-decoration:none;color:inherit">
@@ -1055,8 +1051,8 @@ html{scroll-behavior:smooth}
           <circle cx="18" cy="18" r="17" stroke="#2a5a8c" stroke-width="1.5"/>
           <circle cx="18" cy="18" r="13" stroke="#2a5a8c" stroke-width="1"/>
           <circle cx="18" cy="18" r="9" stroke="#2a5a8c" stroke-width="1"/>
-          <circle cx="18" cy="18" r="5" stroke="#e8c840" stroke-width="1"/>
-          <circle cx="18" cy="18" r="2" fill="#e8c840"/>
+          <circle cx="18" cy="18" r="5" stroke="#f2cf4a" stroke-width="1"/>
+          <circle cx="18" cy="18" r="2" fill="#f2cf4a"/>
         </svg>
       </div>
       <div>
@@ -2876,7 +2872,7 @@ function viewMatch(idx){
   var fmt=d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   var won=m.wins>m.losses;var mdata=m.data||{};
   var s=mdata.singles||[];var db=mdata.doubles||[];var t4=mdata.team4||{};
-  function ch(arr){if(!arr||!arr.length)return '<span style="color:var(--dim);font-size:.8rem">—</span>';return arr.map(function(v){return v===180?'<span class="msc2" style="background:#5a3000;border-color:#e8c840;color:#fff">&#9733; 180</span>':'<span class="msc2">'+v+'</span>';}).join('');}
+  function ch(arr){if(!arr||!arr.length)return '<span style="color:var(--dim);font-size:.8rem">—</span>';return arr.map(function(v){return v===180?'<span class="msc2" style="background:#5a3000;border-color:#f2cf4a;color:#fff">&#9733; 180</span>':'<span class="msc2">'+v+'</span>';}).join('');}
   function rb(r,legs){var badge=r?'<span class="mrr '+r+'">'+r.toUpperCase()+'</span>':'<span style="color:var(--dim)">?</span>';var ls=legs?'<span style="font-size:.8rem;color:var(--dim);margin-left:4px">('+legs+')</span>':'';return badge+ls;}
   function co(v){return v?'<span style="font-size:.72rem;color:var(--amber);margin-left:6px;white-space:nowrap">CO '+v+'</span>':'';}
   var h='<h3>'+esc(m.opponent)+'&nbsp;<span style="font-size:.8rem;color:var(--dim)">'+fmt+'</span></h3>';
@@ -3104,11 +3100,11 @@ function renderStats(){
     +catRow('Team Game',cat.team,false)
     +'</tbody></table></div><p style="font-size:.72rem;color:var(--dim);margin-top:.5rem">Team Game legs aren\u2019t tracked individually — it\u2019s recorded as a single win/loss per match.</p></div>';
   var noteHtml='<p style="font-size:.72rem;color:var(--dim);margin:-.75rem 0 1.25rem;line-height:1.5"><strong>Win Rate (Games)</strong> covers every format — Singles, Doubles and Team Game. <strong>Win Rate (Legs)</strong> covers Singles and Doubles only, since the Team Game isn\u2019t scored leg-by-leg.</p>';
-  el.innerHTML='<div style="display:flex;justify-content:flex-end;gap:.5rem;margin-bottom:.75rem"><button class="pr2" onclick="sharePlayerStatsPDF(&quot;'+esc(player).replace(/"/g,'&quot;')+'&quot;)" style="font-size:.72rem">📤 Share</button><button class="pr2" onclick="downloadPlayerStatsPDF(&quot;'+esc(player).replace(/"/g,'&quot;')+'&quot;)" style="font-size:.72rem">📄 Download PDF</button></div><div class="sg"><div class="scard"><div class="v g">'+tw+'</div><div class="lb">Games Won</div></div><div class="scard"><div class="v r">'+tl+'</div><div class="lb">Games Lost</div></div><div class="scard"><div class="v '+(gp>=50?'g':'r')+'">'+gp+'%</div><div class="lb">Win Rate (Games)</div></div><div class="scard"><div class="v g">'+tlw+' / '+tot+'</div><div class="lb">Legs Won</div></div><div class="scard"><div class="v r">'+tll+'</div><div class="lb">Legs Lost</div></div><div class="scard"><div class="v">'+tot+'</div><div class="lb">Legs Played</div></div><div class="scard"><div class="v '+(wp>=50?'g':'r')+'">'+wp+'%</div><div class="lb">Win Rate (Legs)</div></div><div class="scard"><div class="v a">'+allSc.length+'</div><div class="lb">80+ Scores</div></div><div class="scard"><div class="v a">'+(hi||'—')+'</div><div class="lb">Highest</div></div><div class="scard"><div class="v a">'+(hiCheckout||'—')+'</div><div class="lb">Highest Checkout</div></div><div class="scard"><div class="v">'+pm.length+'</div><div class="lb">Matches</div></div></div>'+noteHtml+breakdown+'<div class="cc"><h3>Cumulative Wins &amp; Losses</h3><div class="cw"><canvas id="cwl"></canvas></div></div><div class="cc"><h3>80+ Scores Per Match</h3><div class="cw"><canvas id="chs"></canvas></div></div><div class="cc"><h3>All 80+ Scores</h3><div class="scl">'+(allSc.sort(function(a,b){return b-a;}).map(function(s){return s===180?'<span class="sp2" style="background:#5a3000;border-color:#e8c840;color:#fff">&#9733; 180</span>':'<span class="sp2">'+s+'</span>';}).join('')||'<span style="color:var(--dim)">None yet</span>')+'</div></div>'+(allCos.length?'<div class="cc"><h3>All Checkouts</h3><div class="scl">'+allCos.sort(function(a,b){return b-a;}).map(function(v){return '<span class="sp2">'+v+'</span>';}).join('')+'</div></div>':'');
+  el.innerHTML='<div style="display:flex;justify-content:flex-end;gap:.5rem;margin-bottom:.75rem"><button class="pr2" onclick="sharePlayerStatsPDF(&quot;'+esc(player).replace(/"/g,'&quot;')+'&quot;)" style="font-size:.72rem">📤 Share</button><button class="pr2" onclick="downloadPlayerStatsPDF(&quot;'+esc(player).replace(/"/g,'&quot;')+'&quot;)" style="font-size:.72rem">📄 Download PDF</button></div><div class="sg"><div class="scard"><div class="v g">'+tw+'</div><div class="lb">Games Won</div></div><div class="scard"><div class="v r">'+tl+'</div><div class="lb">Games Lost</div></div><div class="scard"><div class="v '+(gp>=50?'g':'r')+'">'+gp+'%</div><div class="lb">Win Rate (Games)</div></div><div class="scard"><div class="v g">'+tlw+' / '+tot+'</div><div class="lb">Legs Won</div></div><div class="scard"><div class="v r">'+tll+'</div><div class="lb">Legs Lost</div></div><div class="scard"><div class="v">'+tot+'</div><div class="lb">Legs Played</div></div><div class="scard"><div class="v '+(wp>=50?'g':'r')+'">'+wp+'%</div><div class="lb">Win Rate (Legs)</div></div><div class="scard"><div class="v a">'+allSc.length+'</div><div class="lb">80+ Scores</div></div><div class="scard"><div class="v a">'+(hi||'—')+'</div><div class="lb">Highest</div></div><div class="scard"><div class="v a">'+(hiCheckout||'—')+'</div><div class="lb">Highest Checkout</div></div><div class="scard"><div class="v">'+pm.length+'</div><div class="lb">Matches</div></div></div>'+noteHtml+breakdown+'<div class="cc"><h3>Cumulative Wins &amp; Losses</h3><div class="cw"><canvas id="cwl"></canvas></div></div><div class="cc"><h3>80+ Scores Per Match</h3><div class="cw"><canvas id="chs"></canvas></div></div><div class="cc"><h3>All 80+ Scores</h3><div class="scl">'+(allSc.sort(function(a,b){return b-a;}).map(function(s){return s===180?'<span class="sp2" style="background:#5a3000;border-color:#f2cf4a;color:#fff">&#9733; 180</span>':'<span class="sp2">'+s+'</span>';}).join('')||'<span style="color:var(--dim)">None yet</span>')+'</div></div>'+(allCos.length?'<div class="cc"><h3>All Checkouts</h3><div class="scl">'+allCos.sort(function(a,b){return b-a;}).map(function(v){return '<span class="sp2">'+v+'</span>';}).join('')+'</div></div>':'');
   ['cwl','chs'].forEach(function(id){if(charts[id]){charts[id].destroy();delete charts[id];}});
   var go={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8a9080',font:{family:"'Barlow Condensed',sans-serif",size:11}}}},scales:{x:{ticks:{color:'#8a9080',font:{family:"'Barlow Condensed',sans-serif",size:10}},grid:{color:'#2a3a2a'}},y:{ticks:{color:'#8a9080',font:{family:"'Barlow Condensed',sans-serif",size:10}},grid:{color:'#2a3a2a'},beginAtZero:true}}};
   charts['cwl']=new Chart(document.getElementById('cwl'),{type:'line',data:{labels:wlL,datasets:[{label:'Wins',data:wlW,borderColor:'#4a8855',backgroundColor:'rgba(74,136,85,0.15)',tension:.3,fill:true,pointBackgroundColor:'#4a8855'},{label:'Losses',data:wlL2,borderColor:'#c0392b',backgroundColor:'rgba(192,57,43,0.1)',tension:.3,fill:true,pointBackgroundColor:'#c0392b'}]},options:go});
-  charts['chs']=new Chart(document.getElementById('chs'),{type:'bar',data:{labels:hsL,datasets:[{label:'Count',data:hsC,backgroundColor:'rgba(232,200,64,0.5)',borderColor:'#e8c840',borderWidth:1},{label:'Highest',data:hsM,type:'line',borderColor:'#e8c840',backgroundColor:'transparent',tension:.3,pointBackgroundColor:'#e8c840',yAxisID:'y1'}]},options:Object.assign({},go,{scales:Object.assign({},go.scales,{y1:{position:'right',ticks:{color:'#8a9080',font:{family:"'Barlow Condensed',sans-serif",size:10}},grid:{drawOnChartArea:false},beginAtZero:true}})})});
+  charts['chs']=new Chart(document.getElementById('chs'),{type:'bar',data:{labels:hsL,datasets:[{label:'Count',data:hsC,backgroundColor:'rgba(232,200,64,0.5)',borderColor:'#f2cf4a',borderWidth:1},{label:'Highest',data:hsM,type:'line',borderColor:'#f2cf4a',backgroundColor:'transparent',tension:.3,pointBackgroundColor:'#f2cf4a',yAxisID:'y1'}]},options:Object.assign({},go,{scales:Object.assign({},go.scales,{y1:{position:'right',ticks:{color:'#8a9080',font:{family:"'Barlow Condensed',sans-serif",size:10}},grid:{drawOnChartArea:false},beginAtZero:true}})})});
 }
 
 // ── Head to head comparison ──────────────────────────────────────────────────
@@ -4513,6 +4509,6 @@ if(!navigator.onLine){
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 </script>
 <div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-logout-fix</div>
-<div style="position:fixed;bottom:6px;right:8px;font-family:monospace;font-size:.65rem;color:#3a4a3a;background:#141814;padding:2px 6px;border-radius:4px;z-index:9999;pointer-events:none">v56-light-theme</div>
+<div style="position:fixed;bottom:6px;right:8px;font-family:monospace;font-size:.65rem;color:#34503e;background:#0d1711;padding:2px 6px;border-radius:4px;z-index:9999;pointer-events:none">v56-light-theme</div>
 </body>
 </html>

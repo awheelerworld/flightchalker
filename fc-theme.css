@@ -1,0 +1,99 @@
+/* Flight Chalker shared theme. Loaded AFTER each page's own CSS. Restyle only: no layout logic. */
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600&display=swap');
+
+:root{
+  --bg:#0d1711;--surface:#142119;--s2:#1b2b20;--s3:#243628;
+  --green:#4c9468;--gl:#7fc79a;--amber:#f2cf4a;--red:#d1604f;
+  --blue:#3d5646;--blue-l:#a9bbae;--blue-bg:#142119;
+  --text:#f1efe4;--dim:#a9bbae;--wb:#2f6b45;--lb:#8a3a30;--border:#34503e;
+  --fc-yellow:#f2cf4a;--fc-ink:#14200f;--fc-head:'Bricolage Grotesque',system-ui,sans-serif;--fc-body:'Hanken Grotesk',system-ui,sans-serif;
+}
+[data-theme="light"]{
+  --bg:#f6f5ee;--surface:#ffffff;--s2:#eceadd;--s3:#dedbc9;
+  --green:#2f6b45;--gl:#245a39;--amber:#8a6a00;--red:#b3362a;
+  --blue:#4a6353;--blue-l:#2f4a3a;--blue-bg:#eceadd;
+  --text:#14200f;--dim:#4d5f52;--wb:#2f6b45;--lb:#8a3a30;--border:#c9c6b2;
+}
+
+/* Type: sentence case, no tracking, two families */
+*,*::before,*::after{font-family:var(--fc-body) !important;text-transform:none !important;letter-spacing:normal !important}
+h1,h2,h3,h4,.landing-title,.logo,.sec-title,.auth-card h2,.big-num,.stat-num,.stat-val,.score-big,.rem-big,.fc-head,
+[class*="title"],[class*="Title"],[class*="heading"]{font-family:var(--fc-head) !important;letter-spacing:-0.01em !important}
+code,pre,kbd,samp,.mono,[style*="monospace"]{font-family:ui-monospace,Menlo,Consolas,monospace !important}
+body{background:var(--bg);color:var(--text);font-size:16px;line-height:1.5}
+
+/* Primary actions: yellow pill with dark ink */
+.btn-land-p,.btnp,.btna,.btn-submit,.btn-start,.btn-again,.btn-next,.btn-hit,.throw-add,.btn-admin,
+.join-form button,.modal-actions .confirm{
+  background:var(--fc-yellow) !important;color:var(--fc-ink) !important;border:none !important;border-radius:999px !important;
+  font-weight:600 !important;min-height:48px;padding-left:1.4rem;padding-right:1.4rem}
+.btn-land-p:hover,.btnp:hover,.btna:hover,.btn-submit:hover,.btn-start:hover,.btn-again:hover,.btn-next:hover,.btn-hit:hover,
+.throw-add:hover,.btn-admin:hover,.join-form button:hover,.modal-actions .confirm:hover{filter:brightness(1.06)}
+/* Secondary actions: outlined pill */
+.btn-land-s,.btns,.btn-land-admin,.lg-btn,.logout-btn,.theme-toggle,.btn-back{
+  background:transparent !important;color:var(--text) !important;border:1.5px solid #4a6353 !important;border-radius:999px !important;font-weight:600 !important;min-height:44px}
+.btn-land-s:hover,.btns:hover,.btn-land-admin:hover,.lg-btn:hover,.logout-btn:hover,.theme-toggle:hover{border-color:var(--fc-yellow) !important;color:var(--fc-yellow) !important}
+[data-theme="light"] .btn-land-p,[data-theme="light"] .btnp{background:#14200f !important;color:#f6f5ee !important}
+
+/* Panels, forms, tables */
+.card,.auth-card,.game-card,.stat-card,.modal,.panel{background:var(--surface) !important;border:1px solid var(--s3) !important;border-radius:16px !important}
+input,select,textarea{font-size:16px;border-radius:12px !important;background:var(--surface);border:1.5px solid #3d5646;color:var(--text)}
+input:focus,select:focus,textarea:focus{border-color:var(--fc-yellow) !important;outline:none}
+label{color:var(--dim)}
+table{border-collapse:collapse}
+th{font-weight:600;color:var(--dim);border-bottom:1px solid var(--s3)}
+td{border-bottom:1px solid var(--s3)}
+.tab{border-radius:999px;font-weight:600}
+.tab.active,.tab.on{color:var(--fc-yellow) !important;border-color:var(--fc-yellow) !important}
+a{color:inherit}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--fc-yellow) !important;outline-offset:3px}
+.toast{background:var(--s2) !important;color:var(--text) !important;border:1px solid #3d5646;border-radius:14px}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none !important;transition:none !important;scroll-behavior:auto !important}}
+
+/* Homepage (landing) */
+.fc-wrap{max-width:1100px;margin:0 auto;padding:0 32px;box-sizing:border-box}
+.fc-nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 0;flex-wrap:wrap}
+.fc-brand{display:flex;align-items:center;gap:10px;font-family:var(--fc-head) !important;font-weight:800;font-size:21px;text-decoration:none}
+.fc-nav-links{display:flex;gap:24px;align-items:center;color:var(--dim);font-weight:500;flex-wrap:wrap}
+.fc-nav-links a{text-decoration:none;min-height:44px;display:flex;align-items:center}
+.fc-nav-links a:hover{color:var(--text)}
+.fc-hero{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center;padding:40px 0 56px}
+.fc-hero h1{font-family:var(--fc-head) !important;font-weight:800;font-size:clamp(40px,6vw,68px);line-height:1;letter-spacing:-0.03em !important;margin:0 0 18px}
+.fc-hero p.lead{font-size:19px;color:#b7c7bb;margin:0 0 28px;max-width:34em}
+.fc-cta{display:flex;gap:12px;flex-wrap:wrap}
+.fc-btn{display:inline-flex;align-items:center;justify-content:center;min-height:54px;padding:0 28px;border-radius:999px;font-weight:600;font-size:18px;text-decoration:none;cursor:pointer;border:1.5px solid #4a6353;color:var(--text);background:transparent}
+.fc-btn.primary{background:var(--fc-yellow);color:var(--fc-ink);border-color:var(--fc-yellow)}
+.fc-btn.light{background:#f1efe4;color:var(--fc-ink);border-color:#f1efe4}
+.fc-btn:hover{filter:brightness(1.07)}
+.fc-link{color:var(--dim);border-bottom:1px solid #4a6353;padding-bottom:2px;text-decoration:none;cursor:pointer}
+.fc-board{position:relative;padding-bottom:34px;display:flex;justify-content:center}
+.fc-board svg{width:100%;max-width:440px;height:auto;display:block}
+.fc-slate{position:absolute;left:4%;bottom:0;background:var(--s2);border:1.5px solid #3d5646;border-radius:12px;padding:12px 16px;box-shadow:0 14px 30px rgba(0,0,0,.45)}
+.fc-slate .n{font-family:var(--fc-head) !important;font-weight:800;font-size:40px;line-height:1;letter-spacing:-0.02em !important}
+.fc-band{background:var(--surface);border-top:1px solid var(--s3);border-bottom:1px solid var(--s3);padding:56px 0}
+.fc-two{display:grid;grid-template-columns:1fr 1fr;gap:56px}
+.fc-two h2,.fc-sec h2{font-family:var(--fc-head) !important;font-weight:700;font-size:32px;line-height:1.1;letter-spacing:-0.02em !important;margin:0 0 10px}
+.fc-two p.sub,.fc-sec p.sub{color:#b7c7bb;margin:0 0 22px}
+.fc-list{display:flex;flex-direction:column;gap:16px;margin-bottom:24px}
+.fc-list b{display:block;font-weight:600;font-size:17px}
+.fc-list span{color:var(--dim)}
+.fc-sec{padding:52px 0 0}
+.fc-foot{margin-top:56px;border-top:1px solid var(--s3);padding:24px 0;font-size:14px;color:#8fa496;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.fc-foot a{margin-right:20px;text-decoration:none}
+@media (max-width:820px){
+  .fc-wrap{padding:0 20px}
+  .fc-hero{grid-template-columns:1fr;gap:28px;padding-top:28px}
+  .fc-two{grid-template-columns:1fr;gap:44px}
+  .fc-btn{width:100%}
+  .fc-cta{flex-direction:column}
+  .fc-nav-links a:not(:last-child){display:none}
+}
+
+/* App headers and small controls */
+.theme-toggle{min-height:36px !important;padding:0 14px !important;font-size:.85rem}
+label,.sec-lbl,[class*="label"]{color:var(--dim) !important}
+
+/* Organiser gate and helper buttons */
+.g-btn{background:var(--fc-yellow) !important;color:var(--fc-ink) !important;border:none !important;border-radius:999px !important;font-weight:600 !important;min-height:48px}
+.g-btn.sec,.g-btn.secondary,.g-btn.blue{background:transparent !important;color:var(--text) !important;border:1.5px solid #4a6353 !important}
+.g-field input{border-radius:12px !important}
