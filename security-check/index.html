@@ -11,7 +11,8 @@ body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,sans-
 button{background:#2e7d32;color:#fff;border:0;border-radius:8px;padding:.7rem 1.2rem;font-size:1rem;cursor:pointer}
 .r{display:flex;gap:.6rem;padding:.35rem 0;border-bottom:1px solid var(--bd);font-size:.92rem}
 .r b{min-width:3.6rem}.pass b{color:var(--ok)}.fail b{color:var(--bad)}.dim{color:var(--dim)}
-</style></head><body><div class="w">
+</style><link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PGNpcmNsZSBjeD0iMzIiIGN5PSIzMiIgcj0iMzAiIGZpbGw9IiNlODQwMmYiLz48Y2lyY2xlIGN4PSIzMiIgY3k9IjMyIiByPSIyMyIgZmlsbD0iI2ZmZiIvPjxjaXJjbGUgY3g9IjMyIiBjeT0iMzIiIHI9IjE2IiBmaWxsPSIjZTg0MDJmIi8+PGNpcmNsZSBjeD0iMzIiIGN5PSIzMiIgcj0iOSIgZmlsbD0iI2ZmZiIvPjxjaXJjbGUgY3g9IjMyIiBjeT0iMzIiIHI9IjQuNSIgZmlsbD0iI2U4NDAyZiIvPjxsaW5lIHgxPSIzMiIgeTE9IjMyIiB4Mj0iNTQiIHkyPSIxMCIgc3Ryb2tlPSIjMmY2ZmQwIiBzdHJva2Utd2lkdGg9IjMuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTUwIDYgTDYwIDQgTDU4IDE0IFoiIGZpbGw9IiMyZjZmZDAiLz48L3N2Zz4=">
+</head><body><div class="w">
 <h1>Flight Chalker security check</h1>
 <p class="dim">This page tries the things a stranger could try, using only the public key, and tells you whether the database blocked them. Nothing real is changed: every test uses made-up IDs.</p>
 
@@ -62,7 +63,7 @@ async function attack(){
    ['Cannot read player emails','read',()=>call('GET','/rest/v1/team_players?select=email&limit=1')],
    ['Cannot read league passwords','read',()=>call('GET','/rest/v1/leagues?select=admin_password&limit=1')],
    ['Cannot read PINs in pending team requests','read',()=>call('GET','/rest/v1/team_claim_requests?select=pin&limit=1')],
-   ['Cannot post a league notice','write',()=>call('POST','/rest/v1/league_notices',{league_id:ID,title:'x',body:'x'})],
+   ['Cannot post a league notice','write',()=>call('POST','/rest/v1/league_notices',{league_id:ID,message:'x'})],
    ['Cannot add a fixture','write',()=>call('POST','/rest/v1/league_fixtures',{league_id:ID,home_team_id:ID,away_team_id:ID,fixture_date:'2030-01-01'})],
    ['Cannot add a captain contact','write',()=>call('POST','/rest/v1/league_captains',{league_id:ID,team_name:'x'})],
    ['Cannot create a team directly','write',()=>call('POST','/rest/v1/teams',{team_name:'x',league_id:ID,pin:'0000'})],
