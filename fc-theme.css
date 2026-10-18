@@ -20,7 +20,8 @@
 h1,h2,h3,h4,.landing-title,.logo,.sec-title,.auth-card h2,.big-num,.stat-num,.stat-val,.score-big,.rem-big,.fc-head,
 [class*="title"],[class*="Title"],[class*="heading"]{font-family:var(--fc-head) !important;letter-spacing:-0.01em !important}
 code,pre,kbd,samp,.mono,[style*="monospace"]{font-family:ui-monospace,Menlo,Consolas,monospace !important}
-body{background:var(--bg);color:var(--text);font-size:16px;line-height:1.5}
+body{background:var(--bg);color:var(--text);font-size:16px;line-height:1.35}
+.fc-wrap,.fc-band{line-height:1.5}
 
 /* Primary actions: yellow pill with dark ink */
 .btn-land-p,.btnp,.btna,.btn-submit,.btn-start,.btn-again,.btn-next,.btn-hit,.throw-add,.btn-admin,
@@ -97,3 +98,50 @@ label,.sec-lbl,[class*="label"]{color:var(--dim) !important}
 .g-btn{background:var(--fc-yellow) !important;color:var(--fc-ink) !important;border:none !important;border-radius:999px !important;font-weight:600 !important;min-height:48px}
 .g-btn.sec,.g-btn.secondary,.g-btn.blue{background:transparent !important;color:var(--text) !important;border:1.5px solid #4a6353 !important}
 .g-field input{border-radius:12px !important}
+
+/* Game screens on phones: keep the keypad and scores on one screen */
+@media (max-width:520px){
+  .hdr,#app-header{gap:6px !important}
+  .hdr{height:auto !important;min-height:48px;padding:6px 10px !important;flex-wrap:nowrap}
+  .hdr-logo{font-size:.9rem !important;line-height:1.05 !important;white-space:normal}
+  .hdr-sub{display:none}
+  .hbtn,.hdr .theme-toggle{white-space:nowrap;font-size:.72rem !important;padding:0 7px !important;min-height:34px !important;line-height:1.1;display:inline-flex;align-items:center;gap:3px}
+  .hdr > div,.hdr .hright{gap:4px !important;flex-wrap:nowrap}
+}
+@media (max-width:520px){
+  .game-wrap{padding-top:.6rem !important;padding-bottom:1.5rem !important}
+  .game-title{font-size:1.3rem !important;margin-bottom:0 !important}
+  .game-sub{margin-bottom:.6rem !important;font-size:.8rem !important}
+  .cpu-scores,.score-cards{gap:.45rem !important;margin-bottom:.5rem !important}
+  .cpu-score-card{padding:.45rem !important}
+  .cpu-score-val{font-size:2.1rem !important}
+  .cpu-score-name{margin-bottom:.15rem !important}
+  .cpu-turn-banner{padding:.3rem !important;margin-bottom:.5rem !important}
+  .numpad{gap:.25rem !important;margin-bottom:.4rem !important}
+  .np{padding:.4rem !important;min-height:44px}
+  .quick-scores{gap:.25rem !important;margin-bottom:.4rem !important}
+  .qs-btn{padding:.3rem !important;min-height:36px}
+  .btn-start,.btn-next,.btn-again,.btn-hit,.btnp,.btns{min-height:44px !important}
+}
+@media (max-width:520px) and (max-height:800px){
+  .input-area{padding:.55rem !important}
+  .input-label{font-size:.72rem !important;margin-bottom:.3rem !important;line-height:1.2 !important}
+  .display-input{min-height:0 !important;padding:.3rem !important;font-size:1.7rem !important;margin-bottom:.4rem !important}
+  .np{min-height:38px !important;padding:.25rem !important}
+  .qs-btn{min-height:32px !important;padding:.2rem !important}
+  .game-title{font-size:1.15rem !important}
+  .cpu-score-val{font-size:1.8rem !important}
+  .cpu-turn-banner{font-size:.85rem !important}
+}
+@media (max-width:400px){
+  .hdr{padding:6px 6px !important;gap:4px !important}
+  .hdr-logo{font-size:.8rem !important}
+  .hbtn,.hdr .theme-toggle{font-size:.66rem !important;padding:0 5px !important;gap:2px !important}
+}
+@media (max-width:520px) and (max-height:800px){
+  .btn-start,.btn-next,.btn-again,.btn-hit,.btnp,.btns,.btnd{min-height:40px !important}
+}
+@media (max-width:370px){
+  .hdr{flex-wrap:wrap !important;row-gap:4px !important}
+  .hdr > div:last-child{flex-wrap:wrap !important;justify-content:flex-end;margin-left:auto}
+}
