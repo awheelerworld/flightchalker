@@ -145,3 +145,61 @@ label,.sec-lbl,[class*="label"]{color:var(--dim) !important}
   .hdr{flex-wrap:wrap !important;row-gap:4px !important}
   .hdr > div:last-child{flex-wrap:wrap !important;justify-content:flex-end;margin-left:auto}
 }
+
+/* Tablet / landscape: scores on the right, bigger keypad on the left */
+@media (min-width:820px) and (orientation:landscape){
+  #screen-game .game-wrap{max-width:1180px !important;display:grid !important;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);column-gap:1.25rem;align-items:start;padding:1rem 1.5rem !important}
+  #screen-game .throw-area{grid-column:1;grid-row:1 / span 4;margin-bottom:0 !important}
+  #screen-game .players-row{grid-column:2;grid-row:1;grid-template-columns:1fr !important;margin-bottom:1rem !important}
+  #screen-game .leg-history{grid-column:2;grid-row:2}
+  #screen-game .player-card{padding:.9rem 1.25rem !important}
+  #screen-game .throw-input{font-size:3rem !important}
+  #screen-game .np{min-height:68px !important;font-size:1.7rem !important}
+  #screen-game .action-row button{min-height:56px}
+}
+@media (min-width:820px) and (orientation:landscape){
+  #screen-game .np-btn{min-height:68px !important;font-size:1.7rem !important}
+  /* Training: CPU opponent */
+  #screen-cpu .game-wrap{max-width:1180px !important;display:grid !important;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);column-gap:1.25rem;align-items:start;padding:1rem 1.5rem !important}
+  #screen-cpu .game-title,#screen-cpu .game-sub{grid-column:1 / -1}
+  #screen-cpu .input-area{grid-column:1;grid-row:3 / span 6;margin-bottom:0 !important}
+  #screen-cpu .cpu-scores{grid-column:2;grid-row:3;grid-template-columns:1fr !important}
+  #screen-cpu .cpu-turn-banner{grid-column:2;grid-row:4}
+  #screen-cpu .np{min-height:64px !important;font-size:1.6rem !important}
+}
+@media (min-width:820px) and (orientation:landscape) and (max-height:760px){
+  #screen-cpu .np{min-height:50px !important;font-size:1.4rem !important}
+  #screen-cpu .qs-btn{min-height:30px !important}
+  #screen-cpu .game-title{margin-top:0 !important}
+}
+
+/* Tablet / landscape: other scorer game modes (scoreboard right, throw pad left) */
+@media (min-width:820px) and (orientation:landscape){
+  #screen-cricket .game-wrap,#screen-killer .game-wrap,#screen-shanghai .game-wrap,#screen-halveit .game-wrap{
+    max-width:1180px !important;display:grid !important;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);column-gap:1.25rem;align-items:start;padding:1rem 1.5rem !important}
+  #screen-cricket .throw-area,#screen-killer .throw-area,#screen-shanghai .throw-area,#screen-halveit .throw-area{grid-column:1;grid-row:1 / span 4;margin-bottom:0 !important}
+  #cricket-scoreboard,#killer-players,#shanghai-scores,#halveit-scores{grid-column:2;grid-row:1;min-width:0}
+  #screen-cricket .np-btn,#screen-killer .np-btn,#screen-shanghai .np-btn,#screen-halveit .np-btn,
+  #cricket-numpad button,#killer-numpad button,#shanghai-numpad button,#halveit-numpad button{min-height:64px !important;font-size:1.5rem !important}
+  #screen-cricket .action-row button,#screen-killer .action-row button,#screen-shanghai .action-row button,#screen-halveit .action-row button{min-height:56px}
+  #screen-halveit .display-input,#screen-killer .display-input{font-size:2.6rem !important}
+}
+
+/* Tablet / landscape: training drills (stats and target right, big answer buttons left) */
+@media (min-width:820px) and (orientation:landscape){
+  #screen-checkout .game-wrap,#screen-atc .game-wrap,#screen-bobs .game-wrap,#screen-doubles .game-wrap,#screen-trebles .game-wrap{
+    max-width:1180px !important;display:grid !important;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);column-gap:1.5rem;align-items:start;padding:1rem 1.5rem !important}
+  #screen-checkout .game-wrap > *,#screen-atc .game-wrap > *,#screen-bobs .game-wrap > *,#screen-doubles .game-wrap > *,#screen-trebles .game-wrap > *{grid-column:2;min-width:0}
+  #screen-checkout .game-wrap > .game-title,#screen-atc .game-wrap > .game-title,#screen-bobs .game-wrap > .game-title,#screen-doubles .game-wrap > .game-title,#screen-trebles .game-wrap > .game-title,
+  #screen-atc .game-wrap > .game-sub,#screen-bobs .game-wrap > .game-sub,#screen-doubles .game-wrap > .game-sub,#screen-trebles .game-wrap > .game-sub{grid-column:1 / -1}
+  #screen-checkout .game-wrap > .input-area,#screen-atc .game-wrap > .input-area,#screen-bobs .game-wrap > .input-area,#screen-doubles .game-wrap > .input-area,#screen-trebles .game-wrap > .input-area{grid-column:1;grid-row:3 / span 10;margin-bottom:0 !important}
+  #screen-checkout .game-wrap > .input-area{grid-row:2 / span 10 !important}
+  #screen-checkout .btn-hit,#screen-checkout .btn-miss,#screen-atc .btn-hit,#screen-atc .btn-miss,#screen-bobs .btn-hit,#screen-bobs .btn-miss,
+  #screen-doubles .btn-hit,#screen-doubles .btn-miss,#screen-trebles .btn-hit,#screen-trebles .btn-miss{min-height:110px !important;font-size:1.8rem !important}
+}
+@media (min-width:820px) and (orientation:landscape){
+  #screen-checkout .btn-row > *,#screen-atc .btn-row > *,#screen-bobs .btn-row > *,#screen-doubles .btn-row > *,#screen-trebles .btn-row > *{flex:1}
+}
+@media (min-width:820px) and (orientation:landscape){
+  .btn-miss{border-radius:999px !important}
+}
