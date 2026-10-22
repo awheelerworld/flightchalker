@@ -1,0 +1,10 @@
+User-agent: *
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /security-check
+Disallow: /sso-callback
+Disallow: /verify-email
+Disallow: /forgot-password
+Allow: /
+
+Sitemap: https://flightchalker.co.uk/sitemap.xml
