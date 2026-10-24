@@ -103,7 +103,7 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!-- Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-WQRGJRFF1Q"></script>
+<script src="/fc-consent.js"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -1541,6 +1541,7 @@ async function loadFixtureList(){
       var fmt=d.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
       var statusStyle=f.played?'background:#1a2a1e;color:var(--gl);border:1px solid var(--green)':'background:var(--s3);color:var(--dim);border:1px solid var(--border)';
       var statusText=f.played?'Played':'Upcoming';
+      fxCache[f.id]={home:teamMap[f.home_team_id]||'Home',away:teamMap[f.away_team_id]||'Away',hid:f.home_team_id,date:f.fixture_date,played:!!f.played};
       return '<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem .75rem;background:var(--bg);border:1px solid var(--border);border-radius:5px;margin-bottom:.4rem;flex-wrap:wrap">'
         +'<div style="font-size:.8rem;color:var(--dim);min-width:120px">'+fmt+'</div>'
         +'<div style="flex:1;font-size:.9rem;font-weight:600">'+esc(teamMap[f.home_team_id]||'?')+' <span style="color:var(--dim);font-weight:400">vs</span> '+esc(teamMap[f.away_team_id]||'?')
@@ -1549,10 +1550,60 @@ async function loadFixtureList(){
               :'<div style="font-size:.74rem;font-weight:400;color:var(--amber);margin-top:2px">No home venue set for '+esc(teamMap[f.home_team_id]||'this team')+'</div>';})()
           +'</div>'
         +'<div style="font-size:.75rem;padding:2px 8px;border-radius:3px;'+statusStyle+'">'+statusText+'</div>'
+        +'<button onclick="openScoreForm(&quot;'+f.id+'&quot;)" style="background:none;border:1px solid var(--green);border-radius:4px;color:var(--gl);font-size:.72rem;padding:2px 8px;cursor:pointer">'+(f.played?'Edit score':'Enter score')+'</button>'
         +'<button onclick="deleteFixture(&quot;'+f.id+'&quot;)" style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--dim);font-size:.72rem;padding:2px 8px;cursor:pointer">Delete</button>'
+        +'<div id="fxs-'+f.id+'" style="display:none;width:100%;flex-basis:100%"></div>'
         +'</div>';
     }).join('');
   }catch(e){el.innerHTML='<div class="nh">Error: '+esc(e.message)+'</div>';}
+}
+
+// ── Final score entry (for teams with no captain yet) ──────────────────────────
+var fxCache={};
+async function openScoreForm(id){
+  var box=document.getElementById('fxs-'+id),c=fxCache[id];
+  if(!box||!c)return;
+  if(box.style.display==='block'){box.style.display='none';return;}
+  box.style.display='block';
+  box.innerHTML='<div class="nh">Loading…</div>';
+  var h='',a='';
+  if(c.played){
+    try{
+      var r=await sb('team_matches?team_id=eq.'+c.hid+'&match_date=eq.'+c.date+'&opponent=eq.'+encodeURIComponent(c.away)+'&select=wins,losses&limit=1');
+      if(r&&r[0]){h=r[0].wins;a=r[0].losses;}
+    }catch(e){}
+  }
+  var inp='width:64px;text-align:center;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:.4rem;font-size:1rem';
+  box.innerHTML='<div style="margin-top:.6rem;padding:.7rem;background:var(--s3);border:1px solid var(--border);border-radius:6px">'
+    +'<div style="font-size:.78rem;color:var(--dim);margin-bottom:.5rem;line-height:1.4">Final score = matches (rubbers) won by each team, e.g. 6 – 4. The league table, form and fixtures update straight away. Teams can add player detail later.</div>'
+    +'<div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">'
+    +'<span style="font-size:.85rem;min-width:90px">'+esc(c.home)+'</span>'
+    +'<input type="number" min="0" max="50" id="fxs-h-'+id+'" value="'+h+'" style="'+inp+'">'
+    +'<span>–</span>'
+    +'<input type="number" min="0" max="50" id="fxs-a-'+id+'" value="'+a+'" style="'+inp+'">'
+    +'<span style="font-size:.85rem">'+esc(c.away)+'</span></div>'
+    +'<div style="display:flex;gap:.5rem;margin-top:.6rem;flex-wrap:wrap">'
+    +'<button class="btn-admin" onclick="saveScore(&quot;'+id+'&quot;)">Save score</button>'
+    +(c.played?'<button class="btns" onclick="clearScore(&quot;'+id+'&quot;)">Remove score</button>':'')
+    +'<button class="btns" onclick="openScoreForm(&quot;'+id+'&quot;)">Cancel</button>'
+    +'</div></div>';
+}
+async function saveScore(id){
+  var hv=document.getElementById('fxs-h-'+id).value,av=document.getElementById('fxs-a-'+id).value;
+  if(hv===''||av===''||!/^\d+$/.test(hv)||!/^\d+$/.test(av)){toast('Enter both scores as whole numbers',true);return;}
+  try{
+    await sb('rpc/admin_record_final_score',{method:'POST',body:JSON.stringify({p_fixture_id:id,p_home_score:parseInt(hv,10),p_away_score:parseInt(av,10)})});
+    toast('Score saved: '+hv+' – '+av);
+    loadFixtureList();
+  }catch(e){toast('Could not save: '+e.message,true);}
+}
+async function clearScore(id){
+  if(!confirm('Remove this final score and mark the fixture as not played?'))return;
+  try{
+    await sb('rpc/admin_clear_final_score',{method:'POST',body:JSON.stringify({p_fixture_id:id})});
+    toast('Score removed');
+    loadFixtureList();
+  }catch(e){toast('Could not remove: '+e.message,true);}
 }
 
 async function deleteFixture(id){
