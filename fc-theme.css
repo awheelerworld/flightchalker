@@ -203,3 +203,14 @@ label,.sec-lbl,[class*="label"]{color:var(--dim) !important}
 @media (min-width:820px) and (orientation:landscape){
   .btn-miss{border-radius:999px !important}
 }
+
+/* Tablet / landscape: Count-Up, Fives and Baseball */
+@media (min-width:820px) and (orientation:landscape){
+  #screen-total .game-wrap,#screen-baseball .game-wrap{
+    max-width:1180px !important;display:grid !important;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);column-gap:1.25rem;align-items:start;padding:1rem 1.5rem !important}
+  #screen-total .throw-area,#screen-baseball .throw-area{grid-column:1;grid-row:1 / span 4;margin-bottom:0 !important}
+  #total-scores,#baseball-scores{grid-column:2;grid-row:1;min-width:0}
+  #total-numpad button,#baseball-numpad button{min-height:64px !important;font-size:1.5rem !important}
+  #screen-total .action-row button,#screen-baseball .action-row button{min-height:56px}
+  #screen-total .display-input{font-size:2.6rem !important}
+}
