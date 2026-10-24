@@ -314,6 +314,17 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
       </div>
     </div>
 
+    <div id="fives-setup" style="display:none">
+      <div class="setup-section">
+        <h3>How to finish</h3>
+        <div class="score-btns" id="fives-finish-btns" style="grid-template-columns:repeat(2,1fr)">
+          <button class="score-btn sel" data-finish="over" onclick="fivesSetFinish('over')">51 or over</button>
+          <button class="score-btn" data-finish="exact" onclick="fivesSetFinish('exact')">Exactly 51</button>
+        </div>
+        <div id="fives-finish-desc" style="font-size:.78rem;color:var(--dim);margin-top:.5rem;line-height:1.4">The first player to reach 51 or more wins.</div>
+      </div>
+    </div>
+
     <div id="halveit-setup" style="display:none">
       <div class="setup-section">
         <h3>Rounds <span class="hi-round-count" id="hi-round-count"></span></h3>
@@ -1290,6 +1301,15 @@ function selectMode(mode){
   document.getElementById('mode-desc').textContent=modeDescs[mode];
   document.getElementById('x01-options').style.display=mode==='x01'?'block':'none';
   document.getElementById('halveit-setup').style.display=mode==='halveit'?'block':'none';
+  document.getElementById('fives-setup').style.display=mode==='fives'?'block':'none';
+}
+var fivesFinish='over';
+function fivesSetFinish(v){
+  fivesFinish=v;
+  document.querySelectorAll('#fives-finish-btns .score-btn').forEach(function(b){b.classList.toggle('sel',b.getAttribute('data-finish')===v);});
+  document.getElementById('fives-finish-desc').textContent=v==='exact'
+    ?'You must land on exactly 51. A turn that would take you over 51 scores nothing.'
+    :'The first player to reach 51 or more wins.';
 }
 
 // ── RULES MODAL ──────────────────────────────────────────────────────────────
@@ -1384,7 +1404,8 @@ var gameRules={
       '<li>Throw 3 darts and add up the total.</li>'+
       '<li>If the total is a multiple of 5, you score the total divided by 5 (so 60 scores 12 points). Any other total scores nothing.</li>'+
       '<li>Singles, doubles, trebles and bulls all count towards the total.</li>'+
-      '</ul><h4>Winning</h4><p>First player to reach 51 or more points wins.</p>'
+      '<li>Optional setting: <b>Exactly 51</b> — you must land on 51 precisely; a turn that would take you over scores nothing.</li>'+
+      '</ul><h4>Winning</h4><p>Default: first player to reach 51 or more points wins. With "Exactly 51", the first to land exactly on 51 wins.</p>'
   }
 };
 
@@ -2075,8 +2096,8 @@ var COUNTUP_ROUNDS=8,FIVES_TARGET=51;
 function startTotal(kind){
   var names=Array.from(document.getElementById('player-names').querySelectorAll('input')).map(function(i){return i.value.trim()||'Player';});
   names.forEach(fcSaveRecentName);
-  total={kind:kind,rulesKey:kind,players:names,scores:names.map(function(){return 0;}),best:names.map(function(){return 0;}),currentPlayer:0,round:1,inputVal:'',history:[]};
-  document.getElementById('total-hdr-sub').textContent=kind==='fives'?'Fives (51 by 5s)':'Count-Up';
+  total={kind:kind,rulesKey:kind,players:names,scores:names.map(function(){return 0;}),best:names.map(function(){return 0;}),currentPlayer:0,round:1,inputVal:'',history:[],exact:kind==='fives'&&fivesFinish==='exact'};
+  document.getElementById('total-hdr-sub').textContent=kind==='fives'?'Fives (51 by 5s)'+(total.exact?' — exactly 51':''):'Count-Up';
   document.getElementById('total-input').value='';
   showScreen('screen-total');
   document.getElementById('total-numpad').innerHTML=[7,8,9,4,5,6,1,2,3,'CLR',0,'X'].map(function(n){
@@ -2114,12 +2135,17 @@ function totalSubmit(){
     toast('+'+val);speak(val+'. '+t.scores[p]+' total.');
   } else {
     if(val>0&&val%5===0){
-      var pts=val/5;t.scores[p]+=pts;
-      toast(val+' = +'+pts+' points!');speak(val+'. Plus '+pts+'. '+t.scores[p]+' total.');
+      var pts=val/5;
+      if(t.exact&&t.scores[p]+pts>FIVES_TARGET){
+        toast(val+' would go over '+FIVES_TARGET+' — no score',true);speak(val+'. Too many. No score.');
+      } else {
+        t.scores[p]+=pts;
+        toast(val+' = +'+pts+' points!');speak(val+'. Plus '+pts+'. '+t.scores[p]+' total.');
+      }
     } else {
       toast(val===0?'No score':val+' is not a multiple of 5',true);speak(val===0?'No score.':val+'. No score.');
     }
-    if(t.scores[p]>=FIVES_TARGET){
+    if(t.exact?t.scores[p]===FIVES_TARGET:t.scores[p]>=FIVES_TARGET){
       t.inputVal='';document.getElementById('total-input').value='';
       showWinByName(t.players[p]);return;
     }
@@ -2140,7 +2166,7 @@ function renderTotal(){
     document.getElementById('total-explain').textContent='Enter the total of all three darts (0–180).';
   } else {
     var need=FIVES_TARGET-t.scores[t.currentPlayer];
-    document.getElementById('total-target-label').textContent='First to '+FIVES_TARGET+' — '+need+' to go';
+    document.getElementById('total-target-label').textContent=(t.exact?'Exactly ':'First to ')+FIVES_TARGET+' — '+need+' to go';
     document.getElementById('total-explain').textContent='Enter the total of all three darts. Only multiples of 5 score (total ÷ 5).';
   }
   var h='<div class="shanghai-scores"><div class="shanghai-round">'+(t.kind==='countup'?'Round '+Math.min(t.round,COUNTUP_ROUNDS)+' of '+COUNTUP_ROUNDS:'Scores')+'</div>';
