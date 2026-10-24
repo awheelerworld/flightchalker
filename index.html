@@ -444,7 +444,7 @@ html{scroll-behavior:smooth}
 .ob-dot.active{background:var(--green)}
 </style>
 <!-- Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-WQRGJRFF1Q"></script>
+<script src="/fc-consent.js"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -730,6 +730,9 @@ html{scroll-behavior:smooth}
     <a href="#" onclick="goTo('forgot-pin');return false" style="color:#4a5a4a;text-decoration:none;letter-spacing:.04em">Forgot team PIN?</a>
     <a href="/admin" style="color:var(--blue-l);text-decoration:none;letter-spacing:.04em">League Admin Login</a>
     <a href="/organiser-guide" style="color:var(--blue-l);text-decoration:none;letter-spacing:.04em">Organiser Guide</a>
+    <a href="/terms" style="color:#4a5a4a;text-decoration:none;letter-spacing:.04em">Terms</a>
+    <a href="/privacy" style="color:#4a5a4a;text-decoration:none;letter-spacing:.04em">Privacy</a>
+    <a href="#" onclick="fcCookieSettings();return false" style="color:#4a5a4a;text-decoration:none;letter-spacing:.04em">Cookie settings</a>
     <a href="/admin?new=1" style="color:var(--blue-l);text-decoration:none;letter-spacing:.04em">Create a League</a>
   </div>
 </footer>
@@ -3635,7 +3638,13 @@ function downloadPDF(idx,mode){
     var s180=scores?scores.filter(function(v){return v===180;}).length:0;
     var bigScores=(mode==='team'&&scores)?scores.filter(function(v){return v>=80;}).sort(function(a,b){return b-a;}):[];
     var showList=bigScores.length>0;
-    var rH=showList?14:10;
+    // Names use the real text width, and wrap onto extra lines instead of being cut off.
+    doc.setFont('helvetica','normal');doc.setFontSize(8);
+    var nameW=legs?60:(W-pad-22)-(pad+10)-2;
+    var nameLines=doc.splitTextToSize(player,nameW);
+    if(nameLines.length>3){nameLines=nameLines.slice(0,3);}
+    var extra=(nameLines.length-1)*3.6;
+    var rH=(showList?14:10)+extra;
     if(y+rH>278){doc.addPage();y=14;}
     setF(isWin?[22,40,26]:isLoss?[40,20,20]:[26,32,26]);
     doc.rect(pad,y,W-pad*2,rH,'F');
@@ -3645,9 +3654,7 @@ function downloadPDF(idx,mode){
     doc.setFont('helvetica','bold');doc.setFontSize(7);setC(C.dim);
     doc.text(label,pad+1,ty);
     doc.setFont('helvetica','normal');doc.setFontSize(8);setC(C.text);
-    var mc=Math.floor(58/2.2);
-    var ps=player.length>mc?player.substring(0,mc-1)+'…':player;
-    doc.text(ps,pad+10,ty);
+    doc.text(nameLines,pad+10,ty);
     if(legs){
       doc.setFont('helvetica','bold');doc.setFontSize(8);setC(C.text);
       doc.text(legs,pad+72,ty);
@@ -3664,7 +3671,7 @@ function downloadPDF(idx,mode){
       doc.text(isWin?'WIN':'LOSS',W-pad-11,y+6.5,'center');
     }
     if(showList){
-      var ly=ty+5;
+      var ly=ty+5+extra;
       doc.setFont('helvetica','normal');doc.setFontSize(6.5);setC(C.dim);
       doc.text('80+:',pad+10,ly);
       var lx=pad+18;
