@@ -214,3 +214,14 @@ label,.sec-lbl,[class*="label"]{color:var(--dim) !important}
   #screen-total .action-row button,#screen-baseball .action-row button{min-height:56px}
   #screen-total .display-input{font-size:2.6rem !important}
 }
+
+/* Tablet / landscape: keep every scorer pad on one screen whatever the browser chrome takes up.
+   Button height follows the window height; Killer's 20 numbers go in two rows of ten. */
+@media (min-width:820px) and (orientation:landscape){
+  #killer-numpad{grid-template-columns:repeat(10,1fr) !important;gap:.4rem !important}
+  #numpad button,#killer-numpad button,#cricket-numpad button,#shanghai-numpad button,#halveit-numpad button,#total-numpad button,#baseball-numpad button,
+  #screen-game .np,#screen-cpu .np{min-height:clamp(42px,9vh,64px) !important;font-size:clamp(1.15rem,3.2vh,1.5rem) !important;padding-top:.3rem !important;padding-bottom:.3rem !important}
+  #screen-cricket .action-row button,#screen-killer .action-row button,#screen-shanghai .action-row button,#screen-halveit .action-row button,
+  #screen-total .action-row button,#screen-baseball .action-row button,#screen-game .action-row button{min-height:clamp(44px,8vh,56px) !important}
+  #screen-halveit .display-input,#screen-killer .display-input,#screen-total .display-input{font-size:clamp(1.6rem,5.5vh,2.6rem) !important;padding-top:.3rem !important;padding-bottom:.3rem !important}
+}
