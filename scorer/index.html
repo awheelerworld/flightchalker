@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PGNpcmNsZSBjeD0iMzIiIGN5PSIzMiIgcj0iMzAiIGZpbGw9IiNlODQwMmYiLz48Y2lyY2xlIGN4PSIzMiIgY3k9IjMyIiByPSIyMyIgZmlsbD0iI2ZmZiIvPjxjaXJjbGUgY3g9IjMyIiBjeT0iMzIiIHI9IjE2IiBmaWxsPSIjZTg0MDJmIi8+PGNpcmNsZSBjeD0iMzIiIGN5PSIzMiIgcj0iOSIgZmlsbD0iI2ZmZiIvPjxjaXJjbGUgY3g9IjMyIiBjeT0iMzIiIHI9IjQuNSIgZmlsbD0iI2U4NDAyZiIvPjxsaW5lIHgxPSIzMiIgeTE9IjMyIiB4Mj0iNTQiIHkyPSIxMCIgc3Ryb2tlPSIjMmY2ZmQwIiBzdHJva2Utd2lkdGg9IjMuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTUwIDYgTDYwIDQgTDU4IDE0IFoiIGZpbGw9IiMyZjZmZDAiLz48L3N2Zz4=">
-  <meta name="description" content="Free online darts scorer. Play 501, 301, Cricket, Killer, Shanghai and more. Practice your darts checkout combinations.">
+  <meta name="description" content="Free online darts scorer. Play 501, 301, Cricket, Cut-Throat, Killer, Shanghai, Halve-It, Count-Up, Baseball, Fives and more. Practice your darts checkout combinations.">
   <meta name="keywords" content="darts scorer, darts game, 501 darts, online darts, darts practice">
   <meta name="author" content="awheelerworld">
   <meta name="robots" content="index, follow">
@@ -269,7 +269,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
 }
 </style>
 <!-- Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-WQRGJRFF1Q"></script>
+<script src="/fc-consent.js"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -299,9 +299,14 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
       <div class="score-btns" id="mode-btns">
         <button class="score-btn sel" onclick="selectMode('x01')">X01</button>
         <button class="score-btn" onclick="selectMode('cricket')">Cricket</button>
+        <button class="score-btn" onclick="selectMode('cricket-cut')">Cut-Throat Cricket</button>
+        <button class="score-btn" onclick="selectMode('cricket-none')">No-Score Cricket</button>
         <button class="score-btn" onclick="selectMode('killer')">Killer</button>
         <button class="score-btn" onclick="selectMode('shanghai')">Shanghai</button>
         <button class="score-btn" onclick="selectMode('halveit')">Halve-It</button>
+        <button class="score-btn" onclick="selectMode('countup')">Count-Up</button>
+        <button class="score-btn" onclick="selectMode('baseball')">Baseball</button>
+        <button class="score-btn" onclick="selectMode('fives')">Fives (51 by 5s)</button>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-top:.6rem">
         <div id="mode-desc" style="font-size:.8rem;color:var(--dim);line-height:1.4;flex:1">Count down from your starting score. Double to finish.</div>
@@ -472,9 +477,9 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
 <!-- ══════════════════ CRICKET SCREEN ══════════════════ -->
 <div id="screen-cricket" class="screen">
   <div class="hdr">
-    <div><a href="/dashboard" class="hdr-logo" style="text-decoration:none;color:inherit">Flight <span>Chalker</span></a><div class="hdr-sub">Cricket</div></div>
+    <div><a href="/dashboard" class="hdr-logo" style="text-decoration:none;color:inherit">Flight <span>Chalker</span></a><div class="hdr-sub" id="cricket-hdr-sub">Cricket</div></div>
     <div style="display:flex;gap:.5rem;align-items:center">
-      <button class="rules-btn" onclick="showRules('cricket')">❓</button>
+      <button class="rules-btn" onclick="showRules(cricket.rulesKey||'cricket')">❓</button>
       <button class="hbtn" onclick="cricketUndo()">↩ Undo</button>
       <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button><button class="theme-toggle theme-toggle-instance" onclick="toggleTheme()" style="margin-left:.4rem">☀️ Light</button>
     </div>
@@ -576,6 +581,61 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
           <button class="btn-bust" onclick="halveitScore(0)">❌ Missed (Halve!)</button>
           <button class="btn-next" onclick="halveitCustomHit()"><span id="halveit-custom-hit-label">✅ Hit!</span></button>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ TOTAL-ENTRY SCREEN (Count-Up / Fives) ══════════════════ -->
+<div id="screen-total" class="screen">
+  <div class="hdr">
+    <div><a href="/dashboard" class="hdr-logo" style="text-decoration:none;color:inherit">Flight <span>Chalker</span></a><div class="hdr-sub" id="total-hdr-sub">Count-Up</div></div>
+    <div style="display:flex;gap:.5rem;align-items:center">
+      <button class="rules-btn" onclick="showRules(total.rulesKey)">❓</button>
+      <button class="hbtn" onclick="totalUndo()">↩ Undo</button>
+      <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button><button class="theme-toggle theme-toggle-instance" onclick="toggleTheme()" style="margin-left:.4rem">☀️ Light</button>
+    </div>
+  </div>
+  <div class="game-wrap">
+    <div id="total-scores"></div>
+    <div class="throw-area">
+      <div class="throw-title" id="total-turn-title">Player 1's turn</div>
+      <div id="total-target-label" style="font-family:'Barlow Condensed',sans-serif;font-size:1rem;color:var(--amber);margin-bottom:.3rem"></div>
+      <div id="total-explain" style="font-size:.78rem;color:var(--dim);margin-bottom:.6rem;line-height:1.4"></div>
+      <input type="number" id="total-input" class="display-input" placeholder="0" readonly style="margin-bottom:.6rem">
+      <div id="total-numpad" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.35rem;margin-bottom:.6rem"></div>
+      <div class="action-row">
+        <button class="btn-bust" onclick="totalScore(0)">No score (0)</button>
+        <button class="btn-next" onclick="totalSubmit()">Submit →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ BASEBALL SCREEN ══════════════════ -->
+<div id="screen-baseball" class="screen">
+  <div class="hdr">
+    <div><a href="/dashboard" class="hdr-logo" style="text-decoration:none;color:inherit">Flight <span>Chalker</span></a><div class="hdr-sub">Baseball</div></div>
+    <div style="display:flex;gap:.5rem;align-items:center">
+      <button class="rules-btn" onclick="showRules('baseball')">❓</button>
+      <button class="hbtn" onclick="baseballUndo()">↩ Undo</button>
+      <button class="hbtn" onclick="showScreen('screen-setup')">New Game</button><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button><button class="theme-toggle theme-toggle-instance" onclick="toggleTheme()" style="margin-left:.4rem">☀️ Light</button>
+    </div>
+  </div>
+  <div class="game-wrap">
+    <div id="baseball-scores"></div>
+    <div class="throw-area">
+      <div class="throw-title" id="baseball-turn-title">Player 1's turn</div>
+      <div id="baseball-target-label" style="font-family:'Barlow Condensed',sans-serif;font-size:1rem;color:var(--amber);margin-bottom:.6rem"></div>
+      <div class="throw-darts">
+        <div class="dart-chip" id="bb-dart-0">—</div>
+        <div class="dart-chip" id="bb-dart-1">—</div>
+        <div class="dart-chip" id="bb-dart-2">—</div>
+      </div>
+      <div id="baseball-numpad" style="display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;margin-bottom:.6rem;margin-top:.6rem"></div>
+      <div class="action-row">
+        <button class="btn-undo" onclick="baseballDart(0)">Miss (0)</button>
+        <button class="btn-next" id="bb-next-btn" onclick="baseballNext()" disabled>Next Turn →</button>
       </div>
     </div>
   </div>
@@ -1150,7 +1210,7 @@ async function fcEnd(gameType,result){
   }catch(e){
     console.error('fcEnd: could not save session:',e);
   }
-  if(typeof gtag!=='undefined')gtag('event','game_complete',{game_type:gameType,duration:dur,username:fcUser.username||fcUser.id});
+  if(typeof gtag!=='undefined')gtag('event','game_complete',{game_type:gameType,duration:dur});
 }
 async function fcTrain(gameType,score,meta){
   if(!fcUser)return;
@@ -1165,7 +1225,7 @@ async function fcTrain(gameType,score,meta){
   }catch(e){
     console.error('fcTrain: could not save session:',e);
   }
-  if(typeof gtag!=='undefined')gtag('event','training_complete',{game_type:gameType,score:score,username:fcUser.username||fcUser.id});
+  if(typeof gtag!=='undefined')gtag('event','training_complete',{game_type:gameType,score:score});
 }
 // ──────────────────────────────────────────────────────────────────────────
 
@@ -1192,8 +1252,8 @@ function fcPopulateNameDatalist(){
 
 // Tap any player name mid-game to rename them — updates that game's state,
 // re-renders, and remembers the name locally for next time.
-var fcRenameStateMap={x01:function(){return gs;},cricket:function(){return cricket;},killer:function(){return killer;},shanghai:function(){return shanghai;},halveit:function(){return halveit;}};
-var fcRenameRenderMap={x01:function(){renderGame();},cricket:function(){renderCricket();},killer:function(){renderKiller();},shanghai:function(){renderShanghai();},halveit:function(){renderHalveIt();}};
+var fcRenameStateMap={x01:function(){return gs;},cricket:function(){return cricket;},killer:function(){return killer;},shanghai:function(){return shanghai;},halveit:function(){return halveit;},total:function(){return total;},baseball:function(){return baseball;}};
+var fcRenameRenderMap={x01:function(){renderGame();},cricket:function(){renderCricket();},killer:function(){renderKiller();},shanghai:function(){renderShanghai();},halveit:function(){renderHalveIt();},total:function(){renderTotal();},baseball:function(){renderBaseball();}};
 function fcRenamePlayer(mode,i){
   var state=fcRenameStateMap[mode]&&fcRenameStateMap[mode]();
   if(!state||!state.players)return;
@@ -1215,7 +1275,12 @@ var modeDescs={
   cricket:'Close 15-20 and Bull by hitting each 3 times. Score points on numbers you closed.',
   killer:'Hit your own double to become a Killer. Take lives from opponents by hitting their doubles. 3 lives each.',
   shanghai:'7 rounds targeting numbers 1-7. Hit single, double AND treble in one turn for an instant win!',
-  halveit:'Score points each round by hitting the target. Miss all 3 darts and your score is halved!'
+  halveit:'Score points each round by hitting the target. Miss all 3 darts and your score is halved!',
+  'cricket-cut':'Cricket where your points go onto your opponents\u2019 totals. Close everything and have the LOWEST score to win.',
+  'cricket-none':'Cricket with no scoring \u2014 just race to close 15-20 and Bull first.',
+  countup:'8 rounds. Add up all three darts every turn \u2014 highest total wins.',
+  baseball:'9 innings, target number = the inning. Singles, doubles and trebles score 1, 2 or 3 runs.',
+  fives:'Only turns totalling a multiple of 5 score (total \u00f7 5). First to 51 wins.'
 };
 
 function selectMode(mode){
@@ -1276,6 +1341,50 @@ var gameRules={
       '<li>If none of your 3 darts hit the target at all, your <b>entire running score is halved</b>, rounded down.</li>'+
       '<li>Play moves through each round in order; everyone plays the same targets.</li>'+
       '</ul><h4>Winning</h4><p>Highest score after the final round wins.</p>'
+  },
+  'cricket-cut':{
+    title:'Cut-Throat Cricket',
+    objective:'Close 15\u201320 and Bull while keeping your points as LOW as possible.',
+    body:'<h4>How to play</h4><ul>'+
+      '<li>Same numbers and marks as Cricket: 15, 16, 17, 18, 19, 20 and Bull; a single is 1 mark, a double 2, a treble 3.</li>'+
+      '<li>Once you have closed a number, extra hits on it do <b>not</b> score for you \u2014 the points are added to every opponent who has <b>not</b> closed that number.</li>'+
+      '<li>Once everyone has closed a number, it is dead.</li>'+
+      '</ul><h4>Winning</h4><p>First player to close all seven numbers with the <b>lowest</b> (or equal lowest) points wins.</p>'
+  },
+  'cricket-none':{
+    title:'No-Score Cricket',
+    objective:'Be the first to close 15\u201320 and Bull. No points are scored.',
+    body:'<h4>How to play</h4><ul>'+
+      '<li>Hit 15, 16, 17, 18, 19, 20 and Bull; a single is 1 mark, a double 2, a treble 3. Three marks closes a number.</li>'+
+      '<li>Extra hits after closing a number score nothing.</li>'+
+      '</ul><h4>Winning</h4><p>First player to close all seven numbers wins. A great one for beginners.</p>'
+  },
+  countup:{
+    title:'Count-Up',
+    objective:'Score the highest total over 8 rounds.',
+    body:'<h4>How to play</h4><ul>'+
+      '<li>Each turn, throw 3 darts and enter the total of all three (maximum 180).</li>'+
+      '<li>Everything counts \u2014 singles, doubles, trebles and bulls.</li>'+
+      '<li>Play 8 rounds. The scoreboard also tracks each player\u2019s best round.</li>'+
+      '</ul><h4>Winning</h4><p>Highest total after round 8 wins. Equal top scores share the win. Works for 1 or more players.</p>'
+  },
+  baseball:{
+    title:'Baseball',
+    objective:'Score more runs than your opponents over 9 innings.',
+    body:'<h4>How to play</h4><ul>'+
+      '<li>There are 9 innings. In inning N, the target is number N (inning 1 = 1s, inning 9 = 9s).</li>'+
+      '<li>Each dart in the target number scores runs: single = 1, double = 2, treble = 3. Anything else scores nothing.</li>'+
+      '<li>Every player throws 3 darts per inning, then play moves on.</li>'+
+      '</ul><h4>Winning</h4><p>Most runs after 9 innings wins. A tie after 9 innings is a shared win.</p>'
+  },
+  fives:{
+    title:'Fives (51 by 5s)',
+    objective:'Be the first to reach 51 points.',
+    body:'<h4>How to play</h4><ul>'+
+      '<li>Throw 3 darts and add up the total.</li>'+
+      '<li>If the total is a multiple of 5, you score the total divided by 5 (so 60 scores 12 points). Any other total scores nothing.</li>'+
+      '<li>Singles, doubles, trebles and bulls all count towards the total.</li>'+
+      '</ul><h4>Winning</h4><p>First player to reach 51 or more points wins.</p>'
   }
 };
 
@@ -1294,7 +1403,12 @@ function closeRules(){
 var _origStart=startGame;
 startGame=function(){
   if(selectedMode==='x01'){_origStart();}
-  else if(selectedMode==='cricket'){startCricket();}
+  else if(selectedMode==='cricket'){startCricket('std');}
+  else if(selectedMode==='cricket-cut'){startCricket('cut');}
+  else if(selectedMode==='cricket-none'){startCricket('none');}
+  else if(selectedMode==='countup'){startTotal('countup');}
+  else if(selectedMode==='fives'){startTotal('fives');}
+  else if(selectedMode==='baseball'){startBaseball();}
   else if(selectedMode==='killer'){startKiller();}
   else if(selectedMode==='shanghai'){startShanghai();}
   else if(selectedMode==='halveit'){startHalveIt();}
@@ -1304,10 +1418,12 @@ startGame=function(){
 var cricket={};
 var cNums=[20,19,18,17,16,15,25];
 
-function startCricket(){
+function startCricket(variant){
+  variant=variant||'std';
   var names=Array.from(document.getElementById('player-names').querySelectorAll('input')).map(function(i){return i.value.trim()||'Player';});
   names.forEach(fcSaveRecentName);
-  cricket={players:names,marks:names.map(function(){return{20:0,19:0,18:0,17:0,16:0,15:0,25:0};}),points:names.map(function(){return 0;}),currentPlayer:0,dartsThrown:0,history:[]};
+  cricket={players:names,marks:names.map(function(){return{20:0,19:0,18:0,17:0,16:0,15:0,25:0};}),points:names.map(function(){return 0;}),currentPlayer:0,dartsThrown:0,history:[],variant:variant,rulesKey:variant==='cut'?'cricket-cut':variant==='none'?'cricket-none':'cricket'};
+  document.getElementById('cricket-hdr-sub').textContent=variant==='cut'?'Cut-Throat Cricket':variant==='none'?'No-Score Cricket':'Cricket';
   showScreen('screen-cricket');
   document.getElementById('cricket-numpad').innerHTML=[20,19,18,17,16,15,'Bull','Miss'].map(function(n){
     var val=n==='Bull'?25:n==='Miss'?0:n;
@@ -1328,8 +1444,16 @@ function cricketDart(num){
     if(cr.marks[p][num]===3){toast(num+' closed!');speak(label+', closed!');}
     else{toast(num+(cr.marks[p][num]===1?' /':' X'));speak(String(label));}
   } else {
-    var canScore=cr.players.some(function(_,i){return i!==p&&cr.marks[i][num]<3;});
-    if(canScore){cr.points[p]+=num;toast('+'+num+' pts!');speak((num===25?'Bull':num)+'. Plus '+num+' points.');}
+    if(cr.variant==='none'){
+      /* no scoring in this variant */
+    } else if(cr.variant==='cut'){
+      var cutHit=false;
+      cr.players.forEach(function(_,i){if(i!==p&&cr.marks[i][num]<3){cr.points[i]+=num;cutHit=true;}});
+      if(cutHit){toast('+'+num+' to opponents!',true);speak((num===25?'Bull':num)+'. Plus '+num+' to your opponents.');}
+    } else {
+      var canScore=cr.players.some(function(_,i){return i!==p&&cr.marks[i][num]<3;});
+      if(canScore){cr.points[p]+=num;toast('+'+num+' pts!');speak((num===25?'Bull':num)+'. Plus '+num+' points.');}
+    }
   }
   if(cr.dartsThrown>=3){cricketNext();return;}
   renderCricket();
@@ -1349,7 +1473,9 @@ function cricketMiss(){cricketDart(0);}
 function cricketNext(){
   var cr=cricket;cr.dartsThrown=0;
   for(var p=0;p<cr.players.length;p++){
-    if(cNums.every(function(n){return cr.marks[p][n]>=3;})&&cr.points[p]>=Math.max.apply(null,cr.points)){
+    var closedAll=cNums.every(function(n){return cr.marks[p][n]>=3;});
+    var okPoints=cr.variant==='none'?true:cr.variant==='cut'?cr.points[p]<=Math.min.apply(null,cr.points):cr.points[p]>=Math.max.apply(null,cr.points);
+    if(closedAll&&okPoints){
       showWinByName(cr.players[p]);return;
     }
   }
@@ -1374,9 +1500,12 @@ function renderCricket(){
     });
     h+='</div>';
   });
-  h+='<div class="cricket-row" style="grid-template-columns:'+cols+';background:var(--s3)"><div style="font-size:.7rem;color:var(--dim);text-align:center">PTS</div>';
-  cr.points.forEach(function(pts){h+='<div class="cricket-pts">'+pts+'</div>';});
-  h+='</div></div>';
+  if(cr.variant!=='none'){
+    h+='<div class="cricket-row" style="grid-template-columns:'+cols+';background:var(--s3)"><div style="font-size:.7rem;color:var(--dim);text-align:center">'+(cr.variant==='cut'?'PTS (low wins)':'PTS')+'</div>';
+    cr.points.forEach(function(pts){h+='<div class="cricket-pts">'+pts+'</div>';});
+    h+='</div>';
+  }
+  h+='</div>';
   document.getElementById('cricket-scoreboard').innerHTML=h;
   document.getElementById('cricket-turn-title').textContent=cr.players[cr.currentPlayer]+"'s turn — dart "+(cr.dartsThrown+1)+" of 3";
 }
@@ -1938,8 +2067,172 @@ function renderHalveIt(){
   document.getElementById('halveit-scores').innerHTML=h;
 }
 
+
+// ── COUNT-UP and FIVES (enter the 3-dart total each turn) ───────────────────────
+var total={};
+var COUNTUP_ROUNDS=8,FIVES_TARGET=51;
+
+function startTotal(kind){
+  var names=Array.from(document.getElementById('player-names').querySelectorAll('input')).map(function(i){return i.value.trim()||'Player';});
+  names.forEach(fcSaveRecentName);
+  total={kind:kind,rulesKey:kind,players:names,scores:names.map(function(){return 0;}),best:names.map(function(){return 0;}),currentPlayer:0,round:1,inputVal:'',history:[]};
+  document.getElementById('total-hdr-sub').textContent=kind==='fives'?'Fives (51 by 5s)':'Count-Up';
+  document.getElementById('total-input').value='';
+  showScreen('screen-total');
+  document.getElementById('total-numpad').innerHTML=[7,8,9,4,5,6,1,2,3,'CLR',0,'X'].map(function(n){
+    return '<button class="np'+(n==='CLR'?' sp':n==='X'?' dl':'')+'" onclick="totalNumpad(&quot;'+n+'&quot;)">'+n+'</button>';
+  }).join('');
+  renderTotal();
+}
+function totalSnap(){var t=total;return {scores:t.scores.slice(),best:t.best.slice(),currentPlayer:t.currentPlayer,round:t.round};}
+function totalUndo(){
+  var t=total;
+  if(!t.history||!t.history.length){toast('Nothing to undo',true);return;}
+  var last=t.history.pop();
+  t.scores=last.scores;t.best=last.best;t.currentPlayer=last.currentPlayer;t.round=last.round;t.inputVal='';
+  document.getElementById('total-input').value='';
+  renderTotal();toast('Undone');
+}
+function totalNumpad(v){
+  var inp=document.getElementById('total-input');
+  if(v==='X'){total.inputVal=total.inputVal.slice(0,-1);}
+  else if(v==='CLR'){total.inputVal='';}
+  else{if(total.inputVal.length>=3)return;total.inputVal+=String(v);}
+  inp.value=total.inputVal;
+}
+function totalScore(v){total.inputVal=String(v);document.getElementById('total-input').value=v;totalSubmit();}
+function fcWinnerNames(players,scores,lowest){
+  var target=lowest?Math.min.apply(null,scores):Math.max.apply(null,scores);
+  return players.filter(function(_,i){return scores[i]===target;}).join(' & ');
+}
+function totalSubmit(){
+  var t=total,p=t.currentPlayer,val=parseInt(t.inputVal)||0;
+  if(val>180){toast('Maximum score for 3 darts is 180',true);return;}
+  t.history.push(totalSnap());
+  if(t.kind==='countup'){
+    t.scores[p]+=val;if(val>t.best[p])t.best[p]=val;
+    toast('+'+val);speak(val+'. '+t.scores[p]+' total.');
+  } else {
+    if(val>0&&val%5===0){
+      var pts=val/5;t.scores[p]+=pts;
+      toast(val+' = +'+pts+' points!');speak(val+'. Plus '+pts+'. '+t.scores[p]+' total.');
+    } else {
+      toast(val===0?'No score':val+' is not a multiple of 5',true);speak(val===0?'No score.':val+'. No score.');
+    }
+    if(t.scores[p]>=FIVES_TARGET){
+      t.inputVal='';document.getElementById('total-input').value='';
+      showWinByName(t.players[p]);return;
+    }
+  }
+  t.inputVal='';document.getElementById('total-input').value='';
+  t.currentPlayer=(t.currentPlayer+1)%t.players.length;
+  if(t.currentPlayer===0){
+    t.round++;
+    if(t.kind==='countup'&&t.round>COUNTUP_ROUNDS){showWinByName(fcWinnerNames(t.players,t.scores,false));return;}
+  }
+  renderTotal();
+}
+function renderTotal(){
+  var t=total;
+  document.getElementById('total-turn-title').textContent=t.players[t.currentPlayer]+"'s turn";
+  if(t.kind==='countup'){
+    document.getElementById('total-target-label').textContent='Round '+t.round+' of '+COUNTUP_ROUNDS;
+    document.getElementById('total-explain').textContent='Enter the total of all three darts (0–180).';
+  } else {
+    var need=FIVES_TARGET-t.scores[t.currentPlayer];
+    document.getElementById('total-target-label').textContent='First to '+FIVES_TARGET+' — '+need+' to go';
+    document.getElementById('total-explain').textContent='Enter the total of all three darts. Only multiples of 5 score (total ÷ 5).';
+  }
+  var h='<div class="shanghai-scores"><div class="shanghai-round">'+(t.kind==='countup'?'Round '+Math.min(t.round,COUNTUP_ROUNDS)+' of '+COUNTUP_ROUNDS:'Scores')+'</div>';
+  t.players.forEach(function(p,i){
+    var extra=t.kind==='countup'?'<span style="font-size:.7rem;color:var(--dim);margin-left:.4rem">best '+t.best[i]+'</span>':'<span style="font-size:.7rem;color:var(--dim);margin-left:.4rem">of '+FIVES_TARGET+'</span>';
+    h+='<div class="shanghai-player-score"><span style="color:'+(i===t.currentPlayer?'var(--amber)':'var(--text)')+';cursor:pointer" onclick="fcRenamePlayer(&quot;total&quot;,'+i+')" title="Tap to rename">'+esc(p)+' ✎</span><span><span class="shanghai-total">'+t.scores[i]+'</span>'+extra+'</span></div>';
+  });
+  h+='</div>';
+  document.getElementById('total-scores').innerHTML=h;
+}
+
+// ── BASEBALL ──────────────────────────────────────────────────────────────────
+var baseball={};
+var BASEBALL_INNINGS=9;
+
+function startBaseball(){
+  var names=Array.from(document.getElementById('player-names').querySelectorAll('input')).map(function(i){return i.value.trim()||'Player';});
+  names.forEach(fcSaveRecentName);
+  baseball={players:names,runs:names.map(function(){return [];}),currentPlayer:0,inning:1,currentDarts:[],history:[]};
+  showScreen('screen-baseball');
+  renderBaseball();
+}
+function baseballSnap(){var b=baseball;return {runs:JSON.parse(JSON.stringify(b.runs)),currentPlayer:b.currentPlayer,inning:b.inning,currentDarts:b.currentDarts.slice()};}
+function baseballUndo(){
+  var b=baseball;
+  if(!b.history||!b.history.length){toast('Nothing to undo',true);return;}
+  var last=b.history.pop();
+  b.runs=last.runs;b.currentPlayer=last.currentPlayer;b.inning=last.inning;b.currentDarts=last.currentDarts;
+  renderBaseball();toast('Undone');
+}
+function baseballTotal(i){return baseball.runs[i].reduce(function(a,r){return a+r;},0);}
+function baseballDart(mult){
+  var b=baseball;
+  if(b.currentDarts.length>=3)return;
+  b.history.push(baseballSnap());
+  b.currentDarts.push(mult);
+  speak(mult===0?'Miss':(mult===1?'Single':mult===2?'Double':'Treble')+' '+b.inning);
+  renderBaseball();
+}
+function baseballNext(){
+  var b=baseball;
+  if(b.currentDarts.length<3)return;
+  b.history.push(baseballSnap());
+  var r=b.currentDarts.reduce(function(a,m){return a+m;},0);
+  b.runs[b.currentPlayer].push(r);
+  speak(r+(r===1?' run.':' runs.')+' '+baseballTotal(b.currentPlayer)+' total.');
+  b.currentDarts=[];
+  b.currentPlayer=(b.currentPlayer+1)%b.players.length;
+  if(b.currentPlayer===0){
+    b.inning++;
+    if(b.inning>BASEBALL_INNINGS){
+      var totals=b.players.map(function(_,i){return baseballTotal(i);});
+      showWinByName(fcWinnerNames(b.players,totals,false));return;
+    }
+  }
+  renderBaseball();
+}
+function renderBaseball(){
+  var b=baseball,n=b.inning,cols='1fr '+'repeat('+b.players.length+',1fr)';
+  document.getElementById('baseball-turn-title').textContent=b.players[b.currentPlayer]+"'s turn";
+  document.getElementById('baseball-target-label').textContent='Inning '+n+' of '+BASEBALL_INNINGS+' — Target: '+n+' (S=1 D=2 T=3 runs)';
+  for(var d=0;d<3;d++){
+    var chip=document.getElementById('bb-dart-'+d);
+    if(d<b.currentDarts.length){var m=b.currentDarts[d];chip.textContent=m===0?'Miss':(m===1?'S':m===2?'D':'T')+n;chip.className='dart-chip has-value';}
+    else{chip.textContent='—';chip.className='dart-chip';}
+  }
+  document.getElementById('bb-next-btn').disabled=b.currentDarts.length<3;
+  document.getElementById('baseball-numpad').innerHTML=[{l:'Miss',m:0},{l:'S'+n,m:1},{l:'D'+n,m:2},{l:'T'+n,m:3}].map(function(x){
+    return '<button class="np'+(x.m===0?' dl':x.m===3?' sp':'')+'" onclick="baseballDart('+x.m+')">'+x.l+'</button>';
+  }).join('');
+  var h='<div class="halveit-table"><div class="halveit-header" style="grid-template-columns:'+cols+'"><div>Inning</div>';
+  b.players.forEach(function(p,i){
+    h+='<div style="color:'+(i===b.currentPlayer?'var(--amber)':'var(--dim)')+';cursor:pointer" onclick="fcRenamePlayer(&quot;baseball&quot;,'+i+')" title="Tap to rename">'+esc(p)+' ✎</div>';
+  });
+  h+='</div>';
+  for(var inn=1;inn<=BASEBALL_INNINGS;inn++){
+    var cls='halveit-row'+(inn===n?' halveit-current':inn<n?' halveit-done':'');
+    h+='<div class="'+cls+'" style="grid-template-columns:'+cols+'"><div>'+inn+'</div>';
+    b.players.forEach(function(_,i){
+      var v=b.runs[i][inn-1];
+      h+='<div style="font-weight:700;color:var(--amber)">'+(v===undefined?'&mdash;':v)+'</div>';
+    });
+    h+='</div>';
+  }
+  h+='<div class="halveit-row" style="grid-template-columns:'+cols+';background:var(--s3)"><div style="font-weight:700">Total</div>';
+  b.players.forEach(function(_,i){h+='<div style="font-weight:900;color:var(--amber)">'+baseballTotal(i)+'</div>';});
+  h+='</div></div>';
+  document.getElementById('baseball-scores').innerHTML=h;
+}
+
 function showWinByName(name){
-  document.getElementById('win-title').textContent=name+' Wins! 🏆';
+  document.getElementById('win-title').textContent=name+(name.indexOf(' & ')>-1?' Win! 🏆':' Wins! 🏆');
   document.getElementById('win-name').textContent='';
   document.getElementById('win-legs').textContent='';
   showScreen('screen-win');
