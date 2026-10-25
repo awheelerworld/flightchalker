@@ -314,6 +314,20 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
       </div>
     </div>
 
+    <div id="killer-setup" style="display:none">
+      <div class="setup-section">
+        <h3>Starting lives</h3>
+        <div class="score-btns" id="killer-lives-btns" style="grid-template-columns:repeat(5,1fr)">
+          <button class="score-btn" data-lives="1" onclick="killerSetLives(1)">1</button>
+          <button class="score-btn" data-lives="2" onclick="killerSetLives(2)">2</button>
+          <button class="score-btn sel" data-lives="3" onclick="killerSetLives(3)">3</button>
+          <button class="score-btn" data-lives="4" onclick="killerSetLives(4)">4</button>
+          <button class="score-btn" data-lives="5" onclick="killerSetLives(5)">5</button>
+        </div>
+        <div id="killer-lives-desc" style="font-size:.78rem;color:var(--dim);margin-top:.5rem;line-height:1.4">Every player starts with 3 lives.</div>
+      </div>
+    </div>
+
     <div id="baseball-setup" style="display:none">
       <div class="setup-section">
         <h3>Innings numbers</h3>
@@ -1295,7 +1309,7 @@ var selectedMode='x01';
 var modeDescs={
   x01:'Count down from your starting score. Must finish on a double.',
   cricket:'Close 15-20 and Bull by hitting each 3 times. Score points on numbers you closed.',
-  killer:'Hit your own double to become a Killer. Take lives from opponents by hitting their doubles. 3 lives each.',
+  killer:'Hit your own double to become a Killer. Take lives from opponents by hitting their doubles. Choose 1\u20135 starting lives (3 by default).',
   shanghai:'7 rounds targeting numbers 1-7. Hit single, double AND treble in one turn for an instant win!',
   halveit:'Score points each round by hitting the target. Miss all 3 darts and your score is halved!',
   'cricket-cut':'Cricket where your points go onto your opponents\u2019 totals. Close everything and have the LOWEST score to win.',
@@ -1314,6 +1328,13 @@ function selectMode(mode){
   document.getElementById('halveit-setup').style.display=mode==='halveit'?'block':'none';
   document.getElementById('fives-setup').style.display=mode==='fives'?'block':'none';
   document.getElementById('baseball-setup').style.display=mode==='baseball'?'block':'none';
+  document.getElementById('killer-setup').style.display=mode==='killer'?'block':'none';
+}
+var killerStartLives=3;
+function killerSetLives(n){
+  killerStartLives=n;
+  document.querySelectorAll('#killer-lives-btns .score-btn').forEach(function(b){b.classList.toggle('sel',parseInt(b.getAttribute('data-lives'),10)===n);});
+  document.getElementById('killer-lives-desc').textContent='Every player starts with '+n+(n===1?' life \u2014 one mistake and you\u2019re out.':' lives.');
 }
 var baseballOrder='random';
 function baseballSetOrder(v){
@@ -1366,7 +1387,7 @@ var gameRules={
     body:'<h4>How to play</h4><ul>'+
       '<li>Each player is assigned their own number on the board and throws to find it, then must hit doubles on their own number to become a "Killer".</li>'+
       '<li>Once you\u2019re a Killer, hitting doubles on an opponent\u2019s number removes one of their lives — hitting your own number by mistake costs you a life instead.</li>'+
-      '<li>Each player starts with a set number of lives.</li>'+
+      '<li>Each player starts with the number of lives chosen on the setup screen (1 to 5, 3 by default).</li>'+
       '</ul><h4>Winning</h4><p>Last player with lives remaining wins.</p>'
   },
   shanghai:{
@@ -1561,7 +1582,7 @@ function startKiller(){
   var names=Array.from(document.getElementById('player-names').querySelectorAll('input')).map(function(i){return i.value.trim()||'Player';});
   names.forEach(fcSaveRecentName);
   var nums=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20].sort(function(){return Math.random()-.5;}).slice(0,names.length);
-  killer={players:names,doubles:nums,lives:names.map(function(){return 3;}),isKiller:names.map(function(){return false;}),currentPlayer:0,dartsThrown:0,history:[]};
+  killer={players:names,doubles:nums,maxLives:killerStartLives,lives:names.map(function(){return killerStartLives;}),isKiller:names.map(function(){return false;}),currentPlayer:0,dartsThrown:0,history:[]};
   showScreen('screen-killer');
   document.getElementById('killer-numpad').innerHTML=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20].map(function(n){
     return '<button class="np" onclick="killerDart('+n+')">'+n+'</button>';
@@ -1614,7 +1635,7 @@ function killerNextTurn(){
 function renderKiller(){
   var k=killer,p=k.currentPlayer;
   document.getElementById('killer-players').innerHTML=k.players.map(function(name,i){
-    var lives='';for(var l=0;l<3;l++){lives+='<span>'+(l<k.lives[i]?'❤️':'🖤')+'</span>';}
+    var lives='';for(var l=0;l<k.maxLives;l++){lives+='<span>'+(l<k.lives[i]?'❤️':'🖤')+'</span>';}
     return '<div class="killer-card'+(i===p?' active-player':'')+(k.isKiller[i]?' is-killer':'')+(k.lives[i]<=0?' eliminated':'')+'">'
       +'<div><div class="killer-name" onclick="fcRenamePlayer(&quot;killer&quot;,'+i+')" style="cursor:pointer" title="Tap to rename">'+esc(name)+' ✎</div><div class="killer-double">D'+k.doubles[i]+'</div></div>'
       +'<div class="killer-lives">'+lives+'</div>'+(k.isKiller[i]?'<div class="killer-badge">KILLER</div>':'')+'</div>';
