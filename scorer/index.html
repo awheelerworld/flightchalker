@@ -314,6 +314,17 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
       </div>
     </div>
 
+    <div id="baseball-setup" style="display:none">
+      <div class="setup-section">
+        <h3>Innings numbers</h3>
+        <div class="score-btns" id="baseball-order-btns" style="grid-template-columns:repeat(2,1fr)">
+          <button class="score-btn sel" data-order="random" onclick="baseballSetOrder('random')">Random</button>
+          <button class="score-btn" data-order="inorder" onclick="baseballSetOrder('inorder')">In order (1–9)</button>
+        </div>
+        <div id="baseball-order-desc" style="font-size:.78rem;color:var(--dim);margin-top:.5rem;line-height:1.4">Each game picks 9 different numbers at random from 1–20, one per inning.</div>
+      </div>
+    </div>
+
     <div id="fives-setup" style="display:none">
       <div class="setup-section">
         <h3>How to finish</h3>
@@ -1290,7 +1301,7 @@ var modeDescs={
   'cricket-cut':'Cricket where your points go onto your opponents\u2019 totals. Close everything and have the LOWEST score to win.',
   'cricket-none':'Cricket with no scoring \u2014 just race to close 15-20 and Bull first.',
   countup:'8 rounds. Add up all three darts every turn \u2014 highest total wins.',
-  baseball:'9 innings, target number = the inning. Singles, doubles and trebles score 1, 2 or 3 runs.',
+  baseball:'9 innings, each with its own target number (random by default). Singles, doubles and trebles score 1, 2 or 3 runs.',
   fives:'Only turns totalling a multiple of 5 score (total \u00f7 5). First to 51 wins.'
 };
 
@@ -1302,6 +1313,21 @@ function selectMode(mode){
   document.getElementById('x01-options').style.display=mode==='x01'?'block':'none';
   document.getElementById('halveit-setup').style.display=mode==='halveit'?'block':'none';
   document.getElementById('fives-setup').style.display=mode==='fives'?'block':'none';
+  document.getElementById('baseball-setup').style.display=mode==='baseball'?'block':'none';
+}
+var baseballOrder='random';
+function baseballSetOrder(v){
+  baseballOrder=v;
+  document.querySelectorAll('#baseball-order-btns .score-btn').forEach(function(b){b.classList.toggle('sel',b.getAttribute('data-order')===v);});
+  document.getElementById('baseball-order-desc').textContent=v==='random'
+    ?'Each game picks 9 different numbers at random from 1\u201320, one per inning.'
+    :'Innings use the numbers 1 to 9 in order.';
+}
+function baseballPickTargets(){
+  if(baseballOrder==='inorder')return [1,2,3,4,5,6,7,8,9];
+  var pool=[];for(var i=1;i<=20;i++)pool.push(i);
+  for(var j=pool.length-1;j>0;j--){var k=Math.floor(Math.random()*(j+1));var t=pool[j];pool[j]=pool[k];pool[k]=t;}
+  return pool.slice(0,BASEBALL_INNINGS);
 }
 var fivesFinish='over';
 function fivesSetFinish(v){
@@ -1392,7 +1418,7 @@ var gameRules={
     title:'Baseball',
     objective:'Score more runs than your opponents over 9 innings.',
     body:'<h4>How to play</h4><ul>'+
-      '<li>There are 9 innings. In inning N, the target is number N (inning 1 = 1s, inning 9 = 9s).</li>'+
+      '<li>There are 9 innings. Each inning has its own target number \u2014 by default 9 different numbers picked at random from 1\u201320 when the game starts (or 1 to 9 in order if you choose that on the setup screen).</li>'+
       '<li>Each dart in the target number scores runs: single = 1, double = 2, treble = 3. Anything else scores nothing.</li>'+
       '<li>Every player throws 3 darts per inning, then play moves on.</li>'+
       '</ul><h4>Winning</h4><p>Most runs after 9 innings wins. A tie after 9 innings is a shared win.</p>'
@@ -2185,7 +2211,7 @@ var BASEBALL_INNINGS=9;
 function startBaseball(){
   var names=Array.from(document.getElementById('player-names').querySelectorAll('input')).map(function(i){return i.value.trim()||'Player';});
   names.forEach(fcSaveRecentName);
-  baseball={players:names,runs:names.map(function(){return [];}),currentPlayer:0,inning:1,currentDarts:[],history:[]};
+  baseball={players:names,runs:names.map(function(){return [];}),currentPlayer:0,inning:1,currentDarts:[],history:[],targets:baseballPickTargets()};
   showScreen('screen-baseball');
   renderBaseball();
 }
@@ -2203,7 +2229,7 @@ function baseballDart(mult){
   if(b.currentDarts.length>=3)return;
   b.history.push(baseballSnap());
   b.currentDarts.push(mult);
-  speak(mult===0?'Miss':(mult===1?'Single':mult===2?'Double':'Treble')+' '+b.inning);
+  speak(mult===0?'Miss':(mult===1?'Single':mult===2?'Double':'Treble')+' '+b.targets[b.inning-1]);
   renderBaseball();
 }
 function baseballNext(){
@@ -2225,9 +2251,9 @@ function baseballNext(){
   renderBaseball();
 }
 function renderBaseball(){
-  var b=baseball,n=b.inning,cols='1fr '+'repeat('+b.players.length+',1fr)';
+  var b=baseball,n=b.targets[Math.min(b.inning,BASEBALL_INNINGS)-1],cols='1fr '+'repeat('+b.players.length+',1fr)';
   document.getElementById('baseball-turn-title').textContent=b.players[b.currentPlayer]+"'s turn";
-  document.getElementById('baseball-target-label').textContent='Inning '+n+' of '+BASEBALL_INNINGS+' — Target: '+n+' (S=1 D=2 T=3 runs)';
+  document.getElementById('baseball-target-label').textContent='Inning '+b.inning+' of '+BASEBALL_INNINGS+' — Target: '+n+' (S=1 D=2 T=3 runs)';
   for(var d=0;d<3;d++){
     var chip=document.getElementById('bb-dart-'+d);
     if(d<b.currentDarts.length){var m=b.currentDarts[d];chip.textContent=m===0?'Miss':(m===1?'S':m===2?'D':'T')+n;chip.className='dart-chip has-value';}
@@ -2237,14 +2263,14 @@ function renderBaseball(){
   document.getElementById('baseball-numpad').innerHTML=[{l:'Miss',m:0},{l:'S'+n,m:1},{l:'D'+n,m:2},{l:'T'+n,m:3}].map(function(x){
     return '<button class="np'+(x.m===0?' dl':x.m===3?' sp':'')+'" onclick="baseballDart('+x.m+')">'+x.l+'</button>';
   }).join('');
-  var h='<div class="halveit-table"><div class="halveit-header" style="grid-template-columns:'+cols+'"><div>Inning</div>';
+  var h='<div class="halveit-table"><div class="halveit-header" style="grid-template-columns:'+cols+'"><div>Inning · No.</div>';
   b.players.forEach(function(p,i){
     h+='<div style="color:'+(i===b.currentPlayer?'var(--amber)':'var(--dim)')+';cursor:pointer" onclick="fcRenamePlayer(&quot;baseball&quot;,'+i+')" title="Tap to rename">'+esc(p)+' ✎</div>';
   });
   h+='</div>';
   for(var inn=1;inn<=BASEBALL_INNINGS;inn++){
     var cls='halveit-row'+(inn===n?' halveit-current':inn<n?' halveit-done':'');
-    h+='<div class="'+cls+'" style="grid-template-columns:'+cols+'"><div>'+inn+'</div>';
+    h+='<div class="'+cls+'" style="grid-template-columns:'+cols+'"><div>'+inn+' · <b>'+b.targets[inn-1]+'</b></div>';
     b.players.forEach(function(_,i){
       var v=b.runs[i][inn-1];
       h+='<div style="font-weight:700;color:var(--amber)">'+(v===undefined?'&mdash;':v)+'</div>';
