@@ -1457,6 +1457,65 @@ var gameRules={
   }
 };
 
+// Worked examples shown at the bottom of each game's rules.
+var gameExamples={
+  x01:[
+    'You start on 501. First turn you hit treble 20, treble 20 and a single 20: that is 140, so you are on <b>361</b>.',
+    'Later you need <b>40</b>. Your first dart hits double 20, so you finish and win the leg.',
+    '<b>Bust:</b> you need 32 and throw 20 then 14. That would take you to −2, so the turn is cancelled and you stay on 32. Leaving yourself on 1 is also a bust when double-out is on, because 1 can’t be finished.'
+  ],
+  cricket:[
+    'Anna hits a treble 20, which is 3 marks, so 20 is <b>closed</b> for her. Her next dart is another 20. Ben has not closed 20 yet, so Anna scores <b>20 points</b>.',
+    'Ben then closes 20 as well. From now on 20 is dead and nobody scores on it.',
+    'Anna wins once she has closed all seven numbers (15–20 and Bull) <b>and</b> her points are equal to or higher than Ben’s. If she has closed everything but is behind on points, she keeps scoring on numbers Ben has not closed until she catches up.'
+  ],
+  'cricket-cut':[
+    'Anna closes 20 with a treble. Her next dart is another 20. Ben has not closed 20, so <b>Ben gets 20 points</b> added to his total. Points are bad in this game.',
+    'If Ben had already closed 20 as well, nobody would get anything.',
+    'Anna wins when she has closed all seven numbers and has the <b>lowest</b> points. Closing everything while sitting on 0 while Ben has 60 is an easy win. If Anna has closed everything but has 40 against Ben’s 20, the game carries on. Anna keeps hitting numbers Ben has not closed, which adds to Ben’s points, until she is the lowest. Ben can also win by closing everything himself.'
+  ],
+  'cricket-none':[
+    'Anna hits a single 19 (1 mark), then a double 19 (2 more marks). That is 3 marks, so 19 is closed for her.',
+    'Ben hits a treble 20, which closes 20 in one dart.',
+    'Extra darts on a number you have closed score nothing. The first player to close 15, 16, 17, 18, 19, 20 and Bull wins.'
+  ],
+  killer:[
+    'Three players start on 3 lives each. Anna’s double is D16, Ben’s is D5 and Cara’s is D12.',
+    'Anna throws until she hits <b>D16</b> and becomes a Killer. Later she hits <b>D5</b>: Ben drops from 3 lives to 2.',
+    'If Anna hits her own D16 while she is a Killer, she <b>loses a life</b> and has to hit D16 again to become a Killer again.',
+    'A player with 0 lives is out. The last player with lives left wins. You can change the starting lives (1 to 5) on the setup screen.'
+  ],
+  shanghai:[
+    'It is round 4, so only 4s count. Anna throws a treble 4, a single 4 and a miss. That is 12 + 4 + 0 = <b>16 points</b>.',
+    'Ben throws a single 4, a double 4 and a treble 4 in the same turn. That is a <b>Shanghai</b>, and he wins instantly, whatever the scores are.',
+    'If nobody gets a Shanghai, the highest total after round 7 wins.'
+  ],
+  halveit:[
+    'Anna is on 60 and the round’s target is double 7. One dart hits D7, so she adds 14 and is on <b>74</b>.',
+    'Next round the target is 14. Ben is on 40 and misses with all three darts, so his score is halved to <b>20</b>. A score that does not halve evenly is rounded down, so 45 becomes 22.',
+    'After the last round the highest score wins.'
+  ],
+  countup:[
+    'Round 1: Anna throws 20, 20, 20 and enters <b>60</b>. Ben throws a treble 20, 20 and 20 and enters <b>100</b>.',
+    'Totals build up round by round. After 8 rounds the highest total wins, and if two players tie they share the win.',
+    'The most you can enter for a turn is 180 (three treble 20s).'
+  ],
+  baseball:[
+    'It is inning 3 and the target number is 17. Anna throws a single 17, a treble 17 and a miss: 1 + 3 + 0 = <b>4 runs</b>.',
+    'A double 17 would be worth 2 runs. Darts in any other number score nothing.',
+    'Each inning has a different target number. After inning 9 the player with the most runs wins, and a tie is a shared win.'
+  ],
+  fives:[
+    'Anna throws 20, 20, 20 and enters <b>60</b>. 60 is a multiple of 5, so she scores 60 ÷ 5 = <b>12 points</b>.',
+    'Ben throws 20, 19, 4 and enters <b>43</b>. That is not a multiple of 5, so he scores <b>nothing</b>.',
+    'In the <b>Exactly 51</b> setting, Anna is on 48. She throws a turn totalling 20 (worth 4 points). That would take her to 52, so the turn scores nothing. She needs a turn totalling exactly 15 (worth 3 points) to land on 51 and win.'
+  ]
+};
+Object.keys(gameExamples).forEach(function(k){
+  if(!gameRules[k])return;
+  gameRules[k].body+='<h4>Example</h4><ul>'+gameExamples[k].map(function(t){return '<li>'+t+'</li>';}).join('')+'</ul>';
+});
+
 function showRules(mode){
   var r=gameRules[mode];
   if(!r){toast('No rules written for this mode yet',true);return;}
