@@ -267,9 +267,115 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
   .win-wrap{padding:1rem}
   #rules-modal{max-height:80vh;padding:.8rem}
 }
+/* ── Colour skins: Neon / Arcade / Dartboard. Colours only; sizes and layout come from the rules above. Classic = no data-skin. ── */
+html[data-skin="neon"]{--bg:#0a0f24;--s2:#121a3a;--s3:#1b2550;--border:#2a3a7a;--text:#f4f7ff;--dim:#9fb0e8;--green:#35e0ff;--gl:#35e0ff;--amber:#c6ff3d;--red:#ff4f9a;--surface:#121a3a}
+html[data-skin="neon"] .theme-toggle{visibility:hidden !important}
+html[data-skin="neon"] .hdr{background:#121a3a;border-bottom:2px solid #c6ff3d;box-shadow:0 1px 0 0 #c6ff3d}
+html[data-skin="neon"] .hdr-logo span,html[data-skin="neon"] .setup-title,html[data-skin="neon"] #rules-modal h2{color:#c6ff3d}
+html[data-skin="neon"] .hdr-sub,html[data-skin="neon"] .setup-section h3{color:#35e0ff}
+html[data-skin="neon"] .hbtn{color:#f4f7ff;border-color:#9fb0e8}
+html[data-skin="neon"] .score-btn.sel{background:#0f2a45;border-color:#35e0ff;color:#35e0ff}
+html[data-skin="neon"] .score-btn{background:#1b2550;border-color:#2a3a7a;color:#f4f7ff}
+html[data-skin="neon"] .score-btn.sel{background:#0f2a45;border-color:#35e0ff;color:#35e0ff}
+html[data-skin="neon"] .toggle.on{background:#35e0ff}
+html[data-skin="neon"] .btn-start,html[data-skin="neon"] .btn-next,html[data-skin="neon"] .btn-again,html[data-skin="neon"] .throw-add{background:#c6ff3d !important;color:#0a0f24 !important}
+html[data-skin="neon"] .btn-bust{background:#ff4f9a !important;color:#0a0f24 !important;border:1px solid #ff4f9a !important}
+html[data-skin="neon"] .btn-undo{background:transparent;color:#35e0ff;border:1px solid #35e0ff}
+html[data-skin="neon"] .np-btn,html[data-skin="neon"] .np{background:#1b2550;color:#f4f7ff;border:1px solid #2a3a7a;}
+html[data-skin="neon"] .np-btn.special,html[data-skin="neon"] .np.sp{background:#0f2a45;color:#35e0ff;border-color:#35e0ff}
+html[data-skin="neon"] .np-btn.del-btn,html[data-skin="neon"] .np.dl{background:#3a1233;color:#ff4f9a;border-color:#ff4f9a}
+html[data-skin="neon"] .np-btn:active,html[data-skin="neon"] .np-btn:hover,html[data-skin="neon"] .np:active{filter:brightness(.88)}
+html[data-skin="neon"] .np-btn:active,html[data-skin="neon"] .np:active{transform:scale(.97)}
+html[data-skin="neon"] .pc-score,html[data-skin="neon"] .np,html[data-skin="neon"] .np-btn,html[data-skin="neon"] .display-input,html[data-skin="neon"] .throw-input,html[data-skin="neon"] #score-input{font-family:var(--fc-head) !important}
+html[data-skin="neon"] #score-input,html[data-skin="neon"] .display-input,html[data-skin="neon"] .throw-input{background:#05081a !important;border-color:#35e0ff !important;color:#35e0ff !important}
+html[data-skin="neon"] .player-card{background:#121a3a;border-color:#2a3a7a}
+html[data-skin="neon"] .player-card.active-player,html[data-skin="neon"] .killer-card.active-player{background:#121a3a;border-color:#c6ff3d;}
+html[data-skin="neon"] .player-card.active-player .pc-name,html[data-skin="neon"] .player-card.active-player .pc-legs,html[data-skin="neon"] .player-card.active-player .pc-turn,html[data-skin="neon"] .player-card.active-player .pc-checkout{color:#9fb0e8}
+html[data-skin="neon"] .player-card.active-player .pc-score{color:#c6ff3d}
+html[data-skin="neon"] .player-card.active-player .pc-score.finishing{color:#35e0ff}
+html[data-skin="neon"] .player-card.active-player .pc-score.danger{color:#ff4f9a}
+html[data-skin="neon"] .player-card.winner{background:#0f2a45;border-color:#35e0ff}
+html[data-skin="neon"] .killer-card.active-player .killer-name,html[data-skin="neon"] .killer-card.active-player .killer-double{color:#9fb0e8}
+html[data-skin="neon"] .checkout-box{background:#0f2a45;border-color:#35e0ff}
+html[data-skin="neon"] .checkout-title{color:#35e0ff}
+html[data-skin="neon"] .checkout-route{color:#c6ff3d}
+html[data-skin="neon"] .halveit-current{background:#0f2a45}
+html[data-skin="neon"] .halveit-done{background:#0a0f24}
+html[data-skin="neon"] .killer-badge{background:#0a0f24;color:#ff4f9a;border-color:#ff4f9a}
+html[data-skin="arcade"]{--bg:#1c0b3a;--s2:#2a1259;--s3:#3b1b7a;--border:#5b32b5;--text:#fff6e8;--dim:#cdb8f5;--green:#2de2c8;--gl:#2de2c8;--amber:#ffd23f;--red:#ff4d8d;--surface:#2a1259}
+html[data-skin="arcade"] .theme-toggle{visibility:hidden !important}
+html[data-skin="arcade"] .hdr{background:#2a1259;border-bottom:2px solid #ff8a1f;box-shadow:0 2px 0 0 #ff8a1f}
+html[data-skin="arcade"] .hdr-logo span,html[data-skin="arcade"] .setup-title,html[data-skin="arcade"] #rules-modal h2{color:#ffd23f}
+html[data-skin="arcade"] .hdr-sub,html[data-skin="arcade"] .setup-section h3{color:#2de2c8}
+html[data-skin="arcade"] .hbtn{color:#fff6e8;border-color:#cdb8f5}
+html[data-skin="arcade"] .score-btn.sel{background:#3b1b7a;border-color:#2de2c8;color:#2de2c8}
+html[data-skin="arcade"] .score-btn{background:#3b1b7a;border-color:#5b32b5;color:#fff6e8}
+html[data-skin="arcade"] .score-btn.sel{background:#3b1b7a;border-color:#2de2c8;color:#2de2c8}
+html[data-skin="arcade"] .toggle.on{background:#2de2c8}
+html[data-skin="arcade"] .btn-start,html[data-skin="arcade"] .btn-next,html[data-skin="arcade"] .btn-again,html[data-skin="arcade"] .throw-add{background:#ff8a1f !important;color:#1c0b3a !important}
+html[data-skin="arcade"] .btn-bust{background:#ff4d8d !important;color:#1c0b3a !important;border:1px solid transparent !important}
+html[data-skin="arcade"] .btn-undo{background:#3b1b7a;color:#fff6e8;border:1px solid transparent}
+html[data-skin="arcade"] .np-btn,html[data-skin="arcade"] .np{background:#fff6e8;color:#1c0b3a;border:1px solid transparent;box-shadow:0 5px 0 #b9a3e6;}
+html[data-skin="arcade"] .np-btn.special,html[data-skin="arcade"] .np.sp{background:#ffd23f;color:#1c0b3a;border-color:transparent}
+html[data-skin="arcade"] .np-btn.del-btn,html[data-skin="arcade"] .np.dl{background:#ff4d8d;color:#1c0b3a;border-color:transparent}
+html[data-skin="arcade"] .np-btn:active,html[data-skin="arcade"] .np-btn:hover,html[data-skin="arcade"] .np:active{filter:brightness(.88)}
+html[data-skin="arcade"] .np-btn:active,html[data-skin="arcade"] .np:active{transform:scale(.97)}
+html[data-skin="arcade"] .pc-score,html[data-skin="arcade"] .np,html[data-skin="arcade"] .np-btn,html[data-skin="arcade"] .display-input,html[data-skin="arcade"] .throw-input,html[data-skin="arcade"] #score-input{font-family:var(--fc-head) !important}
+html[data-skin="arcade"] #score-input,html[data-skin="arcade"] .display-input,html[data-skin="arcade"] .throw-input{background:#12062a !important;border-color:#ffd23f !important;color:#ffd23f !important}
+html[data-skin="arcade"] .player-card{background:#2a1259;border-color:#5b32b5}
+html[data-skin="arcade"] .player-card.active-player,html[data-skin="arcade"] .killer-card.active-player{background:#ff8a1f;border-color:#ff8a1f;}
+html[data-skin="arcade"] .player-card.active-player .pc-name,html[data-skin="arcade"] .player-card.active-player .pc-legs,html[data-skin="arcade"] .player-card.active-player .pc-turn,html[data-skin="arcade"] .player-card.active-player .pc-checkout{color:#1c0b3a}
+html[data-skin="arcade"] .player-card.active-player .pc-score{color:#1c0b3a}
+html[data-skin="arcade"] .player-card.active-player .pc-score.finishing{color:#1c0b3a}
+html[data-skin="arcade"] .player-card.active-player .pc-score.danger{color:#7a0a2e}
+html[data-skin="arcade"] .player-card.winner{background:#3b1b7a;border-color:#2de2c8}
+html[data-skin="arcade"] .killer-card.active-player .killer-name,html[data-skin="arcade"] .killer-card.active-player .killer-double{color:#1c0b3a}
+html[data-skin="arcade"] .checkout-box{background:#12062a;border-color:#2de2c8}
+html[data-skin="arcade"] .checkout-title{color:#2de2c8}
+html[data-skin="arcade"] .checkout-route{color:#ffd23f}
+html[data-skin="arcade"] .halveit-current{background:#3b1b7a}
+html[data-skin="arcade"] .halveit-done{background:#12062a}
+html[data-skin="arcade"] .killer-badge{background:#1c0b3a;color:#ff4d8d;border-color:#ff4d8d}
+html[data-skin="dartboard"]{--bg:#101010;--s2:#1c1c1c;--s3:#262626;--border:#3a3a3a;--text:#f4ead2;--dim:#c9bf9f;--green:#1fa05a;--gl:#4fd68a;--amber:#f4ead2;--red:#e0243a;--surface:#1c1c1c}
+html[data-skin="dartboard"] .theme-toggle{visibility:hidden !important}
+html[data-skin="dartboard"] .hdr{background:#1c1c1c;border-bottom:2px solid #e0243a;box-shadow:0 2px 0 0 #101010,0 4px 0 0 #e0243a}
+html[data-skin="dartboard"] .hdr-logo span,html[data-skin="dartboard"] .setup-title,html[data-skin="dartboard"] #rules-modal h2{color:#e0243a}
+html[data-skin="dartboard"] .hdr-sub,html[data-skin="dartboard"] .setup-section h3{color:#4fd68a}
+html[data-skin="dartboard"] .hbtn{color:#f4ead2;border-color:#c9bf9f}
+html[data-skin="dartboard"] .score-btn.sel{background:#0c2a18;border-color:#4fd68a;color:#4fd68a}
+html[data-skin="dartboard"] .score-btn{background:#262626;border-color:#3a3a3a;color:#f4ead2}
+html[data-skin="dartboard"] .score-btn.sel{background:#0c2a18;border-color:#4fd68a;color:#4fd68a}
+html[data-skin="dartboard"] .toggle.on{background:#1fa05a}
+html[data-skin="dartboard"] .btn-start,html[data-skin="dartboard"] .btn-next,html[data-skin="dartboard"] .btn-again,html[data-skin="dartboard"] .throw-add{background:#17863f !important;color:#ffffff !important}
+html[data-skin="dartboard"] .btn-bust{background:#c8102e !important;color:#ffffff !important;border:1px solid #c8102e !important}
+html[data-skin="dartboard"] .btn-undo{background:transparent;color:#f4ead2;border:1px solid #f4ead2}
+html[data-skin="dartboard"] .np-btn,html[data-skin="dartboard"] .np{background:#f4ead2;color:#101010;border:1px solid #101010;outline:2px solid #f4ead2;}
+html[data-skin="dartboard"] .np-btn.special,html[data-skin="dartboard"] .np.sp{background:#101010;color:#f4ead2;border-color:#f4ead2}
+html[data-skin="dartboard"] .np-btn.del-btn,html[data-skin="dartboard"] .np.dl{background:#e0243a;color:#ffffff;border-color:#101010}
+html[data-skin="dartboard"] .np-btn:active,html[data-skin="dartboard"] .np-btn:hover,html[data-skin="dartboard"] .np:active{filter:brightness(.88)}
+html[data-skin="dartboard"] .np-btn:active,html[data-skin="dartboard"] .np:active{transform:scale(.97)}
+html[data-skin="dartboard"] .pc-score,html[data-skin="dartboard"] .np,html[data-skin="dartboard"] .np-btn,html[data-skin="dartboard"] .display-input,html[data-skin="dartboard"] .throw-input,html[data-skin="dartboard"] #score-input{font-family:var(--fc-head) !important}
+html[data-skin="dartboard"] #score-input,html[data-skin="dartboard"] .display-input,html[data-skin="dartboard"] .throw-input{background:#000000 !important;border-color:#1fa05a !important;color:#f4ead2 !important}
+html[data-skin="dartboard"] .player-card{background:#1c1c1c;border-color:#3a3a3a}
+html[data-skin="dartboard"] .player-card.active-player,html[data-skin="dartboard"] .killer-card.active-player{background:#f4ead2;border-color:#f4ead2;box-shadow:inset 10px 0 0 #1fa05a,inset -10px 0 0 #e0243a !important;}
+html[data-skin="dartboard"] .player-card.active-player .pc-name,html[data-skin="dartboard"] .player-card.active-player .pc-legs,html[data-skin="dartboard"] .player-card.active-player .pc-turn,html[data-skin="dartboard"] .player-card.active-player .pc-checkout{color:#101010}
+html[data-skin="dartboard"] .player-card.active-player .pc-score{color:#c8102e}
+html[data-skin="dartboard"] .player-card.active-player .pc-score.finishing{color:#17863f}
+html[data-skin="dartboard"] .player-card.active-player .pc-score.danger{color:#c8102e}
+html[data-skin="dartboard"] .player-card.winner{background:#0c2a18;border-color:#4fd68a}
+html[data-skin="dartboard"] .killer-card.active-player .killer-name,html[data-skin="dartboard"] .killer-card.active-player .killer-double{color:#101010}
+html[data-skin="dartboard"] .checkout-box{background:#0c2a18;border-color:#1fa05a}
+html[data-skin="dartboard"] .checkout-title{color:#4fd68a}
+html[data-skin="dartboard"] .checkout-route{color:#f4ead2}
+html[data-skin="dartboard"] .halveit-current{background:#0c2a18}
+html[data-skin="dartboard"] .halveit-done{background:#141414}
+html[data-skin="dartboard"] .killer-badge{background:#101010;color:#e0243a;border-color:#e0243a}
+.skin-dots{display:flex;gap:4px;justify-content:center;margin-top:5px}
+.skin-dots i{width:12px;height:12px;border-radius:50%;display:inline-block;border:1px solid rgba(255,255,255,.35)}
 </style>
 <!-- Google Analytics -->
 <script src="/fc-consent.js"></script>
+<script src="/subscription-config.js"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -278,6 +384,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="/fc-theme.css">
+<script>try{var _s=localStorage.getItem('fc_skin');if(_s==='neon'||_s==='arcade'||_s==='dartboard')document.documentElement.setAttribute('data-skin',_s);}catch(e){}</script>
 </head>
 <body>
 
@@ -293,6 +400,16 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
   <div class="setup-wrap">
     <div class="setup-title">🎯 Play Darts</div>
     <div class="setup-sub">Set up your game and start throwing</div>
+
+    <div class="setup-section">
+      <h3>Colours</h3>
+      <div class="score-btns" id="skin-btns" style="grid-template-columns:repeat(2,1fr)">
+        <button class="score-btn sel" data-skin="classic" onclick="setSkin('classic')">Classic<span class="skin-dots"><i style="background:#0d1711"></i><i style="background:#4c9468"></i><i style="background:#f2cf4a"></i></span></button>
+        <button class="score-btn" data-skin="neon" onclick="setSkin('neon')">Neon <span class="skin-lock" style="display:none">🔒</span><span class="skin-dots"><i style="background:#0a0f24"></i><i style="background:#c6ff3d"></i><i style="background:#ff4f9a"></i></span></button>
+        <button class="score-btn" data-skin="arcade" onclick="setSkin('arcade')">Arcade <span class="skin-lock" style="display:none">🔒</span><span class="skin-dots"><i style="background:#1c0b3a"></i><i style="background:#ff8a1f"></i><i style="background:#ffd23f"></i></span></button>
+        <button class="score-btn" data-skin="dartboard" onclick="setSkin('dartboard')">Dartboard <span class="skin-lock" style="display:none">🔒</span><span class="skin-dots"><i style="background:#101010"></i><i style="background:#e0243a"></i><i style="background:#1fa05a"></i></span></button>
+      </div>
+    </div>
 
     <div class="setup-section">
       <h3>Game Mode</h3>
@@ -744,6 +861,16 @@ async function fcInit(){
       console.error('Profile row check/create failed (non-fatal):',profileErr);
     }
 
+    // Colour skins: free while subscriptions are off; Premium-only once on.
+    // Defaults to locked on any lookup error so a hiccup never unlocks them.
+    if(skinsGated()){
+      try{
+        var { data:tierRow } = await sb.from('users').select('subscription_tier').eq('id',su.id).single();
+        fcPremium=!!(tierRow&&tierRow.subscription_tier==='premium');
+      }catch(tierErr){fcPremium=false;}
+    }
+    applySavedSkin();
+
     return true;
   }catch(e){
     console.error('Scorer page auth check failed:',e);
@@ -770,6 +897,38 @@ function toggleTheme(){
   updateThemeLabels(!isLight);
 }
 initTheme();
+
+// ── Colour skins (Classic / Neon / Arcade / Dartboard), remembered on this device ──
+var fcPremium=false;
+function skinsGated(){return (typeof SUBSCRIPTIONS_ENABLED!=='undefined')&&SUBSCRIPTIONS_ENABLED===true;}
+function skinsUnlocked(){return !skinsGated()||fcPremium;}
+function markSkin(s){
+  document.querySelectorAll('#skin-btns .score-btn').forEach(function(b){
+    var k=b.getAttribute('data-skin');
+    b.classList.toggle('sel',k===s);
+    var lock=b.querySelector('.skin-lock');
+    if(lock)lock.style.display=(k!=='classic'&&!skinsUnlocked())?'inline':'none';
+  });
+}
+function applySkin(s){
+  if(s==='classic')document.documentElement.removeAttribute('data-skin');
+  else document.documentElement.setAttribute('data-skin',s);
+}
+function setSkin(s){
+  if(s!=='classic'&&!skinsUnlocked()){
+    toast('Neon, Arcade and Dartboard colours come with Premium',true);
+    return;
+  }
+  applySkin(s);
+  try{localStorage.setItem('fc_skin',s);}catch(e){}
+  markSkin(s);
+}
+function applySavedSkin(){
+  var s='classic';try{s=localStorage.getItem('fc_skin')||'classic';}catch(e){}
+  if(s!=='classic'&&!skinsUnlocked())s='classic';
+  applySkin(s);markSkin(s);
+}
+(function(){var s='classic';try{s=localStorage.getItem('fc_skin')||'classic';}catch(e){}markSkin(s);})();
 
 document.addEventListener('DOMContentLoaded', function(){
   updateCallerButton();
@@ -876,7 +1035,7 @@ var doubleFinishOn=true;
 // ── Setup ──────────────────────────────────────────────────────────────────────
 function selectScore(val){
   selectedScore=val;
-  document.querySelectorAll('.score-btn').forEach(function(b){b.classList.remove('sel');});
+  event.target.parentNode.querySelectorAll('.score-btn').forEach(function(b){b.classList.remove('sel');});
   event.target.classList.add('sel');
   document.getElementById('custom-score-wrap').style.display=val===0?'block':'none';
 }
