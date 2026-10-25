@@ -184,7 +184,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
 .checkout-alt-btn:hover{border-color:var(--amber)}
 </style>
 <!-- Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-WQRGJRFF1Q"></script>
+<script src="/fc-consent.js"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -830,7 +830,7 @@ function fcEnd(gameType,result){
     duration_seconds: dur,
     meta: { legs: result.legs||null }
   }).then(function(){}).catch(function(e){console.error('fcEnd: could not save session:',e);});
-  if(typeof gtag!=='undefined')gtag('event','game_complete',{game_type:gameType,duration:dur,username:fcUser.username||fcUser.id});
+  if(typeof gtag!=='undefined')gtag('event','game_complete',{game_type:gameType,duration:dur});
 }
 async function fcTrain(gameType,score,meta){
   if(!fcUser)return;
@@ -845,7 +845,7 @@ async function fcTrain(gameType,score,meta){
   }catch(e){
     console.error('fcTrain: could not save session:',e);
   }
-  if(typeof gtag!=='undefined')gtag('event','training_complete',{game_type:gameType,score:score,username:fcUser.username||fcUser.id});
+  if(typeof gtag!=='undefined')gtag('event','training_complete',{game_type:gameType,score:score});
 }
 // ──────────────────────────────────────────────────────────────────────────
 
