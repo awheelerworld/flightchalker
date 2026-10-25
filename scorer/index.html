@@ -434,7 +434,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
       <datalist id="fc-recent-names"></datalist>
     </div>
 
-    <div class="setup-section">
+    <div class="setup-section" id="x01-rules">
       <h3>Game Rules</h3>
       <div class="field">
         <label>Best Of (Legs)</label>
@@ -1325,6 +1325,7 @@ function selectMode(mode){
   event.target.classList.add('sel');
   document.getElementById('mode-desc').textContent=modeDescs[mode];
   document.getElementById('x01-options').style.display=mode==='x01'?'block':'none';
+  document.getElementById('x01-rules').style.display=mode==='x01'?'':'none';
   document.getElementById('halveit-setup').style.display=mode==='halveit'?'block':'none';
   document.getElementById('fives-setup').style.display=mode==='fives'?'block':'none';
   document.getElementById('baseball-setup').style.display=mode==='baseball'?'block':'none';
