@@ -290,7 +290,7 @@ html[data-skin="neon"] .pc-score,html[data-skin="neon"] .np,html[data-skin="neon
 html[data-skin="neon"] #score-input,html[data-skin="neon"] .display-input,html[data-skin="neon"] .throw-input{background:#05081a !important;border-color:#35e0ff !important;color:#35e0ff !important}
 html[data-skin="neon"] .player-card{background:#121a3a;border-color:#2a3a7a}
 html[data-skin="neon"] .player-card.active-player,html[data-skin="neon"] .killer-card.active-player{background:#121a3a;border-color:#c6ff3d;}
-html[data-skin="neon"] .player-card.active-player .pc-name,html[data-skin="neon"] .player-card.active-player .pc-legs,html[data-skin="neon"] .player-card.active-player .pc-turn,html[data-skin="neon"] .player-card.active-player .pc-checkout{color:#9fb0e8}
+html[data-skin="neon"] .player-card.active-player .pc-name,html[data-skin="neon"] .player-card.active-player .pc-legs,html[data-skin="neon"] .player-card.active-player .pc-stats,html[data-skin="neon"] .player-card.active-player .pc-stats b,html[data-skin="neon"] .player-card.active-player .pc-turn,html[data-skin="neon"] .player-card.active-player .pc-checkout{color:#9fb0e8}
 html[data-skin="neon"] .player-card.active-player .pc-score{color:#c6ff3d}
 html[data-skin="neon"] .player-card.active-player .pc-score.finishing{color:#35e0ff}
 html[data-skin="neon"] .player-card.active-player .pc-score.danger{color:#ff4f9a}
@@ -324,7 +324,7 @@ html[data-skin="arcade"] .pc-score,html[data-skin="arcade"] .np,html[data-skin="
 html[data-skin="arcade"] #score-input,html[data-skin="arcade"] .display-input,html[data-skin="arcade"] .throw-input{background:#12062a !important;border-color:#ffd23f !important;color:#ffd23f !important}
 html[data-skin="arcade"] .player-card{background:#2a1259;border-color:#5b32b5}
 html[data-skin="arcade"] .player-card.active-player,html[data-skin="arcade"] .killer-card.active-player{background:#ff8a1f;border-color:#ff8a1f;}
-html[data-skin="arcade"] .player-card.active-player .pc-name,html[data-skin="arcade"] .player-card.active-player .pc-legs,html[data-skin="arcade"] .player-card.active-player .pc-turn,html[data-skin="arcade"] .player-card.active-player .pc-checkout{color:#1c0b3a}
+html[data-skin="arcade"] .player-card.active-player .pc-name,html[data-skin="arcade"] .player-card.active-player .pc-legs,html[data-skin="arcade"] .player-card.active-player .pc-stats,html[data-skin="arcade"] .player-card.active-player .pc-stats b,html[data-skin="arcade"] .player-card.active-player .pc-turn,html[data-skin="arcade"] .player-card.active-player .pc-checkout{color:#1c0b3a}
 html[data-skin="arcade"] .player-card.active-player .pc-score{color:#1c0b3a}
 html[data-skin="arcade"] .player-card.active-player .pc-score.finishing{color:#1c0b3a}
 html[data-skin="arcade"] .player-card.active-player .pc-score.danger{color:#7a0a2e}
@@ -358,7 +358,7 @@ html[data-skin="dartboard"] .pc-score,html[data-skin="dartboard"] .np,html[data-
 html[data-skin="dartboard"] #score-input,html[data-skin="dartboard"] .display-input,html[data-skin="dartboard"] .throw-input{background:#000000 !important;border-color:#1fa05a !important;color:#f4ead2 !important}
 html[data-skin="dartboard"] .player-card{background:#1c1c1c;border-color:#3a3a3a}
 html[data-skin="dartboard"] .player-card.active-player,html[data-skin="dartboard"] .killer-card.active-player{background:#f4ead2;border-color:#f4ead2;box-shadow:inset 10px 0 0 #1fa05a,inset -10px 0 0 #e0243a !important;}
-html[data-skin="dartboard"] .player-card.active-player .pc-name,html[data-skin="dartboard"] .player-card.active-player .pc-legs,html[data-skin="dartboard"] .player-card.active-player .pc-turn,html[data-skin="dartboard"] .player-card.active-player .pc-checkout{color:#101010}
+html[data-skin="dartboard"] .player-card.active-player .pc-name,html[data-skin="dartboard"] .player-card.active-player .pc-legs,html[data-skin="dartboard"] .player-card.active-player .pc-stats,html[data-skin="dartboard"] .player-card.active-player .pc-stats b,html[data-skin="dartboard"] .player-card.active-player .pc-turn,html[data-skin="dartboard"] .player-card.active-player .pc-checkout{color:#101010}
 html[data-skin="dartboard"] .player-card.active-player .pc-score{color:#c8102e}
 html[data-skin="dartboard"] .player-card.active-player .pc-score.finishing{color:#17863f}
 html[data-skin="dartboard"] .player-card.active-player .pc-score.danger{color:#c8102e}
@@ -372,6 +372,12 @@ html[data-skin="dartboard"] .halveit-done{background:#141414}
 html[data-skin="dartboard"] .killer-badge{background:#101010;color:#e0243a;border-color:#e0243a}
 .skin-dots{display:flex;gap:4px;justify-content:center;margin-top:5px}
 .skin-dots i{width:12px;height:12px;border-radius:50%;display:inline-block;border:1px solid rgba(255,255,255,.35)}
+/* Live X01 player stats: tablet landscape only, so the phone layout is untouched. */
+.pc-stats{display:none}
+@media (min-width:820px) and (orientation:landscape){
+  .player-card .pc-stats{display:flex;flex-wrap:wrap;gap:.2rem 1rem;margin-top:.45rem;font-size:.85rem;color:var(--dim)}
+  .player-card .pc-stats b{color:var(--text);font-weight:700}
+}
 </style>
 <!-- Google Analytics -->
 <script src="/fc-consent.js"></script>
@@ -1076,6 +1082,7 @@ function startGame(){
     legsToWin:Math.ceil(bestOf/2),
     doubleFinish:doubleFinishOn,
     history:[],
+    all:[],
     legHistory:[],
     inputVal:''
   };
@@ -1153,6 +1160,7 @@ function submitScore(){
   if(newScore<0||(gs.doubleFinish&&newScore===1)){
     // Bust
     toast('BUST! Score unchanged',true);
+    logBust();
     gs.inputVal='';
     document.getElementById('score-input').value='';
     document.getElementById('score-input').style.borderColor='var(--border)';
@@ -1193,6 +1201,7 @@ function confirmDouble(wasDouble){
     legWon();
   } else {
     toast('Not a double — BUST! Score unchanged',true);
+    logBust();
     gs.inputVal='';
     document.getElementById('score-input').value='';
     advancePlayer();
@@ -1200,7 +1209,9 @@ function confirmDouble(wasDouble){
 }
 
 function recordScore(val,remaining){
-  gs.history.push({player:gs.currentPlayer,prevScore:remaining,scored:val});
+  var visit={player:gs.currentPlayer,scored:val};
+  gs.all.push(visit);
+  gs.history.push({player:gs.currentPlayer,prevScore:remaining,scored:val,visit:visit});
   gs.scores[gs.currentPlayer]-=val;
   gs.inputVal='';
   var inp=document.getElementById('score-input');
@@ -1208,6 +1219,7 @@ function recordScore(val,remaining){
   speak(val+'. '+gs.scores[gs.currentPlayer]+' remaining.');
 }
 
+function logBust(){gs.all.push({player:gs.currentPlayer,scored:0,bust:true});}
 function advancePlayer(){
   gs.currentPlayer=(gs.currentPlayer+1)%gs.players.length;
   renderGame();
@@ -1220,6 +1232,7 @@ function advancePlayer(){
 function markBust(){
   toast('BUST! Score unchanged',true);
   speak('Bust! No score.');
+  logBust();
   gs.inputVal='';
   var inp=document.getElementById('score-input');
   if(inp){inp.value='';inp.style.borderColor='var(--border)';inp.style.color='var(--text)';}
@@ -1229,6 +1242,7 @@ function markBust(){
 function undoLast(){
   if(!gs.history.length){toast('Nothing to undo',true);return;}
   var last=gs.history.pop();
+  if(last.visit){var vi=gs.all.indexOf(last.visit);if(vi>-1)gs.all.splice(vi,1);}
   gs.scores[last.player]=last.prevScore;
   gs.currentPlayer=last.player;
   gs.inputVal='';
@@ -1266,8 +1280,9 @@ function legWon(){
 
 function showWin(winner){
   // Save session
-  var best=Math.max.apply(null,gs.history.map(function(h){return h.score||0;}).concat([0]));
-  var s180=gs.history.filter(function(h){return h.score===180;}).length;
+  // Whole match, every leg (history only holds the current leg).
+  var best=Math.max.apply(null,gs.all.map(function(h){return h.scored||0;}).concat([0]));
+  var s180=gs.all.filter(function(h){return h.scored===180;}).length;
   fcEnd(gs.mode,{winner:gs.players[winner],best:best,s180:s180,legs:gs.legs.slice()});
   document.getElementById('win-title').textContent=gs.players[winner]+' Wins! 🏆';
   document.getElementById('win-legs').textContent=
@@ -1281,12 +1296,21 @@ function playAgain(){
   gs.currentPlayer=0;
   gs.currentLeg=1;
   gs.history=[];
+  gs.all=[];
   gs.legHistory=[];
   gs.inputVal='';
   showScreen('screen-game');
   renderGame();
 }
 
+// Live per-player stats from the whole-match log (busts count as a 0 visit)
+function x01Stats(p){
+  var v=(gs.all||[]).filter(function(h){return h.player===p;});
+  if(!v.length)return {avg:'–',last:'–',n80:0,best:'–'};
+  var tot=v.reduce(function(a,h){return a+h.scored;},0);
+  var best=v.reduce(function(a,h){return h.scored>a?h.scored:a;},0);
+  return {avg:(Math.round(tot/v.length*10)/10).toFixed(1),last:v[v.length-1].scored,n80:v.filter(function(h){return h.scored>=80;}).length,best:best};
+}
 // ── Render ─────────────────────────────────────────────────────────────────────
 function renderGame(){
   document.getElementById('game-sub').textContent='Leg '+gs.currentLeg+' of '+gs.bestOf;
@@ -1303,6 +1327,7 @@ function renderGame(){
       +'<div class="pc-name" onclick="fcRenamePlayer(&quot;x01&quot;,'+i+')" style="cursor:pointer" title="Tap to rename">'+esc(name)+' ✎</div>'
       +'<div class="pc-score '+scoreClass+'">'+score+'</div>'
       +'<div class="pc-legs">Legs: '+gs.legs[i]+'</div>'
+      +(function(){var st=x01Stats(i);return '<div class="pc-stats"><span>Avg <b>'+st.avg+'</b></span><span>Last <b>'+st.last+'</b></span><span>80+ <b>'+st.n80+'</b></span><span>Best <b>'+st.best+'</b></span></div>';})()
       +'</div>';
   }).join('');
 
