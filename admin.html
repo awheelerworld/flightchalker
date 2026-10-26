@@ -833,6 +833,7 @@ async function populateFixtureLeagueDropdowns(){
   }catch(e){toast('Error loading leagues: '+e.message,true);}
 }
 
+var scoreModeOk=false;
 async function loadLeagues(){
   var el=document.getElementById('leagues-list');
   el.innerHTML='<div class="lh"><span class="spin"></span> Loading…</div>';
@@ -845,6 +846,9 @@ async function loadLeagues(){
       try{ leagues=await sb('leagues?order=created_at.desc&select='+leagueCols+',match_time'+leagueScope()); }
       catch(e2){ leagues=await sb('leagues?order=created_at.desc&select='+leagueCols+leagueScope()); } // newer columns not added yet (migrations 03/04)
     }
+    var modes={};
+    try{ (await sb('leagues?select=id,score_mode'+leagueScope())).forEach(function(r){modes[r.id]=r.score_mode;}); scoreModeOk=true; }catch(e){ scoreModeOk=false; } // column added by SQL 09
+    leagues.forEach(function(l){l.score_mode=modes[l.id]||'exact';});
     var teams=await sb('teams?select=id,league_id'+(scopedLeagueId?'&league_id=eq.'+scopedLeagueId:''));
     if(!leagues||!leagues.length){el.innerHTML='<div class="nh">No leagues yet. Create one using the Create League tab.</div>';return;}
     el.innerHTML=leagues.map(function(l){
@@ -878,6 +882,7 @@ async function loadLeagues(){
         +'<div class="field"><label>Points Draw</label><input type="number" id="epd-'+l.id+'" value="'+(l.points_draw||1)+'"></div>'
         +'<div class="field"><label>Points Loss</label><input type="number" id="epl-'+l.id+'" value="'+(l.points_loss||0)+'"></div>'
         +'<div class="field" style="grid-column:1/-1"><label style="display:flex;align-items:center;gap:.5rem;font-weight:400;text-transform:none;letter-spacing:0"><input type="checkbox" id="eftn-'+l.id+'" '+(l.fixed_team_names?'checked':'')+' style="width:auto"> Fix team names — captains must pick from the Captain Contacts list instead of typing their own</label></div>'
+        +'<div class="field" style="grid-column:1/-1"><label>Score recording (scores of 80+)</label><select id="esm-'+l.id+'"'+(scoreModeOk?'':' disabled')+'><option value="exact" '+(l.score_mode!=='counters'?'selected':'')+'>Exact scores — type each score (e.g. 85, 140, 180)</option><option value="counters" '+(l.score_mode==='counters'?'selected':'')+'>Counters — tap to count 80–99, 100+ and 180s</option></select>'+(scoreModeOk?'':'<div style="font-size:.72rem;color:var(--amber);margin-top:.3rem">Run SQL 09_score_mode.sql in Supabase to enable this setting.</div>')+'</div>'
         +'</div>'
         +'<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#5a9abf;margin:.9rem 0 .5rem">Public Directory Profile</div>'
         +'<div class="grid">'
@@ -961,6 +966,11 @@ async function saveEdit(id){
   st.textContent='Saving…';st.className='st';
   try{
     await sbPatch('leagues','id=eq.'+id,data);
+    var smEl=document.getElementById('esm-'+id);
+    if(scoreModeOk&&smEl){
+      try{ await sbPatch('leagues','id=eq.'+id,{score_mode:smEl.value}); }
+      catch(e){ throw new Error('Score recording not saved — run SQL 09_score_mode.sql first ('+e.message+')'); }
+    }
     var tok=await tokenForLeague(id);
     var r=await sb('rpc/update_league_profile',{method:'POST',body:JSON.stringify({
       p_token:tok,
