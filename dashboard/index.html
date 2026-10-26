@@ -175,12 +175,13 @@ main{max-width:1100px !important;padding:48px 32px 72px !important}
 .lg-badge{background:var(--amber) !important;color:var(--fc-ink) !important;border-radius:999px !important}
 @media (max-width:820px){header{padding:8px 16px !important}main{padding:32px 16px 56px !important}.game-grid{grid-template-columns:1fr !important}.fc-hnav{display:none}.stat-card{border-right:none !important;border-bottom:1px solid var(--s3) !important}}
 </style>
+<link rel="stylesheet" href="/fc-loader.css">
 </head>
 <body>
 
 <header>
   <a href="/dashboard" class="logo"><svg width="26" height="26" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="15" fill="none" stroke="#f1efe4" stroke-width="1.5"/><circle cx="17" cy="17" r="9" fill="none" stroke="#f1efe4" stroke-width="1.5"/><circle cx="17" cy="17" r="3" fill="#f2cf4a"/></svg><span>Flight Chalker</span></a>
-  <nav class="fc-hnav" aria-label="Main"><a href="/scorer">Play darts</a><a href="/training">Training</a><a href="/">Leagues</a><a href="/organiser-guide">Help</a></nav>
+  <nav class="fc-hnav" aria-label="Main"><a href="/scorer">Scorer</a><a href="/training">Training</a><a href="/">Leagues</a><a href="/organiser-guide">Help</a></nav>
   <div class="hright">
     <span class="username-badge" id="username-display"></span>
     <button class="btn-signout" onclick="signOut()">Sign Out</button>
@@ -362,7 +363,7 @@ main{max-width:1100px !important;padding:48px 32px 72px !important}
 </main>
 
 <div id="loading-screen" class="loading" style="padding:4rem">
-  <span class="spin"></span> Loading your dashboard...
+  <span class="spin throw"></span> Loading your dashboard...
 </div>
 
 <div class="toast" id="toast"></div>
