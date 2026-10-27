@@ -1283,7 +1283,7 @@ function showWin(winner){
   // Whole match, every leg (history only holds the current leg).
   var best=Math.max.apply(null,gs.all.map(function(h){return h.scored||0;}).concat([0]));
   var s180=gs.all.filter(function(h){return h.scored===180;}).length;
-  fcEnd(gs.mode,{winner:gs.players[winner],best:best,s180:s180,legs:gs.legs.slice()});
+  fcEnd('x01',{winner:gs.players[winner],best:best,s180:s180,legs:gs.legs.slice()});
   document.getElementById('win-title').textContent=gs.players[winner]+' Wins! 🏆';
   document.getElementById('win-legs').textContent=
     'Final: '+gs.players.map(function(p,i){return p+' '+gs.legs[i];}).join(' — ');
