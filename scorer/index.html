@@ -378,6 +378,18 @@ html[data-skin="dartboard"] .killer-badge{background:#101010;color:#e0243a;borde
   .player-card .pc-stats{display:flex;flex-wrap:wrap;gap:.2rem 1rem;margin-top:.45rem;font-size:.85rem;color:var(--dim)}
   .player-card .pc-stats b{color:var(--text);font-weight:700}
 }
+
+/* ── Celebration effects (can be switched off in Setup) ── */
+#fx-canvas{position:fixed;left:0;top:0;width:100vw;height:100vh;pointer-events:none;z-index:9990}
+@keyframes fxrise{0%{transform:translateY(70px) scale(.55);opacity:0}55%{transform:translateY(-10px) scale(1.07);opacity:1}78%{transform:translateY(3px) scale(.98)}100%{transform:translateY(0) scale(1);opacity:1}}
+@keyframes fxglow{0%,100%{opacity:.3;transform:scale(1)}50%{opacity:.7;transform:scale(1.12)}}
+@keyframes fxpop{0%{transform:translate(-50%,-50%) scale(.3);opacity:0}25%{transform:translate(-50%,-50%) scale(1.15);opacity:1}70%{transform:translate(-50%,-50%) scale(1);opacity:1}100%{transform:translate(-50%,-62%) scale(1.05);opacity:0}}
+.fx-cupwrap{position:relative;display:inline-block;margin-bottom:1rem}
+.fx-cup{display:block;animation:fxrise 1s cubic-bezier(.2,.8,.3,1) .25s both}
+.fx-glow{position:absolute;left:50%;top:50%;width:150px;height:150px;margin:-75px 0 0 -75px;border-radius:50%;background:radial-gradient(circle,#f2cf4a 0%,transparent 68%);animation:fxglow 2.4s ease-in-out 1s infinite;z-index:-1}
+#fx-180{position:fixed;left:50%;top:38%;z-index:9991;pointer-events:none;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:5.5rem;letter-spacing:.04em;color:var(--amber,#f2cf4a);text-shadow:0 0 18px rgba(0,0,0,.6),0 3px 0 rgba(0,0,0,.5);animation:fxpop 1.3s ease-out both}
+@media (prefers-reduced-motion:reduce){.fx-cup{animation:none}.fx-glow{display:none}#fx-180{animation:none;transform:translate(-50%,-50%)}}
+.fx-switch{margin-top:1.1rem;background:none;border:0;color:var(--dim);font-family:'Barlow Condensed',sans-serif;font-size:.95rem;letter-spacing:.06em;text-decoration:underline;cursor:pointer;padding:.4rem}
 </style>
 <!-- Google Analytics -->
 <script src="/fc-consent.js"></script>
@@ -406,6 +418,15 @@ html[data-skin="dartboard"] .killer-badge{background:#101010;color:#e0243a;borde
   <div class="setup-wrap">
     <div class="setup-title">🎯 Play Darts</div>
     <div class="setup-sub">Set up your game and start throwing</div>
+
+    <div class="setup-section">
+      <h3>Celebrations</h3>
+      <div class="score-btns" id="fx-btns" style="grid-template-columns:repeat(2,1fr)">
+        <button class="score-btn sel" data-fx="on" onclick="setFx(true)">✨ On</button>
+        <button class="score-btn" data-fx="off" onclick="setFx(false)">Off</button>
+      </div>
+      <div style="font-size:.78rem;color:var(--dim);margin-top:.4rem">Fireworks and a cup when a match is won, and a flash on a 180.</div>
+    </div>
 
     <div class="setup-section">
       <h3>Colours</h3>
@@ -810,12 +831,13 @@ html[data-skin="dartboard"] .killer-badge{background:#101010;color:#e0243a;borde
     <a href="/dashboard" style="text-decoration:none"><button class="hbtn">← Home</button></a><button class="hbtn caller-toggle-btn" onclick="toggleCaller()" style="margin-left:.4rem">🔊 Caller</button><button class="theme-toggle theme-toggle-instance" onclick="toggleTheme()" style="margin-left:.4rem">☀️ Light</button>
   </div>
   <div class="win-wrap">
-    <div class="win-emoji">🏆</div>
+    <div class="win-emoji" id="win-emoji">🏆</div>
     <div class="win-title" id="win-title">Winner!</div>
     <div class="win-name" id="win-name"></div>
     <div class="win-legs" id="win-legs"></div>
     <button class="btn-again" onclick="playAgain()">Play Again 🎯</button>
     <button class="btn-new" onclick="showScreen('screen-setup')">New Game Setup</button>
+    <div><button class="fx-switch" id="fx-switch" onclick="setFx(!fxOn())">Turn celebrations off</button></div>
   </div>
 </div>
 
@@ -1092,7 +1114,123 @@ function startGame(){
 }
 
 // ── Screen switching ───────────────────────────────────────────────────────────
+
+// ── Celebration effects ───────────────────────────────────────────────────────
+var FX_PAL={
+  classic:['#f2cf4a','#f4ead2','#e0243a','#1fa05a'],
+  neon:['#22e6ff','#ff2bd6','#b6ff3b','#ffffff'],
+  arcade:['#ffd400','#ff6a00','#ff3d81','#46e6ff'],
+  dartboard:['#e0243a','#1fa05a','#f2cf4a','#f4ead2']
+};
+function fxOn(){try{return localStorage.getItem('fc_fx')!=='off';}catch(e){return true;}}
+function fxReduced(){try{return !!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);}catch(e){return false;}}
+function fxSkin(){return document.documentElement.getAttribute('data-skin')||'classic';}
+function fxCols(){return FX_PAL[fxSkin()]||FX_PAL.classic;}
+function setFx(on){
+  try{localStorage.setItem('fc_fx',on?'on':'off');}catch(e){}
+  fxMark();
+  if(!on){fxStop();fxCupRestore();}
+}
+function fxMark(){
+  var on=fxOn();
+  document.querySelectorAll('#fx-btns .score-btn').forEach(function(b){b.classList.toggle('sel',(b.getAttribute('data-fx')==='on')===on);});
+  var sw=document.getElementById('fx-switch');
+  if(sw)sw.textContent=on?'Turn celebrations off':'Turn celebrations on';
+}
+var fxCv=null,fxCtx=null,fxParts=[],fxRaf=0,fxTimers=[],fxLast=0,fxPending=0;
+function fxEnsureCanvas(){
+  if(fxCv)return true;
+  try{
+    fxCv=document.createElement('canvas');fxCv.id='fx-canvas';
+    var dpr=Math.min(window.devicePixelRatio||1,2);
+    fxCv.width=Math.round(window.innerWidth*dpr);fxCv.height=Math.round(window.innerHeight*dpr);
+    fxCtx=fxCv.getContext('2d');fxCtx.scale(dpr,dpr);
+    document.body.appendChild(fxCv);return true;
+  }catch(e){fxCv=null;return false;}
+}
+function fxSpawn(x,y,n,cols,speed){
+  for(var i=0;i<n;i++){
+    var a=(i/n)*Math.PI*2+Math.random()*.3,v=(speed||4.2)*(.55+Math.random()*.6);
+    fxParts.push({x:x,y:y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:1,decay:.011+Math.random()*.01,c:cols[(Math.random()*cols.length)|0],r:1.6+Math.random()*1.4});
+  }
+}
+function fxFrame(t){
+  fxRaf=0;
+  if(!fxCtx)return;
+  var dt=Math.min(2,(t-(fxLast||t))/16.7||1);fxLast=t;
+  fxCtx.globalCompositeOperation='destination-out';
+  fxCtx.fillStyle='rgba(0,0,0,.2)';fxCtx.fillRect(0,0,window.innerWidth,window.innerHeight);
+  fxCtx.globalCompositeOperation='lighter';
+  for(var i=fxParts.length-1;i>=0;i--){
+    var p=fxParts[i];
+    p.vy+=.06*dt;p.vx*=.992;p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=p.decay*dt;
+    if(p.life<=0){fxParts.splice(i,1);continue;}
+    fxCtx.globalAlpha=Math.max(0,p.life);fxCtx.fillStyle=p.c;
+    fxCtx.beginPath();fxCtx.arc(p.x,p.y,p.r,0,6.2832);fxCtx.fill();
+  }
+  fxCtx.globalAlpha=1;
+  if(fxParts.length||fxPending>0)fxRaf=requestAnimationFrame(fxFrame);
+  else fxStop();
+}
+function fxKick(){if(!fxRaf){fxLast=0;fxRaf=requestAnimationFrame(fxFrame);}}
+function fxStop(){
+  fxTimers.forEach(clearTimeout);fxTimers=[];fxPending=0;fxParts=[];
+  if(fxRaf){cancelAnimationFrame(fxRaf);fxRaf=0;}
+  if(fxCv&&fxCv.parentNode)fxCv.parentNode.removeChild(fxCv);
+  fxCv=null;fxCtx=null;
+  var b=document.getElementById('fx-180');if(b&&b.parentNode)b.parentNode.removeChild(b);
+}
+function fxCupSvg(){
+  var sk=fxSkin(),a='#e0243a',b='#1fa05a',base='#3a3a3a';
+  if(sk==='neon'){a='#ff2bd6';b='#22e6ff';base='#262647';}
+  else if(sk==='arcade'){a='#ff3d81';b='#ffd400';base='#ff3d81';}
+  return '<svg viewBox="0 0 200 220" width="150" height="165" role="img" aria-label="Winner\'s cup">'
+   +'<path d="M52 40 C14 40 10 92 52 104" fill="none" stroke="#c9a227" stroke-width="10" stroke-linecap="round"/>'
+   +'<path d="M148 40 C186 40 190 92 148 104" fill="none" stroke="#c9a227" stroke-width="10" stroke-linecap="round"/>'
+   +'<path d="M46 24 H154 V84 C154 120 128 140 100 140 C72 140 46 120 46 84 Z" fill="#f2cf4a"/>'
+   +'<path d="M60 30 H78 V92 C78 108 84 120 92 130 C72 124 60 108 60 84 Z" fill="#fff" opacity=".35"/>'
+   +'<rect x="46" y="24" width="108" height="10" rx="5" fill="#c9a227"/><rect x="90" y="138" width="20" height="30" fill="#c9a227"/>'
+   +'<path d="M72 168 H128 L136 188 H64 Z" fill="#f2cf4a"/>'
+   +'<rect x="52" y="188" width="96" height="20" rx="4" fill="'+base+'"/><rect x="52" y="188" width="96" height="5" fill="#000" opacity=".25"/>'
+   +'<circle cx="100" cy="78" r="26" fill="#c9a227" opacity=".45"/><circle cx="100" cy="78" r="16" fill="'+a+'"/><circle cx="100" cy="78" r="8" fill="'+b+'"/><circle cx="100" cy="78" r="3" fill="'+a+'"/></svg>';
+}
+function fxCupRestore(){var e=document.getElementById('win-emoji');if(e)e.textContent='🏆';}
+function fxWin(){
+  fxMark();
+  fxStop();
+  var e=document.getElementById('win-emoji');
+  if(!fxOn()){fxCupRestore();return;}
+  if(e)e.innerHTML='<span class="fx-cupwrap"><span class="fx-glow"></span><span class="fx-cup">'+fxCupSvg()+'</span></span>';
+  if(fxReduced()||!fxEnsureCanvas())return;
+  var W=window.innerWidth,H=window.innerHeight,cols=fxCols();
+  var spots=[[.2,.28],[.8,.22],[.5,.15],[.14,.5],[.86,.46],[.5,.34],[.3,.2],[.7,.3]];
+  var dly=[0,350,800,1300,1750,2200,2700,3100];
+  fxPending=spots.length;
+  spots.forEach(function(s,i){
+    fxTimers.push(setTimeout(function(){
+      fxPending--;
+      if(!fxCtx)return;
+      fxSpawn(s[0]*W,s[1]*H,46,cols,4.4);
+      fxKick();
+    },dly[i]));
+  });
+  fxKick();
+}
+function fx180(){
+  if(!fxOn())return;
+  var old=document.getElementById('fx-180');if(old&&old.parentNode)old.parentNode.removeChild(old);
+  var b=document.createElement('div');b.id='fx-180';b.textContent='180!';b.setAttribute('aria-hidden','true');
+  document.body.appendChild(b);
+  setTimeout(function(){if(b.parentNode)b.parentNode.removeChild(b);},1400);
+  if(fxReduced()||!fxEnsureCanvas())return;
+  var W=window.innerWidth,H=window.innerHeight,cols=fxCols();
+  fxSpawn(W*.5,H*.38,60,cols,5);fxSpawn(W*.25,H*.3,30,cols,3.6);fxSpawn(W*.75,H*.3,30,cols,3.6);
+  fxKick();
+}
+document.addEventListener('DOMContentLoaded',fxMark);
+
 function showScreen(id){
+  if(id!=='screen-win'&&typeof fxStop==='function'){fxStop();fxCupRestore();}
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);
@@ -1209,6 +1347,7 @@ function confirmDouble(wasDouble){
 }
 
 function recordScore(val,remaining){
+  if(val===180&&typeof fx180==='function')fx180();
   var visit={player:gs.currentPlayer,scored:val};
   gs.all.push(visit);
   gs.history.push({player:gs.currentPlayer,prevScore:remaining,scored:val,visit:visit});
@@ -1288,6 +1427,7 @@ function showWin(winner){
   document.getElementById('win-legs').textContent=
     'Final: '+gs.players.map(function(p,i){return p+' '+gs.legs[i];}).join(' — ');
   showScreen('screen-win');
+  fxWin();
 }
 
 function playAgain(){
@@ -2553,6 +2693,7 @@ function showWinByName(name){
   document.getElementById('win-name').textContent='';
   document.getElementById('win-legs').textContent='';
   showScreen('screen-win');
+  fxWin();
 }
 
 // Init
