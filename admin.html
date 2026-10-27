@@ -833,7 +833,7 @@ async function populateFixtureLeagueDropdowns(){
   }catch(e){toast('Error loading leagues: '+e.message,true);}
 }
 
-var scoreModeOk=false;
+var scoreModeOk=false, tableScoringOk=false;
 async function loadLeagues(){
   var el=document.getElementById('leagues-list');
   el.innerHTML='<div class="lh"><span class="spin"></span> Loading…</div>';
@@ -849,6 +849,9 @@ async function loadLeagues(){
     var modes={};
     try{ (await sb('leagues?select=id,score_mode'+leagueScope())).forEach(function(r){modes[r.id]=r.score_mode;}); scoreModeOk=true; }catch(e){ scoreModeOk=false; } // column added by SQL 09
     leagues.forEach(function(l){l.score_mode=modes[l.id]||'exact';});
+    var tsc={};
+    try{ (await sb('leagues?select=id,table_scoring,points_per_game'+leagueScope())).forEach(function(r){tsc[r.id]=r;}); tableScoringOk=true; }catch(e){ tableScoringOk=false; }
+    leagues.forEach(function(l){var r=tsc[l.id]||{};l.table_scoring=r.table_scoring==='games'?'games':'match';l.points_per_game=r.points_per_game==null?1:r.points_per_game;});
     var teams=await sb('teams?select=id,league_id'+(scopedLeagueId?'&league_id=eq.'+scopedLeagueId:''));
     if(!leagues||!leagues.length){el.innerHTML='<div class="nh">No leagues yet. Create one using the Create League tab.</div>';return;}
     el.innerHTML=leagues.map(function(l){
@@ -882,6 +885,7 @@ async function loadLeagues(){
         +'<div class="field"><label>Points Draw</label><input type="number" id="epd-'+l.id+'" value="'+(l.points_draw||1)+'"></div>'
         +'<div class="field"><label>Points Loss</label><input type="number" id="epl-'+l.id+'" value="'+(l.points_loss||0)+'"></div>'
         +'<div class="field" style="grid-column:1/-1"><label style="display:flex;align-items:center;gap:.5rem;font-weight:400;text-transform:none;letter-spacing:0"><input type="checkbox" id="eftn-'+l.id+'" '+(l.fixed_team_names?'checked':'')+' style="width:auto"> Fix team names — captains must pick from the Captain Contacts list instead of typing their own</label></div>'
+        +'<div class="field" style="grid-column:1/-1"><label>League table points</label><select id="ets2-'+l.id+'"'+(tableScoringOk?'':' disabled')+' onchange="document.getElementById(\'eppg-wrap-'+l.id+'\').style.display=this.value===\'games\'?\'block\':\'none\'"><option value="match" '+(l.table_scoring!=='games'?'selected':'')+'>Match result — points for a win / draw / loss (uses the Points boxes above)</option><option value="games" '+(l.table_scoring==='games'?'selected':'')+'>Games won — points for every game won on the night (e.g. a 6–3 win: 6 points to the winners, 3 to the losers)</option></select>'+(tableScoringOk?'':'<div style="font-size:.72rem;color:var(--amber);margin-top:.3rem">Run SQL 09_score_mode.sql in Supabase to enable this setting.</div>')+'<div id="eppg-wrap-'+l.id+'" style="margin-top:.5rem;display:'+(l.table_scoring==='games'?'block':'none')+'"><label>Points per game won</label><input type="number" min="0" id="eppg-'+l.id+'" value="'+l.points_per_game+'"></div></div>'
         +'<div class="field" style="grid-column:1/-1"><label>Score recording (scores of 80+)</label><select id="esm-'+l.id+'"'+(scoreModeOk?'':' disabled')+'><option value="exact" '+(l.score_mode!=='counters'?'selected':'')+'>Exact scores — type each score (e.g. 85, 140, 180)</option><option value="counters" '+(l.score_mode==='counters'?'selected':'')+'>Counters — tap to count 80–99, 100+ and 180s</option></select>'+(scoreModeOk?'':'<div style="font-size:.72rem;color:var(--amber);margin-top:.3rem">Run SQL 09_score_mode.sql in Supabase to enable this setting.</div>')+'</div>'
         +'</div>'
         +'<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#5a9abf;margin:.9rem 0 .5rem">Public Directory Profile</div>'
@@ -966,6 +970,11 @@ async function saveEdit(id){
   st.textContent='Saving…';st.className='st';
   try{
     await sbPatch('leagues','id=eq.'+id,data);
+    var tsEl=document.getElementById('ets2-'+id);
+    if(tableScoringOk&&tsEl){
+      try{ await sbPatch('leagues','id=eq.'+id,{table_scoring:tsEl.value,points_per_game:Math.max(0,parseInt(document.getElementById('eppg-'+id).value)||1)}); }
+      catch(e){ throw new Error('League table points not saved — run SQL 09_score_mode.sql first ('+e.message+')'); }
+    }
     var smEl=document.getElementById('esm-'+id);
     if(scoreModeOk&&smEl){
       try{ await sbPatch('leagues','id=eq.'+id,{score_mode:smEl.value}); }

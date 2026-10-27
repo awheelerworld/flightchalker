@@ -2005,7 +2005,19 @@ function buildRowsInner(){
 }
 
 // Read from its own request so the app keeps working even before the score_mode column exists.
+async function attachTableScoring(lg){
+  lg.table_scoring='match';lg.points_per_game=1;
+  try{
+    var r=await sb('leagues?id=eq.'+lg.id+'&select=table_scoring,points_per_game');
+    if(r&&r[0]){ if(r[0].table_scoring==='games')lg.table_scoring='games'; if(r[0].points_per_game!=null)lg.points_per_game=r[0].points_per_game; }
+  }catch(e){}
+}
+function tablePts(lg,wins,draws,losses,gamesWon){
+  if(lg&&lg.table_scoring==='games')return gamesWon*(lg.points_per_game==null?1:lg.points_per_game);
+  return wins*(lg.points_win||2)+draws*(lg.points_draw||1)+losses*(lg.points_loss||0);
+}
 async function attachScoreMode(){
+  await attachTableScoring(currentLeague);
   currentLeague.score_mode='exact';
   try{
     var r=await sb('leagues?id=eq.'+currentLeague.id+'&select=score_mode');
@@ -2748,7 +2760,7 @@ async function renderLeagueTable(){
       var losses=tMatches.filter(function(m){return m.wins<m.losses;}).length;
       var gamesWon=tMatches.reduce(function(a,m){return a+m.wins;},0);
       var gamesLost=tMatches.reduce(function(a,m){return a+m.losses;},0);
-      var pts=wins*(currentLeague.points_win||2)+draws*(currentLeague.points_draw||1)+losses*(currentLeague.points_loss||0);
+      var pts=tablePts(currentLeague,wins,draws,losses,gamesWon);
       // Form - last 5
       var sorted=tMatches.slice().sort(function(a,b){return a.match_date<b.match_date?1:-1;}).slice(0,5);
       var form=sorted.map(function(m){return m.wins>m.losses?'w':(m.wins===m.losses?'d':'l');}).reverse();
@@ -2773,7 +2785,7 @@ async function renderLeagueTable(){
         +'</tr>';
     });
     html+='</tbody></table>';
-    html+='<p style="font-size:.72rem;color:var(--dim);margin-top:.75rem">GW = Games Won · GL = Games Lost · GD = Game Difference · Pts = Points · Form = last '+tableData[0].form.length+' matches</p>';
+    html+='<p style="font-size:.72rem;color:var(--dim);margin-top:.75rem">GW = Games Won · GL = Games Lost · GD = Game Difference · Pts = '+(currentLeague.table_scoring==='games'?'Points (1 per game won)':'Points')+' · Form = last '+tableData[0].form.length+' matches</p>';
     wrap.innerHTML=html;
   }catch(e){wrap.innerHTML='<div class="nh">Error loading table: '+esc(e.message)+'</div>';}
 }
@@ -4417,6 +4429,7 @@ async function loadPublicTable(){
   wrap.innerHTML='<div class="lh"><span class="spin"></span> Loading…</div>';
   var season=parseInt(document.getElementById('pub-season-sel').value)||1;
   try{
+    await attachTableScoring(publicLeague);
     var teams=await sb('teams?league_id=eq.'+publicLeague.id+'&select=id,team_name');
     if(!teams.length){wrap.innerHTML='<div class="nh">No teams registered yet.</div>';return;}
     var allMatches=await sb('team_matches?team_id=in.('+teams.map(function(t){return t.id;}).join(',')+')'+'&season=eq.'+season+'&select=team_id,wins,losses,match_date');
@@ -4428,7 +4441,7 @@ async function loadPublicTable(){
       var losses2=tM.filter(function(m){return m.wins<m.losses;}).length;
       var gw=tM.reduce(function(a,m){return a+m.wins;},0);
       var gl=tM.reduce(function(a,m){return a+m.losses;},0);
-      var pts=wins*(publicLeague.points_win||2)+draws*(publicLeague.points_draw||1)+losses2*(publicLeague.points_loss||0);
+      var pts=tablePts(publicLeague,wins,draws,losses2,gw);
       var form=tM.slice().sort(function(a,b){return a.match_date<b.match_date?1:-1;}).slice(0,5).map(function(m){return m.wins>m.losses?'w':(m.wins===m.losses?'d':'l');}).reverse();
       return{name:t.team_name,played,wins,draws,losses:losses2,gw,gl,gd:gw-gl,pts,form};
     });
@@ -4443,7 +4456,7 @@ async function loadPublicTable(){
         +'<td>'+t.form.map(function(f){return '<span class="form-pip '+f+'">'+f.toUpperCase()+'</span>';}).join('')+'</td>'
         +'</tr>';
     });
-    html+='</tbody></table><p style="font-size:.72rem;color:var(--dim);margin-top:.75rem">GW = Games Won · GL = Games Lost · GD = Difference · Pts = Points</p>';
+    html+='</tbody></table><p style="font-size:.72rem;color:var(--dim);margin-top:.75rem">GW = Games Won · GL = Games Lost · GD = Difference · Pts = '+(publicLeague.table_scoring==='games'?'Points (1 per game won)':'Points')+'</p>';
     wrap.innerHTML=html;
   }catch(e){wrap.innerHTML='<div class="nh">Error: '+esc(e.message)+'</div>';}
 }
