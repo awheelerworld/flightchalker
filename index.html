@@ -920,7 +920,7 @@ html{scroll-behavior:smooth}
           <div class="sbig" id="tmw" style="color:var(--amber)">0</div>
           <div class="slbl">Matches Won</div>
         </div>
-        <div class="e8t"><div class="num" id="t8">0</div><div class="lbl" id="t8-label">80+ scores</div><div class="split" id="t8-split"></div></div>
+        <div class="e8t"><div class="num" id="t8">0</div><div class="lbl" id="t8-label">80+ scores</div></div>
       </div>
       <div id="match-rows-container"></div>
       <div class="ar">
@@ -964,6 +964,7 @@ html{scroll-behavior:smooth}
 
     <!-- STATS -->
     <div id="tab-stats" class="tc">
+      <div id="stfilter" style="display:none;margin-bottom:.75rem"></div>
       <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin-bottom:.75rem">
         <label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--dim)">Player</label>
         <select id="spsel" onchange="renderStats()" style="background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:Barlow,sans-serif;font-size:.9rem;padding:.4rem .75rem"><option value="">— Select player —</option></select>
@@ -1061,7 +1062,7 @@ html{scroll-behavior:smooth}
               <li>Fill in the <strong>Date</strong>, <strong>Opponent</strong> and whether it's <strong>Home</strong> or <strong>Away</strong> under Match Details.</li>
               <li>For each Single, Double and Team Game row, select the player(s) from the dropdown, then use the <strong>−</strong> / <strong>+</strong> buttons to record legs won and lost as the match is played. The result badge updates automatically once one side is ahead.</li>
               <li>Enter any 80+ scores as they happen using the score box under each row — press Enter or tap <strong>+</strong> to log each one. A 180 is highlighted with a star.</li>
-              <li>If your league organiser has switched score recording to <strong>Counters</strong>, you'll see 80–99, 100+ and ★180 counters under each player instead of a score box. Tap + each time that kind of score is thrown.</li>
+              <li>Player stats also keep a tally of each player&rsquo;s 80–99, 100–179 and 180 scores automatically — just enter each score as usual.</li>
               <li>The scorebar at the top keeps a running total of legs, matches won and 80+ scores for the whole match.</li>
             </ol>
           </div>
@@ -2018,25 +2019,23 @@ function tablePts(lg,wins,draws,losses,gamesWon){
 }
 async function attachScoreMode(){
   await attachTableScoring(currentLeague);
+  // Scores of 80+ are always typed in (exact). The 80–99 / 100–179 / 180 tallies are worked out from them.
   currentLeague.score_mode='exact';
-  try{
-    var r=await sb('leagues?id=eq.'+currentLeague.id+'&select=score_mode');
-    if(r&&r[0]&&r[0].score_mode==='counters')currentLeague.score_mode='counters';
-  }catch(e){}
 }
 // ── 80+ score bands ───────────────────────────────────────────────────────────
 // "Exact" leagues store every 80+ score as a number in the scores arrays.
 // "Counters" leagues store three small counters per player instead:
-//   a = 80–99 (from the team's threshold), b = 100+ (includes 180s), c = 180s (a subset of b).
+//   a = 80–99 (from the team's threshold), b = 100–179, c = 180 (three separate tallies).
 // Everything below reads BOTH forms, so stats work whichever way a match was recorded.
 function countersMode(){return !!(currentLeague&&currentLeague.score_mode==='counters');}
 function newBands(){return countersMode()?{a:0,b:0,c:0}:null;}
 function bandLo(){var t=currentTeam&&currentTeam.score_threshold?currentTeam.score_threshold:80;return String(t>=100?80:t);}
 function bandsOf(scores,bands){
+  // Three separate tallies: a = 80–99, b = 100–179, c = 180 (never double counted)
   var a=0,b=0,c=0;
-  (scores||[]).forEach(function(v){if(v>=100)b++;else a++;if(v===180)c++;});
+  (scores||[]).forEach(function(v){if(v===180)c++;else if(v>=100)b++;else a++;});
   if(bands){a+=bands.a||0;b+=bands.b||0;c+=bands.c||0;}
-  return {a:a,b:b,c:c,total:a+b};
+  return {a:a,b:b,c:c,total:a+b+c};
 }
 function bandsSum(list){var t={a:0,b:0,c:0,total:0};list.forEach(function(x){if(!x)return;t.a+=x.a;t.b+=x.b;t.c+=x.c;t.total+=x.total;});return t;}
 function bandsRaw(list){var t={a:0,b:0,c:0};(list||[]).forEach(function(x){if(!x)return;t.a+=x.a||0;t.b+=x.b||0;t.c+=x.c||0;});return t;}
@@ -2048,8 +2047,8 @@ function bandsOfData(data){
   if(t4){var n=Math.max((t4.scores||[]).length,(t4.bands||[]).length);for(var i=0;i<n;i++)l.push(bandsOf((t4.scores||[])[i],(t4.bands||[])[i]));}
   return bandsSum(l);
 }
-function bandsLabel(x){return x.total?(bandLo()+'–99: '+x.a+' · 100+: '+x.b+(x.c?' (★180: '+x.c+')':'')):'';}
-function bandsFilled(b){return !!(b&&((b.a||0)+(b.b||0)));}
+function bandsLabel(x){return x.total?(bandLo()+'–99: '+x.a+' · 100–179: '+x.b+' · 180: '+x.c):'';}
+function bandsFilled(b){return !!(b&&((b.a||0)+(b.b||0)+(b.c||0)));}
 function cntCells(key,fn,b){
   b=b||{a:0,b:0,c:0};
   function cell(w,txt,cls){return '<div class="cnt'+(cls||'')+'"><div class="cl">'+txt+'</div><div class="cc2"><button type="button" class="cb" aria-label="Fewer '+txt+'" onclick="'+fn+'(&quot;'+key+'&quot;,&quot;'+w+'&quot;,-1)">−</button><span class="cv" id="cv-'+key+'-'+w+'">'+(b[w]||0)+'</span><button type="button" class="cb" aria-label="More '+txt+'" onclick="'+fn+'(&quot;'+key+'&quot;,&quot;'+w+'&quot;,1)">+</button></div></div>';}
@@ -2308,7 +2307,6 @@ function updateBar(){
   document.getElementById('tla').textContent=la;
   document.getElementById('tmw').textContent=mw;
   document.getElementById('t8').textContent=total8();
-  var t8s=document.getElementById('t8-split');if(t8s)t8s.textContent=bandsLabel(bandsOfData({singles:md.singles,doubles:md.doubles,team4:md.team4}));
   var opp=document.getElementById('mopp').value||'—';
   document.getElementById('hvs').textContent='vs '+opp;
   document.getElementById('hscore').textContent=lf+' – '+la;
@@ -2691,7 +2689,7 @@ function emailResultsQuick(){
   md.doubles.forEach(function(m){if(m.result==='win')mw++;else if(m.result==='loss')ml++;});
   if(md.team4){if(md.team4.result==='win')mw++;else if(md.team4.result==='loss')ml++;}
   var subject=encodeURIComponent(currentLeague.name+': '+currentTeam.team_name+' vs '+opp+' ('+date+')');
-  var body='League: '+currentLeague.name+'\nTeam: '+currentTeam.team_name+'\nOpponent: '+opp+'\nDate: '+date+'\nResult: '+mw+' – '+ml+' ('+(mw>ml?'WIN':'LOSS')+')\nLegs: '+lf+' – '+la+'\n80+ Scores: '+total8()+(function(){var t=bandsOfData({singles:md.singles,doubles:md.doubles,team4:md.team4});return t.total?'\n'+bandsLabel(t):'';})()+'\n\nSINGLES\n';
+  var body='League: '+currentLeague.name+'\nTeam: '+currentTeam.team_name+'\nOpponent: '+opp+'\nDate: '+date+'\nResult: '+mw+' – '+ml+' ('+(mw>ml?'WIN':'LOSS')+')\nLegs: '+lf+' – '+la+'\n80+ Scores: '+total8()+'\n\nSINGLES\n';
   md.singles.forEach(function(s,i){body+='S'+(i+1)+': '+(s.player||'—')+' | '+(s.legsFor||0)+'-'+(s.legsAgainst||0)+' | '+(s.result?s.result.toUpperCase():'?')+'\n';});
   if(md.doubles.length){body+='\nDOUBLES\n';md.doubles.forEach(function(d,i){body+='D'+(i+1)+': '+(d.p1||'—')+' & '+(d.p2||'—')+' | '+(d.legsFor||0)+'-'+(d.legsAgainst||0)+' | '+(d.result?d.result.toUpperCase():'?')+'\n';});}
   if(md.team4){var tN=[];for(var pi=1;pi<=currentLeague.team_game_players;pi++){if(md.team4['p'+pi])tN.push(md.team4['p'+pi]);}body+='\nTEAM GAME\n'+tN.join(', ')+' | '+(md.team4.result?md.team4.result.toUpperCase():'?')+'\n';}
@@ -2742,6 +2740,12 @@ async function renderHistory(){
   }catch(e){el.innerHTML='<div class="nh">Error: '+esc(e.message)+'</div>';}
 }
 
+// Matches for one league + season. Uses the league stamp on each match (SQL 10) so a team that moved
+// league doesn't bring its old results with it; falls back to the old team-based lookup if SQL 10 isn't run yet.
+async function fetchLeagueMatches(leagueId,teams,season,cols){
+  try{ return await sb('team_matches?league_id=eq.'+leagueId+'&season=eq.'+season+'&select='+cols); }
+  catch(e){ return await sb('team_matches?team_id=in.('+teams.map(function(t){return t.id;}).join(',')+')&season=eq.'+season+'&select='+cols); }
+}
 // ── League table ──────────────────────────────────────────────────────────────
 async function renderLeagueTable(){
   var wrap=document.getElementById('league-table-wrap');
@@ -2750,7 +2754,7 @@ async function renderLeagueTable(){
     // Get all teams in league
     var teams=await sb('teams?league_id=eq.'+currentLeague.id+'&select=id,team_name');
     // Get all matches for all teams in league
-    var allMatches=await sb('team_matches?team_id=in.('+teams.map(t=>t.id).join(',')+')'+'&season=eq.'+(currentLeague.current_season||1)+'&select=team_id,wins,losses,match_date');
+    var allMatches=await fetchLeagueMatches(currentLeague.id,teams,(currentLeague.current_season||1),'team_id,wins,losses,match_date');
     // Build table data
     var tableData=teams.map(function(t){
       var tMatches=allMatches.filter(function(m){return m.team_id===t.id;});
@@ -3055,7 +3059,7 @@ function viewMatch(idx){
   var fmt=d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   var won=m.wins>m.losses;var mdata=m.data||{};
   var s=mdata.singles||[];var db=mdata.doubles||[];var t4=mdata.team4||{};
-  function bch(b){if(!b||!((b.a||0)+(b.b||0)))return '';var o='';if(b.a)o+='<span class="msc2">'+bandLo()+'–99 ×'+b.a+'</span>';if(b.b)o+='<span class="msc2">100+ ×'+b.b+'</span>';if(b.c)o+='<span class="msc2" style="background:#5a3000;border-color:#f2cf4a;color:#fff">&#9733; 180 ×'+b.c+'</span>';return o;}
+  function bch(b){if(!b||!((b.a||0)+(b.b||0)+(b.c||0)))return '';var o='';if(b.a)o+='<span class="msc2">'+bandLo()+'–99 ×'+b.a+'</span>';if(b.b)o+='<span class="msc2">100–179 ×'+b.b+'</span>';if(b.c)o+='<span class="msc2" style="background:#5a3000;border-color:#f2cf4a;color:#fff">&#9733; 180 ×'+b.c+'</span>';return o;}
   function ch(arr){if(!arr||!arr.length)return '<span style="color:var(--dim);font-size:.8rem">—</span>';return arr.map(function(v){return v===180?'<span class="msc2" style="background:#5a3000;border-color:#f2cf4a;color:#fff">&#9733; 180</span>':'<span class="msc2">'+v+'</span>';}).join('');}
   function rb(r,legs){var badge=r?'<span class="mrr '+r+'">'+r.toUpperCase()+'</span>':'<span style="color:var(--dim)">?</span>';var ls=legs?'<span style="font-size:.8rem;color:var(--dim);margin-left:4px">('+legs+')</span>':'';return badge+ls;}
   function co(v){return v?'<span style="font-size:.72rem;color:var(--amber);margin-left:6px;white-space:nowrap">CO '+v+'</span>':'';}
@@ -3064,7 +3068,7 @@ function viewMatch(idx){
   s.forEach(function(x,i){var legs=x.legsFor!==undefined?(x.legsFor+' – '+x.legsAgainst):'';h+='<div class="mrow"><span class="mrn">S'+(i+1)+'</span><span class="mrname">'+esc(x.player||'—')+'</span>'+rb(x.result,legs)+co(x.checkout)+'<div class="msc">'+ch(x.scores)+bch(x.bands)+'</div></div>';});
   if(db.length){h+='</div><div class="ms"><div class="mst">Doubles</div>';db.forEach(function(x,i){var legs=x.legsFor!==undefined?(x.legsFor+' – '+x.legsAgainst):'';h+='<div class="mrow"><span class="mrn">D'+(i+1)+'</span><span class="mrname">'+esc(x.p1||'—')+' &amp; '+esc(x.p2||'—')+'</span>'+rb(x.result,legs)+co(x.checkout1)+co(x.checkout2)+'<div class="msc">'+ch(x.scores1)+' '+ch(x.scores2)+bch(bandsRaw([x.bands1,x.bands2]))+'</div></div>';});}
   if(t4&&t4.result!==undefined){h+='</div><div class="ms"><div class="mst">Team Game</div>';var tN=[];for(var pi=1;pi<=6;pi++){if(t4['p'+pi])tN.push(esc(t4['p'+pi]));}var tCos=[];for(var cpi=1;cpi<=6;cpi++){if(t4['checkout'+cpi])tCos.push(co(t4['checkout'+cpi]));}h+='<div class="mrow"><span class="mrn">Team</span><span class="mrname">'+tN.join(', ')+'</span>'+rb(t4.result,'')+tCos.join('')+'<div class="msc">'+ch((t4.scores||[]).flat())+bch(bandsRaw(t4.bands))+'</div></div>';}
-  h+='</div><div class="mf"><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:1.5rem;font-weight:900;color:'+(won?'var(--gl)':'var(--red)')+'">'+m.wins+'–'+m.losses+' '+(won?'WIN':'LOSS')+'</div><div style="color:var(--amber);font-family:\'Barlow Condensed\',sans-serif">⬡ '+m.eighties+' scores over 80'+(function(){var t=bandsOfData(m.data);return t.total?' <span style="font-size:.8rem;color:var(--dim)">('+bandsLabel(t)+')</span>':'';})()+'</div></div>';
+  h+='</div><div class="mf"><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:1.5rem;font-weight:900;color:'+(won?'var(--gl)':'var(--red)')+'">'+m.wins+'–'+m.losses+' '+(won?'WIN':'LOSS')+'</div><div style="color:var(--amber);font-family:\'Barlow Condensed\',sans-serif">⬡ '+m.eighties+' scores over 80</div></div>';
   h+='<div class="mf"><button class="mc" onclick="closeMo()">Close</button><button class="btnp" style="font-size:.85rem;padding:.45rem 1.25rem" onclick="closeMo();openEdit('+idx+')">Edit</button><button class="btn-email" style="font-size:.85rem;padding:.45rem 1.25rem" onclick="closeMo();openPdfChoice('+idx+')">&#8681; PDF</button></div>';
   document.getElementById('mbody').innerHTML=h;document.getElementById('modal').classList.add('open');
 }
@@ -3198,6 +3202,69 @@ async function doDeleteMatch(){if(!delId)return;try{await sb('team_matches?id=eq
 // Pure computation, no DOM - shared by the single-player Stats view and the
 // Head to Head comparison so both stay in sync with any future changes to
 // how wins/legs/scores are tallied.
+
+// ── Stats filter: league + season ─────────────────────────────────────────────
+// Every recorded match carries the league it was played in (SQL 10). If a team moves league,
+// its old results stay with the old league. "All" shows everything, as before.
+var statsFilter={league:'all',season:'all'};
+var statsLeagueNames={};
+function mLeague(m){return m.league_id||(currentLeague&&currentLeague.id)||'';}
+function statsMatches(){
+  return matchHistory.filter(function(m){
+    if(statsFilter.league!=='all'&&mLeague(m)!==statsFilter.league)return false;
+    if(statsFilter.season!=='all'&&String(m.season||1)!==String(statsFilter.season))return false;
+    return true;
+  });
+}
+function statsLeagueLabel(id){
+  if(currentLeague&&id===currentLeague.id)return currentLeague.name||'This league';
+  return statsLeagueNames[id]||'Previous league';
+}
+function buildStatsFilter(){
+  var box=document.getElementById('stfilter');if(!box)return;
+  var leagues=[],seen={};
+  matchHistory.forEach(function(m){var l=mLeague(m);if(l&&!seen[l]){seen[l]=1;leagues.push(l);}});
+  if(statsFilter.league!=='all'&&!seen[statsFilter.league])statsFilter.league='all';
+  var inLeague=matchHistory.filter(function(m){return statsFilter.league==='all'||mLeague(m)===statsFilter.league;});
+  var seasons=[],ss={};
+  inLeague.forEach(function(m){var n=m.season||1;if(!ss[n]){ss[n]=1;seasons.push(n);}});
+  seasons.sort(function(a,b){return a-b;});
+  if(statsFilter.season!=='all'&&!ss[statsFilter.season])statsFilter.season='all';
+  if(leagues.length<2&&seasons.length<2&&statsFilter.league==='all'&&statsFilter.season==='all'){box.style.display='none';box.innerHTML='';return;}
+  var h='<div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap">';
+  if(leagues.length>1||statsFilter.league!=='all'){
+    h+='<label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--dim)" for="stf-league">League</label>'
+      +'<select id="stf-league" onchange="setStatsFilter(\'league\',this.value)" style="background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:Barlow,sans-serif;font-size:.9rem;padding:.4rem .6rem"><option value="all">All leagues</option>'
+      +leagues.map(function(l){return '<option value="'+esc(l)+'"'+(statsFilter.league===l?' selected':'')+'>'+esc(statsLeagueLabel(l))+'</option>';}).join('')+'</select>';
+  }
+  if(seasons.length>1||statsFilter.season!=='all'){
+    h+='<label style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--dim)" for="stf-season">Season</label>'
+      +'<select id="stf-season" onchange="setStatsFilter(\'season\',this.value)" style="background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:Barlow,sans-serif;font-size:.9rem;padding:.4rem .6rem"><option value="all">All seasons</option>'
+      +seasons.map(function(n){return '<option value="'+n+'"'+(String(statsFilter.season)===String(n)?' selected':'')+'>Season '+n+'</option>';}).join('')+'</select>';
+  }
+  h+='</div>';
+  box.style.display='block';box.innerHTML=h;
+  // fetch names of other leagues once, then redraw the labels
+  var need=leagues.filter(function(l){return !statsLeagueNames[l]&&!(currentLeague&&l===currentLeague.id);});
+  if(need.length&&!buildStatsFilter._busy){
+    buildStatsFilter._busy=true;
+    sb('leagues?id=in.('+need.join(',')+')&select=id,name').then(function(rows){
+      (rows||[]).forEach(function(r){statsLeagueNames[r.id]=r.name;});
+      need.forEach(function(l){if(!statsLeagueNames[l])statsLeagueNames[l]='Previous league';});
+      buildStatsFilter._busy=false;buildStatsFilter();
+    }).catch(function(){need.forEach(function(l){statsLeagueNames[l]='Previous league';});buildStatsFilter._busy=false;});
+  }
+}
+function setStatsFilter(which,val){
+  statsFilter[which]=val;
+  if(which==='league')statsFilter.season='all';
+  buildStatsFilter();
+  var cmp=document.getElementById('cmpall-box');
+  renderStats();
+  if(typeof renderCompare==='function')try{renderCompare();}catch(e){}
+  if(cmp&&cmp.style.display!=='none')renderCompareAll();
+}
+
 function computePlayerStats(player){
   var pm=[];
   var cat={
@@ -3205,14 +3272,14 @@ function computePlayerStats(player){
     doubles:{gw:0,gl:0,lw:0,ll:0},
     team:{gw:0,gl:0}
   };
-  matchHistory.slice().reverse().forEach(function(m){
+  statsMatches().slice().reverse().forEach(function(m){
     var mdata=m.data||{};var s=mdata.singles||[];var db=mdata.doubles||[];var t4=mdata.team4||{};
     var date=new Date(m.match_date+'T00:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
     var w=0,l=0,sc=[],bl=[],legsW=0,legsL=0,cos=[];
     s.forEach(function(x){if(x.player===player){if(x.result==='win'){w++;cat.singles.gw++;}else if(x.result==='loss'){l++;cat.singles.gl++;}sc.push.apply(sc,x.scores||[]);bl.push(x.bands);legsW+=(x.legsFor||0);legsL+=(x.legsAgainst||0);cat.singles.lw+=(x.legsFor||0);cat.singles.ll+=(x.legsAgainst||0);if(x.checkout)cos.push(x.checkout);}});
     db.forEach(function(x){if(x.p1===player){if(x.result==='win'){w++;cat.doubles.gw++;}else if(x.result==='loss'){l++;cat.doubles.gl++;}sc.push.apply(sc,x.scores1||[]);bl.push(x.bands1);legsW+=(x.legsFor||0);legsL+=(x.legsAgainst||0);cat.doubles.lw+=(x.legsFor||0);cat.doubles.ll+=(x.legsAgainst||0);if(x.checkout1)cos.push(x.checkout1);}if(x.p2===player){if(x.result==='win'){w++;cat.doubles.gw++;}else if(x.result==='loss'){l++;cat.doubles.gl++;}sc.push.apply(sc,x.scores2||[]);bl.push(x.bands2);legsW+=(x.legsFor||0);legsL+=(x.legsAgainst||0);cat.doubles.lw+=(x.legsFor||0);cat.doubles.ll+=(x.legsAgainst||0);if(x.checkout2)cos.push(x.checkout2);}});
     for(var pi=1;pi<=6;pi++){if(t4['p'+pi]===player){if(t4.result==='win'){w++;cat.team.gw++;}else if(t4.result==='loss'){l++;cat.team.gl++;}sc.push.apply(sc,(t4.scores&&t4.scores[pi-1])||[]);bl.push(t4.bands&&t4.bands[pi-1]);if(t4['checkout'+pi])cos.push(t4['checkout'+pi]);break;}}
-    var mb=bandsOf(sc,null);bl.forEach(function(bb){if(bb){mb.a+=bb.a||0;mb.b+=bb.b||0;mb.c+=bb.c||0;mb.total=mb.a+mb.b;}});
+    var mb=bandsOf(sc,null);bl.forEach(function(bb){if(bb){mb.a+=bb.a||0;mb.b+=bb.b||0;mb.c+=bb.c||0;mb.total=mb.a+mb.b+mb.c;}});
     if(w>0||l>0||mb.total>0)pm.push({date,wins:w,losses:l,scores:sc,bands:mb,legsW,legsL,checkouts:cos});
   });
   if(!pm.length)return null;
@@ -3233,13 +3300,15 @@ function selectStatsPlayer(name){
 function renderLeaderboard(){
   var el=document.getElementById('scontent');
   ['cwl','chs'].forEach(function(id){if(charts[id]){charts[id].destroy();delete charts[id];}});
+  buildStatsFilter();
   if(!players.length){el.innerHTML='<div class="nh">No players on the roster yet.</div>';return;}
   if(!matchHistory.length){el.innerHTML='<div class="nh">No match data recorded yet — the leaderboard will fill in once matches are recorded.</div>';return;}
+  if(!statsMatches().length){el.innerHTML='<div class="nh">No matches recorded for this league / season.</div>';return;}
   var rows=players.map(function(p){
     var name=p.name||p;
     var st=computePlayerStats(name);
     if(!st)return null;
-    return {name,tw:st.tw,tl:st.tl,gp:st.gp,tlw:st.tlw,tll:st.tll,tot:st.tot,wp:st.wp,hi:st.hi,eighties:st.n80,b80:st.b80,b100:st.b100,matches:st.matches,hiCheckout:st.hiCheckout};
+    return {name,tw:st.tw,tl:st.tl,gp:st.gp,tlw:st.tlw,tll:st.tll,tot:st.tot,wp:st.wp,hi:st.hi,eighties:st.n80,b80:st.b80,b100:st.b100,b180:st.b180,matches:st.matches,hiCheckout:st.hiCheckout};
   }).filter(Boolean);
   if(!rows.length){el.innerHTML='<div class="nh">No players have recorded stats yet.</div>';return;}
   var MIN_MATCHES=3; // qualifier for win-rate leaderboard, so a single match at 100%/0% can't dominate the ranking
@@ -3276,8 +3345,10 @@ function renderLeaderboard(){
 function renderStats(){
   var player=document.getElementById('spsel').value;
   var el=document.getElementById('scontent');
+  buildStatsFilter();
   if(!player){renderLeaderboard();return;}
   if(!matchHistory.length){el.innerHTML='<div class="nh">No match data available.</div>';return;}
+  if(!statsMatches().length){el.innerHTML='<div class="nh">No matches recorded for this league / season.</div>';return;}
   var st=computePlayerStats(player);
   if(!st){el.innerHTML='<div class="nh">'+esc(player)+' has not played in any recorded matches.</div>';return;}
   var tw=st.tw,tl=st.tl,gp=st.gp,tlw=st.tlw,tll=st.tll,tot=st.tot,allSc=st.allSc,hi=st.hi,wp=st.wp,pm=st.pm,cat=st.cat,hiCheckout=st.hiCheckout,allCos=st.allCos;
@@ -3299,7 +3370,7 @@ function renderStats(){
     +catRow('Team Game',cat.team,false)
     +'</tbody></table></div><p style="font-size:.72rem;color:var(--dim);margin-top:.5rem">Team Game legs aren\u2019t tracked individually — it\u2019s recorded as a single win/loss per match.</p></div>';
   var noteHtml='<p style="font-size:.72rem;color:var(--dim);margin:-.75rem 0 1.25rem;line-height:1.5"><strong>Win Rate (Games)</strong> covers every format — Singles, Doubles and Team Game. <strong>Win Rate (Legs)</strong> covers Singles and Doubles only, since the Team Game isn\u2019t scored leg-by-leg.</p>';
-  el.innerHTML='<div style="display:flex;justify-content:flex-end;gap:.5rem;margin-bottom:.75rem"><button class="pr2" onclick="sharePlayerStatsPDF(&quot;'+esc(player).replace(/"/g,'&quot;')+'&quot;)" style="font-size:.72rem">📤 Share</button><button class="pr2" onclick="downloadPlayerStatsPDF(&quot;'+esc(player).replace(/"/g,'&quot;')+'&quot;)" style="font-size:.72rem">📄 Download PDF</button></div><div class="sg"><div class="scard"><div class="v g">'+tw+'</div><div class="lb">Games Won</div></div><div class="scard"><div class="v r">'+tl+'</div><div class="lb">Games Lost</div></div><div class="scard"><div class="v '+(gp>=50?'g':'r')+'">'+gp+'%</div><div class="lb">Win Rate (Games)</div></div><div class="scard"><div class="v g">'+tlw+' / '+tot+'</div><div class="lb">Legs Won</div></div><div class="scard"><div class="v r">'+tll+'</div><div class="lb">Legs Lost</div></div><div class="scard"><div class="v">'+tot+'</div><div class="lb">Legs Played</div></div><div class="scard"><div class="v '+(wp>=50?'g':'r')+'">'+wp+'%</div><div class="lb">Win Rate (Legs)</div></div><div class="scard"><div class="v a">'+st.n80+'</div><div class="lb">80+ Scores</div></div><div class="scard"><div class="v a">'+st.b80+'</div><div class="lb">'+bandLo()+'–99</div></div><div class="scard"><div class="v a">'+st.b100+'</div><div class="lb">100+</div></div><div class="scard"><div class="v a">'+(hi||'—')+'</div><div class="lb">Highest</div></div><div class="scard"><div class="v a">'+(hiCheckout||'—')+'</div><div class="lb">Highest Checkout</div></div><div class="scard"><div class="v">'+pm.length+'</div><div class="lb">Matches</div></div></div>'+noteHtml+breakdown+'<div class="cc"><h3>Cumulative Wins &amp; Losses</h3><div class="cw"><canvas id="cwl"></canvas></div></div><div class="cc"><h3>80+ Scores Per Match</h3><div class="cw"><canvas id="chs"></canvas></div></div><div class="cc"><h3>All 80+ Scores</h3><div class="scl">'+(allSc.sort(function(a,b){return b-a;}).map(function(s){return s===180?'<span class="sp2" style="background:#5a3000;border-color:#f2cf4a;color:#fff">&#9733; 180</span>':'<span class="sp2">'+s+'</span>';}).join('')||'<span style="color:var(--dim)">None yet</span>')+'</div></div>'+(allCos.length?'<div class="cc"><h3>All Checkouts</h3><div class="scl">'+allCos.sort(function(a,b){return b-a;}).map(function(v){return '<span class="sp2">'+v+'</span>';}).join('')+'</div></div>':'');
+  el.innerHTML='<div style="display:flex;justify-content:flex-end;gap:.5rem;margin-bottom:.75rem"><button class="pr2" onclick="sharePlayerStatsPDF(&quot;'+esc(player).replace(/"/g,'&quot;')+'&quot;)" style="font-size:.72rem">📤 Share</button><button class="pr2" onclick="downloadPlayerStatsPDF(&quot;'+esc(player).replace(/"/g,'&quot;')+'&quot;)" style="font-size:.72rem">📄 Download PDF</button></div><div class="sg"><div class="scard"><div class="v g">'+tw+'</div><div class="lb">Games Won</div></div><div class="scard"><div class="v r">'+tl+'</div><div class="lb">Games Lost</div></div><div class="scard"><div class="v '+(gp>=50?'g':'r')+'">'+gp+'%</div><div class="lb">Win Rate (Games)</div></div><div class="scard"><div class="v g">'+tlw+' / '+tot+'</div><div class="lb">Legs Won</div></div><div class="scard"><div class="v r">'+tll+'</div><div class="lb">Legs Lost</div></div><div class="scard"><div class="v">'+tot+'</div><div class="lb">Legs Played</div></div><div class="scard"><div class="v '+(wp>=50?'g':'r')+'">'+wp+'%</div><div class="lb">Win Rate (Legs)</div></div><div class="scard"><div class="v a">'+st.n80+'</div><div class="lb">80+ Scores</div></div><div class="scard"><div class="v a">'+st.b80+'</div><div class="lb">'+bandLo()+'–99</div></div><div class="scard"><div class="v a">'+st.b100+'</div><div class="lb">100–179</div></div><div class="scard"><div class="v a">'+st.b180+'</div><div class="lb">180s</div></div><div class="scard"><div class="v a">'+(hi||'—')+'</div><div class="lb">Highest</div></div><div class="scard"><div class="v a">'+(hiCheckout||'—')+'</div><div class="lb">Highest Checkout</div></div><div class="scard"><div class="v">'+pm.length+'</div><div class="lb">Matches</div></div></div>'+noteHtml+breakdown+'<div class="cc"><h3>Cumulative Wins &amp; Losses</h3><div class="cw"><canvas id="cwl"></canvas></div></div><div class="cc"><h3>80+ Scores Per Match</h3><div class="cw"><canvas id="chs"></canvas></div></div><div class="cc"><h3>All 80+ Scores</h3><div class="scl">'+(allSc.sort(function(a,b){return b-a;}).map(function(s){return s===180?'<span class="sp2" style="background:#5a3000;border-color:#f2cf4a;color:#fff">&#9733; 180</span>':'<span class="sp2">'+s+'</span>';}).join('')||'<span style="color:var(--dim)">None yet</span>')+'</div></div>'+(allCos.length?'<div class="cc"><h3>All Checkouts</h3><div class="scl">'+allCos.sort(function(a,b){return b-a;}).map(function(v){return '<span class="sp2">'+v+'</span>';}).join('')+'</div></div>':'');
   ['cwl','chs'].forEach(function(id){if(charts[id]){charts[id].destroy();delete charts[id];}});
   var go={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8a9080',font:{family:"'Barlow Condensed',sans-serif",size:11}}}},scales:{x:{ticks:{color:'#8a9080',font:{family:"'Barlow Condensed',sans-serif",size:10}},grid:{color:'#2a3a2a'}},y:{ticks:{color:'#8a9080',font:{family:"'Barlow Condensed',sans-serif",size:10}},grid:{color:'#2a3a2a'},beginAtZero:true}}};
   charts['cwl']=new Chart(document.getElementById('cwl'),{type:'line',data:{labels:wlL,datasets:[{label:'Wins',data:wlW,borderColor:'#4a8855',backgroundColor:'rgba(74,136,85,0.15)',tension:.3,fill:true,pointBackgroundColor:'#4a8855'},{label:'Losses',data:wlL2,borderColor:'#c0392b',backgroundColor:'rgba(192,57,43,0.1)',tension:.3,fill:true,pointBackgroundColor:'#c0392b'}]},options:go});
@@ -3318,8 +3389,8 @@ function renderCompare(){
   if(n1===n2){el.innerHTML='<div class="nh">Pick two different players to compare.</div>';return;}
   var a=computePlayerStats(n1),b=computePlayerStats(n2);
   if(!a&&!b){el.innerHTML='<div class="nh">Neither player has any recorded matches yet.</div>';return;}
-  a=a||{tw:0,tl:0,gp:0,tlw:0,tll:0,tot:0,wp:0,allSc:[],n80:0,b80:0,b100:0,hi:0,hiCheckout:0,matches:0,cat:{singles:{gw:0,gl:0,lw:0,ll:0},doubles:{gw:0,gl:0,lw:0,ll:0},team:{gw:0,gl:0}}};
-  b=b||{tw:0,tl:0,gp:0,tlw:0,tll:0,tot:0,wp:0,allSc:[],n80:0,b80:0,b100:0,hi:0,hiCheckout:0,matches:0,cat:{singles:{gw:0,gl:0,lw:0,ll:0},doubles:{gw:0,gl:0,lw:0,ll:0},team:{gw:0,gl:0}}};
+  a=a||{tw:0,tl:0,gp:0,tlw:0,tll:0,tot:0,wp:0,allSc:[],n80:0,b80:0,b100:0,b180:0,hi:0,hiCheckout:0,matches:0,cat:{singles:{gw:0,gl:0,lw:0,ll:0},doubles:{gw:0,gl:0,lw:0,ll:0},team:{gw:0,gl:0}}};
+  b=b||{tw:0,tl:0,gp:0,tlw:0,tll:0,tot:0,wp:0,allSc:[],n80:0,b80:0,b100:0,b180:0,hi:0,hiCheckout:0,matches:0,cat:{singles:{gw:0,gl:0,lw:0,ll:0},doubles:{gw:0,gl:0,lw:0,ll:0},team:{gw:0,gl:0}}};
   function row(label,v1,v2,fmt1,fmt2,higherBetter){
     fmt1=fmt1===undefined?v1:fmt1;fmt2=fmt2===undefined?v2:fmt2;
     var aWins=higherBetter===false?v1<v2:v1>v2;
@@ -3342,7 +3413,8 @@ function renderCompare(){
     +row('Win Rate (Legs)',a.wp,b.wp,a.tot?a.wp+'%':'—',b.tot?b.wp+'%':'—')
     +row('80+ Scores',a.n80,b.n80)
     +row(bandLo()+'–99',a.b80,b.b80)
-    +row('100+',a.b100,b.b100)
+    +row('100–179',a.b100,b.b100)
+    +row('180s',a.b180,b.b180)
     +row('Highest Score',a.hi,b.hi,a.hi||'—',b.hi||'—')
     +row('Highest Checkout',a.hiCheckout,b.hiCheckout,a.hiCheckout||'—',b.hiCheckout||'—')
     +row('Matches Played',a.matches,b.matches)
@@ -3398,8 +3470,8 @@ function renderCompareAll(){
   var rows=players.map(function(p){
     var name=p.name||p;
     var st=computePlayerStats(name);
-    if(!st)return {name,tw:0,tl:0,gp:0,tlw:0,tll:0,tot:0,wp:0,hi:0,eighties:0,b80:0,b100:0,matches:0};
-    return {name,tw:st.tw,tl:st.tl,gp:st.gp,tlw:st.tlw,tll:st.tll,tot:st.tot,wp:st.wp,hi:st.hi,eighties:st.n80,b80:st.b80,b100:st.b100,matches:st.matches,hiCheckout:st.hiCheckout};
+    if(!st)return {name,tw:0,tl:0,gp:0,tlw:0,tll:0,tot:0,wp:0,hi:0,eighties:0,b80:0,b100:0,b180:0,matches:0};
+    return {name,tw:st.tw,tl:st.tl,gp:st.gp,tlw:st.tlw,tll:st.tll,tot:st.tot,wp:st.wp,hi:st.hi,eighties:st.n80,b80:st.b80,b100:st.b100,b180:st.b180,matches:st.matches,hiCheckout:st.hiCheckout};
   });
   var col=cmpAllSort.col,dir=cmpAllSort.dir;
   rows.sort(function(a,b){
@@ -3415,7 +3487,7 @@ function renderCompareAll(){
   }
   var head='<tr>'
     +'<th onclick="sortCompareAll(&quot;name&quot;)" style="cursor:pointer;padding:.4rem .5rem;white-space:nowrap;text-align:left;color:var(--dim);text-transform:uppercase;font-size:.62rem;letter-spacing:.05em;user-select:none">Player'+(cmpAllSort.col==='name'?(cmpAllSort.dir==='asc'?' \u25b2':' \u25bc'):'')+'</th>'
-    +th('GW','tw')+th('GL','tl')+th('Win% G','gp')+th('LW','tlw')+th('LL','tll')+th('Legs','tot')+th('Win% L','wp')+th('80+','eighties')+th(bandLo()+'–99','b80')+th('100+','b100')+th('Hi','hi')+th('Hi CO','hiCheckout')+th('M','matches')
+    +th('GW','tw')+th('GL','tl')+th('Win% G','gp')+th('LW','tlw')+th('LL','tll')+th('Legs','tot')+th('Win% L','wp')+th('80+','eighties')+th(bandLo()+'–99','b80')+th('100–179','b100')+th('180s','b180')+th('Hi','hi')+th('Hi CO','hiCheckout')+th('M','matches')
     +'</tr>';
   var body=rows.map(function(r){
     return '<tr style="border-top:1px solid var(--border)"><td style="padding:.4rem .5rem;text-align:left;font-weight:600;white-space:nowrap">'+esc(r.name)+'</td>'
@@ -3429,6 +3501,7 @@ function renderCompareAll(){
       +'<td style="padding:.4rem .5rem;text-align:center;color:var(--amber)">'+r.eighties+'</td>'
       +'<td style="padding:.4rem .5rem;text-align:center;color:var(--amber)">'+r.b80+'</td>'
       +'<td style="padding:.4rem .5rem;text-align:center;color:var(--amber)">'+r.b100+'</td>'
+      +'<td style="padding:.4rem .5rem;text-align:center;color:var(--amber)">'+r.b180+'</td>'
       +'<td style="padding:.4rem .5rem;text-align:center;color:var(--amber)">'+(r.hi||'—')+'</td>'
       +'<td style="padding:.4rem .5rem;text-align:center;color:var(--amber)">'+(r.hiCheckout||'—')+'</td>'
       +'<td style="padding:.4rem .5rem;text-align:center">'+r.matches+'</td></tr>';
@@ -3607,7 +3680,7 @@ function buildPlayerStatsDoc(player){
   discRow('Doubles',st.cat.doubles,true);
   discRow('Team Game',st.cat.team,false);
   y+=6;
-  if(st.n80){doc.setFont('helvetica','normal');doc.setFontSize(8);setC(C.dim);doc.text(bandLo()+'-99: '+st.b80+'     100+: '+st.b100+(st.b180?'     180s: '+st.b180:''),pad,y);y+=6;}
+  if(st.n80){doc.setFont('helvetica','normal');doc.setFontSize(8);setC(C.dim);doc.text(bandLo()+'-99: '+st.b80+'     100-179: '+st.b100+'     180s: '+st.b180,pad,y);y+=6;}
 
   // 80+ scores list
   if(st.allSc.length){
@@ -3750,7 +3823,7 @@ function downloadPDF(idx,mode){
 
   function drawRow(label,player,legs,result,scores,mode,bands){
     var isWin=result==='win',isLoss=result==='loss';
-    var bt=bands?(bands.a||0)+(bands.b||0):0;
+    var bt=bands?(bands.a||0)+(bands.b||0)+(bands.c||0):0;
     var s180=(scores?scores.filter(function(v){return v===180;}).length:0)+(bands?(bands.c||0):0);
     var bigScores=(mode==='team'&&scores)?scores.filter(function(v){return v>=80;}).sort(function(a,b){return b-a;}):[];
     var showList=bigScores.length>0||(mode==='team'&&bt>0);
@@ -3801,7 +3874,7 @@ function downloadPDF(idx,mode){
       });
       if(mode==='team'&&bt>0){
         doc.setFont('helvetica','bold');doc.setFontSize(6.5);setC(C.text);
-        doc.text((bands.a?bandLo()+'-99 x'+bands.a+'   ':'')+(bands.b?'100+ x'+bands.b:'')+(bands.c?'  (180 x'+bands.c+')':''),lx,ly);
+        doc.text((bands.a?bandLo()+'-99 x'+bands.a+'   ':'')+(bands.b?'100-179 x'+bands.b+'   ':'')+(bands.c?'180 x'+bands.c:''),lx,ly);
       }
     }
     y+=rH+0.5;
@@ -4432,7 +4505,7 @@ async function loadPublicTable(){
     await attachTableScoring(publicLeague);
     var teams=await sb('teams?league_id=eq.'+publicLeague.id+'&select=id,team_name');
     if(!teams.length){wrap.innerHTML='<div class="nh">No teams registered yet.</div>';return;}
-    var allMatches=await sb('team_matches?team_id=in.('+teams.map(function(t){return t.id;}).join(',')+')'+'&season=eq.'+season+'&select=team_id,wins,losses,match_date');
+    var allMatches=await fetchLeagueMatches(publicLeague.id,teams,season,'team_id,wins,losses,match_date');
     var tableData=teams.map(function(t){
       var tM=allMatches.filter(function(m){return m.team_id===t.id;});
       var played=tM.length;
@@ -4526,7 +4599,7 @@ async function loadPublicScorers(){
   try{
     var teams=await sb('teams?league_id=eq.'+publicLeague.id+'&select=id,team_name');
     if(!teams.length){wrap.innerHTML='<div class="nh">No data yet.</div>';return;}
-    var matches=await sb('team_matches?team_id=in.('+teams.map(function(t){return t.id;}).join(',')+')'+'&season=eq.'+season+'&select=team_id,data');
+    var matches=await fetchLeagueMatches(publicLeague.id,teams,season,'team_id,data');
     var teamMap={};teams.forEach(function(t){teamMap[t.id]=t.team_name;});
     // Aggregate 80+ scores per player
     var playerScores={};
@@ -4550,7 +4623,7 @@ async function loadPublicScorers(){
     wrap.innerHTML='<div class="top-scorers">'+sorted.map(function(p,i){
       return '<div class="scorer-row"><span class="scorer-rank">'+(i+1)+'</span>'
         +'<div><div class="scorer-name">'+esc(p.player)+'</div><div class="scorer-team">'+esc(p.team)+'</div></div>'
-        +'<div style="text-align:right"><div class="scorer-val">'+p.count+'</div><div style="font-size:.7rem;color:var(--dim)">scores</div><div style="font-size:.65rem;color:var(--dim)">'+(p.a+p.b?'80–99: '+p.a+' · 100+: '+p.b:'')+'</div></div>'
+        +'<div style="text-align:right"><div class="scorer-val">'+p.count+'</div><div style="font-size:.7rem;color:var(--dim)">scores</div><div style="font-size:.65rem;color:var(--dim)">'+''+'</div></div>'
         +((p.highest===180||p.c>0)?'<span style="color:var(--amber);font-size:.85rem;font-weight:700;font-family:Barlow,sans-serif">&#9733; 180</span>':'')
         +'</div>';
     }).join('')+'</div>';
