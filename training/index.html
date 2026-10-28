@@ -67,13 +67,14 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
 /* Tips & FAQ */
 .faq-wrap{max-width:640px;margin:0 auto;padding:1.5rem 1rem 3rem}
 .faq-list{display:flex;flex-direction:column;gap:.6rem;margin-top:1.25rem}
+.faq-group{font-family:'Barlow Condensed',sans-serif;font-size:.78rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);margin:.6rem 0 -.1rem}
 .faq-item{background:var(--s2);border:1px solid var(--border);border-radius:10px;overflow:hidden}
 .faq-q{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:1rem 1.1rem;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:1.02rem;font-weight:700;letter-spacing:.02em;color:var(--text)}
 .faq-item:hover .faq-q{color:var(--amber)}
 .faq-arrow{flex-shrink:0;font-size:.85rem;color:var(--green);transition:transform .2s}
 .faq-item.open .faq-arrow{transform:rotate(90deg);color:var(--amber)}
 .faq-a{max-height:0;overflow:hidden;transition:max-height .25s ease}
-.faq-item.open .faq-a{max-height:600px}
+.faq-item.open .faq-a{max-height:1400px}
 .faq-a-inner{padding:0 1.1rem 1.1rem;font-size:.86rem;line-height:1.55;color:var(--dim)}
 .faq-source{display:inline-flex;align-items:center;gap:.3rem;margin-top:.7rem;font-family:'Barlow Condensed',sans-serif;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gl);text-decoration:none;border-bottom:1px solid transparent}
 .faq-source:hover{color:var(--amber);border-color:var(--amber)}
@@ -293,8 +294,84 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
 <div id="screen-tips" class="screen">
   <div class="faq-wrap">
     <div class="menu-title" style="font-size:1.5rem">💡 Tips &amp; FAQ</div>
-    <div class="menu-sub">Common problems, with fixes — tap a question to expand</div>
+    <div class="menu-sub">Getting set up, plus common problems and fixes — tap a question to expand</div>
     <div class="faq-list">
+
+      <div class="faq-group">Setting up</div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">How high and how far away should the board be?<span class="faq-arrow">▶</span></div>
+        <div class="faq-a"><div class="faq-a-inner">
+          The standard set-up is the same everywhere. Fix the board so the <strong>middle of the bullseye is 5ft 8in (173cm) off the floor</strong>, measured to the bull itself rather than the top edge. Then mark the throw line (the oche) <strong>7ft 9&frac14;in (237cm) back from the front of the board</strong>, not from the wall behind it. A handy check: from the bull to the back of the oche, measured on the slant, should come to about <strong>9ft 7&frac12;in (293cm)</strong>. If you play on an electronic board, 8ft is the usual distance.
+          <br><a class="faq-source" href="https://www.harrowsdarts.com/blogs/guides/how-to-set-up-a-dartboard-in-6-simple-steps" target="_blank" rel="noopener noreferrer">Further reading: Harrows ↗</a>
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">How do I mount the board so it stays put?<span class="faq-arrow">▶</span></div>
+        <div class="faq-a"><div class="faq-a-inner">
+          Put the <strong>20 at the top</strong>. Screw it up using the centre fixing plus the three clips arranged in a triangle, which stops it turning, then lay a spirit level across to make sure it hangs straight. Allow roughly 2ft (60cm) of free wall either side and a lane about 5ft wide to throw from.
+          <br><a class="faq-source" href="https://www.harrowsdarts.com/blogs/guides/how-to-set-up-a-dartboard-in-6-simple-steps" target="_blank" rel="noopener noreferrer">Further reading: Harrows ↗</a>
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">What else is worth having around the board?<span class="faq-arrow">▶</span></div>
+        <div class="faq-a"><div class="faq-a-inner">
+          Lighting is the big one: an even, glare-free light lets you see the wires and numbers properly. A surround keeps wayward darts off the wall, and a mat or rubber floor protects both your floor and your darts, since bounce-outs onto hard flooring can blunt points or crack barrels.
+          <br><a class="faq-source" href="https://www.harrowsdarts.com/blogs/guides/how-to-set-up-a-dartboard-in-6-simple-steps" target="_blank" rel="noopener noreferrer">Further reading: Harrows ↗</a>
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">What is a dart made of?<span class="faq-arrow">▶</span></div>
+        <div class="faq-a"><div class="faq-a-inner">
+          There are four bits. The <strong>barrel</strong> is the part you hold, and it varies in weight, shape and grip pattern. The <strong>tip</strong> bites into the board. The <strong>shaft</strong> (also called the stem) joins the barrel to the <strong>flight</strong>, the fin that keeps the dart pointing the right way. Shafts and flights get knocked about, so keep some spares in your case.
+          <br><a class="faq-source" href="https://www.harrowsdarts.com/pages/darts-buying-guide-for-beginners" target="_blank" rel="noopener noreferrer">Further reading: Harrows ↗</a>
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Steel tip or soft tip?<span class="faq-arrow">▶</span></div>
+        <div class="faq-a"><div class="faq-a-inner">
+          Steel-tip darts are for the traditional bristle board found in most UK pubs and leagues. Soft-tip darts have plastic points and are made for electronic boards. Buy whichever matches the board you will actually be playing on, and if you use steel points, keep them sharp, as a dull point is a common cause of bounce-outs.
+          <br><a class="faq-source" href="https://www.harrowsdarts.com/pages/darts-buying-guide-for-beginners" target="_blank" rel="noopener noreferrer">Further reading: Harrows ↗</a>
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">What should my first set of darts be?<span class="faq-arrow">▶</span></div>
+        <div class="faq-a"><div class="faq-a-inner">
+          A good low-risk starting point: steel tip, around <strong>22&ndash;24g</strong>, a medium-grip barrel (brass if you want to spend little, or 80% tungsten for a slimmer feel), standard flights and medium-length shafts. Budget somewhere around &pound;25&ndash;&pound;40. Try a friend&rsquo;s darts of different weights before you commit.
+          <br><a class="faq-source" href="https://www.harrowsdarts.com/pages/darts-buying-guide-for-beginners" target="_blank" rel="noopener noreferrer">Further reading: Harrows ↗</a>
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">How does dart weight change my throw?<span class="faq-arrow">▶</span></div>
+        <div class="faq-a"><div class="faq-a-inner">
+          Barrels commonly run from about 18g to 32g, though most players use 20&ndash;26g.<br>&bull; <strong>Lighter (roughly 18&ndash;21g):</strong> you have to put a little more into the throw. They suit a quick, flat delivery, but any slip in your release shows up more.<br>&bull; <strong>Middle (22&ndash;24g):</strong> where most newcomers settle, as it balances feel and control.<br>&bull; <strong>Heavier (25g+):</strong> once it is moving it does much of the work, so you can throw gently and steady a shaky action. Throw too softly, though, and the front can dip.<br>Neither end is better; it is about what suits your natural action. Stick with a set for a few sessions before judging, and only change one thing at a time. If darts keep landing low or short, try a gram or two lighter; if they stray high and right, try slightly heavier.
+          <br><a class="faq-source" href="https://www.harrowsdarts.com/blogs/guides/what-weight-darts-should-i-use" target="_blank" rel="noopener noreferrer">Further reading: Harrows ↗</a>
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Which shafts (stems) should I use?<span class="faq-arrow">▶</span></div>
+        <div class="faq-a"><div class="faq-a-inner">
+          The shaft changes where the dart balances and how it feels in the hand.<br><strong>Length.</strong> A short shaft keeps the weight forward, which suits a grip near the point. A longer one shifts the balance back and tends to make the flight steadier. Players and retailers do not agree on exactly how each length alters the arc, so test a few. A middle length is the safe starting choice.<br><strong>Material.</strong><br>&bull; <em>Nylon or plastic:</em> cheap and light; plastic is the most likely to snap.<br>&bull; <em>Aluminium:</em> cheap and slender, which can mean fewer deflections, but it can bend if hit hard.<br>&bull; <em>Carbon fibre:</em> super light and very long-lasting, at a higher price.<br>&bull; <em>Titanium:</em> tough and light; the top-end option.<br><strong>Style.</strong> Standard-width shafts favour stability; slim ones trade some of that for a quicker dart. &ldquo;Spinning&rdquo; shafts let the flight turn freely to shrug off knocks, though players report mixed results. If flights keep dropping out, suspect a worn shaft or a loose flight.
+          <br><a class="faq-source" href="https://doubletopdartshop.com/blogs/news/how-to-choose-the-best-dart-shafts" target="_blank" rel="noopener noreferrer">Further reading: Double Top Darts ↗</a> &nbsp;<a class="faq-source" href="https://www.shotdarts.com/blog/dart-shaft-lengths" target="_blank" rel="noopener noreferrer">Further reading: Shot Darts ↗</a>
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Which flights should I use?<span class="faq-arrow">▶</span></div>
+        <div class="faq-a"><div class="faq-a-inner">
+          A flight works like the fins on an arrow. The bigger it is, the more air it catches: the dart slows and follows a higher arc. A smaller flight lets it fly faster and flatter. The main shapes:<br>&bull; <strong>Standard:</strong> the all-rounder, and a good match for heavier darts. The smaller No.6 is a little quicker.<br>&bull; <strong>Slim:</strong> narrow with a long taper and low drag, for lighter darts and firm throwers.<br>&bull; <strong>Kite:</strong> short and broad, sitting between lift and control.<br>&bull; <strong>Pear:</strong> a rounder kite that is a touch faster.<br>&bull; <strong>Fantail:</strong> a stretched kite, faster again.<br>&bull; <strong>Vortex:</strong> a large, notched teardrop for slower, smoother throws.<br>&bull; <strong>Combat:</strong> a diamond with a small area, favoured by sharp, aggressive throwers.<br>Flights cost very little, so collect a few shapes and compare. Replace any that get chewed up, and a small flight protector helps them last.
+          <br><a class="faq-source" href="https://darthelp.com/guides/guide-to-dart-flights/" target="_blank" rel="noopener noreferrer">Further reading: DartHelp ↗</a>
+        </div></div>
+      </div>
+
+      <div class="faq-group">Fixing problems</div>
 
       <div class="faq-item">
         <div class="faq-q" onclick="toggleFaq(this)">My darts keep flying too high<span class="faq-arrow">▶</span></div>
@@ -361,7 +438,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
       </div>
 
     </div>
-    <div class="faq-note">Advice above is summarised from third-party darts coaching sites, linked under each answer — tap a source link to read the full article. Every player's technique is different, so treat these as a starting point rather than a fix-all.</div>
+    <div class="faq-note">The set-up answers are our own summaries of widely published darts guidance (the problem-fix answers are summarised from the coaching sites linked under them) — tap a link to read more. Every player's technique is different, so treat these as a starting point rather than a fix-all.</div>
   </div>
 </div>
 
