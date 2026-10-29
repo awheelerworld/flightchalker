@@ -1123,6 +1123,23 @@ async function createLeague(){
 function wizErr(id,msg){var e=wizEl(id);if(e){e.textContent=msg||'';e.className='st'+(msg?' err':'');}}
 function wizOk(id,msg){var e=wizEl(id);if(e){e.textContent=msg||'';e.className='st ok';}}
 
+// Reopen the guided set-up for a league that already exists (e.g. from the empty Manage Teams list).
+async function wizResume(leagueId){
+  try{
+    var rows=await sb('leagues?id=eq.'+leagueId+'&select=id,name,match_night,num_singles,num_doubles,team_game_players,current_season,county,town,description');
+    var l=rows&&rows[0];if(!l)throw new Error('League not found.');
+    var token=await tokenForLeague(leagueId);
+    var teams=await sb('teams?league_id=eq.'+leagueId+'&order=team_name.asc&select=id,team_name');
+    var fx=[];try{fx=await sb('league_fixtures?league_id=eq.'+leagueId+'&season=eq.'+(l.current_season||1)+'&select=id&limit=2000');}catch(e){}
+    wiz={id:leagueId,name:l.name,code:String(leagueId).replace(/-/g,'').toUpperCase().slice(0,8),token:token,
+      teams:(teams||[]).map(function(t){return {team_id:t.id,team_name:t.team_name,setup_code:'',captain:'',email:'',registered:true};}),
+      step:2,season:l.current_season||1,fixtures:(fx||[]).length,night:l.match_night||'Monday',county:l.county||'',town:l.town||'',desc:l.description||'',
+      tscoring:'match',tgPlayers:l.team_game_players||0,singles:l.num_singles||0,doubles:l.num_doubles||0,note:''};
+    showTab('create');
+    wizShow(2);
+  }catch(e){toast('Could not open team set-up: '+(e.message||e),true);}
+}
+
 // ---- Step 2: teams ----
 function wizRenderTeams(){
   var n=wiz.teams.length;
@@ -1141,7 +1158,7 @@ function wizRenderTeams(){
    +'<div class="wiz-help" style="margin-top:.5rem">One team per line: <em>Team name, Captain name, Captain email</em> (the captain details are optional). You can copy these straight out of a spreadsheet.</div>'
    +'<textarea id="wt-paste" rows="5" style="width:100%;background:var(--bg);border:1px solid var(--blue);border-radius:4px;color:var(--text);font-family:\'Barlow\',sans-serif;font-size:.85rem;padding:.45rem .6rem" placeholder="The Crown, Dave Smith, dave@example.com\nRed Lion, Sue Jones, sue@example.com"></textarea>'
    +'<button class="btn-admin" style="margin-top:.5rem" onclick="wizPasteTeams()">Add these teams</button></details>'
-   +'<details id="wx-box" style="margin-top:.9rem"><summary style="cursor:pointer;color:#8ac4ff;font-size:.85rem">Or add a team that is already on Flight Chalker</summary>'
+   +'<div class="wiz-sec" style="margin-top:1.3rem">Already on Flight Chalker?</div><details id="wx-box" open style="margin-top:.2rem"><summary style="cursor:pointer;color:#8ac4ff;font-size:.9rem;font-weight:600">Add a team that is already on Flight Chalker</summary>'
    +'<div class="wiz-help" style="margin-top:.5rem">A team can play in more than one league. Ask the captain for their <strong>team code</strong> (shown in the team app). The team keeps its place in its other league. This league gets its own record of the team with the same name and players, and its own PIN, so results and stats stay separate.</div>'
    +'<div class="field"><label>Team code</label><input type="text" id="wx-code" maxlength="20" autocapitalize="characters" autocomplete="off" placeholder="e.g. CRWN42X" onkeydown="if(event.key===\'Enter\'){event.preventDefault();wizFindTeam();}"></div>'
    +'<button class="btn-admin" onclick="wizFindTeam()">Find team</button>'
@@ -1149,8 +1166,8 @@ function wizRenderTeams(){
    +'<div class="st" id="wt-status"></div>'
    +'<div class="wiz-sec">Teams added ('+n+')</div>'
    +'<div id="wt-list">'+(n?wiz.teams.map(function(t,i){
-      return '<div class="wiz-row"><div class="tn">'+esc(t.team_name)+(t.fromTown||t.fromName?'<div style="font-size:.72rem;color:var(--dim);font-weight:400">'+esc([t.fromTown,t.fromName].filter(Boolean).join(' · '))+'</div>':'')+'</div>'+(t.byCode?'<div class="tc" style="flex:2">Existing team, added by code. PIN '+esc(t.pin)+'</div>':'<div class="tc">'+esc(t.captain||'—')+'</div><div class="tc">'+esc(t.email||'—')+'</div>')
-        +'<button onclick="wizRemoveTeam('+i+')" style="background:none;border:1px solid #5c2020;border-radius:4px;color:#ff8080;font-size:.7rem;padding:2px 8px;cursor:pointer">Remove</button></div>';
+      return '<div class="wiz-row"><div class="tn">'+esc(t.team_name)+(t.fromTown||t.fromName?'<div style="font-size:.72rem;color:var(--dim);font-weight:400">'+esc([t.fromTown,t.fromName].filter(Boolean).join(' · '))+'</div>':'')+'</div>'+(t.registered?'<div class="tc" style="flex:2">Already in the league</div>':t.byCode?'<div class="tc" style="flex:2">Existing team, added by code. PIN '+esc(t.pin)+'</div>':'<div class="tc">'+esc(t.captain||'—')+'</div><div class="tc">'+esc(t.email||'—')+'</div>')
+        +(t.registered?'':'<button onclick="wizRemoveTeam('+i+')" style="background:none;border:1px solid #5c2020;border-radius:4px;color:#ff8080;font-size:.7rem;padding:2px 8px;cursor:pointer">Remove</button>')+'</div>';
     }).join(''):'<div class="nh">No teams yet. Add at least two to continue.</div>')+'</div>'
    +'<div class="wiz-nav"><button class="btn-admin" '+(n<2?'disabled style="opacity:.5;cursor:not-allowed"':'')+' onclick="wizShow(3)">Continue to fixtures &rarr;</button></div>';
 }
@@ -1404,7 +1421,8 @@ async function wizPublish(){
 }
 async function wizFinish(){
   var id=wiz.id;
-  if(isPlatformAdmin){wizReset();showTab('leagues');return;}
+  wizReset();
+  if(isPlatformAdmin){showTab('leagues');return;}
   openMyLeague(id);
 }
 
@@ -2027,7 +2045,7 @@ async function loadTeamList(leagueId){
     var teams;
     try{ teams=await sb('teams?league_id=eq.'+leagueId+'&order=team_name.asc&select='+teamCols+',venue_name,venue_address'); }
     catch(e){ teams=await sb('teams?league_id=eq.'+leagueId+'&order=team_name.asc&select='+teamCols); } // venue columns not added yet (migration_03)
-    if(!teams||!teams.length){el.innerHTML='<div class="nh">No teams registered yet.</div>';return;}
+    if(!teams||!teams.length){el.innerHTML='<div class="nh">No teams registered yet.<div style="margin-top:.8rem"><button class="btn-admin" onclick="wizResume(\''+leagueId+'\')">+ Add teams to this league</button></div><div style="font-size:.78rem;margin-top:.6rem">Enter teams one by one, paste a list, or add a team that already exists on Flight Chalker. Then draw up fixtures and email the captains.</div></div>';return;}
 
     // PINs are no longer readable directly (see migration_01_security.sql)
     // - fetched separately via the token-gated RPC and merged in here.
