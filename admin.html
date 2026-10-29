@@ -1160,7 +1160,9 @@ function wizRenderTeams(){
    +'<button class="btn-admin" style="margin-top:.5rem" onclick="wizPasteTeams()">Add these teams</button></details>'
    +'<div class="wiz-sec" style="margin-top:1.3rem">Already on Flight Chalker?</div><details id="wx-box" open style="margin-top:.2rem"><summary style="cursor:pointer;color:#8ac4ff;font-size:.9rem;font-weight:600">Add a team that is already on Flight Chalker</summary>'
    +'<div class="wiz-help" style="margin-top:.5rem">A team can play in more than one league. Ask the captain for their <strong>team code</strong> (shown in the team app). The team keeps its place in its other league. This league gets its own record of the team with the same name and players, and its own PIN, so results and stats stay separate.</div>'
-   +'<div class="field"><label>Team code</label><input type="text" id="wx-code" maxlength="20" autocapitalize="characters" autocomplete="off" placeholder="e.g. CRWN42X" onkeydown="if(event.key===\'Enter\'){event.preventDefault();wizFindTeam();}"></div>'
+   +'<div class="field"><label>Pick from your other leagues</label><select id="wx-pick" onfocus="wizLoadPick()" onchange="wizPicked()"><option value="">Choose a team\u2026</option></select></div>'
+   +'<div class="wiz-help">No team code yet? A team only gets a code once its captain has opened the team in the app, so teams nobody has claimed won\u2019t have one. If the team is in a league you run, pick it here instead.</div>'
+   +'<div class="field"><label>Or enter a team code</label><input type="text" id="wx-code" maxlength="20" autocapitalize="characters" autocomplete="off" placeholder="e.g. CRWN42X" onkeydown="if(event.key===\'Enter\'){event.preventDefault();wizFindTeam();}"></div>'
    +'<button class="btn-admin" onclick="wizFindTeam()">Find team</button>'
    +'<div id="wx-found"></div></details>'
    +'<div class="st" id="wt-status"></div>'
@@ -1219,6 +1221,22 @@ async function wizRemoveTeam(i){
 }
 
 // ---- Existing team, added by its team code ----
+var wizPickLoaded=false;
+async function wizLoadPick(){
+  if(wizPickLoaded)return;wizPickLoaded=true;
+  var sel=wizEl('wx-pick');
+  try{
+    var ls=await sb('leagues?select=id,name,town&order=name.asc');var nm={};(ls||[]).forEach(function(l){nm[l.id]=l.name+(l.town?' ('+l.town+')':'');});
+    var ts=await sb('teams?league_id=neq.'+wiz.id+'&select=id,team_name,league_id&order=team_name.asc&limit=1000');
+    if(!ts||!ts.length){sel.innerHTML='<option value="">No teams found in your other leagues</option>';return;}
+    sel.innerHTML='<option value="">Choose a team ('+ts.length+')\u2026</option>'+ts.map(function(t){return '<option value="'+esc(t.id)+'">'+esc(t.team_name)+' \u2014 '+esc(nm[t.league_id]||'another league')+'</option>';}).join('');
+  }catch(e){wizPickLoaded=false;sel.innerHTML='<option value="">Could not load teams</option>';}
+}
+function wizPicked(){
+  var v=wizEl('wx-pick').value;if(!v)return;
+  wizEl('wx-code').value=v.replace(/-/g,'').slice(0,8).toUpperCase();
+  wizFindTeam();
+}
 var wizFound=null;
 async function wizFindTeam(){
   var code=wizEl('wx-code').value.trim();
@@ -1240,6 +1258,7 @@ async function wizFindTeam(){
 }
 async function wizAddByCode(){
   if(!wizFound)return;
+  wizErr('wt-status','');
   try{
     var rows=await sb('rpc/admin_add_team_by_code',{method:'POST',body:JSON.stringify({p_token:wiz.token,p_code:wizFound.code})});
     var r=Array.isArray(rows)?rows[0]:rows;
