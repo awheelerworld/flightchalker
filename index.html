@@ -646,6 +646,8 @@ html{scroll-behavior:smooth}
         </select>
         <span class="hint" id="reg-team-hint" style="display:none">Team names for this league are set by your league admin. Not seeing your team? Contact them.</span>
       </div>
+      <div class="afield" id="reg-code-row" style="display:none"><label style="display:flex;align-items:center;gap:.5rem;font-weight:400;text-transform:none;letter-spacing:0;cursor:pointer"><input type="checkbox" id="reg-usecode" style="width:auto" onchange="regCodeToggle()"> My league admin gave me a setup code</label></div>
+      <div class="afield" id="reg-code-field" style="display:none"><label>Setup Code</label><input type="text" id="reg-code" autocomplete="off" autocapitalize="characters" placeholder="e.g. K7M2QX" style="text-transform:uppercase"><span class="hint">It is in the email from your league admin. It works once, for your team only.</span></div>
       <div class="afield" id="reg-claim-name-field" style="display:none"><label>Your Name</label><input type="text" id="reg-claim-name" placeholder="e.g. Dave Smith"></div>
       <div class="afield" id="reg-claim-email-field" style="display:none"><label>Your Email</label><input type="email" id="reg-claim-email" placeholder="you@example.com"><span class="hint">Your league admin will use this to verify your request.</span></div>
       <div class="afield">
@@ -1642,6 +1644,26 @@ async function lookupLeague(){
   }catch(e){toast('Error: '+e.message,true);}
 }
 
+var regPrepared=[];
+function regCodeToggle(){
+  var on=document.getElementById('reg-usecode').checked&&regPrepared.length>0;
+  var sel=document.getElementById('reg-team-select'),textInp=document.getElementById('reg-team'),hint=document.getElementById('reg-team-hint');
+  document.getElementById('reg-code-field').style.display=on?'':'none';
+  document.getElementById('reg-claim-name-field').style.display=on?'none':'';
+  document.getElementById('reg-claim-email-field').style.display=on?'none':'';
+  textInp.style.display='none';sel.style.display='';hint.style.display=on?'none':'block';
+  if(on){
+    sel.innerHTML='<option value="">— Select your team —</option>'+regPrepared.map(function(n){return '<option value="'+esc(n)+'">'+esc(n)+'</option>';}).join('');
+  }else{
+    // Fall back to the usual request-to-the-admin list
+    sel.innerHTML='<option value="">Loading team names…</option>';
+    sb('rpc/league_claimable_team_names',{method:'POST',body:JSON.stringify({p_league_id:regLeague.id})}).then(function(open){
+      var a=(open||[]).map(function(c){return c.team_name;});
+      sel.innerHTML=a.length?'<option value="">— Select your team —</option>'+a.map(function(n){return '<option value="'+esc(n)+'">'+esc(n)+'</option>';}).join(''):'<option value="">No unclaimed team names available</option>';
+    }).catch(function(){sel.innerHTML='<option value="">Could not load team names</option>';});
+  }
+}
+
 // Toggles between free-text team name entry and a fixed list set by the
 // league admin (from the Captain Contacts list in admin.html), depending on
 // the league's fixed_team_names flag. In fixed mode, only team names that
@@ -1652,9 +1674,23 @@ async function setupTeamNameField(){
   var hint=document.getElementById('reg-team-hint');
   var claimNameField=document.getElementById('reg-claim-name-field');
   var claimEmailField=document.getElementById('reg-claim-email-field');
+  regPrepared=[];
+  document.getElementById('reg-code-row').style.display='none';
+  document.getElementById('reg-code-field').style.display='none';
+  document.getElementById('reg-usecode').checked=false;
   if(!regLeague||!regLeague.fixed_team_names){
     textInp.style.display='';sel.style.display='none';hint.style.display='none';
     claimNameField.style.display='none';claimEmailField.style.display='none';
+    return;
+  }
+  try{
+    var prep=await sb('rpc/league_prepared_team_names',{method:'POST',body:JSON.stringify({p_league_id:regLeague.id})});
+    regPrepared=(prep||[]).map(function(c){return c.team_name;});
+  }catch(e){regPrepared=[];}
+  if(regPrepared.length){
+    document.getElementById('reg-code-row').style.display='';
+    document.getElementById('reg-usecode').checked=true;
+    regCodeToggle();
     return;
   }
   textInp.style.display='none';sel.style.display='';hint.style.display='block';
@@ -1725,6 +1761,25 @@ async function registerTeam(){
   if(!secret){st.textContent='Please enter a secret word.';st.className='ast err';sp.style.display='none';return;}
   let pin=String(Math.floor(1000+Math.random()*9000));
   const threshold=parseInt(document.getElementById('reg-threshold').value)||80;
+
+  if(regLeague.fixed_team_names&&regPrepared.length&&document.getElementById('reg-usecode').checked){
+    const code=document.getElementById('reg-code').value.trim().toUpperCase().replace(/\s+/g,'');
+    if(!code){st.textContent='Please enter the setup code from your league admin.';st.className='ast err';sp.style.display='none';return;}
+    try{
+      const rows=await sb('rpc/claim_prepared_team',{method:'POST',body:JSON.stringify({p_league_id:regLeague.id,p_team_name:teamName,p_setup_code:code,p_secret_word:secret,p_threshold:threshold,p_players:regPlayers})});
+      if(!rows||!rows.length){st.textContent='That setup code is not right for this team. Check it and try again. After 8 wrong tries the code locks and your league admin can issue a new one.';st.className='ast err';sp.style.display='none';return;}
+      pin=rows[0].pin;
+      currentTeam={id:rows[0].team_id,team_name:teamName,league_id:regLeague.id,score_threshold:threshold,token:rows[0].token};
+      currentLeague=regLeague;
+      try{await attachScoreMode();}catch(e){}
+      localStorage.setItem('mld_session',JSON.stringify({team:currentTeam,league:currentLeague}));
+      document.getElementById('pin-display').textContent=pin;
+      document.getElementById('pin-team-name').textContent=teamName+' · '+regLeague.name;
+      document.getElementById('pin-overlay').style.display='flex';
+    }catch(e){st.textContent='Error: '+e.message;st.className='ast err';}
+    sp.style.display='none';
+    return;
+  }
 
   if(regLeague.fixed_team_names){
     const claimName=document.getElementById('reg-claim-name').value.trim();

@@ -91,6 +91,18 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
 #ss-overlay.open{display:block}
 #ss-box{max-width:640px;margin:2vh auto;background:var(--surface,#142119);border:1px solid var(--blue,#2a6aa0);border-radius:12px;padding:1.25rem}
 #ss-box h2{font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;font-weight:900;text-transform:uppercase;letter-spacing:.05em;color:var(--amber);margin-bottom:.25rem}
+.wiz-help{font-size:.8rem;color:var(--dim);line-height:1.5;margin-bottom:.75rem}
+.wiz-sec{font-family:'Barlow Condensed',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#5a9abf;margin:1.1rem 0 .6rem}
+.wiz-bar{display:flex;gap:.4rem;margin:0 0 1.1rem}
+.wiz-bar div{flex:1;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);border-bottom:3px solid var(--border,#34503e);padding-bottom:.35rem}
+.wiz-bar div.on{color:#8ac4ff;border-color:var(--blue-l)}
+.wiz-bar div.done{color:var(--gl);border-color:var(--gl)}
+.wiz-row{display:flex;align-items:center;gap:.5rem;padding:.45rem 0;border-bottom:1px solid var(--border);font-size:.85rem;flex-wrap:wrap}
+.wiz-row .tn{flex:1.2;min-width:120px;font-weight:600;overflow-wrap:anywhere}
+.wiz-row .tc{flex:1;min-width:110px;color:var(--dim);overflow-wrap:anywhere}
+.wiz-row input[type=email]{flex:1.4;min-width:150px;background:var(--bg);border:1px solid var(--blue);border-radius:4px;color:var(--text);font-size:.82rem;padding:.3rem .5rem}
+.wiz-nav{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1.1rem}
+.wiz-ghost{background:none;border:1px solid var(--border);color:var(--dim)}
 .ss-steps{display:flex;gap:.4rem;margin:.5rem 0 1rem}
 .ss-steps span{flex:1;height:4px;border-radius:2px;background:var(--border,#34503e)}
 .ss-steps span.on{background:var(--amber)}
@@ -316,38 +328,70 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
     </div>
   </div>
 
-  <!-- CREATE LEAGUE PANEL -->
+  <!-- CREATE LEAGUE PANEL: guided set-up (1 Format, 2 Teams, 3 Fixtures, 4 Publish & send) -->
   <div id="panel-create" class="panel">
     <div class="card">
-      <h2>Create New League</h2>
-      <div class="field"><label>League Name</label><input type="text" id="cl-name" placeholder="e.g. Monday Night Darts 2026"></div>
-      <div class="grid">
-        <div class="field"><label>County</label><select id="cl-county"><option value="">— Select county —</option></select></div>
-        <div class="field"><label>Town / City</label><input type="text" id="cl-town" maxlength="60" placeholder="e.g. Guildford"></div>
+      <div id="wiz-head"></div>
+
+      <!-- STEP 1: FORMAT -->
+      <div id="wiz-1">
+        <h2>League format</h2>
+        <p class="wiz-help">Start by setting the rules of your league. You can change any of this later from the league's Edit button.</p>
+        <div class="field"><label>League name</label><input type="text" id="cl-name" placeholder="e.g. Monday Night Darts 2026"></div>
+        <div class="grid">
+          <div class="field"><label>Match night</label>
+            <select id="cl-night"><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option></select></div>
+          <div class="field"><label>Start time</label><input type="time" id="cl-time" value="20:00"></div>
+        </div>
+
+        <div class="wiz-sec">Games each night</div>
+        <div class="grid">
+          <div class="field"><label>Singles games</label><input type="number" id="cl-singles" value="6" min="1" max="12"></div>
+          <div class="field"><label>Doubles games</label><input type="number" id="cl-doubles" value="3" min="0" max="6"></div>
+          <div class="field"><label>Team game (e.g. a 4-way)?</label><select id="cl-tgyn" onchange="wizTg()"><option value="no" selected>No team game</option><option value="yes">Yes, include a team game</option></select></div>
+          <div class="field" id="cl-tg-players" style="display:none"><label>Players in the team game</label><select id="cl-teamgame"><option value="3">3 players</option><option value="4" selected>4 players</option><option value="6">6 players</option></select></div>
+        </div>
+        <div class="wiz-help" id="cl-need">Each team needs 6 players on the night.</div>
+
+        <div class="wiz-sec">Legs and starting scores</div>
+        <div class="grid">
+          <div class="field"><label>Singles score</label><input type="number" id="cl-sscore" value="501" min="101"></div>
+          <div class="field"><label>Singles best of</label><select id="cl-bosing"><option value="1">1 leg</option><option value="3" selected>Best of 3</option><option value="5">Best of 5</option></select></div>
+          <div class="field"><label>Doubles score</label><input type="number" id="cl-dscore" value="601" min="101"></div>
+          <div class="field"><label>Doubles best of</label><select id="cl-bodub"><option value="1">1 leg</option><option value="3" selected>Best of 3</option><option value="5">Best of 5</option></select></div>
+          <div class="field" id="cl-tscore-wrap" style="display:none"><label>Team game score</label><input type="number" id="cl-tscore" value="1001" min="101"></div>
+        </div>
+
+        <div class="wiz-sec">League table points</div>
+        <div class="field"><label>How are points awarded?</label>
+          <select id="cl-tscoring" onchange="wizPts()"><option value="match" selected>Match result: points for a win, draw or loss</option><option value="games">Games won: a point for every game won on the night (e.g. 6&ndash;3 = 6 points)</option></select></div>
+        <div class="grid" id="cl-pts-match">
+          <div class="field"><label>Points for a win</label><input type="number" id="cl-pwin" value="2" min="0"></div>
+          <div class="field"><label>Points for a draw</label><input type="number" id="cl-pdraw" value="1" min="0"></div>
+          <div class="field"><label>Points for a loss</label><input type="number" id="cl-ploss" value="0" min="0"></div>
+        </div>
+        <div class="grid" id="cl-pts-games" style="display:none">
+          <div class="field"><label>Points per game won</label><input type="number" id="cl-ppg" value="1" min="0" max="100"></div>
+        </div>
+
+        <div class="wiz-sec">Where is the league?</div>
+        <div class="grid">
+          <div class="field"><label>County</label><select id="cl-county"><option value="">— Select county —</option></select></div>
+          <div class="field"><label>Town / City</label><input type="text" id="cl-town" maxlength="60" placeholder="e.g. Guildford"></div>
+        </div>
+        <div class="field"><label>About the league <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional, shown to people looking for a league)</span></label><textarea id="cl-desc" maxlength="1000" rows="3" placeholder="e.g. Friendly Monday night pub league, 12 teams, all abilities welcome." style="width:100%;background:var(--bg);border:1px solid var(--blue);border-radius:4px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.9rem;padding:.45rem .6rem;resize:vertical"></textarea></div>
+
+        <div class="wiz-sec">Options</div>
+        <div class="field"><label style="display:flex;align-items:center;gap:.5rem;font-weight:400;text-transform:none;letter-spacing:0"><input type="checkbox" id="cl-fixedteams" style="width:auto" checked> Only teams I add can join (recommended). Captains set up the team you entered rather than typing their own name.</label></div>
+        <div class="field"><label>Helper password <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label><input type="password" id="cl-pw" placeholder="Leave blank unless you want a co-organiser to log in" autocomplete="new-password"></div>
+
+        <button class="btn-admin" onclick="createLeague()"><span id="cl-spin" style="display:none" class="spin"></span>Save format &amp; continue &rarr;</button>
+        <div class="st" id="cl-status"></div>
       </div>
-      <div class="field"><label>About the league <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional - shown to people looking for a league)</span></label><textarea id="cl-desc" maxlength="1000" rows="3" placeholder="e.g. Friendly Monday night pub league, 12 teams, all abilities welcome." style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:Barlow,sans-serif;font-size:.9rem;padding:.5rem"></textarea></div>
-      <div class="field"><label>Helper Password <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label><input type="password" id="cl-pw" placeholder="Leave blank unless you want a co-organiser to log in" autocomplete="new-password"><span style="font-size:.72rem;color:var(--dim)">You manage this league through your own account. This is only for sharing limited access with a co-organiser (league name + this password). Minimum 6 characters. You can change it later.</span></div>
-      <div class="field"><label>Start Time <span style="font-weight:400;text-transform:none;letter-spacing:0">(used for calendar entries)</span></label><input type="time" id="cl-time" value="20:00"></div>
-      <div class="field"><label>Match Night</label>
-        <select id="cl-night"><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Sunday</option></select>
-      </div>
-      <div class="field"><label style="display:flex;align-items:center;gap:.5rem;font-weight:400;text-transform:none;letter-spacing:0"><input type="checkbox" id="cl-fixedteams" style="width:auto"> Fix team names — captains pick from a list you set (e.g. pub/club names), instead of typing their own</label></div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#5a9abf;margin-bottom:.75rem;margin-top:.25rem">Match Format</div>
-      <div class="grid">
-        <div class="field"><label>Singles</label><input type="number" id="cl-singles" value="6" min="1" max="12"></div>
-        <div class="field"><label>Doubles</label><input type="number" id="cl-doubles" value="3" min="0" max="6"></div>
-        <div class="field"><label>Team Game</label><select id="cl-teamgame"><option value="0">None</option><option value="3">3 players</option><option value="4" selected>4 players</option><option value="6">6 players</option></select></div>
-        <div class="field"><label>Singles Score</label><input type="number" id="cl-sscore" value="501" min="101"></div>
-        <div class="field"><label>Doubles Score</label><input type="number" id="cl-dscore" value="601" min="101"></div>
-        <div class="field"><label>Team Score</label><input type="number" id="cl-tscore" value="1001" min="101"></div>
-        <div class="field"><label>Singles Best Of</label><select id="cl-bosing"><option value="1">1 leg</option><option value="3" selected>Best of 3</option><option value="5">Best of 5</option></select></div>
-        <div class="field"><label>Doubles Best Of</label><select id="cl-bodub"><option value="1">1 leg</option><option value="3" selected>Best of 3</option><option value="5">Best of 5</option></select></div>
-        <div class="field"><label>Points Win</label><input type="number" id="cl-pwin" value="2" min="0"></div>
-        <div class="field"><label>Points Draw</label><input type="number" id="cl-pdraw" value="1" min="0"></div>
-        <div class="field"><label>Points Loss</label><input type="number" id="cl-ploss" value="0" min="0"></div>
-      </div>
-      <button class="btn-admin" onclick="createLeague()"><span id="cl-spin" style="display:none" class="spin"></span>Create League</button>
-      <div class="st" id="cl-status"></div>
+
+      <div id="wiz-2" style="display:none"></div>
+      <div id="wiz-3" style="display:none"></div>
+      <div id="wiz-4" style="display:none"></div>
     </div>
   </div>
   <!-- NOTICES PANEL -->
@@ -687,7 +731,7 @@ function enterCreateMode(){
   document.querySelectorAll('.tabs .tab').forEach(function(t){t.style.display='none';});
   document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
   document.getElementById('panel-create').classList.add('active');
-  document.getElementById('cl-status').textContent='';
+  wizReset();
   showMyLeaguesButton(true);
 }
 function startCreateLeague(){ enterCreateMode(); }
@@ -808,6 +852,7 @@ function showTab(name){
   document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
   document.getElementById('panel-'+name).classList.add('active');
   if(name==='leagues')loadLeagues();
+  if(name==='create'&&!wiz.id)wizReset();
   if(name==='fixtures')populateFixtureLeagueDropdowns();
   if(name==='notices')populateNoticeDropdowns();
   if(name==='enquiries')populateEnquiryLeagues();
@@ -833,7 +878,7 @@ async function populateFixtureLeagueDropdowns(){
   }catch(e){toast('Error loading leagues: '+e.message,true);}
 }
 
-var scoreModeOk=false, tableScoringOk=false;
+var tableScoringOk=false;
 async function loadLeagues(){
   var el=document.getElementById('leagues-list');
   el.innerHTML='<div class="lh"><span class="spin"></span> Loading…</div>';
@@ -846,9 +891,6 @@ async function loadLeagues(){
       try{ leagues=await sb('leagues?order=created_at.desc&select='+leagueCols+',match_time'+leagueScope()); }
       catch(e2){ leagues=await sb('leagues?order=created_at.desc&select='+leagueCols+leagueScope()); } // newer columns not added yet (migrations 03/04)
     }
-    var modes={};
-    try{ (await sb('leagues?select=id,score_mode'+leagueScope())).forEach(function(r){modes[r.id]=r.score_mode;}); scoreModeOk=true; }catch(e){ scoreModeOk=false; } // column added by SQL 09
-    leagues.forEach(function(l){l.score_mode=modes[l.id]||'exact';});
     var tsc={};
     try{ (await sb('leagues?select=id,table_scoring,points_per_game'+leagueScope())).forEach(function(r){tsc[r.id]=r;}); tableScoringOk=true; }catch(e){ tableScoringOk=false; }
     leagues.forEach(function(l){var r=tsc[l.id]||{};l.table_scoring=r.table_scoring==='games'?'games':'match';l.points_per_game=r.points_per_game==null?1:r.points_per_game;});
@@ -886,7 +928,6 @@ async function loadLeagues(){
         +'<div class="field"><label>Points Loss</label><input type="number" id="epl-'+l.id+'" value="'+(l.points_loss||0)+'"></div>'
         +'<div class="field" style="grid-column:1/-1"><label style="display:flex;align-items:center;gap:.5rem;font-weight:400;text-transform:none;letter-spacing:0"><input type="checkbox" id="eftn-'+l.id+'" '+(l.fixed_team_names?'checked':'')+' style="width:auto"> Fix team names — captains must pick from the Captain Contacts list instead of typing their own</label></div>'
         +'<div class="field" style="grid-column:1/-1"><label>League table points</label><select id="ets2-'+l.id+'"'+(tableScoringOk?'':' disabled')+' onchange="document.getElementById(\'eppg-wrap-'+l.id+'\').style.display=this.value===\'games\'?\'block\':\'none\'"><option value="match" '+(l.table_scoring!=='games'?'selected':'')+'>Match result — points for a win / draw / loss (uses the Points boxes above)</option><option value="games" '+(l.table_scoring==='games'?'selected':'')+'>Games won — points for every game won on the night (e.g. a 6–3 win: 6 points to the winners, 3 to the losers)</option></select>'+(tableScoringOk?'':'<div style="font-size:.72rem;color:var(--amber);margin-top:.3rem">Run SQL 09_score_mode.sql in Supabase to enable this setting.</div>')+'<div id="eppg-wrap-'+l.id+'" style="margin-top:.5rem;display:'+(l.table_scoring==='games'?'block':'none')+'"><label>Points per game won</label><input type="number" min="0" id="eppg-'+l.id+'" value="'+l.points_per_game+'"></div></div>'
-        +'<div class="field" style="grid-column:1/-1"><label>Score recording (scores of 80+)</label><select id="esm-'+l.id+'"'+(scoreModeOk?'':' disabled')+'><option value="exact" '+(l.score_mode!=='counters'?'selected':'')+'>Exact scores — type each score (e.g. 85, 140, 180)</option><option value="counters" '+(l.score_mode==='counters'?'selected':'')+'>Counters — tap to count 80–99, 100+ and 180s</option></select>'+(scoreModeOk?'':'<div style="font-size:.72rem;color:var(--amber);margin-top:.3rem">Run SQL 09_score_mode.sql in Supabase to enable this setting.</div>')+'</div>'
         +'</div>'
         +'<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#5a9abf;margin:.9rem 0 .5rem">Public Directory Profile</div>'
         +'<div class="grid">'
@@ -975,11 +1016,6 @@ async function saveEdit(id){
       try{ await sbPatch('leagues','id=eq.'+id,{table_scoring:tsEl.value,points_per_game:Math.max(0,parseInt(document.getElementById('eppg-'+id).value)||1)}); }
       catch(e){ throw new Error('League table points not saved — run SQL 09_score_mode.sql first ('+e.message+')'); }
     }
-    var smEl=document.getElementById('esm-'+id);
-    if(scoreModeOk&&smEl){
-      try{ await sbPatch('leagues','id=eq.'+id,{score_mode:smEl.value}); }
-      catch(e){ throw new Error('Score recording not saved — run SQL 09_score_mode.sql first ('+e.message+')'); }
-    }
     var tok=await tokenForLeague(id);
     var r=await sb('rpc/update_league_profile',{method:'POST',body:JSON.stringify({
       p_token:tok,
@@ -995,54 +1031,333 @@ async function saveEdit(id){
   }catch(e){st.textContent='Error: '+e.message;st.className='st err';}
 }
 
+// ── Guided league set-up ─────────────────────────────────────────────────────
+// 1 Format -> 2 Teams -> 3 Fixtures -> 4 Publish & send. The league is created at the end of step 1;
+// teams are created with a one-off setup code that each captain uses to take their team over.
+var wiz={id:null,name:'',code:'',token:null,teams:[],step:1,season:1,fixtures:0,night:'Monday',county:'',town:'',desc:'',tscoring:'match',tgPlayers:0,singles:6,doubles:3,note:''};
+function wizEl(id){return document.getElementById(id);}
+function wizReset(){
+  wiz={id:null,name:'',code:'',token:null,teams:[],step:1,season:1,fixtures:0,night:'Monday',county:'',town:'',desc:'',tscoring:'match',tgPlayers:0,singles:6,doubles:3,note:''};
+  var st=wizEl('cl-status');if(st)st.textContent='';
+  wizTg();wizPts();wizShow(1);
+}
+function wizHead(){
+  var names=['Format','Teams','Fixtures','Publish'];
+  wizEl('wiz-head').innerHTML='<div class="wiz-bar">'+names.map(function(n,i){
+    var k=i+1;return '<div class="'+(k===wiz.step?'on':(k<wiz.step?'done':''))+'">'+k+'. '+n+'</div>';
+  }).join('')+'</div>';
+}
+function wizShow(n){
+  wiz.step=n;wizHead();
+  [1,2,3,4].forEach(function(i){var e=wizEl('wiz-'+i);if(e)e.style.display=i===n?'block':'none';});
+  if(n===2)wizRenderTeams();
+  if(n===3)wizRenderFixtures();
+  if(n===4)wizRenderPublish();
+  window.scrollTo(0,0);
+}
+function wizTg(){
+  var yes=wizEl('cl-tgyn')&&wizEl('cl-tgyn').value==='yes';
+  wizEl('cl-tg-players').style.display=yes?'':'none';
+  wizEl('cl-tscore-wrap').style.display=yes?'':'none';
+  var singles=parseInt(wizEl('cl-singles').value)||0,doubles=parseInt(wizEl('cl-doubles').value)||0;
+  var need=Math.max(singles,doubles*2,yes?(parseInt(wizEl('cl-teamgame').value)||0):0);
+  wizEl('cl-need').textContent=need?('Games each night: '+singles+' singles'+(doubles?', '+doubles+' doubles':'')+(yes?', plus a '+wizEl('cl-teamgame').value+'-player team game':', no team game')+'.'):'';
+}
+function wizPts(){
+  var g=wizEl('cl-tscoring')&&wizEl('cl-tscoring').value==='games';
+  wizEl('cl-pts-match').style.display=g?'none':'';
+  wizEl('cl-pts-games').style.display=g?'':'none';
+}
 async function createLeague(){
-  var name=document.getElementById('cl-name').value.trim();
-  var pw=document.getElementById('cl-pw').value.trim();
-  var st=document.getElementById('cl-status');
-  var sp=document.getElementById('cl-spin');
+  var name=wizEl('cl-name').value.trim();
+  var pw=wizEl('cl-pw').value.trim();
+  var st=wizEl('cl-status');
+  var sp=wizEl('cl-spin');
   if(!name){st.textContent='Please enter a league name.';st.className='st err';return;}
-  var county=document.getElementById('cl-county').value, town=document.getElementById('cl-town').value.trim();
+  var county=wizEl('cl-county').value, town=wizEl('cl-town').value.trim();
   if(!county||!town){st.textContent='Please choose the county and enter the town or city, so players can find your league.';st.className='st err';return;}
   if(pw&&pw.length<6){st.textContent='Helper password must be at least 6 characters (or leave it blank).';st.className='st err';return;}
   if(!organiserUser){st.textContent='Please sign in first.';st.className='st err';return;}
+  var tgYes=wizEl('cl-tgyn').value==='yes';
+  var tg=tgYes?(parseInt(wizEl('cl-teamgame').value)||4):0;
+  var games=wizEl('cl-tscoring').value==='games';
   sp.style.display='inline-block';st.textContent='';
   try{
-    // Created through a database function so the league is owned by the
-    // signed-in account (see migration_02_organiser_accounts.sql).
     var { data:newId, error } = await paClient.rpc('create_my_league',{
       p_name:name,
-      p_match_night:document.getElementById('cl-night').value,
-      p_num_singles:parseInt(document.getElementById('cl-singles').value),
-      p_num_doubles:parseInt(document.getElementById('cl-doubles').value),
-      p_team_game_players:parseInt(document.getElementById('cl-teamgame').value),
-      p_starting_score:parseInt(document.getElementById('cl-sscore').value)||501,
-      p_starting_score_doubles:parseInt(document.getElementById('cl-dscore').value)||601,
-      p_starting_score_team:parseInt(document.getElementById('cl-tscore').value)||1001,
-      p_best_of_singles:parseInt(document.getElementById('cl-bosing').value),
-      p_best_of_doubles:parseInt(document.getElementById('cl-bodub').value),
-      p_points_win:parseInt(document.getElementById('cl-pwin').value),
-      p_points_draw:parseInt(document.getElementById('cl-pdraw').value),
-      p_points_loss:parseInt(document.getElementById('cl-ploss').value),
-      p_fixed_team_names:document.getElementById('cl-fixedteams').checked,
+      p_match_night:wizEl('cl-night').value,
+      p_num_singles:parseInt(wizEl('cl-singles').value),
+      p_num_doubles:parseInt(wizEl('cl-doubles').value),
+      p_team_game_players:tg,
+      p_starting_score:parseInt(wizEl('cl-sscore').value)||501,
+      p_starting_score_doubles:parseInt(wizEl('cl-dscore').value)||601,
+      p_starting_score_team:parseInt(wizEl('cl-tscore').value)||1001,
+      p_best_of_singles:parseInt(wizEl('cl-bosing').value),
+      p_best_of_doubles:parseInt(wizEl('cl-bodub').value),
+      p_points_win:games?2:parseInt(wizEl('cl-pwin').value),
+      p_points_draw:games?1:parseInt(wizEl('cl-pdraw').value),
+      p_points_loss:games?0:parseInt(wizEl('cl-ploss').value),
+      p_fixed_team_names:wizEl('cl-fixedteams').checked,
       p_helper_password:pw||null,
-      p_match_time:document.getElementById('cl-time').value||'20:00',
+      p_match_time:wizEl('cl-time').value||'20:00',
       p_county:county,
       p_town:town,
-      p_description:document.getElementById('cl-desc').value.trim()||null
+      p_description:wizEl('cl-desc').value.trim()||null
     });
     if(error) throw error;
-    var code=String(newId).replace(/-/g,'').toUpperCase().slice(0,8);
-    st.innerHTML='<span style="color:var(--gl)">✓ League created!</span> Registration code: <strong style="color:var(--amber);font-size:1.1rem;letter-spacing:.1em">'+code+'</strong>'
-      +'<div style="font-size:.8rem;color:var(--dim);margin:.4rem 0 .6rem;line-height:1.5">Give this code to your team captains so they can register. The league is now saved in your account under <strong>My Leagues</strong>.</div>'
-      +(isPlatformAdmin?'':'<button class="btn-admin" onclick="openMyLeague(\''+newId+'\')">Open this league →</button>');
-    st.className='st';
-    document.getElementById('cl-name').value='';
-    document.getElementById('cl-fixedteams').checked=false;
-    document.getElementById('cl-pw').value='';
-    document.getElementById('cl-town').value='';document.getElementById('cl-desc').value='';document.getElementById('cl-county').value='';
+    wiz.id=newId;wiz.name=name;wiz.code=String(newId).replace(/-/g,'').toUpperCase().slice(0,8);
+    wiz.night=wizEl('cl-night').value;wiz.county=county;wiz.town=town;wiz.desc=wizEl('cl-desc').value.trim();
+    wiz.tgPlayers=tg;wiz.singles=parseInt(wizEl('cl-singles').value)||0;wiz.doubles=parseInt(wizEl('cl-doubles').value)||0;
+    wiz.tscoring=games?'games':'match';wiz.note='';
+    wiz.token=await tokenForLeague(newId);
+    if(games){
+      try{ await sbPatch('leagues','id=eq.'+newId,{table_scoring:'games',points_per_game:Math.max(0,parseInt(wizEl('cl-ppg').value)||1)}); }
+      catch(e2){ wiz.note='Games-won scoring was not saved (run SQL 09_score_mode.sql in Supabase, then set "League table points" with the league’s Edit button).'; }
+    }
     if(isPlatformAdmin)loadLeagues();
+    wizShow(2);
   }catch(e){st.textContent='Error: '+e.message;st.className='st err';}
   sp.style.display='none';
+}
+
+function wizErr(id,msg){var e=wizEl(id);if(e){e.textContent=msg||'';e.className='st'+(msg?' err':'');}}
+function wizOk(id,msg){var e=wizEl(id);if(e){e.textContent=msg||'';e.className='st ok';}}
+
+// ---- Step 2: teams ----
+function wizRenderTeams(){
+  var n=wiz.teams.length;
+  wizEl('wiz-2').innerHTML=
+    '<h2>Add your teams</h2>'
+   +'<p class="wiz-help"><strong style="color:var(--gl)">&#10003; '+esc(wiz.name)+' is saved.</strong> League code: <strong style="color:var(--amber);letter-spacing:.1em">'+esc(wiz.code)+'</strong>. '
+   +'Enter each team with its captain’s name and email. The captain gets a one-off setup code in the last step, which lets them set up their team and players.</p>'
+   +(wiz.note?'<div class="st err" style="margin-bottom:.75rem">'+esc(wiz.note)+'</div>':'')
+   +'<div class="grid">'
+   +'<div class="field"><label>Team name</label><input type="text" id="wt-name" maxlength="60" placeholder="e.g. The Crown Arrows" onkeydown="if(event.key===\'Enter\'){event.preventDefault();wizAddTeam();}"></div>'
+   +'<div class="field"><label>Captain’s name</label><input type="text" id="wt-cap" maxlength="60" placeholder="e.g. Dave Smith" onkeydown="if(event.key===\'Enter\'){event.preventDefault();wizAddTeam();}"></div>'
+   +'<div class="field"><label>Captain’s email</label><input type="email" id="wt-email" maxlength="120" placeholder="dave@example.com" onkeydown="if(event.key===\'Enter\'){event.preventDefault();wizAddTeam();}"></div>'
+   +'</div>'
+   +'<button class="btn-admin" onclick="wizAddTeam()">+ Add team</button>'
+   +'<details style="margin-top:.9rem"><summary style="cursor:pointer;color:#8ac4ff;font-size:.85rem">Or paste a list of teams</summary>'
+   +'<div class="wiz-help" style="margin-top:.5rem">One team per line: <em>Team name, Captain name, Captain email</em> (the captain details are optional). You can copy these straight out of a spreadsheet.</div>'
+   +'<textarea id="wt-paste" rows="5" style="width:100%;background:var(--bg);border:1px solid var(--blue);border-radius:4px;color:var(--text);font-family:\'Barlow\',sans-serif;font-size:.85rem;padding:.45rem .6rem" placeholder="The Crown, Dave Smith, dave@example.com\nRed Lion, Sue Jones, sue@example.com"></textarea>'
+   +'<button class="btn-admin" style="margin-top:.5rem" onclick="wizPasteTeams()">Add these teams</button></details>'
+   +'<div class="st" id="wt-status"></div>'
+   +'<div class="wiz-sec">Teams added ('+n+')</div>'
+   +'<div id="wt-list">'+(n?wiz.teams.map(function(t,i){
+      return '<div class="wiz-row"><div class="tn">'+esc(t.team_name)+'</div><div class="tc">'+esc(t.captain||'—')+'</div><div class="tc">'+esc(t.email||'—')+'</div>'
+        +'<button onclick="wizRemoveTeam('+i+')" style="background:none;border:1px solid #5c2020;border-radius:4px;color:#ff8080;font-size:.7rem;padding:2px 8px;cursor:pointer">Remove</button></div>';
+    }).join(''):'<div class="nh">No teams yet. Add at least two to continue.</div>')+'</div>'
+   +'<div class="wiz-nav"><button class="btn-admin" '+(n<2?'disabled style="opacity:.5;cursor:not-allowed"':'')+' onclick="wizShow(3)">Continue to fixtures &rarr;</button></div>';
+}
+function wizEmailOk(e){return !e||/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);}
+async function wizAddOne(name,cap,email){
+  var rows=await sb('rpc/admin_add_team',{method:'POST',body:JSON.stringify({p_token:wiz.token,p_team_name:name,p_captain_name:cap||null,p_email:email||null})});
+  var r=Array.isArray(rows)?rows[0]:rows;
+  if(!r)throw new Error('Could not add that team.');
+  wiz.teams.push({team_id:r.team_id,team_name:r.team_name,setup_code:r.setup_code,captain:cap||'',email:email||''});
+}
+async function wizAddTeam(){
+  var name=wizEl('wt-name').value.trim(),cap=wizEl('wt-cap').value.trim(),email=wizEl('wt-email').value.trim().toLowerCase();
+  if(!name){wizErr('wt-status','Please enter the team name.');return;}
+  if(!wizEmailOk(email)){wizErr('wt-status','That email address doesn’t look right.');return;}
+  try{
+    wizErr('wt-status','');
+    await wizAddOne(name,cap,email);
+    wizRenderTeams();wizEl('wt-name').focus();
+  }catch(e){wizErr('wt-status',e.message);}
+}
+async function wizPasteTeams(){
+  var lines=wizEl('wt-paste').value.split(/\r?\n/).map(function(l){return l.trim();}).filter(Boolean);
+  if(!lines.length){wizErr('wt-status','Paste at least one line first.');return;}
+  var added=0,problems=[];
+  for(var i=0;i<lines.length;i++){
+    var parts=lines[i].indexOf('\t')>-1?lines[i].split('\t'):lines[i].split(',');
+    parts=parts.map(function(p){return p.trim().replace(/^"|"$/g,'');});
+    var name=parts[0],cap=parts[1]||'',email=(parts[2]||'').toLowerCase();
+    if(/^team( name)?$/i.test(name))continue; // header row
+    if(!wizEmailOk(email)){problems.push('"'+name+'": the email doesn’t look right');continue;}
+    try{await wizAddOne(name,cap,email);added++;}catch(e){problems.push('"'+name+'": '+e.message);}
+  }
+  wizRenderTeams();
+  if(problems.length)wizErr('wt-status',(added?added+' added. ':'')+'Skipped: '+problems.slice(0,6).join('; '));
+  else wizOk('wt-status',added+' team'+(added===1?'':'s')+' added.');
+}
+async function wizRemoveTeam(i){
+  var t=wiz.teams[i];if(!t)return;
+  if(!confirm('Remove '+t.team_name+' from this league?'))return;
+  try{
+    await sb('team_players?team_id=eq.'+t.team_id,{method:'DELETE'});
+    await sb('league_fixtures?home_team_id=eq.'+t.team_id,{method:'DELETE'});
+    await sb('league_fixtures?away_team_id=eq.'+t.team_id,{method:'DELETE'});
+    await sb('teams?id=eq.'+t.team_id,{method:'DELETE'});
+    try{await sb('league_captains?league_id=eq.'+wiz.id+'&team_name=eq.'+encodeURIComponent(t.team_name),{method:'DELETE'});}catch(e){}
+    wiz.teams.splice(i,1);
+    wizRenderTeams();
+  }catch(e){wizErr('wt-status',e.message);}
+}
+
+// ---- Step 3: fixtures ----
+function wizPad(n){return (n<10?'0':'')+n;}
+function wizAddDays(iso,d){var p=iso.split('-').map(Number);var dt=new Date(p[0],p[1]-1,p[2]+d);return dt.getFullYear()+'-'+wizPad(dt.getMonth()+1)+'-'+wizPad(dt.getDate());}
+function wizShowDate(iso){var p=iso.split('-').map(Number);return new Date(p[0],p[1]-1,p[2]).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});}
+// Round robin (circle method). Returns a list of rounds, each a list of [homeIndex,awayIndex].
+function wizRoundRobin(n,twice){
+  var idx=[];for(var i=0;i<n;i++)idx.push(i);
+  if(n%2===1)idx.push(-1);
+  var m=idx.length,rounds=[];
+  for(var r=0;r<m-1;r++){
+    var round=[];
+    for(var k=0;k<m/2;k++){
+      var a=idx[k],b=idx[m-1-k];
+      if(a<0||b<0)continue;
+      round.push((r+k)%2===0?[a,b]:[b,a]);
+    }
+    rounds.push(round);
+    idx.splice(1,0,idx.pop()); // rotate everyone except the first
+  }
+  if(twice){var second=rounds.map(function(rd){return rd.map(function(p){return [p[1],p[0]];});});rounds=rounds.concat(second);}
+  return rounds;
+}
+var wizPlan=null;
+function wizRenderFixtures(){
+  var n=wiz.teams.length;
+  wizEl('wiz-3').innerHTML=
+    '<h2>Fixtures</h2>'
+   +'<p class="wiz-help">'+n+' teams entered. Choose when the first matches are played and we’ll draw up the whole season so every team plays every other team. You can check the dates before saving, and still add or change fixtures later.</p>'
+   +'<div class="grid">'
+   +'<div class="field"><label>First match date</label><input type="date" id="wf-start"></div>'
+   +'<div class="field"><label>Teams play each other</label><select id="wf-times"><option value="1">Once</option><option value="2" selected>Twice (home and away)</option></select></div>'
+   +'<div class="field"><label>Matches are played</label><select id="wf-gap"><option value="7" selected>Every week</option><option value="14">Every two weeks</option></select></div>'
+   +'</div>'
+   +'<div class="wiz-help" id="wf-warn" style="color:var(--amber)"></div>'
+   +'<button class="btn-admin" onclick="wizPreviewFixtures()">Preview season</button>'
+   +'<div class="st" id="wf-status"></div>'
+   +'<div id="wf-preview"></div>'
+   +'<div class="wiz-nav"><button class="btn-admin wiz-ghost" onclick="wizShow(2)">&larr; Back</button>'
+   +'<button class="btn-admin wiz-ghost" onclick="wizShow(4)">Skip, I’ll add fixtures later &rarr;</button></div>'
+   +'<div class="wiz-help" style="margin-top:.6rem">Prefer your own spreadsheet of fixtures? Skip this step and use the Fixtures tab once the league is open.</div>';
+  wizPlan=null;
+}
+function wizPreviewFixtures(){
+  var start=wizEl('wf-start').value;
+  if(!start){wizErr('wf-status','Please choose the first match date.');return;}
+  var twice=wizEl('wf-times').value==='2',gap=parseInt(wizEl('wf-gap').value)||7;
+  var rounds=wizRoundRobin(wiz.teams.length,twice);
+  var d=new Date(start+'T00:00:00');
+  var days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  wizEl('wf-warn').textContent=(days[d.getDay()]!==wiz.night)?'Note: that date is a '+days[d.getDay()]+', but your league plays on '+wiz.night+'s.':'';
+  var plan=[];
+  rounds.forEach(function(rd,ri){var date=wizAddDays(start,ri*gap);rd.forEach(function(p){plan.push({date:date,home:wiz.teams[p[0]],away:wiz.teams[p[1]]});});});
+  wizPlan=plan;wizErr('wf-status','');
+  wizEl('wf-preview').innerHTML=
+    '<div class="wiz-sec">'+rounds.length+' rounds, '+plan.length+' matches</div>'
+    +'<div style="max-height:320px;overflow:auto;border:1px solid var(--border);border-radius:6px;padding:.4rem .7rem">'
+    +rounds.map(function(rd,ri){
+      var date=wizAddDays(start,ri*gap);
+      return '<div style="padding:.35rem 0;border-bottom:1px solid var(--border);font-size:.82rem"><div style="color:#8ac4ff;font-weight:600">Round '+(ri+1)+' &middot; '+esc(wizShowDate(date))+'</div>'
+        +rd.map(function(p){return '<div style="color:var(--dim)">'+esc(wiz.teams[p[0]].team_name)+' v '+esc(wiz.teams[p[1]].team_name)+'</div>';}).join('')+'</div>';
+    }).join('')+'</div>'
+    +'<button class="btn-admin" style="margin-top:.8rem" onclick="wizSaveFixtures()"><span id="wf-spin" style="display:none" class="spin"></span>Save these fixtures &amp; continue &rarr;</button>';
+}
+async function wizSaveFixtures(){
+  if(!wizPlan||!wizPlan.length)return;
+  var sp=wizEl('wf-spin');sp.style.display='inline-block';
+  try{
+    var rows=wizPlan.map(function(m){return {league_id:wiz.id,home_team_id:m.home.team_id,away_team_id:m.away.team_id,fixture_date:m.date,season:wiz.season,played:false};});
+    for(var i=0;i<rows.length;i+=100){
+      await sb('league_fixtures',{method:'POST',prefer:'return=minimal',body:JSON.stringify(rows.slice(i,i+100))});
+    }
+    wiz.fixtures+=rows.length;
+    wizShow(4);
+  }catch(e){wizErr('wf-status',e.message);}
+  sp.style.display='none';
+}
+
+// ---- Step 4: publish and send ----
+var wizInvites=[];
+function wizInviteText(t){
+  return 'Hi '+(t.captain_name||t.captain||'there')+',\n\n'
+   +'You’ve been entered as the captain of '+t.team_name+' in '+wiz.name+' on Flight Chalker — a free app for recording match results, tracking stats and following the league table.\n\n'
+   +'To set up your team (it takes about two minutes):\n'
+   +'1. Go to https://flightchalker.co.uk\n'
+   +'2. Scroll down to "Starting a new league team?" and tap "Register team"\n'
+   +'3. Enter the league code '+wiz.code+' and tap "Look Up League"\n'
+   +'4. Tick "My league admin gave me a setup code", choose '+t.team_name+' and enter your setup code: '+t.setup_code+'\n'
+   +'5. Add your players, choose a secret word and tap Register\n'
+   +'6. You’ll be given a 4-digit PIN — that’s what your team uses to log in each week to record results and see the table and fixtures.\n\n'
+   +'Your setup code is just for your team and works once, so please don’t share it.\n\n'
+   +'See you on the oche!\n'+wiz.name;
+}
+async function wizRenderPublish(){
+  var fmt=wiz.singles+' singles'+(wiz.doubles?', '+wiz.doubles+' doubles':'')+(wiz.tgPlayers?', '+wiz.tgPlayers+'-player team game':', no team game');
+  wizEl('wiz-4').innerHTML=
+    '<h2>Publish and send</h2>'
+   +'<div class="wiz-help" style="color:var(--text)"><strong>'+esc(wiz.name)+'</strong> &middot; '+esc(wiz.night)+'s &middot; '+esc(fmt)+'<br>'
+   +wiz.teams.length+' teams &middot; '+wiz.fixtures+' fixtures &middot; League code <strong style="color:var(--amber);letter-spacing:.1em">'+esc(wiz.code)+'</strong></div>'
+   +'<div class="wiz-sec">Publish</div>'
+   +'<div class="field"><label style="display:flex;align-items:center;gap:.5rem;font-weight:400;text-transform:none;letter-spacing:0"><input type="checkbox" id="wp-listed" style="width:auto" checked> List this league in the Flight Chalker directory so players can find it</label></div>'
+   +'<div class="field"><label style="display:flex;align-items:center;gap:.5rem;font-weight:400;text-transform:none;letter-spacing:0"><input type="checkbox" id="wp-enq" style="width:auto" checked> Let players send enquiries to the league</label></div>'
+   +'<div class="field"><label>Looking for</label><select id="wp-recr"><option value="">Not recruiting</option><option value="players">New players</option><option value="teams">New teams</option><option value="both">Players and teams</option></select></div>'
+   +'<button class="btn-admin" onclick="wizPublish()">Publish league</button><div class="st" id="wp-status"></div>'
+   +'<div class="wiz-sec">Email your captains</div>'
+   +'<p class="wiz-help">Each captain gets their own email with the league code and their personal setup code. Check or correct the addresses, then press <em>Email</em> to open it in your email app.</p>'
+   +'<div id="wp-invites"><div class="lh"><span class="spin"></span> Loading…</div></div>'
+   +'<div class="wiz-nav"><button class="btn-admin wiz-ghost" onclick="wizShow(3)">&larr; Back</button>'
+   +'<button class="btn-admin" onclick="wizFinish()">Finish &amp; open my league</button></div>';
+  try{
+    var rows=await sb('rpc/admin_setup_list',{method:'POST',body:JSON.stringify({p_token:wiz.token})});
+    wizInvites=(rows||[]).map(function(r){return {team_id:r.team_id,team_name:r.team_name,setup_code:r.setup_code,captain_name:r.captain_name||'',email:r.email||''};});
+  }catch(e){
+    wizInvites=wiz.teams.map(function(t){return {team_id:t.team_id,team_name:t.team_name,setup_code:t.setup_code,captain_name:t.captain,email:t.email};});
+  }
+  wizDrawInvites();
+}
+function wizDrawInvites(){
+  var el=wizEl('wp-invites');if(!el)return;
+  if(!wizInvites.length){el.innerHTML='<div class="nh">No teams are waiting for a captain.</div>';return;}
+  el.innerHTML=wizInvites.map(function(t,i){
+    return '<div class="wiz-row"><div class="tn">'+esc(t.team_name)+'<div style="font-size:.72rem;color:var(--dim);font-weight:400">Setup code <strong style="color:var(--amber);letter-spacing:.08em">'+esc(t.setup_code)+'</strong></div></div>'
+      +'<div class="tc">'+esc(t.captain_name||'—')+'</div>'
+      +'<input type="email" id="wi-email-'+i+'" value="'+esc(t.email)+'" placeholder="captain@example.com" aria-label="Email for '+esc(t.team_name)+'" onchange="wizSaveEmail('+i+')">'
+      +'<button class="btn-admin" style="font-size:.78rem;padding:4px 12px" onclick="wizEmailOne('+i+')">&#9993; Email</button>'
+      +'<button class="btn-admin wiz-ghost" style="font-size:.78rem;padding:4px 12px" onclick="wizCopyOne('+i+')">Copy</button></div>';
+  }).join('')
+  +'<div class="wiz-nav"><button class="btn-admin wiz-ghost" onclick="wizCopyAll()">Copy all invitations</button></div>'
+  +'<div class="st" id="wi-status"></div>';
+}
+async function wizSaveEmail(i){
+  var t=wizInvites[i];var v=wizEl('wi-email-'+i).value.trim().toLowerCase();
+  if(!wizEmailOk(v)){wizErr('wi-status','That email address doesn’t look right.');return;}
+  t.email=v;
+  try{await sb('league_captains?league_id=eq.'+wiz.id+'&team_name=eq.'+encodeURIComponent(t.team_name),{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({email:v||null})});wizOk('wi-status','Saved.');}
+  catch(e){wizErr('wi-status','Could not save that email: '+e.message);}
+}
+function wizEmailOne(i){
+  var t=wizInvites[i];var v=wizEl('wi-email-'+i).value.trim();
+  if(!v){wizErr('wi-status','Add an email address for '+t.team_name+' first.');return;}
+  var subject='Set up '+t.team_name+' in '+wiz.name+' on Flight Chalker';
+  window.location.href='mailto:'+encodeURIComponent(v)+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(wizInviteText(t));
+}
+function wizCopy(text,msg){
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(function(){toast(msg);},function(){toast('Could not copy',true);});}
+  else toast('Copy is not available in this browser',true);
+}
+function wizCopyOne(i){wizCopy(wizInviteText(wizInvites[i]),'Invitation copied');}
+function wizCopyAll(){wizCopy(wizInvites.map(function(t){return 'To: '+(t.email||'(no email)')+'\n\n'+wizInviteText(t);}).join('\n\n--------------------\n\n'),'All invitations copied');}
+async function wizPublish(){
+  var listed=wizEl('wp-listed').checked;
+  try{
+    await sb('rpc/update_league_profile',{method:'POST',body:JSON.stringify({
+      p_token:wiz.token,p_county:wiz.county,p_town:wiz.town,p_description:wiz.desc,
+      p_listed:listed,p_recruiting:wizEl('wp-recr').value,p_accepts_enquiries:wizEl('wp-enq').checked
+    })});
+    wizOk('wp-status',listed?'✓ Published. Your league can now be found in the directory.':'✓ Saved. Your league is not listed in the directory.');
+  }catch(e){wizErr('wp-status',e.message);}
+}
+async function wizFinish(){
+  var id=wiz.id;
+  if(isPlatformAdmin){wizReset();showTab('leagues');return;}
+  openMyLeague(id);
 }
 
 // ── Directory profile + enquiries (migration_04) ─────────────────────────────
