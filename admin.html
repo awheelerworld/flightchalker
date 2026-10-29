@@ -1141,10 +1141,15 @@ function wizRenderTeams(){
    +'<div class="wiz-help" style="margin-top:.5rem">One team per line: <em>Team name, Captain name, Captain email</em> (the captain details are optional). You can copy these straight out of a spreadsheet.</div>'
    +'<textarea id="wt-paste" rows="5" style="width:100%;background:var(--bg);border:1px solid var(--blue);border-radius:4px;color:var(--text);font-family:\'Barlow\',sans-serif;font-size:.85rem;padding:.45rem .6rem" placeholder="The Crown, Dave Smith, dave@example.com\nRed Lion, Sue Jones, sue@example.com"></textarea>'
    +'<button class="btn-admin" style="margin-top:.5rem" onclick="wizPasteTeams()">Add these teams</button></details>'
+   +'<details id="wx-box" style="margin-top:.9rem"><summary style="cursor:pointer;color:#8ac4ff;font-size:.85rem">Or add a team that is already on Flight Chalker</summary>'
+   +'<div class="wiz-help" style="margin-top:.5rem">A team can play in more than one league. Ask the captain for their <strong>team code</strong> (shown in the team app). The team keeps its place in its other league. This league gets its own record of the team with the same name and players, and its own PIN, so results and stats stay separate.</div>'
+   +'<div class="field"><label>Team code</label><input type="text" id="wx-code" maxlength="20" autocapitalize="characters" autocomplete="off" placeholder="e.g. CRWN42X" onkeydown="if(event.key===\'Enter\'){event.preventDefault();wizFindTeam();}"></div>'
+   +'<button class="btn-admin" onclick="wizFindTeam()">Find team</button>'
+   +'<div id="wx-found"></div></details>'
    +'<div class="st" id="wt-status"></div>'
    +'<div class="wiz-sec">Teams added ('+n+')</div>'
    +'<div id="wt-list">'+(n?wiz.teams.map(function(t,i){
-      return '<div class="wiz-row"><div class="tn">'+esc(t.team_name)+'</div><div class="tc">'+esc(t.captain||'—')+'</div><div class="tc">'+esc(t.email||'—')+'</div>'
+      return '<div class="wiz-row"><div class="tn">'+esc(t.team_name)+(t.fromTown||t.fromName?'<div style="font-size:.72rem;color:var(--dim);font-weight:400">'+esc([t.fromTown,t.fromName].filter(Boolean).join(' · '))+'</div>':'')+'</div>'+(t.byCode?'<div class="tc" style="flex:2">Existing team, added by code. PIN '+esc(t.pin)+'</div>':'<div class="tc">'+esc(t.captain||'—')+'</div><div class="tc">'+esc(t.email||'—')+'</div>')
         +'<button onclick="wizRemoveTeam('+i+')" style="background:none;border:1px solid #5c2020;border-radius:4px;color:#ff8080;font-size:.7rem;padding:2px 8px;cursor:pointer">Remove</button></div>';
     }).join(''):'<div class="nh">No teams yet. Add at least two to continue.</div>')+'</div>'
    +'<div class="wiz-nav"><button class="btn-admin" '+(n<2?'disabled style="opacity:.5;cursor:not-allowed"':'')+' onclick="wizShow(3)">Continue to fixtures &rarr;</button></div>';
@@ -1194,6 +1199,37 @@ async function wizRemoveTeam(i){
     wiz.teams.splice(i,1);
     wizRenderTeams();
   }catch(e){wizErr('wt-status',e.message);}
+}
+
+// ---- Existing team, added by its team code ----
+var wizFound=null;
+async function wizFindTeam(){
+  var code=wizEl('wx-code').value.trim();
+  var out=wizEl('wx-found');wizFound=null;out.innerHTML='';
+  if(!code){wizErr('wt-status','Enter the team code first.');return;}
+  try{
+    wizErr('wt-status','');
+    var rows=await sb('rpc/admin_preview_team_by_code',{method:'POST',body:JSON.stringify({p_token:wiz.token,p_code:code})});
+    var r=Array.isArray(rows)?rows[0]:rows;
+    if(!r)throw new Error('No team found with that code.');
+    wizFound={code:code,r:r};
+    var where=[r.source_town,r.source_league].filter(Boolean).join(' \u00b7 ');
+    out.innerHTML='<div style="border:1px solid var(--border);border-radius:6px;padding:.7rem;margin:.6rem 0">'
+      +'<div style="font-weight:700;font-size:1rem">'+esc(r.team_name)+'</div>'
+      +'<div class="wiz-help" style="margin:.25rem 0 0">'+(where?'From '+esc(where)+'. ':'')+(r.venue_name?'Plays at '+esc(r.venue_name)+'. ':'')+esc(String(r.player_count))+' player'+(r.player_count===1?'':'s')+'.</div></div>'
+      +(r.already_here?'<div class="st err">A team with this name is already in this league.</div>'
+        :'<button class="btn-admin" onclick="wizAddByCode()">Yes, add '+esc(r.team_name)+' to '+esc(wiz.name)+'</button>');
+  }catch(e){wizErr('wt-status',e.message||String(e));}
+}
+async function wizAddByCode(){
+  if(!wizFound)return;
+  try{
+    var rows=await sb('rpc/admin_add_team_by_code',{method:'POST',body:JSON.stringify({p_token:wiz.token,p_code:wizFound.code})});
+    var r=Array.isArray(rows)?rows[0]:rows;
+    if(!r)throw new Error('Could not add that team.');
+    wiz.teams.push({team_id:r.team_id,team_name:r.team_name,setup_code:'',captain:'',email:'',byCode:true,pin:r.pin,fromName:r.source_league,fromTown:r.source_town});
+    wizFound=null;wizRenderTeams();wizOk('wt-status',r.team_name+' added.');
+  }catch(e){wizErr('wt-status',e.message||String(e));}
 }
 
 // ---- Step 3: fixtures ----
@@ -1299,6 +1335,10 @@ async function wizRenderPublish(){
    +'<div class="field"><label style="display:flex;align-items:center;gap:.5rem;font-weight:400;text-transform:none;letter-spacing:0"><input type="checkbox" id="wp-enq" style="width:auto" checked> Let players send enquiries to the league</label></div>'
    +'<div class="field"><label>Looking for</label><select id="wp-recr"><option value="">Not recruiting</option><option value="players">New players</option><option value="teams">New teams</option><option value="both">Players and teams</option></select></div>'
    +'<button class="btn-admin" onclick="wizPublish()">Publish league</button><div class="st" id="wp-status"></div>'
+   +(wiz.teams.some(function(t){return t.byCode;})?'<div class="wiz-sec">Existing teams you added</div><div class="wiz-help">These teams already use Flight Chalker. Each has its own PIN for this league, listed here, so tell the captain.</div>'
+      +wiz.teams.filter(function(t){return t.byCode;}).map(function(t){var k=wiz.teams.indexOf(t);return '<div class="wiz-row"><div class="tn">'+esc(t.team_name)+'<div style="font-size:.72rem;color:var(--dim);font-weight:400">PIN for this league <strong style="color:var(--amber)">'+esc(t.pin)+'</strong></div></div>'
+        +'<input type="email" id="wb-email-'+k+'" placeholder="captain@example.com" aria-label="Email for '+esc(t.team_name)+'">'
+        +'<button class="btn-admin" style="font-size:.78rem;padding:4px 12px" onclick="wizEmailExisting('+k+')">&#9993; Email</button></div>';}).join(''):'')
    +'<div class="wiz-sec">Email your captains</div>'
    +'<p class="wiz-help">Each captain gets their own email with the league code and their personal setup code. Check or correct the addresses, then press <em>Email</em> to open it in your email app.</p>'
    +'<div id="wp-invites"><div class="lh"><span class="spin"></span> Loading…</div></div>'
@@ -1337,6 +1377,14 @@ function wizEmailOne(i){
   if(!v){wizErr('wi-status','Add an email address for '+t.team_name+' first.');return;}
   var subject='Set up '+t.team_name+' in '+wiz.name+' on Flight Chalker';
   window.location.href='mailto:'+encodeURIComponent(v)+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(wizInviteText(t));
+}
+function wizEmailExisting(k){
+  var t=wiz.teams[k];var v=wizEl('wb-email-'+k).value.trim();
+  if(!v||!wizEmailOk(v)){wizErr('wp-status','Add a valid email address for '+t.team_name+' first.');return;}
+  var body='Hi,\n\n'+t.team_name+' has been added to '+wiz.name+' on Flight Chalker.\n\n'
+    +'To record results for this league, go to https://flightchalker.co.uk and log in with the team name '+t.team_name+' and this league\u2019s PIN: '+t.pin+'\n\n'
+    +'This PIN is only for '+wiz.name+'. Your other league keeps its own PIN, results and stats.\n\nSee you on the oche!\n'+wiz.name;
+  window.location.href='mailto:'+encodeURIComponent(v)+'?subject='+encodeURIComponent(t.team_name+' has been added to '+wiz.name)+'&body='+encodeURIComponent(body);
 }
 function wizCopy(text,msg){
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(function(){toast(msg);},function(){toast('Could not copy',true);});}
