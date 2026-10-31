@@ -874,6 +874,7 @@ html{scroll-behavior:smooth}
     <div class="hright">
       <div class="hteam"><strong id="hscore">— : —</strong><span id="hvs">vs —</span></div>
       <button class="theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()">☀️ Light</button>
+      <button class="logout-btn" id="switch-team-btn" style="display:none" onclick="openTeamChooser(true)">Switch team</button>
       <button class="logout-btn" onclick="logout()">Log Out</button>
     </div>
   </div>
@@ -1393,6 +1394,45 @@ async function tryAutoLinkPlayer(){
   }
 }
 
+// Every team this signed-in account looks after: captain of it, an approved member, or linked as a player.
+async function getMyTeams(){
+  var c=fcClient();
+  var gs=await c.auth.getSession();
+  var session=gs&&gs.data&&gs.data.session;
+  if(!session)return [];
+  var uid=session.user.id,ids={};
+  try{var r1=await c.from('teams').select('id').eq('captain_user_id',uid);(r1.data||[]).forEach(function(t){ids[t.id]=1;});}catch(e){}
+  try{var r2=await c.from('team_memberships').select('team_id,status').eq('user_id',uid).eq('status','approved');(r2.data||[]).forEach(function(m){ids[m.team_id]=1;});}catch(e){}
+  try{var r3=await c.from('team_players').select('team_id').eq('linked_user_id',uid);(r3.data||[]).forEach(function(m){ids[m.team_id]=1;});}catch(e){}
+  var list=Object.keys(ids);
+  if(!list.length)return [];
+  var tr=await c.from('teams').select('id,team_name,league_id').in('id',list);
+  var teams=tr.data||[];
+  var lids=Array.from(new Set(teams.map(function(t){return t.league_id;}).filter(Boolean)));
+  var names={};
+  if(lids.length){try{var lr=await c.from('leagues').select('id,name').in('id',lids);(lr.data||[]).forEach(function(l){names[l.id]=l.name;});}catch(e){}}
+  teams.forEach(function(t){t.league_name=names[t.league_id]||'';});
+  teams.sort(function(a,b){return (a.team_name||'').localeCompare(b.team_name||'');});
+  return teams;
+}
+// Offer the choice when the account has more than one team (force=true even if a team is already open).
+async function openTeamChooser(force){
+  try{
+    var teams=await getMyTeams();
+    if(!teams.length)return false;
+    if(teams.length===1&&!force)return await loadTeamById(teams[0].id);
+    if(teams.length===1)return await loadTeamById(teams[0].id);
+    showTeamPicker(teams);
+    return true;
+  }catch(e){console.error('openTeamChooser',e);return false;}
+}
+async function maybeShowSwitch(){
+  try{
+    var teams=await getMyTeams();
+    var b=document.getElementById('switch-team-btn');
+    if(b&&teams.length>1)b.style.display='';
+  }catch(e){}
+}
 async function loadTeamById(teamId){
   var rows=await sb('teams?id=eq.'+teamId+'&select=id,created_at,team_name,league_id,score_threshold,captain_user_id,join_code');
   if(!rows||!rows.length){
@@ -1421,9 +1461,9 @@ function showTeamPicker(teams){
   var html='<div id="team-picker-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:900;display:flex;align-items:center;justify-content:center;padding:1rem">'
     +'<div style="background:var(--surface);border:1px solid var(--green);border-radius:12px;padding:1.75rem;max-width:400px;width:100%">'
       +'<h3 style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;text-transform:uppercase;color:var(--amber);margin-bottom:1rem">Which team?</h3>'
-      +'<p style="font-size:.85rem;color:var(--dim);margin-bottom:1rem">Your account is linked to more than one team.</p>'
+      +'<p style="font-size:.85rem;color:var(--dim);margin-bottom:1rem">Your account is linked to more than one team. Choose the one to view and edit.</p>'
       +teams.map(function(t){
-        return '<button onclick="pickTeam(&quot;'+t.id+'&quot;)" style="display:block;width:100%;text-align:left;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:.75rem 1rem;margin-bottom:.5rem;color:var(--text);font-family:Barlow,sans-serif;font-size:.95rem;cursor:pointer">'+esc(t.team_name)+'</button>';
+        return '<button onclick="pickTeam(&quot;'+t.id+'&quot;)" style="display:block;width:100%;text-align:left;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:.75rem 1rem;margin-bottom:.5rem;color:var(--text);font-family:Barlow,sans-serif;font-size:.95rem;cursor:pointer">'+esc(t.team_name)+(t.league_name?'<span style="display:block;font-size:.78rem;color:var(--dim);margin-top:2px">'+esc(t.league_name)+'</span>':'')+'</button>';
       }).join('')
     +'</div></div>';
   document.body.insertAdjacentHTML('beforeend', html);
@@ -1581,6 +1621,12 @@ document.addEventListener('DOMContentLoaded',async function(){
     return;
   }
 
+  // From the dashboard's "League Team View": a signed-in account with several teams chooses which one
+  if(params.get('pick')==='1'){
+    window.history.replaceState({},'','/');
+    if(await openTeamChooser(false)){setTimeout(maybeShowSwitch,1500);return;}
+  }
+
   // Check for saved sessions
   var sess=localStorage.getItem('mld_session');
   // SECURITY FIX: this used to also check localStorage's 'mld_admin' flag
@@ -1614,6 +1660,7 @@ document.addEventListener('DOMContentLoaded',async function(){
       setTimeout(showOnboarding,1500);
       var wname=currentTeam&&currentTeam.team_name?currentTeam.team_name:'';
       if(wname)setTimeout(function(){toast('Welcome back, '+wname+' 🎯');},600);
+      setTimeout(maybeShowSwitch,1500);
     }catch(e){localStorage.removeItem('mld_session');showScreen('screen-landing');}
   } else {
     var autoLinked = await tryAutoLinkPlayer();
