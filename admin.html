@@ -275,6 +275,7 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
     <div class="card">
       <h2>Import Fixture List</h2>
       <p style="font-size:.82rem;color:var(--dim);margin-bottom:.5rem;line-height:1.5">Download the template, fill in your fixtures, then upload to bulk-import a full season. Teams must already be registered in the league, with names matching exactly.</p>
+      <p style="font-size:.78rem;color:var(--dim);margin-bottom:.5rem;line-height:1.5"><strong style="color:var(--gl)">Byes:</strong> put BYE in place of a team (Home or Away column) for a rest week. Those rows are recognised and skipped.</p>
       <p style="font-size:.78rem;color:var(--dim);margin-bottom:.75rem;line-height:1.5"><strong style="color:var(--gl)">Safe to re-upload.</strong> If you upload the same file again, or a corrected version, existing fixtures are matched by teams and updated — you won't get duplicates. You'll see a summary and confirm before anything changes. Fixtures that have already been played are never altered.</p>
       <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:center">
         <button class="btn-admin" onclick="downloadFixtureTemplate()">⬇ Download Template</button>
@@ -373,6 +374,10 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
         <div class="grid" id="cl-pts-games" style="display:none">
           <div class="field"><label>Points per game won</label><input type="number" id="cl-ppg" value="1" min="0" max="100"></div>
         </div>
+        <div class="grid">
+          <div class="field"><label>Points for a bye</label><input type="number" id="cl-pbye" value="0" min="0" max="100"></div>
+        </div>
+        <div class="wiz-help">A bye is a week when a team has no match (when there is an odd number of teams). Enter the table points a team gets for it, or 0 for none.</div>
 
         <div class="wiz-sec">Where is the league?</div>
         <div class="grid">
@@ -879,6 +884,7 @@ async function populateFixtureLeagueDropdowns(){
 }
 
 var tableScoringOk=false;
+var byePtsOk=false;
 async function loadLeagues(){
   var el=document.getElementById('leagues-list');
   el.innerHTML='<div class="lh"><span class="spin"></span> Loading…</div>';
@@ -893,6 +899,9 @@ async function loadLeagues(){
     }
     var tsc={};
     try{ (await sb('leagues?select=id,table_scoring,points_per_game'+leagueScope())).forEach(function(r){tsc[r.id]=r;}); tableScoringOk=true; }catch(e){ tableScoringOk=false; }
+    var pbm={};
+    try{ (await sb('leagues?select=id,points_bye'+leagueScope())).forEach(function(r){pbm[r.id]=r.points_bye;}); byePtsOk=true; }catch(e){ byePtsOk=false; }
+    leagues.forEach(function(l){l.points_bye=pbm[l.id]==null?0:pbm[l.id];});
     leagues.forEach(function(l){var r=tsc[l.id]||{};l.table_scoring=r.table_scoring==='games'?'games':'match';l.points_per_game=r.points_per_game==null?1:r.points_per_game;});
     var teams=await sb('teams?select=id,league_id'+(scopedLeagueId?'&league_id=eq.'+scopedLeagueId:''));
     if(!leagues||!leagues.length){el.innerHTML='<div class="nh">No leagues yet. Create one using the Create League tab.</div>';return;}
@@ -928,6 +937,7 @@ async function loadLeagues(){
         +'<div class="field"><label>Points Loss</label><input type="number" id="epl-'+l.id+'" value="'+(l.points_loss||0)+'"></div>'
         +'<div class="field" style="grid-column:1/-1"><label style="display:flex;align-items:center;gap:.5rem;font-weight:400;text-transform:none;letter-spacing:0"><input type="checkbox" id="eftn-'+l.id+'" '+(l.fixed_team_names?'checked':'')+' style="width:auto"> Fix team names — captains must pick from the Captain Contacts list instead of typing their own</label></div>'
         +'<div class="field" style="grid-column:1/-1"><label>League table points</label><select id="ets2-'+l.id+'"'+(tableScoringOk?'':' disabled')+' onchange="document.getElementById(\'eppg-wrap-'+l.id+'\').style.display=this.value===\'games\'?\'block\':\'none\'"><option value="match" '+(l.table_scoring!=='games'?'selected':'')+'>Match result — points for a win / draw / loss (uses the Points boxes above)</option><option value="games" '+(l.table_scoring==='games'?'selected':'')+'>Games won — points for every game won on the night (e.g. a 6–3 win: 6 points to the winners, 3 to the losers)</option></select>'+(tableScoringOk?'':'<div style="font-size:.72rem;color:var(--amber);margin-top:.3rem">Run SQL 09_score_mode.sql in Supabase to enable this setting.</div>')+'<div id="eppg-wrap-'+l.id+'" style="margin-top:.5rem;display:'+(l.table_scoring==='games'?'block':'none')+'"><label>Points per game won</label><input type="number" min="0" id="eppg-'+l.id+'" value="'+l.points_per_game+'"></div></div>'
+        +'<div class="field"><label>Points for a bye</label><input type="number" min="0" max="100" id="epb-'+l.id+'" value="'+(l.points_bye||0)+'"'+(byePtsOk?'':' disabled')+'><div style="font-size:.72rem;color:var(--dim);margin-top:.25rem;line-height:1.4">Table points a team gets for a week with no match (a bye). 0 means no points.'+(byePtsOk?'':' <span style="color:var(--amber)">Run SQL 13_byes.sql first.</span>')+'</div></div>'
         +'</div>'
         +'<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#5a9abf;margin:.9rem 0 .5rem">Public Directory Profile</div>'
         +'<div class="grid">'
@@ -1016,6 +1026,11 @@ async function saveEdit(id){
     if(tableScoringOk&&tsEl){
       try{ await sbPatch('leagues','id=eq.'+id,{table_scoring:tsEl.value,points_per_game:Math.max(0,parseInt(document.getElementById('eppg-'+id).value)||1)}); }
       catch(e){ throw new Error('League table points not saved — run SQL 09_score_mode.sql first ('+e.message+')'); }
+    }
+    var pbEl=document.getElementById('epb-'+id);
+    if(byePtsOk&&pbEl){
+      try{ await sbPatch('leagues','id=eq.'+id,{points_bye:Math.max(0,Math.min(100,parseInt(pbEl.value)||0))}); }
+      catch(e){ throw new Error('Points for a bye not saved — run SQL 13_byes.sql first ('+e.message+')'); }
     }
     var tok=await tokenForLeague(id);
     var r=await sb('rpc/update_league_profile',{method:'POST',body:JSON.stringify({
@@ -1114,6 +1129,11 @@ async function createLeague(){
     if(games){
       try{ await sbPatch('leagues','id=eq.'+newId,{table_scoring:'games',points_per_game:Math.max(0,parseInt(wizEl('cl-ppg').value)||1)}); }
       catch(e2){ wiz.note='Games-won scoring was not saved (run SQL 09_score_mode.sql in Supabase, then set "League table points" with the league’s Edit button).'; }
+    }
+    var pbye=Math.max(0,Math.min(100,parseInt(wizEl('cl-pbye').value)||0));
+    if(pbye>0){
+      try{ await sbPatch('leagues','id=eq.'+newId,{points_bye:pbye}); }
+      catch(e3){ wiz.note=(wiz.note?wiz.note+' ':'')+'Points for a bye were not saved (run SQL 13_byes.sql in Supabase, then set them with the league\u2019s Edit button).'; }
     }
     if(isPlatformAdmin)loadLeagues();
     wizShow(2);
@@ -1292,6 +1312,17 @@ function wizRoundRobin(n,twice){
   return rounds;
 }
 var wizPlan=null;
+var wizByes=[];
+async function wizSaveByes(list){
+  if(!list||!list.length)return '';
+  try{ var n=await sb('rpc/admin_add_byes',{method:'POST',body:JSON.stringify({p_token:wiz.token,p_byes:list})}); return ' '+(n||0)+' bye'+(n===1?'':'s')+' recorded.'; }
+  catch(e){ return ' (Byes could not be recorded: run SQL 13_byes.sql in Supabase. '+(e.message||'')+')'; }
+}
+function wizByeLine(rd){
+  var played={};rd.forEach(function(p){played[p[0]]=1;played[p[1]]=1;});
+  var out=[];wiz.teams.forEach(function(t,i){if(!played[i])out.push(t.team_name);});
+  return out.length?'<div style="color:var(--amber)">Bye: '+esc(out.join(', '))+'</div>':'';
+}
 function wizRenderFixtures(){
   var n=wiz.teams.length;
   wizEl('wiz-3').innerHTML=
@@ -1306,9 +1337,13 @@ function wizRenderFixtures(){
    +'<button class="btn-admin" onclick="wizPreviewFixtures()">Preview season</button>'
    +'<div class="st" id="wf-status"></div>'
    +'<div id="wf-preview"></div>'
+   +'<div class="wiz-sec">Or upload your own schedule</div>'
+   +'<div class="wiz-help">Already have a schedule agreed by your committee? Upload it as a spreadsheet (.xlsx) or CSV with the columns <em>Date, Home team, Away team, Season</em>. Team names must match the teams you entered. Write <strong>BYE</strong> in place of a team for a rest week; those rows are recognised and skipped.</div>'
+   +'<input type="file" id="wf-upload" data-wiz="1" accept=".xlsx,.xls,.csv" style="display:none" onchange="importFixtures(this)">'
+   +'<button class="btn-admin" onclick="wizEl(\'wf-upload\').click()">&#11014; Upload my schedule</button>'
+   +'<div class="st" id="wf-up-status" style="white-space:pre-line"></div>'
    +'<div class="wiz-nav"><button class="btn-admin wiz-ghost" onclick="wizShow(2)">&larr; Back</button>'
-   +'<button class="btn-admin wiz-ghost" onclick="wizShow(4)">Skip, I’ll add fixtures later &rarr;</button></div>'
-   +'<div class="wiz-help" style="margin-top:.6rem">Prefer your own spreadsheet of fixtures? Skip this step and use the Fixtures tab once the league is open.</div>';
+   +'<button class="btn-admin wiz-ghost" onclick="wizShow(4)">Continue &rarr;</button></div>';
   wizPlan=null;
 }
 function wizPreviewFixtures(){
@@ -1322,13 +1357,20 @@ function wizPreviewFixtures(){
   var plan=[];
   rounds.forEach(function(rd,ri){var date=wizAddDays(start,ri*gap);rd.forEach(function(p){plan.push({date:date,home:wiz.teams[p[0]],away:wiz.teams[p[1]]});});});
   wizPlan=plan;wizErr('wf-status','');
+  wizByes=[];
+  rounds.forEach(function(rd,ri){
+    var played={};rd.forEach(function(p){played[p[0]]=1;played[p[1]]=1;});
+    wiz.teams.forEach(function(t,ti){if(!played[ti])wizByes.push({team_id:t.team_id,bye_date:wizAddDays(start,ri*gap),season:wiz.season});});
+  });
   wizEl('wf-preview').innerHTML=
     '<div class="wiz-sec">'+rounds.length+' rounds, '+plan.length+' matches</div>'
+    +(wiz.teams.length%2===1?'<div class="wiz-help">You have an odd number of teams ('+wiz.teams.length+'), so one team has a <strong>bye</strong> (no match) each round. Over '+(twice?'each half of the season':'the season')+' every team gets exactly one bye. Byes are shown in amber below.</div>':'')
     +'<div style="max-height:320px;overflow:auto;border:1px solid var(--border);border-radius:6px;padding:.4rem .7rem">'
     +rounds.map(function(rd,ri){
       var date=wizAddDays(start,ri*gap);
       return '<div style="padding:.35rem 0;border-bottom:1px solid var(--border);font-size:.82rem"><div style="color:#8ac4ff;font-weight:600">Round '+(ri+1)+' &middot; '+esc(wizShowDate(date))+'</div>'
-        +rd.map(function(p){return '<div style="color:var(--dim)">'+esc(wiz.teams[p[0]].team_name)+' v '+esc(wiz.teams[p[1]].team_name)+'</div>';}).join('')+'</div>';
+        +rd.map(function(p){return '<div style="color:var(--dim)">'+esc(wiz.teams[p[0]].team_name)+' v '+esc(wiz.teams[p[1]].team_name)+'</div>';}).join('')
+        +wizByeLine(rd)+'</div>';
     }).join('')+'</div>'
     +'<button class="btn-admin" style="margin-top:.8rem" onclick="wizSaveFixtures()"><span id="wf-spin" style="display:none" class="spin"></span>Save these fixtures &amp; continue &rarr;</button>';
 }
@@ -1341,6 +1383,8 @@ async function wizSaveFixtures(){
       await sb('league_fixtures',{method:'POST',prefer:'return=minimal',body:JSON.stringify(rows.slice(i,i+100))});
     }
     wiz.fixtures+=rows.length;
+    var bmsg=await wizSaveByes(wizByes);
+    if(bmsg.indexOf('could not')>-1)toast(bmsg,true);
     wizShow(4);
   }catch(e){wizErr('wf-status',e.message);}
   sp.style.display='none';
@@ -2339,8 +2383,9 @@ function readFixtureFile(file){
 }
 
 async function importFixtures(input){
-  var leagueId=document.getElementById('fx-import-league').value;
-  var st=document.getElementById('import-status');
+  var inWiz=input.getAttribute('data-wiz')==='1'&&wiz&&wiz.id;
+  var leagueId=inWiz?wiz.id:document.getElementById('fx-import-league').value;
+  var st=document.getElementById(inWiz?'wf-up-status':'import-status');
   st.style.whiteSpace='pre-line';
   if(!leagueId){st.textContent='Please select a league first.';st.className='st err';input.value='';return;}
   var file=input.files[0];
@@ -2355,12 +2400,21 @@ async function importFixtures(input){
     var defSeason=(lg&&lg[0]&&lg[0].current_season)||1;
 
     var raw=await readFixtureFile(file);
-    var errors=[],fileRows=[];
+    var errors=[],fileRows=[],byeRows=0,byeList=[];
+    // A row with BYE (or a dash / blank) in place of a team is a rest week, not a match.
+    function isByeCell(c){var v=String(c==null?'':c).trim();return v===''||/^(bye|a bye|no match|no game|rest|n\/a|-+|\u2013|\u2014)$/i.test(v);}
     var start=(raw.length&&parseFixtureDate(raw[0][0])===null)?1:0; // first row is a header unless it starts with a date
     for(var i=start;i<raw.length;i++){
       var r=raw[i];
       if(!r||r.every(function(c){return String(c==null?'':c).trim()==='';}))continue;
       var line=i+1;
+      if(isByeCell(r[1])||isByeCell(r[2])){
+        byeRows++;
+        var bt=!isByeCell(r[1])?teamMap[fxNorm(r[1])]:(!isByeCell(r[2])?teamMap[fxNorm(r[2])]:null);
+        var bd=parseFixtureDate(r[0]);
+        if(bt&&bd)byeList.push({team_id:bt.id,bye_date:bd,season:parseInt(r[3])||defSeason});
+        continue;
+      }
       var date=parseFixtureDate(r[0]);
       if(!date){errors.push('Row '+line+': date "'+r[0]+'" not understood — use DD/MM/YYYY');continue;}
       var home=teamMap[fxNorm(r[1])],away=teamMap[fxNorm(r[2])];
@@ -2370,7 +2424,7 @@ async function importFixtures(input){
       fileRows.push({line:line,date:date,home:home,away:away,season:parseInt(r[3])||defSeason});
     }
     if(!fileRows.length){
-      st.textContent='Nothing to import.'+(errors.length?'\n'+errors.slice(0,8).join('\n'):' Is the file empty?');
+      st.textContent='Nothing to import.'+(byeRows?' ('+byeRows+' bye row'+(byeRows!==1?'s':'')+' recognised and skipped.)':'')+(errors.length?'\n'+errors.slice(0,8).join('\n'):' Is the file empty?');
       st.className='st err';input.value='';return;
     }
 
@@ -2410,9 +2464,16 @@ async function importFixtures(input){
     var inFile=0;rows.forEach(function(){inFile++;});
     var notInFile=existing.length-unchanged-updates.length-locked.length;
 
+    async function recordByes(){
+      if(!byeList.length)return '';
+      try{ var tk=await tokenForLeague(leagueId); var n=await sb('rpc/admin_add_byes',{method:'POST',body:JSON.stringify({p_token:tk,p_byes:byeList})}); return ' '+(n||0)+' new bye'+(n===1?'':'s')+' recorded for the table.'; }
+      catch(e){ return ' Byes could not be recorded (run SQL 13_byes.sql in Supabase): '+(e.message||e); }
+    }
     if(!inserts.length&&!updates.length){
-      var m0='Nothing to change — '+unchanged+' fixture'+(unchanged!==1?'s are':' is')+' already in '+leagueName+' exactly as in your file.';
+      var byeNote0=await recordByes();
+      var m0=(byeRows?byeRows+' bye row'+(byeRows!==1?'s':'')+' skipped. ':'')+'Nothing to change — '+unchanged+' fixture'+(unchanged!==1?'s are':' is')+' already in '+leagueName+' exactly as in your file.';
       if(locked.length)m0+='\n'+locked.length+' fixture'+(locked.length!==1?'s':'')+' in the file differ from fixtures already played, which are never changed.';
+      m0+=byeNote0;
       if(errors.length)m0+='\n\nSkipped:\n'+errors.slice(0,8).join('\n');
       st.textContent=m0;st.className=errors.length?'st err':'st ok';input.value='';return;
     }
@@ -2425,6 +2486,7 @@ async function importFixtures(input){
       +'• '+unchanged+' already correct (no change)\n';
     if(locked.length)plan+='• '+locked.length+' already played — left alone\n';
     if(notInFile>0)plan+='• '+notInFile+' fixture'+(notInFile!==1?'s':'')+' in the league are not in your file — left as they are (nothing is deleted)\n';
+    if(byeRows)plan+='• '+byeRows+' bye row'+(byeRows!==1?'s':'')+' recognised (rest weeks, recorded as byes)\n';
     if(errors.length)plan+='• '+errors.length+' row'+(errors.length!==1?'s':'')+' skipped (see below after import)\n';
     if(updates.length){
       plan+='\nDate corrections:\n'+updates.slice(0,8).map(function(u){return '  '+label(u.f)+': '+fxShowDate(u.e.fixture_date)+' → '+fxShowDate(u.f.date);}).join('\n');
@@ -2447,10 +2509,11 @@ async function importFixtures(input){
       try{ await sbPatch('league_fixtures','id=eq.'+updates[u].e.id,{fixture_date:updates[u].f.date}); corrected++; }
       catch(e){failed.push('Row '+updates[u].f.line+': '+e.message);}
     }
-    var msg='Done — '+added+' added, '+corrected+' corrected, '+unchanged+' unchanged.';
+    var msg='Done — '+added+' added, '+corrected+' corrected, '+unchanged+' unchanged.'+(byeRows?' '+byeRows+' bye row'+(byeRows!==1?'s':'')+' found (no match to save).':'')+await recordByes();
     var problems=errors.concat(failed);
     if(problems.length)msg+='\n\nNot imported:\n'+problems.slice(0,8).join('\n')+(problems.length>8?'\n…and '+(problems.length-8)+' more':'');
     st.textContent=msg;st.className=problems.length?'st err':'st ok';
+    if(inWiz)wiz.fixtures+=added;
     toast(added+' added, '+corrected+' corrected');
     loadFixtureList();
   }catch(e){

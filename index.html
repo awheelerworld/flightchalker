@@ -2068,6 +2068,20 @@ async function attachTableScoring(lg){
     if(r&&r[0]){ if(r[0].table_scoring==='games')lg.table_scoring='games'; if(r[0].points_per_game!=null)lg.points_per_game=r[0].points_per_game; }
   }catch(e){}
 }
+// Byes (rest weeks): points per bye come from the league; only byes whose date has arrived count.
+async function fetchByeCounts(lg,season){
+  var out={};
+  lg.points_bye=0;
+  try{
+    var r=await sb('leagues?id=eq.'+lg.id+'&select=points_bye');
+    if(r&&r[0]&&r[0].points_bye!=null)lg.points_bye=r[0].points_bye;
+    if(!lg.points_bye)return out;
+    var d=new Date();var today=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+    var rows=await sb('league_byes?league_id=eq.'+lg.id+'&season=eq.'+season+'&bye_date=lte.'+today+'&select=team_id');
+    (rows||[]).forEach(function(b){out[b.team_id]=(out[b.team_id]||0)+1;});
+  }catch(e){}
+  return out;
+}
 function tablePts(lg,wins,draws,losses,gamesWon){
   if(lg&&lg.table_scoring==='games')return gamesWon*(lg.points_per_game==null?1:lg.points_per_game);
   return wins*(lg.points_win||2)+draws*(lg.points_draw||1)+losses*(lg.points_loss||0);
@@ -2810,6 +2824,7 @@ async function renderLeagueTable(){
     var teams=await sb('teams?league_id=eq.'+currentLeague.id+'&select=id,team_name');
     // Get all matches for all teams in league
     var allMatches=await fetchLeagueMatches(currentLeague.id,teams,(currentLeague.current_season||1),'team_id,wins,losses,match_date');
+    var byeCounts=await fetchByeCounts(currentLeague,(currentLeague.current_season||1));
     // Build table data
     var tableData=teams.map(function(t){
       var tMatches=allMatches.filter(function(m){return m.team_id===t.id;});
@@ -2819,7 +2834,8 @@ async function renderLeagueTable(){
       var losses=tMatches.filter(function(m){return m.wins<m.losses;}).length;
       var gamesWon=tMatches.reduce(function(a,m){return a+m.wins;},0);
       var gamesLost=tMatches.reduce(function(a,m){return a+m.losses;},0);
-      var pts=tablePts(currentLeague,wins,draws,losses,gamesWon);
+      var byes=byeCounts[t.id]||0;
+      var pts=tablePts(currentLeague,wins,draws,losses,gamesWon)+byes*(currentLeague.points_bye||0);
       // Form - last 5
       var sorted=tMatches.slice().sort(function(a,b){return a.match_date<b.match_date?1:-1;}).slice(0,5);
       var form=sorted.map(function(m){return m.wins>m.losses?'w':(m.wins===m.losses?'d':'l');}).reverse();
@@ -2844,7 +2860,7 @@ async function renderLeagueTable(){
         +'</tr>';
     });
     html+='</tbody></table>';
-    html+='<p style="font-size:.72rem;color:var(--dim);margin-top:.75rem">GW = Games Won · GL = Games Lost · GD = Game Difference · Pts = '+(currentLeague.table_scoring==='games'?'Points (1 per game won)':'Points')+' · Form = last '+tableData[0].form.length+' matches</p>';
+    html+='<p style="font-size:.72rem;color:var(--dim);margin-top:.75rem">GW = Games Won · GL = Games Lost · GD = Game Difference · Pts = '+(currentLeague.table_scoring==='games'?'Points (1 per game won)':'Points')+(currentLeague.points_bye?' · Bye = '+currentLeague.points_bye+' pts':'')+' · Form = last '+tableData[0].form.length+' matches</p>';
     wrap.innerHTML=html;
   }catch(e){wrap.innerHTML='<div class="nh">Error loading table: '+esc(e.message)+'</div>';}
 }
@@ -4561,6 +4577,7 @@ async function loadPublicTable(){
     var teams=await sb('teams?league_id=eq.'+publicLeague.id+'&select=id,team_name');
     if(!teams.length){wrap.innerHTML='<div class="nh">No teams registered yet.</div>';return;}
     var allMatches=await fetchLeagueMatches(publicLeague.id,teams,season,'team_id,wins,losses,match_date');
+    var byeCountsP=await fetchByeCounts(publicLeague,season);
     var tableData=teams.map(function(t){
       var tM=allMatches.filter(function(m){return m.team_id===t.id;});
       var played=tM.length;
@@ -4569,7 +4586,7 @@ async function loadPublicTable(){
       var losses2=tM.filter(function(m){return m.wins<m.losses;}).length;
       var gw=tM.reduce(function(a,m){return a+m.wins;},0);
       var gl=tM.reduce(function(a,m){return a+m.losses;},0);
-      var pts=tablePts(publicLeague,wins,draws,losses2,gw);
+      var pts=tablePts(publicLeague,wins,draws,losses2,gw)+(byeCountsP[t.id]||0)*(publicLeague.points_bye||0);
       var form=tM.slice().sort(function(a,b){return a.match_date<b.match_date?1:-1;}).slice(0,5).map(function(m){return m.wins>m.losses?'w':(m.wins===m.losses?'d':'l');}).reverse();
       return{name:t.team_name,played,wins,draws,losses:losses2,gw,gl,gd:gw-gl,pts,form};
     });
@@ -4584,7 +4601,7 @@ async function loadPublicTable(){
         +'<td>'+t.form.map(function(f){return '<span class="form-pip '+f+'">'+f.toUpperCase()+'</span>';}).join('')+'</td>'
         +'</tr>';
     });
-    html+='</tbody></table><p style="font-size:.72rem;color:var(--dim);margin-top:.75rem">GW = Games Won · GL = Games Lost · GD = Difference · Pts = '+(publicLeague.table_scoring==='games'?'Points (1 per game won)':'Points')+'</p>';
+    html+='</tbody></table><p style="font-size:.72rem;color:var(--dim);margin-top:.75rem">GW = Games Won · GL = Games Lost · GD = Difference · Pts = '+(publicLeague.table_scoring==='games'?'Points (1 per game won)':'Points')+(publicLeague.points_bye?' · Bye = '+publicLeague.points_bye+' pts':'')+'</p>';
     wrap.innerHTML=html;
   }catch(e){wrap.innerHTML='<div class="nh">Error: '+esc(e.message)+'</div>';}
 }
