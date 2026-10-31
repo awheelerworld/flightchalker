@@ -72,6 +72,41 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
 .league-name{font-weight:700;font-size:1rem;color:#8ac4ff;margin-bottom:.25rem}
 .league-meta{font-size:.8rem;color:var(--dim);margin-bottom:.5rem}
 .league-actions{display:flex;gap:.5rem;flex-wrap:wrap}
+/* League card: facts strip + tidy action buttons */
+.lc-facts{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin:.6rem 0 .8rem}
+.lc-facts>div{background:var(--surface,#14221a);border:1px solid var(--border,#2a4034);border-radius:8px;padding:.5rem .7rem;min-width:0}
+.lc-facts span{display:block;font-family:'Barlow Condensed',sans-serif;font-size:.68rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.lc-facts b{display:block;font-size:1rem;font-weight:600;color:var(--text);overflow-wrap:anywhere;margin-top:1px}
+.lc-facts b.code{font-family:'Barlow Condensed',sans-serif;letter-spacing:.1em;color:#8ac4ff}
+.lc-actions{display:grid;grid-template-columns:1fr;gap:.5rem}
+.lc-btn{display:flex;align-items:center;gap:.5rem;min-height:44px;padding:.5rem .8rem;background:transparent;border:1px solid var(--border,#2a4034);border-radius:8px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.88rem;font-weight:500;text-align:left;cursor:pointer;transition:border-color .15s,background .15s}
+.lc-btn:hover,.lc-btn:focus-visible{border-color:var(--blue-l,#4a9eff);background:rgba(74,158,255,.08);outline:none}
+.lc-btn.main{border-color:var(--green,#2f7d4f);color:var(--gl,#7fd69b)}
+.lc-btn .ic{width:1.2rem;text-align:center;flex:none}
+@media(min-width:640px){.lc-facts{grid-template-columns:repeat(4,1fr)}.lc-actions{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:960px){.lc-actions{grid-template-columns:repeat(5,1fr)}}
+/* Registered teams as a table of expandable rows */
+.tm-head{display:none}
+.tm{background:var(--bg);border:1px solid var(--border);border-radius:8px;margin-bottom:.45rem;overflow:hidden}
+.tm>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:.15rem .75rem;align-items:center;padding:.65rem .8rem}
+.tm>summary::-webkit-details-marker{display:none}
+.tm-name{font-weight:600;font-size:.95rem;overflow-wrap:anywhere;grid-column:1}
+.tm-cap{font-size:.78rem;color:var(--dim);grid-column:1}
+.tm-cap.ok{color:var(--gl)}
+.tm-pin{font-size:.78rem;color:var(--dim);grid-column:2;grid-row:1}
+.tm-pin b{font-family:monospace;font-size:.9rem;color:var(--amber);font-weight:600;letter-spacing:.06em}
+.tm-flag{grid-column:2;grid-row:2;justify-self:end;display:flex;align-items:center;gap:.5rem}
+.tm-badge{font-size:.68rem;background:#2a2000;border:1px solid #6a5200;color:var(--amber);border-radius:999px;padding:1px 8px;white-space:nowrap}
+.tm-chev{color:var(--dim);transition:transform .15s;display:inline-block}
+.tm[open] .tm-chev{transform:rotate(90deg)}
+.tm[open]>summary{border-bottom:1px solid var(--border)}
+.tm-body{padding:.3rem .8rem .8rem}
+@media(min-width:720px){
+  .tm-head{display:grid;grid-template-columns:2fr 1.4fr 110px 130px;gap:.75rem;padding:.4rem .8rem;font-family:'Barlow Condensed',sans-serif;font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+  .tm>summary{grid-template-columns:2fr 1.4fr 110px 130px;gap:.75rem}
+  .tm-name,.tm-cap,.tm-pin,.tm-flag{grid-column:auto;grid-row:auto}
+  .tm-flag{justify-self:end}
+}
 .code-badge{background:var(--blue-bg);border:1px solid var(--blue);border-radius:4px;padding:2px 8px;font-family:'Barlow Condensed',sans-serif;font-size:.75rem;color:#8ac4ff;letter-spacing:.06em}
 
 /* Edit panel */
@@ -911,12 +946,18 @@ async function loadLeagues(){
       return '<div class="league-item">'
         +'<div class="league-name">'+esc(l.name)+'</div>'
         +'<div class="league-meta">'+(l.town||l.county?esc([l.town,l.county].filter(Boolean).join(', '))+' &middot; ':'<span style="color:var(--amber)">Location not set</span> &middot; ')+l.match_night+'s &middot; '+l.num_singles+' singles &middot; '+l.num_doubles+' doubles &middot; '+(l.starting_score||501)+' starting &middot; <strong style="color:var(--amber)">Season '+(l.current_season||1)+'</strong></div>'
-        +'<div class="league-actions">'
-        +'<span class="code-badge">Code: '+code+'</span>'
-        +'<span class="code-badge" style="color:var(--amber);border-color:#6a5200;background:#2a2000">'+count+' team'+(count!==1?'s':'')+' registered</span>'
-        +'<span class="code-badge" style="'+(l.fixed_team_names?'color:var(--amber);border-color:#6a5200;background:#2a2000':'color:var(--dim)')+'">'+(l.fixed_team_names?'🔒 Fixed team names':'✎ Captains choose team name')+'</span>'
-        +'<button class="btn-admin" style="font-size:.72rem;padding:3px 10px" onclick="toggleEdit(\''+l.id+'\')">✎ Edit</button>'
-        +(organiserUser?'<button class="btn-admin" style="font-size:.72rem;padding:3px 10px" onclick="setHelperPassword(\''+l.id+'\')">🔑 Helper password</button>':'')
+        +'<div class="lc-facts">'
+        +'<div><span>League code</span><b class="code">'+code+'</b></div>'
+        +'<div><span>Teams</span><b>'+count+'</b></div>'
+        +'<div><span>Season</span><b>'+(l.current_season||1)+'</b></div>'
+        +'<div><span>Team names</span><b>'+(l.fixed_team_names?'Fixed by you':'Captains choose')+'</b></div>'
+        +'</div>'
+        +'<div class="lc-actions">'
+        +'<button class="lc-btn" onclick="toggleEdit(\''+l.id+'\')"><span class="ic">&#9998;</span>Edit league</button>'
+        +'<button class="lc-btn main" onclick="toggleTeams(&quot;'+l.id+'&quot;)"><span class="ic">&#128101;</span>Manage teams</button>'
+        +'<button class="lc-btn" onclick="toggleCaptains(&quot;'+l.id+'&quot;)"><span class="ic">&#128199;</span>Captain contacts</button>'
+        +'<button class="lc-btn" onclick="openSeasonWizard(&quot;'+l.id+'&quot;)"><span class="ic">&#128197;</span>Start new season</button>'
+        +(organiserUser?'<button class="lc-btn" onclick="setHelperPassword(\''+l.id+'\')"><span class="ic">&#128273;</span>Helper password</button>':'')
         +'</div>'
         +'<div class="edit-panel" id="ep-'+l.id+'">'
         +'<h3>Edit League</h3>'
@@ -954,14 +995,9 @@ async function loadLeagues(){
         +'</div>'
         +'<div class="st" id="est-'+l.id+'"></div>'
         +'</div>'
-        +'<div style="margin-top:.4rem;display:flex;gap:.4rem;flex-wrap:wrap">'
-        +'<button class="btn-admin" style="font-size:.72rem;padding:3px 10px;background:#1a2a1e;border-color:var(--green)" onclick="toggleTeams(&quot;'+l.id+'&quot;)">👥 Manage Teams</button>'
-        +'<button class="btn-admin" style="font-size:.72rem;padding:3px 10px;background:#1a2a1e;border-color:var(--amber);color:var(--amber)" onclick="toggleCaptains(&quot;'+l.id+'&quot;)">📇 Captain Contacts</button>'
-        +'<button class="btn-admin" style="font-size:.72rem;padding:3px 10px;background:#2a2000;border-color:var(--amber);color:var(--amber)" onclick="openSeasonWizard(&quot;'+l.id+'&quot;)">🗓 Start New Season</button>'
-        +'</div>'
         +'<div class="edit-panel" id="teams-panel-'+l.id+'" style="border-color:var(--green);margin-top:.4rem">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap;margin-bottom:.5rem"><h3 style="color:var(--gl);margin:0">Registered Teams</h3>'
-        +'<button class="btn-admin" style="font-size:.78rem;padding:4px 14px" onclick="wizResume(&quot;'+l.id+'&quot;)">+ Add teams</button></div>'
+        +'<button class="lc-btn main" style="min-height:38px;padding:.35rem .9rem" onclick="wizResume(&quot;'+l.id+'&quot;)">+ Add teams</button></div>'
         +'<div id="teams-list-'+l.id+'"><div class="lh">Loading…</div></div>'
         +'</div>'
         +'<div class="edit-panel" id="captains-panel-'+l.id+'" style="border-color:var(--amber);margin-top:.4rem">'
@@ -2109,7 +2145,7 @@ async function loadTeamList(leagueId){
     var teams;
     try{ teams=await sb('teams?league_id=eq.'+leagueId+'&order=team_name.asc&select='+teamCols+',venue_name,venue_address'); }
     catch(e){ teams=await sb('teams?league_id=eq.'+leagueId+'&order=team_name.asc&select='+teamCols); } // venue columns not added yet (migration_03)
-    if(!teams||!teams.length){el.innerHTML='<div class="nh">No teams registered yet.<div style="margin-top:.8rem"><button class="btn-admin" onclick="wizResume(\''+leagueId+'\')">+ Add teams to this league</button></div><div style="font-size:.78rem;margin-top:.6rem">Enter teams one by one, paste a list, or add a team that already exists on Flight Chalker. Then draw up fixtures and email the captains.</div></div>';return;}
+    if(!teams||!teams.length){el.innerHTML='<div class="nh">No teams registered yet.<div style="margin-top:.8rem"><button class="lc-btn main" style="display:inline-flex" onclick="wizResume(\''+leagueId+'\')">+ Add teams to this league</button></div><div style="font-size:.78rem;margin-top:.6rem">Enter teams one by one, paste a list, or add a team that already exists on Flight Chalker. Then draw up fixtures and email the captains.</div></div>';return;}
 
     // PINs are no longer readable directly (see migration_01_security.sql)
     // - fetched separately via the token-gated RPC and merged in here.
@@ -2177,11 +2213,15 @@ async function loadTeamList(leagueId){
           +'</div>';
       }).join('') : '<div style="font-size:.78rem;color:var(--dim);padding:.3rem 0">No approved squad members yet.</div>';
 
-      return '<div style="padding:.5rem .75rem;background:var(--bg);border:1px solid var(--border);border-radius:5px;margin-bottom:.4rem">'
-        +'<div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">'
-          +'<div style="flex:1;font-weight:600;font-size:.9rem">'+esc(t.team_name)+'</div>'
-          +'<div style="font-size:.78rem;color:var(--dim)">PIN: '+t.pin+'</div>'
-          +'<button onclick="deleteTeam(&quot;'+t.id+'&quot;,&quot;'+esc(t.team_name)+'&quot;,&quot;'+leagueId+'&quot;)" style="background:none;border:1px solid #5c2020;border-radius:4px;color:#ff8080;font-size:.72rem;padding:2px 8px;cursor:pointer">Remove</button>'
+      var nReq=teamPending.length+teamChangeReqs.length;
+      return '<details class="tm"><summary>'
+          +'<div class="tm-name">'+esc(t.team_name)+'</div>'
+          +'<div class="tm-cap'+(t.captain_user_id?' ok':'')+'">'+(t.captain_user_id?'Captain: '+esc(captainLabel):'Captain not yet claimed')+'</div>'
+          +'<div class="tm-pin">PIN <b>'+esc(String(t.pin==null?'\u2014':t.pin))+'</b></div>'
+          +'<div class="tm-flag">'+(nReq?'<span class="tm-badge">'+nReq+' request'+(nReq!==1?'s':'')+'</span>':'')+'<span class="tm-chev">&#8250;</span></div>'
+        +'</summary><div class="tm-body">'
+        +'<div style="display:flex;justify-content:flex-end;margin-bottom:.2rem">'
+          +'<button onclick="deleteTeam(&quot;'+t.id+'&quot;,&quot;'+esc(t.team_name)+'&quot;,&quot;'+leagueId+'&quot;)" style="background:none;border:1px solid #5c2020;border-radius:4px;color:#ff8080;font-size:.72rem;padding:2px 8px;cursor:pointer">Remove team</button>'
         +'</div>'
         +'<div style="margin-top:.4rem;padding-top:.4rem;border-top:1px solid var(--border)">'
           +'<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin-bottom:.3rem">Home venue <span style="text-transform:none;letter-spacing:0">— shown on fixtures whenever this team is at home</span></div>'
@@ -2203,8 +2243,9 @@ async function loadTeamList(leagueId){
         + (requestsHtml ? '<div style="margin-top:.4rem;padding-top:.4rem;border-top:1px solid var(--border)"><div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin-bottom:.2rem">Join Requests</div>'+requestsHtml+'</div>' : '')
         + (changeReqHtml ? '<div style="margin-top:.4rem;padding-top:.4rem;border-top:1px solid var(--border)"><div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--amber);margin-bottom:.2rem">Captain Change Requests</div>'+changeReqHtml+'</div>' : '')
         +'<div style="margin-top:.4rem;padding-top:.4rem;border-top:1px solid var(--border)"><div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin-bottom:.2rem">Squad — assign captain directly</div>'+squadHtml+'</div>'
-        +'</div>';
+        +'</div></details>';
     }).join('');
+    el.innerHTML='<div class="tm-head"><div>Team</div><div>Captain</div><div>PIN</div><div></div></div>'+el.innerHTML;
   }catch(e){el.innerHTML='<div class="nh">Error: '+esc(e.message)+'</div>';}
 }
 
