@@ -325,6 +325,11 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
           <option value="">— Select league —</option>
         </select>
       </div>
+      <details style="margin-top:.75rem"><summary style="cursor:pointer;color:#8ac4ff;font-size:.88rem">Or paste from Google Sheets or Excel</summary>
+        <p style="font-size:.78rem;color:var(--dim);margin:.5rem 0;line-height:1.5">In your sheet, select the cells (Date, Home team, Away team, Season), copy them, and paste below. A header row is fine. Write BYE for a rest week. Choose the league above first.</p>
+        <textarea id="fx-paste" rows="6" placeholder="02/11/2026&#9;Arrows&#9;Bulls&#9;1" style="width:100%;background:var(--bg);border:1px solid var(--blue);border-radius:4px;color:var(--text);font-family:Barlow,sans-serif;font-size:.85rem;padding:.5rem .6rem"></textarea>
+        <button class="btn-admin" style="margin-top:.5rem" onclick="importPasted(false)">Import pasted schedule</button>
+      </details>
       <div class="st" id="import-status" style="margin-top:.75rem"></div>
     </div>
 
@@ -1377,6 +1382,10 @@ function wizRenderFixtures(){
    +'<div class="wiz-help">Already have a schedule agreed by your committee? Upload it as a spreadsheet (.xlsx) or CSV with the columns <em>Date, Home team, Away team, Season</em>. Team names must match the teams you entered. Write <strong>BYE</strong> in place of a team for a rest week; those rows are recognised and skipped.</div>'
    +'<input type="file" id="wf-upload" data-wiz="1" accept=".xlsx,.xls,.csv" style="display:none" onchange="importFixtures(this)">'
    +'<button class="btn-admin" onclick="wizEl(\'wf-upload\').click()">&#11014; Upload my schedule</button>'
+   +'<details style="margin-top:.6rem"><summary style="cursor:pointer;color:#8ac4ff;font-size:.88rem">Or paste from Google Sheets or Excel</summary>'
+   +'<div class="wiz-help" style="margin-top:.5rem">Select the cells in your sheet (Date, Home team, Away team, Season), copy, and paste below. BYE for a rest week.</div>'
+   +'<textarea id="wf-paste" rows="6" style="width:100%;background:var(--bg);border:1px solid var(--blue);border-radius:4px;color:var(--text);font-family:Barlow,sans-serif;font-size:.85rem;padding:.5rem .6rem"></textarea>'
+   +'<button class="btn-admin" style="margin-top:.5rem" onclick="importPasted(true)">Import pasted schedule</button></details>'
    +'<div class="st" id="wf-up-status" style="white-space:pre-line"></div>'
    +'<div class="wiz-nav"><button class="btn-admin wiz-ghost" onclick="wizShow(2)">&larr; Back</button>'
    +'<button class="btn-admin wiz-ghost" onclick="wizShow(4)">Continue &rarr;</button></div>';
@@ -2405,6 +2414,20 @@ function parseCsvText(text){ // handles quoted fields, commas inside quotes, CRL
 
 // -> 'YYYY-MM-DD' or null. Accepts DD/MM/YYYY, D/M/YY, DD-MM-YYYY, DD.MM.YYYY,
 // YYYY-MM-DD and Excel date serial numbers. Rejects impossible dates (31/02).
+// Pasted from a spreadsheet: tab-separated (or comma-separated) lines -> rows
+function parsePastedSchedule(text){
+  return String(text||'').split(/\r?\n/).map(function(l){return l.replace(/\s+$/,'');}).filter(function(l){return l.trim()!=='';}).map(function(l){
+    var parts=l.indexOf('\t')>-1?l.split('\t'):l.split(',');
+    return parts.map(function(p){return p.trim().replace(/^"(.*)"$/,'$1');});
+  });
+}
+function importPasted(inWiz){
+  var ta=document.getElementById(inWiz?'wf-paste':'fx-paste');
+  var raw=parsePastedSchedule(ta&&ta.value);
+  var st=document.getElementById(inWiz?'wf-up-status':'import-status');
+  if(!raw.length){if(st){st.textContent='Paste your schedule into the box first.';st.className='st err';}return;}
+  importFixtures({getAttribute:function(k){return k==='data-wiz'&&inWiz?'1':null;},files:[],value:''},raw);
+}
 function parseFixtureDate(v){
   if(v===null||v===undefined||String(v).trim()==='')return null;
   var y,m,d,mm;
@@ -2415,7 +2438,14 @@ function parseFixtureDate(v){
     var s=String(v).trim();
     if((mm=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/))){y=+mm[1];m=+mm[2];d=+mm[3];}
     else if((mm=s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2}|\d{4})$/))){d=+mm[1];m=+mm[2];y=+mm[3];if(y<100)y+=2000;}
-    else return null;
+    else{
+      // e.g. "Mon 2 Nov 2026", "2nd November 2026", "Mon 02/11/2026"
+      var t=s.replace(/^(mon|tue|wed|thu|fri|sat|sun)[a-z]*[,.\s]+/i,'');
+      var MN={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+      if((mm=t.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2}|\d{4})$/))){d=+mm[1];m=+mm[2];y=+mm[3];if(y<100)y+=2000;}
+      else if((mm=t.match(/^(\d{1,2})(?:st|nd|rd|th)?[\s\-]+([A-Za-z]{3,9})\.?,?[\s\-]+(\d{2}|\d{4})$/))&&MN[mm[2].slice(0,3).toLowerCase()]){d=+mm[1];m=MN[mm[2].slice(0,3).toLowerCase()];y=+mm[3];if(y<100)y+=2000;}
+      else return null;
+    }
   }
   var chk=new Date(Date.UTC(y,m-1,d));
   if(chk.getUTCFullYear()!==y||chk.getUTCMonth()!==m-1||chk.getUTCDate()!==d)return null;
@@ -2441,15 +2471,15 @@ function readFixtureFile(file){
   });
 }
 
-async function importFixtures(input){
+async function importFixtures(input,rawOverride){
   var inWiz=input.getAttribute('data-wiz')==='1'&&wiz&&wiz.id;
   var leagueId=inWiz?wiz.id:document.getElementById('fx-import-league').value;
   var st=document.getElementById(inWiz?'wf-up-status':'import-status');
   st.style.whiteSpace='pre-line';
   if(!leagueId){st.textContent='Please select a league first.';st.className='st err';input.value='';return;}
-  var file=input.files[0];
-  if(!file){return;}
-  st.textContent='Reading file…';st.className='st';
+  var file=input.files&&input.files[0];
+  if(!file&&!rawOverride){return;}
+  st.textContent=rawOverride?'Reading pasted schedule…':'Reading file…';st.className='st';
   try{
     var teams=await sb('teams?league_id=eq.'+leagueId+'&select=id,team_name');
     var teamMap={};
@@ -2458,7 +2488,7 @@ async function importFixtures(input){
     var leagueName=(lg&&lg[0]&&lg[0].name)||'this league';
     var defSeason=(lg&&lg[0]&&lg[0].current_season)||1;
 
-    var raw=await readFixtureFile(file);
+    var raw=rawOverride||await readFixtureFile(file);
     var errors=[],fileRows=[],byeRows=0,byeList=[];
     // A row with BYE (or a dash / blank) in place of a team is a rest week, not a match.
     function isByeCell(c){var v=String(c==null?'':c).trim();return v===''||/^(bye|a bye|no match|no game|rest|n\/a|-+|\u2013|\u2014)$/i.test(v);}
