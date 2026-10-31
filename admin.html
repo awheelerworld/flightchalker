@@ -2220,7 +2220,12 @@ async function loadTeamList(leagueId){
           +'<div class="tm-pin">PIN <b>'+esc(String(t.pin==null?'\u2014':t.pin))+'</b></div>'
           +'<div class="tm-flag">'+(nReq?'<span class="tm-badge">'+nReq+' request'+(nReq!==1?'s':'')+'</span>':'')+'<span class="tm-chev">&#8250;</span></div>'
         +'</summary><div class="tm-body">'
-        +'<div style="display:flex;justify-content:flex-end;margin-bottom:.2rem">'
+        +'<div style="padding-top:.6rem"><div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin-bottom:.3rem">Team name <span style="text-transform:none;letter-spacing:0">\u2014 correct a spelling mistake</span></div>'
+          +'<div style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center">'
+            +'<input type="text" id="tn-'+t.id+'" maxlength="60" value="'+esc(t.team_name)+'" aria-label="Team name" style="flex:1;min-width:180px;background:var(--surface);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:.4rem .6rem;font-family:Barlow,sans-serif;font-size:.9rem" onkeydown="if(event.key===\'Enter\'){event.preventDefault();renameTeam(\''+t.id+'\',\''+leagueId+'\');}">'
+            +'<button onclick="renameTeam(\''+t.id+'\',\''+leagueId+'\')" style="background:none;border:1px solid var(--green);border-radius:4px;color:var(--gl);font-size:.72rem;padding:3px 10px;cursor:pointer">Save name</button>'
+          +'</div><div class="st" id="tnst-'+t.id+'"></div></div>'
+        +'<div style="display:flex;justify-content:flex-end;margin:.5rem 0 .2rem">'
           +'<button onclick="deleteTeam(&quot;'+t.id+'&quot;,&quot;'+esc(t.team_name)+'&quot;,&quot;'+leagueId+'&quot;)" style="background:none;border:1px solid #5c2020;border-radius:4px;color:#ff8080;font-size:.72rem;padding:2px 8px;cursor:pointer">Remove team</button>'
         +'</div>'
         +'<div style="margin-top:.4rem;padding-top:.4rem;border-top:1px solid var(--border)">'
@@ -2247,6 +2252,19 @@ async function loadTeamList(leagueId){
     }).join('');
     el.innerHTML='<div class="tm-head"><div>Team</div><div>Captain</div><div>PIN</div><div></div></div>'+el.innerHTML;
   }catch(e){el.innerHTML='<div class="nh">Error: '+esc(e.message)+'</div>';}
+}
+
+async function renameTeam(teamId,leagueId){
+  var inp=document.getElementById('tn-'+teamId),st=document.getElementById('tnst-'+teamId);
+  var name=(inp.value||'').replace(/\s+/g,' ').trim();
+  if(name.length<2){st.textContent='Please enter the team name (at least 2 characters).';st.className='st err';return;}
+  try{
+    st.textContent='Saving\u2026';st.className='st';
+    var r=await sb('rpc/admin_rename_team',{method:'POST',body:JSON.stringify({p_token:await tokenForLeague(leagueId),p_team_id:teamId,p_new_name:name})});
+    toast('Team name saved');
+    await loadTeamList(leagueId);
+    var d=document.getElementById('tn-'+teamId);if(d&&d.closest('details'))d.closest('details').open=true;
+  }catch(e){st.textContent=(e.message||String(e))+(/function|does not exist|schema cache/i.test(e.message||'')?' (run SQL 14_rename_team.sql in Supabase first)':'');st.className='st err';}
 }
 
 function randomCode(len){
