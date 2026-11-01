@@ -1,4 +1,4 @@
-<!-- VERSION: v25-team-pick -->
+<!-- VERSION: v26-order -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -199,25 +199,6 @@ main{max-width:1100px !important;padding:48px 32px 72px !important}
     <div class="free-badge">✓ Free Member</div>
   </div>
 
-  <!-- Your Team (captains & vice-captains) -->
-  <div class="sec-title" id="your-team-title" style="display:none">Your Team</div>
-  <div class="team-card" id="captain-teams-card" style="display:none;margin-bottom:1.5rem">
-    <div id="captain-teams-list"></div>
-  </div>
-
-  <!-- Your Leagues (league organisers) -->
-  <div id="my-leagues-section" style="display:none;margin-bottom:1.5rem">
-    <div class="sec-title">Your Leagues</div>
-    <div class="team-card" style="border-color:var(--amber)">
-      <div id="my-leagues-list"></div>
-    </div>
-    <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.9rem">
-      <a href="/admin?new=1" class="lg-btn">＋ Create a new league</a>
-      <a href="/organiser-guide" class="lg-btn">📖 Organiser guide</a>
-      <a href="/admin" class="lg-btn" id="lg-all-link" style="display:none">⚙️ Platform admin: all leagues</a>
-    </div>
-  </div>
-
   <!-- Quick access -->
   <div class="sec-title">Quick Access</div>
   <div class="game-grid">
@@ -266,6 +247,25 @@ main{max-width:1100px !important;padding:48px 32px 72px !important}
     <div class="stat-card"><div class="val" id="stat-training">—</div><div class="lbl">Training Sessions</div></div>
     <div class="stat-card"><div class="val" id="stat-best">—</div><div class="lbl">Best Score</div></div>
     <div class="stat-card"><div class="val" id="stat-180s">—</div><div class="lbl">180s Hit</div></div>
+  </div>
+
+  <!-- Your Team (captains & vice-captains) -->
+  <div class="sec-title" id="your-team-title" style="display:none">Your Team</div>
+  <div class="team-card" id="captain-teams-card" style="display:none;margin-bottom:1.5rem">
+    <div id="captain-teams-list"></div>
+  </div>
+
+  <!-- Your Leagues (league organisers) -->
+  <div id="my-leagues-section" style="display:none;margin-bottom:1.5rem">
+    <div class="sec-title">Your Leagues</div>
+    <div class="team-card" style="border-color:var(--amber)">
+      <div id="my-leagues-list"></div>
+    </div>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.9rem">
+      <a href="/admin?new=1" class="lg-btn">＋ Create a new league</a>
+      <a href="/organiser-guide" class="lg-btn">📖 Organiser guide</a>
+      <a href="/admin" class="lg-btn" id="lg-all-link" style="display:none">⚙️ Platform admin: all leagues</a>
+    </div>
   </div>
 
   <!-- Team memberships -->
@@ -1021,6 +1021,6 @@ window.addEventListener('load', async function(){
   }
 });
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v25-team-pick</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v26-order</div>
 </body>
 </html>
