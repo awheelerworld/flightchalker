@@ -2034,6 +2034,46 @@ async function addFixture(){
   sp.style.display='none';
 }
 
+// Result check: where both teams have recorded the same match but the scores do
+// not agree, list it so the league admin can sort it out with the captains.
+async function resultCheckPanel(leagueId,teams){
+  try{
+    var lg=await sb('leagues?id=eq.'+leagueId+'&select=current_season');
+    var season=(lg&&lg[0]&&lg[0].current_season)||1;
+    if(!teams.length)return '';
+    var ids=teams.map(function(t){return t.id;}).join(',');
+    var ms=await sb('team_matches?team_id=in.('+ids+')&season=eq.'+season+'&select=team_id,wins,losses,match_date,opponent,draft&limit=5000');
+    ms=(ms||[]).filter(function(m){return !m.draft;});
+    var nameById={},idByName={};
+    teams.forEach(function(t){var n=String(t.team_name).trim().toLowerCase();nameById[t.id]=n;idByName[n]=t.id;});
+    var DAY=86400000,used={},bad=[];
+    ms.forEach(function(m,i){
+      if(used[i])return;
+      var oppId=idByName[String(m.opponent||'').trim().toLowerCase()];
+      if(!oppId||oppId===m.team_id)return;
+      for(var j=0;j<ms.length;j++){
+        var r=ms[j];
+        if(j===i||used[j]||r.team_id!==oppId)continue;
+        if(String(r.opponent||'').trim().toLowerCase()!==nameById[m.team_id])continue;
+        if(Math.abs(Date.parse(m.match_date)-Date.parse(r.match_date))>3*DAY)continue;
+        used[i]=used[j]=true;
+        if(m.wins!==r.losses||m.losses!==r.wins)bad.push({a:m,b:r});
+        break;
+      }
+    });
+    if(!bad.length)return '';
+    var nm={};teams.forEach(function(t){nm[t.id]=t.team_name;});
+    return '<div style="background:#2a2414;border:1px solid var(--amber);border-radius:6px;padding:.7rem .85rem;margin-bottom:.8rem">'
+      +'<div style="font-weight:700;color:var(--amber);margin-bottom:.3rem">⚠️ '+bad.length+' result'+(bad.length>1?'s':'')+' where the two teams disagree</div>'
+      +'<div style="font-size:.78rem;color:var(--dim);margin-bottom:.45rem;line-height:1.4">Each team recorded this match with a different score. The table uses each team\'s own figures, so please check with the captains which is right and ask one of them to correct it (Edit in their History tab).</div>'
+      +bad.map(function(x){
+        var d=new Date(x.a.match_date+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+        return '<div style="font-size:.85rem;padding:.3rem 0;border-top:1px solid var(--border)">'+esc(d)+' · <b>'+esc(nm[x.a.team_id])+'</b> recorded '+x.a.wins+'–'+x.a.losses+' vs <b>'+esc(nm[x.b.team_id])+'</b>, who recorded '+x.b.wins+'–'+x.b.losses+'</div>';
+      }).join('')
+      +'</div>';
+  }catch(e){return '';}
+}
+
 async function loadFixtureList(){
   var leagueId=document.getElementById('fx-filter-league').value;
   var el=document.getElementById('fixture-list');
@@ -2045,8 +2085,9 @@ async function loadFixtureList(){
     try{ teams=await sb('teams?league_id=eq.'+leagueId+'&select=id,team_name,venue_name,venue_address'); }
     catch(e){ teams=await sb('teams?league_id=eq.'+leagueId+'&select=id,team_name'); } // venue columns not added yet (migration_03)
     var teamMap={},teamById={};teams.forEach(function(t){teamMap[t.id]=t.team_name;teamById[t.id]=t;});
-    if(!fixtures||!fixtures.length){el.innerHTML='<div class="nh">No fixtures yet for this league.</div>';return;}
-    el.innerHTML=fixtures.map(function(f){
+    var chk=await resultCheckPanel(leagueId,teams);
+    if(!fixtures||!fixtures.length){el.innerHTML=chk+'<div class="nh">No fixtures yet for this league.</div>';return;}
+    el.innerHTML=chk+fixtures.map(function(f){
       var d=new Date(f.fixture_date+'T00:00:00');
       var fmt=d.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
       var statusStyle=f.played?'background:#1a2a1e;color:var(--gl);border:1px solid var(--green)':'background:var(--s3);color:var(--dim);border:1px solid var(--border)';
