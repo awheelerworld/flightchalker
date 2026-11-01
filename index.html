@@ -3465,8 +3465,8 @@ function renderLeaderboard(){
   el.innerHTML='<div class="cc" style="text-align:center;padding:.75rem 1rem"><p style="font-size:.82rem;color:var(--dim);margin:0">Team leaderboard across '+rows.length+' player'+(rows.length!==1?'s':'')+'. Select a player above for their full stats, or tap a name below.</p></div>'
     +card('Most Wins','🏆',byWins,function(r){return r.tw;},'No games recorded yet.')
     +card('Best Win Rate (Legs)','🎯',byWinRate,function(r){return r.wp+'%';},'Not enough matches recorded yet.',qualified.length?('Ranked among players with '+MIN_MATCHES+'+ matches played.'):('Showing all players — nobody\u2019s reached '+MIN_MATCHES+' matches yet.'))
-    +card('Most 80+ Scores','💯',by80,function(r){return r.eighties;},'No 80+ scores recorded yet.')
-    +card('Most 100+ Scores','🎯',by100,function(r){return r.over100;},'No 100+ scores recorded yet.','Counts every score of 100 or more, including 180s.')
+    +card('Most 80+ Scores','🎯',by80,function(r){return r.eighties;},'No 80+ scores recorded yet.')
+    +card('Most 100+ Scores','💯',by100,function(r){return r.over100;},'No 100+ scores recorded yet.','Counts every score of 100 or more, including 180s.')
     +card('Highest Score','🔥',byHigh,function(r){return r.hi;},'No scores recorded yet.')
     +card('Highest Checkout','🏹',byCheckout,function(r){return r.hiCheckout;},'No checkouts recorded yet.');
 }
