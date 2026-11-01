@@ -866,7 +866,7 @@ html{scroll-behavior:smooth}
           <polygon points="19.5,16.5 28,8 30,11" fill="#f2cf4a"/>
         </svg>
       </div>
-      <a href="#" onclick="logout();return false;" style="text-decoration:none;color:inherit">
+      <a href="/dashboard" onclick="goHome();return false;" style="text-decoration:none;color:inherit">
         <div class="app-logo-text">Flight <span>Chalker</span></div>
         <div class="app-logo-sub" id="app-team-label">—</div>
       </a>
@@ -1548,6 +1548,15 @@ function goTo(screen){
     return;
   }
   showScreen('screen-'+screen);
+}
+// The Flight Chalker logo: a signed-in account goes back to its own page and stays signed in.
+// A team that logged in with name + PIN has no account page, so for them it still logs out.
+async function goHome(){
+  try{
+    var gs=await fcClient().auth.getSession();
+    if(gs&&gs.data&&gs.data.session){window.location.href='/dashboard';return;}
+  }catch(e){}
+  logout();
 }
 async function logout(){
   currentTeam=null;currentLeague=null;players=[];matchHistory=[];leagueFixtures=[];leagueTeams=[];
@@ -3426,7 +3435,7 @@ function renderLeaderboard(){
     var name=p.name||p;
     var st=computePlayerStats(name);
     if(!st)return null;
-    return {name,tw:st.tw,tl:st.tl,gp:st.gp,tlw:st.tlw,tll:st.tll,tot:st.tot,wp:st.wp,hi:st.hi,eighties:st.n80,b80:st.b80,b100:st.b100,b180:st.b180,matches:st.matches,hiCheckout:st.hiCheckout};
+    return {name,tw:st.tw,tl:st.tl,gp:st.gp,tlw:st.tlw,tll:st.tll,tot:st.tot,wp:st.wp,hi:st.hi,eighties:st.n80,over100:(st.b100||0)+(st.b180||0),b80:st.b80,b100:st.b100,b180:st.b180,matches:st.matches,hiCheckout:st.hiCheckout};
   }).filter(Boolean);
   if(!rows.length){el.innerHTML='<div class="nh">No players have recorded stats yet.</div>';return;}
   var MIN_MATCHES=3; // qualifier for win-rate leaderboard, so a single match at 100%/0% can't dominate the ranking
@@ -3436,6 +3445,7 @@ function renderLeaderboard(){
   var byWins=top(rows,'tw',3);
   var byWinRate=top(winRatePool,'wp',3);
   var by80=top(rows,'eighties',3);
+  var by100=top(rows,'over100',3);
   var byHigh=top(rows,'hi',3);
   var byCheckout=top(rows,'hiCheckout',3);
   var medals=['🥇','🥈','🥉'];
@@ -3456,6 +3466,7 @@ function renderLeaderboard(){
     +card('Most Wins','🏆',byWins,function(r){return r.tw;},'No games recorded yet.')
     +card('Best Win Rate (Legs)','🎯',byWinRate,function(r){return r.wp+'%';},'Not enough matches recorded yet.',qualified.length?('Ranked among players with '+MIN_MATCHES+'+ matches played.'):('Showing all players — nobody\u2019s reached '+MIN_MATCHES+' matches yet.'))
     +card('Most 80+ Scores','💯',by80,function(r){return r.eighties;},'No 80+ scores recorded yet.')
+    +card('Most 100+ Scores','🎯',by100,function(r){return r.over100;},'No 100+ scores recorded yet.','Counts every score of 100 or more, including 180s.')
     +card('Highest Score','🔥',byHigh,function(r){return r.hi;},'No scores recorded yet.')
     +card('Highest Checkout','🏹',byCheckout,function(r){return r.hiCheckout;},'No checkouts recorded yet.');
 }
