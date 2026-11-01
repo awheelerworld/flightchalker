@@ -1,9 +1,9 @@
-<!-- VERSION: v25-team-pick -->
+<!-- VERSION: v19-league-view-card -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PGNpcmNsZSBjeD0iMzIiIGN5PSIzMiIgcj0iMzAiIGZpbGw9IiNlODQwMmYiLz48Y2lyY2xlIGN4PSIzMiIgY3k9IjMyIiByPSIyMyIgZmlsbD0iI2ZmZiIvPjxjaXJjbGUgY3g9IjMyIiBjeT0iMzIiIHI9IjE2IiBmaWxsPSIjZTg0MDJmIi8+PGNpcmNsZSBjeD0iMzIiIGN5PSIzMiIgcj0iOSIgZmlsbD0iI2ZmZiIvPjxjaXJjbGUgY3g9IjMyIiBjeT0iMzIiIHI9IjQuNSIgZmlsbD0iI2U4NDAyZiIvPjxsaW5lIHgxPSIzMiIgeTE9IjMyIiB4Mj0iNTQiIHkyPSIxMCIgc3Ryb2tlPSIjMmY2ZmQwIiBzdHJva2Utd2lkdGg9IjMuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTUwIDYgTDYwIDQgTDU4IDE0IFoiIGZpbGw9IiMyZjZmZDAiLz48L3N2Zz4=">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzE0MTgxNCIvPgogIDxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YTdjNTkiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNGE3YzU5IiBzdHJva2Utd2lkdGg9IjEiLz4KICA8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI0IiBmaWxsPSIjZThjODQwIi8+Cjwvc3ZnPg==">
   <meta name="description" content="Your Flight Chalker player dashboard.">
   <meta name="robots" content="noindex, nofollow">
   <link rel="canonical" href="https://flightchalker.co.uk/dashboard">
@@ -14,13 +14,13 @@
   <meta property="og:site_name" content="Flight Chalker">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard — Flight Chalker</title>
-<script src="/fc-consent.js"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-WQRGJRFF1Q"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-WQRGJRFF1Q');</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#0d1711;--surface:#142119;--s2:#252e25;--s3:#243628;--green:#4a7c59;--gl:#5a9469;--amber:#f2cf4a;--red:#c0392b;--text:#f1efe4;--dim:#8a9080;--border:#34503e}
+:root{--bg:#141814;--surface:#1e251e;--s2:#252e25;--s3:#2e382e;--green:#4a7c59;--gl:#5a9469;--amber:#e8c840;--red:#c0392b;--text:#e0d8c8;--dim:#8a9080;--border:#3a4a3a}
 body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh}
 
 /* Header */
@@ -35,20 +35,13 @@ header{background:var(--surface);border-bottom:2px solid var(--green);padding:0 
 main{max-width:900px;margin:0 auto;padding:1.5rem 1rem 4rem}
 
 /* Welcome banner */
-.welcome{background:linear-gradient(135deg,#1e3a28,#0d1711);border:1px solid var(--green);border-radius:12px;padding:1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+.welcome{background:linear-gradient(135deg,#1e3a28,#141814);border:1px solid var(--green);border-radius:12px;padding:1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
 .welcome-text h2{font-family:'Barlow Condensed',sans-serif;font-size:1.5rem;font-weight:900;color:var(--text)}
 .welcome-text h2 span{color:var(--amber)}
 .welcome-text p{font-size:.82rem;color:var(--dim);margin-top:.25rem}
 .free-badge{background:#1a2a1e;border:1px solid var(--green);border-radius:20px;padding:.3rem .9rem;font-family:'Barlow Condensed',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gl)}
 
 /* Section headers */
-.lg-row{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.75rem 0;border-bottom:1px solid var(--border);flex-wrap:wrap}
-.lg-row:last-child{border-bottom:none}
-.lg-name{font-weight:600;font-size:1rem;overflow-wrap:anywhere}
-.lg-meta{font-size:.78rem;color:var(--dim);margin-top:2px}
-.lg-btn{display:inline-block;background:#1a2a1e;border:1px solid var(--green);border-radius:6px;padding:.4rem .9rem;font-family:'Barlow Condensed',sans-serif;font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gl);text-decoration:none}
-.lg-btn:hover{border-color:var(--amber);color:var(--amber)}
-.lg-badge{display:inline-block;background:var(--amber);color:#000;border-radius:10px;padding:0 7px;font-size:.72rem;font-weight:700;margin-left:6px}
 .sec-title{font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--green);margin-bottom:.75rem}
 
 /* Game cards */
@@ -139,49 +132,11 @@ input:checked+.slider::before{transform:translateX(18px);background:white}
   .welcome{flex-direction:column}
 }
 </style>
-<link rel="stylesheet" href="/fc-theme.css">
-<style id="fc-dash">
-/* Dashboard layout (fc design) */
-header{background:var(--bg) !important;border-bottom:1px solid var(--s3) !important;height:auto !important;min-height:64px;padding:8px 32px !important;gap:16px;flex-wrap:wrap}
-.logo{display:flex;align-items:center;gap:10px;font-family:var(--fc-head) !important;font-weight:800 !important;font-size:20px !important}
-.logo span{color:var(--text) !important}
-.fc-hnav{display:flex;gap:24px;align-items:center;flex-wrap:wrap;color:var(--dim);font-weight:500;margin-left:auto}
-.fc-hnav a{text-decoration:none;min-height:44px;display:flex;align-items:center}
-.fc-hnav a:hover{color:var(--text)}
-.hright{margin-left:8px}
-.btn-signout{border-radius:999px !important;min-height:40px;padding:0 16px !important;font-weight:600 !important;color:var(--text) !important;border:1.5px solid #4a6353 !important}
-.btn-signout:hover{border-color:var(--amber) !important;color:var(--amber) !important}
-.username-badge{font-weight:600 !important}
-main{max-width:1100px !important;padding:48px 32px 72px !important}
-.welcome{background:none !important;border:none !important;padding:0 !important;margin-bottom:40px !important}
-.welcome-text h2{font-family:var(--fc-head) !important;font-weight:800 !important;font-size:clamp(32px,5vw,46px) !important;line-height:1.05;letter-spacing:-0.03em !important}
-.welcome-text p{font-size:18px !important;color:#b7c7bb !important;margin-top:8px !important}
-.free-badge{display:none !important}
-.sec-title{font-family:var(--fc-head) !important;font-size:26px !important;font-weight:700 !important;color:var(--text) !important;letter-spacing:-0.01em !important;margin:0 0 14px !important}
-.team-card{background:none !important;border:1.5px solid #34503e !important;border-radius:16px !important;padding:22px 24px !important;margin-bottom:44px !important}
-.game-grid{grid-template-columns:repeat(3,1fr) !important;gap:16px !important;margin-bottom:44px !important}
-.game-card{background:var(--surface) !important;border:1px solid var(--s3) !important;border-radius:16px !important;padding:22px !important;gap:6px}
-.game-card:hover{border-color:var(--amber) !important}
-.game-card .icon{display:none}
-.game-card h3{font-family:var(--fc-head) !important;font-size:21px !important;font-weight:700 !important}
-.game-card p{font-size:15px !important;color:var(--dim) !important}
-.game-card .go{font-size:15px !important;font-weight:600 !important;color:var(--amber) !important}
-.stats-grid{gap:0 !important;border:1.5px solid #2c4132;border-radius:16px;margin-bottom:44px !important;overflow:hidden}
-.stat-card{background:none !important;border:none !important;border-right:1px solid var(--s3) !important;border-radius:0 !important;padding:20px 24px !important;text-align:left !important}
-.stat-card:last-child{border-right:none !important}
-.stat-card .val{font-family:var(--fc-head) !important;font-size:36px !important;font-weight:800 !important;color:var(--text) !important}
-.stat-card .lbl{font-size:15px !important;color:var(--dim) !important}
-.lg-btn{background:transparent !important;border:1.5px solid #4a6353 !important;border-radius:999px !important;padding:.55rem 1.1rem !important;font-size:15px !important}
-.lg-badge{background:var(--amber) !important;color:var(--fc-ink) !important;border-radius:999px !important}
-@media (max-width:820px){header{padding:8px 16px !important}main{padding:32px 16px 56px !important}.game-grid{grid-template-columns:1fr !important}.fc-hnav{display:none}.stat-card{border-right:none !important;border-bottom:1px solid var(--s3) !important}}
-</style>
-<link rel="stylesheet" href="/fc-loader.css">
 </head>
 <body>
 
 <header>
-  <a href="/dashboard" class="logo"><svg width="26" height="26" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="15" fill="none" stroke="#f1efe4" stroke-width="1.5"/><circle cx="17" cy="17" r="9" fill="none" stroke="#f1efe4" stroke-width="1.5"/><circle cx="17" cy="17" r="3" fill="#f2cf4a"/></svg><span>Flight Chalker</span></a>
-  <nav class="fc-hnav" aria-label="Main"><a href="/scorer">Scorer</a><a href="/training">Training</a><a href="/">Leagues</a><a href="/organiser-guide">Help</a></nav>
+  <a href="/dashboard" class="logo">Flight <span>Chalker</span></a>
   <div class="hright">
     <span class="username-badge" id="username-display"></span>
     <button class="btn-signout" onclick="signOut()">Sign Out</button>
@@ -193,8 +148,8 @@ main{max-width:1100px !important;padding:48px 32px 72px !important}
   <!-- Welcome -->
   <div class="welcome">
     <div class="welcome-text">
-      <h2>Welcome back, <span id="welcome-name">Player</span> 🎯</h2>
-      <p>Your teams, your leagues and your stats in one place.</p>
+      <h2>Welcome back, <span id="welcome-name">Player</span>! 🎯</h2>
+      <p>Ready to throw some darts?</p>
     </div>
     <div class="free-badge">✓ Free Member</div>
   </div>
@@ -203,19 +158,6 @@ main{max-width:1100px !important;padding:48px 32px 72px !important}
   <div class="sec-title" id="your-team-title" style="display:none">Your Team</div>
   <div class="team-card" id="captain-teams-card" style="display:none;margin-bottom:1.5rem">
     <div id="captain-teams-list"></div>
-  </div>
-
-  <!-- Your Leagues (league organisers) -->
-  <div id="my-leagues-section" style="display:none;margin-bottom:1.5rem">
-    <div class="sec-title">Your Leagues</div>
-    <div class="team-card" style="border-color:var(--amber)">
-      <div id="my-leagues-list"></div>
-    </div>
-    <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.9rem">
-      <a href="/admin?new=1" class="lg-btn">＋ Create a new league</a>
-      <a href="/organiser-guide" class="lg-btn">📖 Organiser guide</a>
-      <a href="/admin" class="lg-btn" id="lg-all-link" style="display:none">⚙️ Platform admin: all leagues</a>
-    </div>
   </div>
 
   <!-- Quick access -->
@@ -239,28 +181,16 @@ main{max-width:1100px !important;padding:48px 32px 72px !important}
       <p>Set up a knockout or round robin tournament. Share the link - no accounts needed for guests.</p>
       <div class="go">Start a tournament →</div>
     </a>
-    <a href="/?pick=1" class="game-card">
+    <a href="/" class="game-card">
       <div class="icon">🏆</div>
       <h3>League Team View</h3>
       <p>Fixtures, league table and match recording for your team.</p>
       <div class="go">View league →</div>
     </a>
-    <a href="/admin" class="game-card">
-      <div class="icon">⚙️</div>
-      <h3>Run a League</h3>
-      <p>Create a league, add teams and fixtures, and manage results. Your leagues all live in one place.</p>
-      <div class="go">League admin →</div>
-    </a>
-    <a href="/organiser-guide" class="game-card">
-      <div class="icon">📖</div>
-      <h3>Organiser Guide</h3>
-      <p>How to set up a league, add teams and fixtures, and manage it.</p>
-      <div class="go">Read the guide →</div>
-    </a>
   </div>
 
   <!-- Stats -->
-  <div class="sec-title">Your Training Stats</div>
+  <div class="sec-title">Your Stats</div>
   <div class="stats-grid" id="stats-grid">
     <div class="stat-card"><div class="val" id="stat-sessions">—</div><div class="lbl">Games Played</div></div>
     <div class="stat-card"><div class="val" id="stat-training">—</div><div class="lbl">Training Sessions</div></div>
@@ -325,19 +255,7 @@ main{max-width:1100px !important;padding:48px 32px 72px !important}
   <div class="profile-card">
     <div class="profile-row">
       <span class="label">Username</span>
-      <span>
-        <span id="profile-username" style="font-weight:600;font-family:'Barlow Condensed',sans-serif;font-size:1rem;color:var(--amber)"></span>
-        <a href="#" onclick="toggleUsernameEdit();return false" style="font-size:.75rem;color:var(--dim);margin-left:.5rem">Change</a>
-      </span>
-    </div>
-    <div id="username-edit-row" style="display:none;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:.75rem;margin:.5rem 0">
-      <div style="font-size:.78rem;color:var(--amber);margin-bottom:.5rem">⚠ This name will be shown publicly to anyone on Flight Chalker — including on leaderboards and league pages.</div>
-      <div style="display:flex;gap:.5rem;flex-wrap:wrap">
-        <input type="text" id="username-edit-input" placeholder="3-20 characters, letters/numbers/underscore" maxlength="20" style="flex:1;min-width:160px">
-        <button class="code-btn" onclick="submitUsernameChange()">Save</button>
-        <button class="code-btn" onclick="toggleUsernameEdit()" style="background:none">Cancel</button>
-      </div>
-      <div id="username-edit-status" style="font-size:.78rem;margin-top:.4rem"></div>
+      <span id="profile-username" style="font-weight:600;font-family:'Barlow Condensed',sans-serif;font-size:1rem;color:var(--amber)"></span>
     </div>
     <div class="profile-row">
       <span class="label">Email</span>
@@ -363,7 +281,7 @@ main{max-width:1100px !important;padding:48px 32px 72px !important}
 </main>
 
 <div id="loading-screen" class="loading" style="padding:4rem">
-  <span class="spin throw"></span> Loading your dashboard...
+  <span class="spin"></span> Loading your dashboard...
 </div>
 
 <div class="toast" id="toast"></div>
@@ -657,16 +575,14 @@ async function renderCaptainTeams(){
       var vcUserIds = (vcRows||[]).map(function(r){return r.user_id;});
       var vcNames = [];
       if(vcUserIds.length){
-        // player_profiles is the public-safe view (id, username only -
-        // never email). See migration_01_security.sql.
-        var { data:vcUsers } = await sb.from('player_profiles').select('id, username').in('id', vcUserIds);
+        var { data:vcUsers } = await sb.from('users').select('id, username, email').in('id', vcUserIds);
         vcNames = vcUsers||[];
       }
       vcHtml = '<div class="vc-section">'
         +'<div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:.4rem">Vice Captains</div>'
         +'<div class="vc-list">'
           + (vcNames.length ? vcNames.map(function(u){
-              return '<span class="vc-chip">'+(u.username||'Player')
+              return '<span class="vc-chip">'+(u.username||u.email||'Player')
                 +'<button onclick="removeViceCaptain(&quot;'+t.id+'&quot;,&quot;'+u.id+'&quot;)" title="Remove">×</button></span>';
             }).join('') : '<span style="font-size:.78rem;color:var(--dim)">None yet</span>')
         +'</div>'
@@ -695,11 +611,9 @@ async function addViceCaptain(teamId){
   var identifier = input.value.trim();
   if(!identifier){ toast('Enter an email or username first',true); return; }
   try{
-    // find_user_by_identifier() never returns the matched user's email -
-    // only id+username - even though the search can be BY email.
-    // See migration_01_security.sql.
-    var { data:foundRows, error:lookupErr } = await sb.rpc('find_user_by_identifier',{p_identifier:identifier});
-    var found = foundRows && foundRows[0];
+    var query = sb.from('users').select('id').limit(1);
+    query = identifier.includes('@') ? query.eq('email', identifier) : query.eq('username', identifier);
+    var { data:found, error:lookupErr } = await query.single();
     if(lookupErr || !found){ toast('No player found with that email/username',true); return; }
 
     var { error:insertErr } = await sb.from('team_vice_captains')
@@ -825,18 +739,23 @@ async function claimCaptaincy(){
   var code = document.getElementById('captain-code').value.trim().toUpperCase();
   if(!code){toast('Please enter a captain code',true);return;}
   try{
-    // Checked on the server: wrong codes are counted and lock after 5 tries.
-    var { data:claimed, error:claimErr } = await sb.rpc('claim_captaincy', { p_code: code });
-    if(claimErr) throw claimErr;
-    var team = claimed && claimed[0];
-    if(!team){toast('No team found with that captain code. (5 wrong tries locks this for 30 minutes.)',true);return;}
+    var { data:team, error:teamErr } = await sb.from('teams')
+      .select('id, team_name, captain_user_id').eq('captain_code', code).single();
+    if(teamErr || !team){toast('No team found with that captain code',true);return;}
+    if(team.captain_user_id){
+      toast('This team already has a captain assigned. Contact your league admin if this seems wrong.',true);
+      return;
+    }
+    var { error:updateErr } = await sb.from('teams')
+      .update({ captain_user_id: window.currentUser.id }).eq('id', team.id);
+    if(updateErr) throw updateErr;
 
     document.getElementById('captain-code').value = '';
     toast('You are now captain of '+(team.team_name||'your team')+'! 🎯');
     await loadCaptainTeams(window.currentUser);
   }catch(e){
     console.error('claimCaptaincy error:',e);
-    toast('Could not claim captaincy: '+String(e.message||'').replace(/^LOCKED:\s*/,''),true);
+    toast('Could not claim captaincy: '+e.message,true);
   }
 }
 
@@ -858,11 +777,11 @@ async function openCaptainChangeModal(teamId){
       membersEl.innerHTML = '<p style="color:var(--dim);font-size:.82rem">No squad members found to propose.</p>';
       return;
     }
-    var { data:users, error:userErr } = await sb.from('player_profiles').select('id, username').in('id', userIds);
+    var { data:users, error:userErr } = await sb.from('users').select('id, username, email').in('id', userIds);
     if(userErr) throw userErr;
     membersEl.innerHTML = (users||[]).map(function(u,i){
       var isSelf = u.id === window.currentUser.id;
-      var label = (u.username || 'Player') + (isSelf ? ' (you)' : '');
+      var label = (u.username || u.email || 'Player') + (isSelf ? ' (you)' : '');
       return '<label class="member-option">'
         +'<input type="radio" name="proposed-captain" value="'+u.id+'"'+(i===0?' checked':'')+'>'
         + label
@@ -902,69 +821,6 @@ function updateLeaderboardPref(checked){
   toast(checked?'Added to leaderboards':'Removed from leaderboards');
 }
 
-function toggleUsernameEdit(){
-  var row=document.getElementById('username-edit-row');
-  var open=row.style.display!=='none';
-  row.style.display=open?'none':'block';
-  document.getElementById('username-edit-status').textContent='';
-  if(!open){
-    var cur=document.getElementById('profile-username').textContent.replace(/^@/,'');
-    document.getElementById('username-edit-input').value=cur;
-    document.getElementById('username-edit-input').focus();
-  }
-}
-
-async function submitUsernameChange(){
-  var input=document.getElementById('username-edit-input');
-  var status=document.getElementById('username-edit-status');
-  var val=input.value.trim();
-  status.style.color='var(--dim)';
-  if(val.length<3||val.length>20){status.textContent='Must be 3-20 characters.';status.style.color='#ff8080';return;}
-  if(!/^[a-zA-Z0-9_]+$/.test(val)){status.textContent='Only letters, numbers and underscores allowed.';status.style.color='#ff8080';return;}
-  if(!confirm('"'+val+'" will be visible to everyone on Flight Chalker - leaderboards, league pages, everywhere your name is shown. Continue?'))return;
-  status.textContent='Saving…';
-  try{
-    // The real check (format, profanity, uniqueness) happens server-side
-    // in set_username() - the client-side checks above are just for
-    // instant feedback, not the actual protection. See
-    // migration_01_security.sql.
-    var { error } = await sb.rpc('set_username',{p_username:val});
-    if(error) throw error;
-    document.getElementById('profile-username').textContent='@'+val;
-    document.getElementById('profile-link').href='/player/'+val;
-    toggleUsernameEdit();
-    toast('Display name updated!');
-  }catch(e){
-    status.textContent=e.message||'Could not update - that name may already be taken.';
-    status.style.color='#ff8080';
-  }
-}
-
-// Leagues this account organises (shown only if there are any, or for platform admins).
-function escH(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-async function loadMyLeagues(userId){
-  try{
-    var { data, error } = await sb.rpc('my_leagues_dashboard');
-    if(error) throw error;
-    var rows=data||[];
-    var mine=rows.filter(function(r){return r.is_mine;});
-    var isAdmin=rows.some(function(r){return !r.is_mine;});
-    if(!isAdmin){ try{ var u=await sb.from('users').select('is_platform_admin').eq('id',userId).single(); isAdmin=!!(u.data&&u.data.is_platform_admin); }catch(e){} }
-    if(!mine.length && !isAdmin) return; // plain player: show nothing extra
-    document.getElementById('my-leagues-list').innerHTML = mine.length ? mine.map(function(l){
-      var loc=[l.town,l.county].filter(Boolean).join(', ');
-      var n=Number(l.new_enquiries)||0;
-      return '<div class="lg-row"><div><div class="lg-name">'+escH(l.name)+'</div>'
-        +'<div class="lg-meta">'+(loc?escH(loc)+' · ':'')+escH(l.match_night)+'s · '+l.team_count+' team'+(Number(l.team_count)===1?'':'s')+'</div></div>'
-        +'<div style="display:flex;gap:.4rem;flex-wrap:wrap">'
-        +(n?'<a class="lg-btn" href="/admin?league='+encodeURIComponent(l.id)+'&tab=enquiries">✉️ Enquiries<span class="lg-badge">'+n+'</span></a>':'')
-        +'<a class="lg-btn" href="/admin?league='+encodeURIComponent(l.id)+'">Manage →</a></div></div>';
-    }).join('') : '<div style="color:var(--dim);font-size:.85rem">You don\'t own any leagues yet.</div>';
-    if(isAdmin) document.getElementById('lg-all-link').style.display='inline-block';
-    document.getElementById('my-leagues-section').style.display='block';
-  }catch(e){ console.error('Could not load leagues (non-fatal):',e); }
-}
-
 // Init
 window.addEventListener('load', async function(){
   try{
@@ -981,46 +837,33 @@ window.addEventListener('load', async function(){
     // account-linking and subscription_tier all have nothing to read from.
     // Create it on-the-fly the first time we see this account, wherever
     // that happens to be (dashboard is where every Google sign-in lands).
-    var profileRow=null;
     try{
-      var { data:existingProfile } = await sb.from('users').select('id,username,created_at').eq('id',su.id).single();
-      profileRow=existingProfile;
+      var { data:existingProfile } = await sb.from('users').select('id').eq('id',su.id).single();
       if(!existingProfile){
-        // No username passed here on purpose - the database assigns a
-        // random "chalkerN" default automatically (see
-        // migration_01_security.sql), same as the email/password signup
-        // path. The player can pick their own from their profile anytime.
-        var { data:inserted } = await sb.from('users').insert({ id:su.id, email:su.email }).select('id,username,created_at').single();
-        profileRow=inserted;
+        var fallbackUsername=(su.user_metadata&&(su.user_metadata.username||su.user_metadata.full_name||su.user_metadata.name))||su.email.split('@')[0];
+        await sb.from('users').insert({ id:su.id, email:su.email, username:fallbackUsername });
       }
     }catch(profileErr){
       console.error('Profile row check/create failed (non-fatal):',profileErr);
     }
 
     // Adapter: keeps the same shape loadDashboard/loadTeams already expect,
-    // so none of that logic needs to change. username/createdAt come from
-    // the public.users row (the real, DB-assigned values), never from
-    // auth metadata - FIX: a previous version of this read username from
-    // user_metadata, which is never populated anymore (see
-    // migration_01_security.sql), and omitted createdAt entirely, which
-    // broke the "Member Since" date on this page ("Invalid Date").
+    // so none of that logic needs to change.
     var adaptedUser = {
       id: su.id,
-      username: profileRow&&profileRow.username,
+      username: su.user_metadata&&su.user_metadata.username,
       firstName: su.user_metadata&&su.user_metadata.firstName,
-      emailAddresses: [{ emailAddress: su.email }],
-      createdAt: profileRow&&profileRow.created_at
+      emailAddresses: [{ emailAddress: su.email }]
     };
     window.currentUser = adaptedUser;
     await loadDashboard(adaptedUser);
     await loadCaptainTeams(adaptedUser);
-    loadMyLeagues(su.id); // not awaited - never blocks the dashboard
   }catch(e){
     console.error('Dashboard error:',e);
     document.getElementById('loading-screen').innerHTML = '<div style="color:var(--red)">Error loading dashboard. <a href="/" style="color:var(--gl)">Go home</a></div>';
   }
 });
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v25-team-pick</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v19-league-view-card</div>
 </body>
 </html>
