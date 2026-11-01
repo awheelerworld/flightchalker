@@ -1424,7 +1424,9 @@ function showWin(winner){
   var s180=gs.all.filter(function(h){return h.scored===180;}).length;
   fcEnd('x01',{winner:gs.players[winner],best:best,s180:s180,legs:gs.legs.slice()});
   document.getElementById('win-title').textContent=gs.players[winner]+' Wins! 🏆';
-  document.getElementById('win-legs').textContent=
+  var legMargin='';
+  if(gs.players.length>1){var lo=gs.legs.filter(function(_,i){return i!==winner;}),lm=gs.legs[winner]-Math.max.apply(null,lo);if(lm>0)legMargin='Won by '+lm+' leg'+(lm===1?'':'s')+' · ';}
+  document.getElementById('win-legs').textContent=legMargin+
     'Final: '+gs.players.map(function(p,i){return p+' '+gs.legs[i];}).join(' — ');
   showScreen('screen-win');
   fxWin();
@@ -1928,7 +1930,7 @@ function cricketNext(){
     var closedAll=cNums.every(function(n){return cr.marks[p][n]>=3;});
     var okPoints=cr.variant==='none'?true:cr.variant==='cut'?cr.points[p]<=Math.min.apply(null,cr.points):cr.points[p]>=Math.max.apply(null,cr.points);
     if(closedAll&&okPoints){
-      showWinByName(cr.players[p]);return;
+      showWinByName(cr.players[p],cricketWinDetail(cr,p));return;
     }
   }
   cr.currentPlayer=(cr.currentPlayer+1)%cr.players.length;
@@ -1989,7 +1991,7 @@ function killerDart(num){
     var t=k.doubles.indexOf(num);
     if(t!==-1&&t!==p&&k.lives[t]>0){
       k.lives[t]--;toast(k.players[t]+' -1 life!',true);speak(k.players[t]+' loses a life!');
-      if(k.lives[t]<=0){if(k.lives.filter(function(l){return l>0;}).length===1){showWinByName(k.players[p]);return;}}
+      if(k.lives[t]<=0){if(k.lives.filter(function(l){return l>0;}).length===1){showWinByName(k.players[p],'Last one standing'+(k.lives[p]>0?' with '+k.lives[p]+(k.lives[p]===1?' life':' lives')+' left':''));return;}}
     } else if(t===p){k.lives[p]--;k.isKiller[p]=false;toast('Own double! -1 life 😬',true);speak('Own double! Lost a life.');}
     else{speak('Miss');}
     k.dartsThrown++;
@@ -2091,7 +2093,7 @@ function shanghaiDart(val,mult){
     if(mults.includes(1)&&mults.includes(2)&&mults.includes(3)){
       toast('SHANGHAI! Instant win! 🎯');
       speak('Shanghai! Instant win!');
-      setTimeout(function(){showWinByName(sh.players[sh.currentPlayer]);},800);
+      setTimeout(function(){showWinByName(sh.players[sh.currentPlayer],'Shanghai! Single, double and treble in one round');},800);
       return;
     }
   }
@@ -2109,7 +2111,7 @@ function shanghaiNextTurn(){
   sh.currentPlayer=(sh.currentPlayer+1)%sh.players.length;
   if(sh.currentPlayer===0){
     sh.currentRound++;
-    if(sh.currentRound>7){showWinByName(sh.players[sh.scores.indexOf(Math.max.apply(null,sh.scores))]);return;}
+    if(sh.currentRound>7){showWinByName(fcWinnerNames(sh.players,sh.scores,false),fcMarginText(sh.scores,'point'));return;}
   }
   renderShanghai();
 }
@@ -2465,7 +2467,7 @@ function halveitSubmit(){
   hv.currentPlayer=(hv.currentPlayer+1)%hv.players.length;
   if(hv.currentPlayer===0){
     hv.currentRound++;
-    if(hv.currentRound>=hv.rounds.length){showWinByName(hv.players[hv.scores.indexOf(Math.max.apply(null,hv.scores))]);return;}
+    if(hv.currentRound>=hv.rounds.length){showWinByName(fcWinnerNames(hv.players,hv.scores,false),fcMarginText(hv.scores,'point'));return;}
   }
   renderHalveIt();
 }
@@ -2480,7 +2482,7 @@ function halveitCustomHit(){
   hv.currentPlayer=(hv.currentPlayer+1)%hv.players.length;
   if(hv.currentPlayer===0){
     hv.currentRound++;
-    if(hv.currentRound>=hv.rounds.length){showWinByName(hv.players[hv.scores.indexOf(Math.max.apply(null,hv.scores))]);return;}
+    if(hv.currentRound>=hv.rounds.length){showWinByName(fcWinnerNames(hv.players,hv.scores,false),fcMarginText(hv.scores,'point'));return;}
   }
   renderHalveIt();
 }
@@ -2578,14 +2580,14 @@ function totalSubmit(){
     }
     if(t.exact?t.scores[p]===FIVES_TARGET:t.scores[p]>=FIVES_TARGET){
       t.inputVal='';document.getElementById('total-input').value='';
-      showWinByName(t.players[p]);return;
+      showWinByName(t.players[p],t.exact?'Hit exactly '+FIVES_TARGET+' points':fcMarginText(t.scores,'point'));return;
     }
   }
   t.inputVal='';document.getElementById('total-input').value='';
   t.currentPlayer=(t.currentPlayer+1)%t.players.length;
   if(t.currentPlayer===0){
     t.round++;
-    if(t.kind==='countup'&&t.round>COUNTUP_ROUNDS){showWinByName(fcWinnerNames(t.players,t.scores,false));return;}
+    if(t.kind==='countup'&&t.round>COUNTUP_ROUNDS){showWinByName(fcWinnerNames(t.players,t.scores,false),fcMarginText(t.scores,'point'));return;}
   }
   renderTotal();
 }
@@ -2650,11 +2652,12 @@ function baseballNext(){
     b.inning++;
     if(b.inning>BASEBALL_INNINGS){
       var totals=b.players.map(function(_,i){return baseballTotal(i);});
-      showWinByName(fcWinnerNames(b.players,totals,false));return;
+      showWinByName(fcWinnerNames(b.players,totals,false),baseballMarginText(totals));return;
     }
   }
   renderBaseball();
 }
+function baseballMarginText(totals){return fcMarginText(totals,'run');}
 function renderBaseball(){
   var b=baseball,n=b.targets[Math.min(b.inning,BASEBALL_INNINGS)-1],cols='1fr '+'repeat('+b.players.length+',1fr)';
   document.getElementById('baseball-turn-title').textContent=b.players[b.currentPlayer]+"'s turn";
@@ -2688,10 +2691,30 @@ function renderBaseball(){
   document.getElementById('baseball-scores').innerHTML=h;
 }
 
-function showWinByName(name){
+// "Won by 6 points (23 – 17)" for the win screen. lowest=true when the lowest score wins.
+function fcMarginText(scores,unit,lowest){
+  if(!scores||scores.length<2)return '';
+  var top=lowest?Math.min.apply(null,scores):Math.max.apply(null,scores);
+  var u=function(n){return unit+(n===1?'':'s');};
+  if(scores.filter(function(t){return t===top;}).length>1)return 'Tied on '+top+' '+u(top);
+  var others=scores.filter(function(t){return t!==top;});
+  var next=lowest?Math.min.apply(null,others):Math.max.apply(null,others);
+  var m=Math.abs(top-next);
+  return 'Won by '+m+' '+u(m)+(scores.length===2?' ('+top+' – '+next+')':' ('+top+', next best '+next+')');
+}
+function cricketWinDetail(cr,p){
+  if(cr.variant==='none')return 'Closed all numbers first';
+  if(cr.players.length<2)return '';
+  var others=cr.points.filter(function(_,i){return i!==p;});
+  var mine=cr.points[p],next=cr.variant==='cut'?Math.min.apply(null,others):Math.max.apply(null,others);
+  var m=Math.abs(mine-next);
+  if(m===0)return 'Closed all numbers, level on '+mine+' point'+(mine===1?'':'s');
+  return 'Won by '+m+' point'+(m===1?'':'s')+(cr.players.length===2?' ('+mine+' – '+next+')':' ('+mine+', next best '+next+')');
+}
+function showWinByName(name,detail){
   document.getElementById('win-title').textContent=name+(name.indexOf(' & ')>-1?' Win! 🏆':' Wins! 🏆');
   document.getElementById('win-name').textContent='';
-  document.getElementById('win-legs').textContent='';
+  document.getElementById('win-legs').textContent=detail||'';
   showScreen('screen-win');
   fxWin();
 }
@@ -2722,6 +2745,6 @@ window.hiMatcher=new RegExpMatcher({
   ...englishRecommendedTransformers
 });
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-audio-caller</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-win-margins</div>
 </body>
 </html>
