@@ -908,7 +908,8 @@ html{scroll-behavior:smooth}
 <div id="draft-banner" style="display:none;background:#1a2a1e;border:1px solid var(--green);border-radius:6px;padding:.6rem 1rem;margin-bottom:.75rem;align-items:center;gap:.75rem;flex-wrap:wrap">
   <span id="draft-msg" style="flex:1;font-size:.85rem;color:var(--text)"></span>
   <button class="btnp" style="font-size:.8rem;padding:.35rem .9rem" onclick="restoreDraft()">Restore</button>
-  <button class="btns" style="font-size:.8rem;padding:.35rem .75rem" onclick="dismissDraft()">Dismiss</button>
+  <button class="btns" style="font-size:.8rem;padding:.35rem .75rem" onclick="dismissDraft()">Not now</button>
+  <button class="btns" style="font-size:.8rem;padding:.35rem .75rem" onclick="discardDraft()">Discard</button>
 </div>
 <div class="card"><h2>Match Details</h2>
         <div class="frow" style="display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end">
@@ -2032,13 +2033,13 @@ async function addPlayer(){
   }catch(e){toast('Error: '+e.message,true);return;}
   players.push({name:name,email:email||null});
   inp.value='';if(einp)einp.value='';
-  renderPChips();buildRows();populateStatSel();
+  renderPChips();refreshDropdowns();populateStatSel(); // refresh only - rebuilding the rows would wipe a match in progress
   toast(name+' added'+(email?' — email saved for account linking':''));
 }
 async function removePlayer(idx){
   const name=players[idx].name||players[idx];
   try{await sb('team_players?team_id=eq.'+currentTeam.id+'&name=eq.'+encodeURIComponent(name),{method:'DELETE'});}catch(e){toast('Error: '+e.message,true);return;}
-  players.splice(idx,1);renderPChips();buildRows();populateStatSel();toast(name+' removed');
+  players.splice(idx,1);renderPChips();refreshDropdowns();populateStatSel();toast(name+' removed');
 }
 async function editPlayer(idx){
   var p=players[idx];
@@ -2061,7 +2062,13 @@ async function editPlayer(idx){
   try{
     await sbPatch('team_players','team_id=eq.'+currentTeam.id+'&name=eq.'+encodeURIComponent(oldName),{name:newName,email:newEmail||null});
     players[idx]={name:newName,email:newEmail||null,linked:p.linked||false};
-    renderPChips();buildRows();populateStatSel();
+    // keep the match in progress: carry the new name through instead of rebuilding the rows
+    if(newName!==oldName){
+      md.singles.forEach(function(x){if(x.player===oldName)x.player=newName;});
+      md.doubles.forEach(function(x){if(x.p1===oldName)x.p1=newName;if(x.p2===oldName)x.p2=newName;});
+      if(md.team4)['p1','p2','p3','p4','p5','p6'].forEach(function(k){if(md.team4[k]===oldName)md.team4[k]=newName;});
+    }
+    renderPChips();refreshDropdowns();populateStatSel();
     toast(oldName+' updated'+(newEmail&&newEmail!==oldEmail?' — email saved':''));
   }catch(e){toast('Error: '+e.message,true);}
 }
@@ -2499,6 +2506,7 @@ document.addEventListener('DOMContentLoaded',function(){
 // ── Auto-save draft ────────────────────────────────────────────────────────────
 var draftTimer=null;
 
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden'&&typeof md!=='undefined'&&document.getElementById('mopp')&&currentTeam)saveDraft();});
 function scheduleDraftSave(){
   if(draftTimer)clearTimeout(draftTimer);
   draftTimer=setTimeout(saveDraft,30000);
@@ -2507,16 +2515,19 @@ function scheduleDraftSave(){
 async function saveDraft(){
   var opp=document.getElementById('mopp')?document.getElementById('mopp').value.trim():'';
   var date=document.getElementById('mdate')?document.getElementById('mdate').value:'';
-  if(!opp||!date)return;
   var venue=document.getElementById('mvenue')?document.getElementById('mvenue').value:'home';
   var data={
     singles:JSON.parse(JSON.stringify(md.singles)),
     doubles:JSON.parse(JSON.stringify(md.doubles)),
     team4:JSON.parse(JSON.stringify(md.team4))
   };
-  var draft={match_date:date,opponent:opp,venue:venue,data:data};
+  var hasWork=md.singles.some(isSinglesFilled)||md.doubles.some(isDoublesFilled)||isTeam4Filled(md.team4);
+  if(!opp&&!hasWork)return;
+  if(!date)date=new Date().toISOString().split('T')[0];
+  var draft={match_date:date,opponent:opp,venue:venue,data:data,saved_at:Date.now()};
   var localOk=true;
   try{localStorage.setItem('dart_draft',JSON.stringify(draft));}catch(e){localOk=false;}
+  if(!opp){showDraftStatus('Draft saved on this device - choose an opponent to back it up online','var(--amber)');return;}
   // Also save to the database, not just this device's local storage — a
   // browser-only draft is no help if the match is finished on a different
   // phone, or that phone's storage never gets checked afterward.
@@ -2546,36 +2557,27 @@ function showDraftStatus(msg,color){
 }
 
 async function checkDraftRestore(){
-  // First check localStorage
-  var draft=localStorage.getItem('dart_draft');
-  // Also check Supabase for a live draft from another user
-  if(!draft&&currentTeam&&currentTeam.id){
+  var best=null,local=null;
+  try{local=JSON.parse(localStorage.getItem('dart_draft')||'null');}catch(e){local=null;}
+  if(local&&(local.opponent||local.data))best=local;
+  // Also look online: a draft saved from another phone/browser, or when this device's storage was cleared
+  if(currentTeam&&currentTeam.id){
     try{
-      var liveDrafts=await sb('team_matches?team_id=eq.'+currentTeam.id+'&draft=eq.true&order=created_at.desc&limit=1&select=*');
-      if(liveDrafts&&liveDrafts.length){
-        draft=JSON.stringify({
-          match_date:liveDrafts[0].match_date,
-          opponent:liveDrafts[0].opponent,
-          venue:liveDrafts[0].venue,
-          data:liveDrafts[0].data,
-          db_id:liveDrafts[0].id
-        });
-      }
-    }catch(e){fcLogError('checkForDraft:liveDraft',e,false);}
+      var rows=await sb('team_matches?team_id=eq.'+currentTeam.id+'&draft=eq.true&order=created_at.desc&limit=5&select=*');
+      (rows||[]).forEach(function(r){
+        var cand={match_date:r.match_date,opponent:r.opponent,venue:r.venue,data:r.data,db_id:r.id,saved_at:Date.parse(r.created_at)||0};
+        if(!best||(cand.saved_at>(best.saved_at||0)&&!(best.opponent===cand.opponent&&best.match_date===cand.match_date&&(best.saved_at||0)>=cand.saved_at)))best=cand;
+      });
+    }catch(e){fcLogError('checkDraftRestore:online',e,false);}
   }
-  if(!draft)return;
-  try{
-    var d=JSON.parse(draft);
-    if(!d.opponent)return;
-    var banner=document.getElementById('draft-banner');
-    var msg=document.getElementById('draft-msg');
-    if(banner&&msg){
-      msg.textContent='Draft in progress: vs '+d.opponent+' on '+d.match_date+'. Restore?';
-      banner.style.display='flex';
-      // Store for restore
-      localStorage.setItem('dart_draft',JSON.stringify(d));
-    }
-  }catch(e){localStorage.removeItem('dart_draft');}
+  if(!best)return;
+  var banner=document.getElementById('draft-banner');
+  var msg=document.getElementById('draft-msg');
+  if(banner&&msg){
+    msg.textContent='Draft in progress'+(best.opponent?': vs '+best.opponent+' on '+best.match_date:' (no opponent chosen yet)')+'. Restore?';
+    banner.style.display='flex';
+    try{localStorage.setItem('dart_draft',JSON.stringify(best));}catch(e){}
+  }
 }
 
 function restoreDraft(){
@@ -2603,7 +2605,7 @@ function restoreDraft(){
         applyDraftToForm(d.data);
       },100);
     }
-    dismissDraft();
+    var bn=document.getElementById('draft-banner');if(bn)bn.style.display='none';
     updateBar();
     sw('match');
     toast('Draft restored!');
@@ -2716,9 +2718,18 @@ function applyDraftToForm(data){
 }
 
 function dismissDraft(){
-  localStorage.removeItem('dart_draft');
+  // Hide the banner only - the draft stays safe on this device and online
   var banner=document.getElementById('draft-banner');
   if(banner)banner.style.display='none';
+}
+async function discardDraft(){
+  if(!confirm('Discard this draft? The scores entered so far will be deleted.'))return;
+  var d=null;try{d=JSON.parse(localStorage.getItem('dart_draft')||'null');}catch(e){}
+  localStorage.removeItem('dart_draft');
+  if(d&&d.opponent&&currentTeam&&currentTeam.id){
+    try{await sb('team_matches?team_id=eq.'+currentTeam.id+'&opponent=eq.'+encodeURIComponent(d.opponent)+'&match_date=eq.'+d.match_date+'&draft=eq.true',{method:'DELETE'});}catch(e){fcLogError('discardDraft',e,false);}
+  }
+  dismissDraft();toast('Draft discarded');
 }
 
 async function saveMatchDraft(){
@@ -2732,7 +2743,7 @@ async function saveMatchDraft(){
     doubles:JSON.parse(JSON.stringify(md.doubles)),
     team4:JSON.parse(JSON.stringify(md.team4))
   };
-  var draft={match_date:date,opponent:opp,venue:venue,data:data};
+  var draft={match_date:date,opponent:opp,venue:venue,data:data,saved_at:Date.now()};
   var sp=document.getElementById('draftspin');
   if(sp)sp.style.display='inline-block';
   var localOk=true;
@@ -2774,7 +2785,7 @@ async function saveMatch(){
   var savedNow=false;
   try{
     // Check for existing result for same team/opponent/date to prevent duplicates
-    var existing=await sb('team_matches?team_id=eq.'+currentTeam.id+'&match_date=eq.'+date+'&opponent=eq.'+encodeURIComponent(opp)+'&select=id,wins,losses,eighties,data');
+    var existing=(await sb('team_matches?team_id=eq.'+currentTeam.id+'&match_date=eq.'+date+'&opponent=eq.'+encodeURIComponent(opp)+'&select=id,wins,losses,eighties,data,draft')||[]).filter(function(r){return !r.draft;});
     if(existing&&existing.length){
       // Existing result found - only update if user has entered new data
       var hasData=mw>0||ml>0||total8()>0||md.singles.some(function(s){return s.result||s.scores.length;});
@@ -2806,7 +2817,7 @@ async function saveMatch(){
         }
         rec.data=mergedData;
         rec.wins=stats.wins;rec.losses=stats.losses;rec.eighties=stats.eighties;
-        await sbPatch('team_matches','id=eq.'+existing[0].id,rec);
+        rec.draft=false;await sbPatch('team_matches','id=eq.'+existing[0].id,rec);
         toast('Match result updated!');localStorage.removeItem('dart_draft');
         savedNow=true;
         try{await sb('team_matches?team_id=eq.'+currentTeam.id+'&match_date=eq.'+date+'&opponent=eq.'+encodeURIComponent(opp)+'&draft=eq.true',{method:'DELETE'});}catch(e){fcLogError('saveMatch:cleanupDraft',e,false);}
@@ -2902,7 +2913,7 @@ async function renderHistory(){
   var el=document.getElementById('hlist');
   el.innerHTML='<div class="lh"><span class="spin"></span> Loading…</div>';
   try{
-    matchHistory=await sb('team_matches?team_id=eq.'+currentTeam.id+'&order=match_date.asc,created_at.asc');
+    matchHistory=(await sb('team_matches?team_id=eq.'+currentTeam.id+'&order=match_date.asc,created_at.asc')||[]).filter(function(r){return !r.draft;});
     if(!matchHistory.length){el.innerHTML='<div class="nh">No matches recorded yet.</div>';return;}
     el.innerHTML=matchHistory.map(function(m,i){
       var won=m.wins>m.losses;var draw=m.wins===m.losses;
@@ -3186,7 +3197,7 @@ async function renderFixtures(){
     var matchTime=await fxMatchTime(currentLeague.id);
     var today=new Date();today.setHours(0,0,0,0);
     // Load existing results to detect recorded fixtures
-    var existingMatches=await sb('team_matches?team_id=eq.'+currentTeam.id+'&select=id,match_date,opponent,wins,losses');
+    var existingMatches=(await sb('team_matches?team_id=eq.'+currentTeam.id+'&select=id,match_date,opponent,wins,losses,draft')||[]).filter(function(r){return !r.draft;});
     var myFixtures=rows.filter(function(r){return r.home_team_id===currentTeam.id||r.away_team_id===currentTeam.id;});
     if(!myFixtures.length){el.innerHTML='<div class="nh">No fixtures found for your team.</div>';return;}
     fxCal.team={name:currentTeam.team_name,events:[]};
@@ -3253,7 +3264,8 @@ function loadFixtureToMatch(date,opp,venue){
   // starting blank - only reset when there's no draft to pick back up.
   var draft=null;
   try{var raw=localStorage.getItem('dart_draft');if(raw)draft=JSON.parse(raw);}catch(e){}
-  if(draft&&draft.match_date===date&&draft.opponent===opp){
+  if(draft&&draft.opponent===opp){
+    draft.match_date=date;try{localStorage.setItem('dart_draft',JSON.stringify(draft));}catch(e){}
     restoreDraft();
     return;
   }
@@ -4927,7 +4939,7 @@ async function loadPublicScorers(){
   try{
     var teams=await sb('teams?league_id=eq.'+publicLeague.id+'&select=id,team_name');
     if(!teams.length){wrap.innerHTML='<div class="nh">No data yet.</div>';return;}
-    var matches=await fetchLeagueMatches(publicLeague.id,teams,season,'team_id,data');
+    var matches=(await fetchLeagueMatches(publicLeague.id,teams,season,'team_id,data,draft')||[]).filter(function(r){return !r.draft;});
     var teamMap={};teams.forEach(function(t){teamMap[t.id]=t.team_name;});
     // Aggregate 80+ scores per player
     var playerScores={};
@@ -5125,6 +5137,6 @@ if(!navigator.onLine){
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 </script>
 <div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-logout-fix</div>
-<div style="position:fixed;bottom:6px;right:8px;font-family:monospace;font-size:.65rem;color:#34503e;background:#0d1711;padding:2px 6px;border-radius:4px;z-index:9999;pointer-events:none">v60-design</div>
+<div style="position:fixed;bottom:6px;right:8px;font-family:monospace;font-size:.65rem;color:#34503e;background:#0d1711;padding:2px 6px;border-radius:4px;z-index:9999;pointer-events:none">v61-drafts</div>
 </body>
 </html>

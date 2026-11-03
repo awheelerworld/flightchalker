@@ -2120,7 +2120,7 @@ async function openScoreForm(id){
   var h='',a='';
   if(c.played){
     try{
-      var r=await sb('team_matches?team_id=eq.'+c.hid+'&match_date=eq.'+c.date+'&opponent=eq.'+encodeURIComponent(c.away)+'&select=wins,losses&limit=1');
+      var r=await sb('team_matches?team_id=eq.'+c.hid+'&match_date=eq.'+c.date+'&opponent=eq.'+encodeURIComponent(c.away)+'&draft=eq.false&select=wins,losses&limit=1');
       if(r&&r[0]){h=r[0].wins;a=r[0].losses;}
     }catch(e){}
   }
