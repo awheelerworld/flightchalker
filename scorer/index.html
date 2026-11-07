@@ -390,6 +390,31 @@ html[data-skin="dartboard"] .killer-badge{background:#101010;color:#e0243a;borde
 #fx-180{position:fixed;left:50%;top:38%;z-index:9991;pointer-events:none;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:5.5rem;letter-spacing:.04em;color:var(--amber,#f2cf4a);text-shadow:0 0 18px rgba(0,0,0,.6),0 3px 0 rgba(0,0,0,.5);animation:fxpop 1.3s ease-out both}
 @media (prefers-reduced-motion:reduce){.fx-cup{animation:none}.fx-glow{display:none}#fx-180{animation:none;transform:translate(-50%,-50%)}}
 .fx-switch{margin-top:1.1rem;background:none;border:0;color:var(--dim);font-family:'Barlow Condensed',sans-serif;font-size:.95rem;letter-spacing:.06em;text-decoration:underline;cursor:pointer;padding:.4rem}
+.h2h-card{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:1.25rem;margin-bottom:1.5rem}
+.h2h-card select{width:100%;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:.55rem .6rem;font-size:.95rem;margin-bottom:1rem}
+.h2h-score{display:flex;align-items:center;justify-content:center;gap:.75rem;text-align:center;margin-bottom:.5rem}
+.h2h-score .nm{flex:1;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.1rem;word-break:break-word}
+.h2h-score .num{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:2.6rem;color:var(--amber);line-height:1}
+.h2h-sub{text-align:center;color:var(--dim);font-size:.85rem;margin-bottom:1rem}
+.h2h-row{display:flex;justify-content:space-between;gap:.5rem;padding:.4rem 0;border-top:1px solid var(--border);font-size:.9rem}
+.h2h-row span:last-child{color:var(--dim);text-align:right}
+.h2h-dots{display:flex;gap:.35rem;justify-content:center;margin:.25rem 0 1rem;flex-wrap:wrap}
+.h2h-dot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:#0d1711}
+.h2h-dot.a{background:var(--amber)}.h2h-dot.b{background:var(--gl)}.h2h-dot.d{background:var(--dim)}
+.h2h-del{background:none;border:none;color:var(--dim);font-size:.78rem;text-decoration:underline;cursor:pointer;margin-top:.75rem;padding:0}
+.btn-h2h{background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.7rem 1rem;cursor:pointer;width:100%;margin-top:.75rem}
+.btn-h2h:hover{border-color:var(--amber);color:var(--amber)}
+.fr-h{font-family:'Barlow Condensed',sans-serif;font-size:.75rem;letter-spacing:.18em;text-transform:uppercase;color:var(--green);margin:1.25rem 0 .6rem}
+.fr-search{display:flex;gap:.5rem;margin-bottom:.75rem}
+.fr-search input{flex:1;min-width:0;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:.55rem .6rem;font-size:.95rem}
+.fr-btn{background:var(--green);border:none;border-radius:6px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:.85rem;padding:.5rem .85rem;cursor:pointer;white-space:nowrap}
+.fr-btn.alt{background:transparent;border:1px solid var(--border);color:var(--text)}
+.fr-row{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.55rem 0;border-top:1px solid var(--border);font-size:.95rem}
+.fr-row:first-child{border-top:none}
+.fr-row .nm{flex:1;min-width:0;word-break:break-word}
+.fr-row .acts{display:flex;gap:.4rem;flex-shrink:0}
+.fr-msg{color:var(--dim);font-size:.85rem;margin:.1rem 0 .6rem}
+.fr-badge{display:inline-block;background:var(--amber);color:#000;border-radius:10px;padding:0 7px;font-size:.72rem;font-weight:700;margin-left:6px}
 </style>
 <!-- Google Analytics -->
 <script src="/fc-consent.js"></script>
@@ -571,6 +596,11 @@ html[data-skin="dartboard"] .killer-badge{background:#101010;color:#e0243a;borde
           <option value="4">4 Players</option>
         </select>
       </div>
+      <div class="field" id="friend-play" style="display:none">
+        <label>Play a friend</label>
+        <select id="friend-sel" onchange="fcPickFriend()"><option value="">— Or type names below —</option></select>
+        <div style="font-size:.78rem;color:var(--dim);margin-top:.35rem">The result goes into both of your Head-to-Head records.</div>
+      </div>
       <div class="player-names" id="player-names">
         <div class="player-name-row"><label>Player 1</label><input type="text" placeholder="Player 1" value="Player 1" list="fc-recent-names"></div>
         <div class="player-name-row"><label>Player 2</label><input type="text" placeholder="Player 2" value="Player 2" list="fc-recent-names"></div>
@@ -600,6 +630,34 @@ html[data-skin="dartboard"] .killer-badge{background:#101010;color:#e0243a;borde
     </div>
 
     <button class="btn-start" onclick="startGame()">Start Game 🎯</button>
+    <button class="btn-h2h" id="btn-h2h" onclick="openH2H()">🤝 Head-to-Head &amp; friends<span class="fr-badge" id="fr-badge" style="display:none"></span></button>
+  </div>
+</div>
+
+<!-- ══════════════════ HEAD-TO-HEAD SCREEN ══════════════════ -->
+<div id="screen-h2h" class="screen">
+  <div class="hdr">
+    <div>
+      <a href="/dashboard" class="hdr-logo" style="text-decoration:none;color:inherit">Flight <span>Chalker</span></a>
+      <div class="hdr-sub">Head-to-Head</div>
+    </div>
+    <button class="hbtn" onclick="showScreen('screen-setup')">← Back</button>
+  </div>
+  <div class="setup-wrap">
+    <div class="setup-title">🤝 Head-to-Head</div>
+    <div class="setup-sub">Your running record against the people you play. Saved for every two-player game you finish while signed in.</div>
+    <div class="h2h-card"><div id="h2h-body" style="color:var(--dim);font-size:.9rem">Loading…</div></div>
+
+    <div class="fr-h">Friends</div>
+    <div class="h2h-card" id="fr-card">
+      <div class="fr-msg">Find a friend by their exact username. They have to accept before you can play each other and share a record.</div>
+      <div class="fr-search">
+        <input id="fr-q" type="text" placeholder="Friend's username" maxlength="40" autocapitalize="off" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter')frSearch()">
+        <button class="fr-btn" type="button" onclick="frSearch()">Find</button>
+      </div>
+      <div id="fr-result"></div>
+      <div id="fr-list"></div>
+    </div>
   </div>
 </div>
 
@@ -835,6 +893,7 @@ html[data-skin="dartboard"] .killer-badge{background:#101010;color:#e0243a;borde
     <div class="win-title" id="win-title">Winner!</div>
     <div class="win-name" id="win-name"></div>
     <div class="win-legs" id="win-legs"></div>
+    <div class="win-legs" id="win-h2h" style="display:none;margin-top:-1.4rem"></div>
     <button class="btn-again" onclick="playAgain()">Play Again 🎯</button>
     <button class="btn-new" onclick="showScreen('screen-setup')">New Game Setup</button>
     <div><button class="fx-switch" id="fx-switch" onclick="setFx(!fxOn())">Turn celebrations off</button></div>
@@ -898,6 +957,7 @@ async function fcInit(){
       }catch(tierErr){fcPremium=false;}
     }
     applySavedSkin();
+    try{if(typeof fcLoadFriends==='function')fcLoadFriends();}catch(fe){}
 
     return true;
   }catch(e){
@@ -1423,6 +1483,8 @@ function showWin(winner){
   var best=Math.max.apply(null,gs.all.map(function(h){return h.scored||0;}).concat([0]));
   var s180=gs.all.filter(function(h){return h.scored===180;}).length;
   fcEnd('x01',{winner:gs.players[winner],best:best,s180:s180,legs:gs.legs.slice()});
+  var h2h1=document.getElementById('win-h2h');if(h2h1){h2h1.textContent='';h2h1.style.display='none';}
+  fcH2H('x01',gs.players,winner,gs.legs);
   document.getElementById('win-title').textContent=gs.players[winner]+' Wins! 🏆';
   var legMargin='';
   if(gs.players.length>1){var lo=gs.legs.filter(function(_,i){return i!==winner;}),lm=gs.legs[winner]-Math.max.apply(null,lo);if(lm>0)legMargin='Won by '+lm+' leg'+(lm===1?'':'s')+' · ';}
@@ -1930,7 +1992,7 @@ function cricketNext(){
     var closedAll=cNums.every(function(n){return cr.marks[p][n]>=3;});
     var okPoints=cr.variant==='none'?true:cr.variant==='cut'?cr.points[p]<=Math.min.apply(null,cr.points):cr.points[p]>=Math.max.apply(null,cr.points);
     if(closedAll&&okPoints){
-      showWinByName(cr.players[p],cricketWinDetail(cr,p));return;
+      fcH2H('cricket',cr.players,p,cr.points);showWinByName(cr.players[p],cricketWinDetail(cr,p));return;
     }
   }
   cr.currentPlayer=(cr.currentPlayer+1)%cr.players.length;
@@ -1991,7 +2053,7 @@ function killerDart(num){
     var t=k.doubles.indexOf(num);
     if(t!==-1&&t!==p&&k.lives[t]>0){
       k.lives[t]--;toast(k.players[t]+' -1 life!',true);speak(k.players[t]+' loses a life!');
-      if(k.lives[t]<=0){if(k.lives.filter(function(l){return l>0;}).length===1){showWinByName(k.players[p],'Last one standing'+(k.lives[p]>0?' with '+k.lives[p]+(k.lives[p]===1?' life':' lives')+' left':''));return;}}
+      if(k.lives[t]<=0){if(k.lives.filter(function(l){return l>0;}).length===1){fcH2H('killer',k.players,p,k.lives);showWinByName(k.players[p],'Last one standing'+(k.lives[p]>0?' with '+k.lives[p]+(k.lives[p]===1?' life':' lives')+' left':''));return;}}
     } else if(t===p){k.lives[p]--;k.isKiller[p]=false;toast('Own double! -1 life 😬',true);speak('Own double! Lost a life.');}
     else{speak('Miss');}
     k.dartsThrown++;
@@ -2093,7 +2155,7 @@ function shanghaiDart(val,mult){
     if(mults.includes(1)&&mults.includes(2)&&mults.includes(3)){
       toast('SHANGHAI! Instant win! 🎯');
       speak('Shanghai! Instant win!');
-      setTimeout(function(){showWinByName(sh.players[sh.currentPlayer],'Shanghai! Single, double and treble in one round');},800);
+      fcH2H('shanghai',sh.players,sh.currentPlayer,sh.scores);setTimeout(function(){showWinByName(sh.players[sh.currentPlayer],'Shanghai! Single, double and treble in one round');},800);
       return;
     }
   }
@@ -2111,7 +2173,7 @@ function shanghaiNextTurn(){
   sh.currentPlayer=(sh.currentPlayer+1)%sh.players.length;
   if(sh.currentPlayer===0){
     sh.currentRound++;
-    if(sh.currentRound>7){showWinByName(fcWinnerNames(sh.players,sh.scores,false),fcMarginText(sh.scores,'point'));return;}
+    if(sh.currentRound>7){fcH2HByScore('shanghai',sh.players,sh.scores);showWinByName(fcWinnerNames(sh.players,sh.scores,false),fcMarginText(sh.scores,'point'));return;}
   }
   renderShanghai();
 }
@@ -2467,7 +2529,7 @@ function halveitSubmit(){
   hv.currentPlayer=(hv.currentPlayer+1)%hv.players.length;
   if(hv.currentPlayer===0){
     hv.currentRound++;
-    if(hv.currentRound>=hv.rounds.length){showWinByName(fcWinnerNames(hv.players,hv.scores,false),fcMarginText(hv.scores,'point'));return;}
+    if(hv.currentRound>=hv.rounds.length){fcH2HByScore('halveit',hv.players,hv.scores);showWinByName(fcWinnerNames(hv.players,hv.scores,false),fcMarginText(hv.scores,'point'));return;}
   }
   renderHalveIt();
 }
@@ -2482,7 +2544,7 @@ function halveitCustomHit(){
   hv.currentPlayer=(hv.currentPlayer+1)%hv.players.length;
   if(hv.currentPlayer===0){
     hv.currentRound++;
-    if(hv.currentRound>=hv.rounds.length){showWinByName(fcWinnerNames(hv.players,hv.scores,false),fcMarginText(hv.scores,'point'));return;}
+    if(hv.currentRound>=hv.rounds.length){fcH2HByScore('halveit',hv.players,hv.scores);showWinByName(fcWinnerNames(hv.players,hv.scores,false),fcMarginText(hv.scores,'point'));return;}
   }
   renderHalveIt();
 }
@@ -2580,14 +2642,14 @@ function totalSubmit(){
     }
     if(t.exact?t.scores[p]===FIVES_TARGET:t.scores[p]>=FIVES_TARGET){
       t.inputVal='';document.getElementById('total-input').value='';
-      showWinByName(t.players[p],t.exact?'Hit exactly '+FIVES_TARGET+' points':fcMarginText(t.scores,'point'));return;
+      fcH2H(t.kind||'fives',t.players,p,t.scores);showWinByName(t.players[p],t.exact?'Hit exactly '+FIVES_TARGET+' points':fcMarginText(t.scores,'point'));return;
     }
   }
   t.inputVal='';document.getElementById('total-input').value='';
   t.currentPlayer=(t.currentPlayer+1)%t.players.length;
   if(t.currentPlayer===0){
     t.round++;
-    if(t.kind==='countup'&&t.round>COUNTUP_ROUNDS){showWinByName(fcWinnerNames(t.players,t.scores,false),fcMarginText(t.scores,'point'));return;}
+    if(t.kind==='countup'&&t.round>COUNTUP_ROUNDS){fcH2HByScore('countup',t.players,t.scores);showWinByName(fcWinnerNames(t.players,t.scores,false),fcMarginText(t.scores,'point'));return;}
   }
   renderTotal();
 }
@@ -2652,7 +2714,7 @@ function baseballNext(){
     b.inning++;
     if(b.inning>BASEBALL_INNINGS){
       var totals=b.players.map(function(_,i){return baseballTotal(i);});
-      showWinByName(fcWinnerNames(b.players,totals,false),baseballMarginText(totals));return;
+      fcH2HByScore('baseball',b.players,totals);showWinByName(fcWinnerNames(b.players,totals,false),baseballMarginText(totals));return;
     }
   }
   renderBaseball();
@@ -2691,6 +2753,250 @@ function renderBaseball(){
   document.getElementById('baseball-scores').innerHTML=h;
 }
 
+// ── Head-to-head records (from two-player games finished on the scorer) ──
+var h2hRows=[],h2hPair=null;
+function h2hEsc(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+async function loadHeadToHead(pairKey){
+  if(pairKey)h2hPair=pairKey;
+  var box=document.getElementById('h2h-body');
+  if(!box)return;
+  try{
+    var r=await sb.from('head_to_head').select('id,played_at,game_mode,player_a,player_b,a_key,b_key,winner,score_a,score_b').order('played_at',{ascending:false}).limit(3000);
+    if(r.error)throw r.error;
+    h2hRows=r.data||[];
+    renderHeadToHead();
+  }catch(e){
+    console.error('Head-to-head:',e);
+    box.textContent='Head-to-head records could not be loaded. Check you are signed in and try again.';
+  }
+}
+function h2hModeName(m){return({x01:'501 / X01',cricket:'Cricket',killer:'Killer',shanghai:'Shanghai',halveit:'Halve-It',fives:'Fives',countup:'Count-Up',baseball:'Baseball'})[m]||m;}
+function renderHeadToHead(){
+  var box=document.getElementById('h2h-body');
+  if(!h2hRows.length){
+    box.textContent='No records yet. Play a two-player game while signed in and the result is remembered here. Keep playing the same person and the record builds over weeks and months.';
+    return;
+  }
+  var pairs={};
+  h2hRows.forEach(function(x){
+    var k=x.a_key+'|'+x.b_key;
+    if(!pairs[k])pairs[k]={key:k,a:x.player_a,b:x.player_b,n:0};
+    pairs[k].n++;
+  });
+  var list=Object.keys(pairs).map(function(k){return pairs[k];}).sort(function(p,q){return q.n-p.n;});
+  if(!h2hPair||!pairs[h2hPair])h2hPair=list[0].key;
+  var sel='<select id="h2h-sel" aria-label="Choose a pair of players">'+list.map(function(p){
+    return '<option value="'+h2hEsc(p.key)+'"'+(p.key===h2hPair?' selected':'')+'>'+h2hEsc(p.a)+' v '+h2hEsc(p.b)+' ('+p.n+' game'+(p.n===1?'':'s')+')</option>';
+  }).join('')+'</select>';
+  var rows=h2hRows.filter(function(x){return x.a_key+'|'+x.b_key===h2hPair;}); // newest first
+  var P=pairs[h2hPair];
+  var wa=0,wb=0,dr=0;
+  rows.forEach(function(x){if(x.winner==='a')wa++;else if(x.winner==='b')wb++;else dr++;});
+  var dec=wa+wb;
+  var lead=wa===wb?'All square':(wa>wb?P.a:P.b)+' leads by '+Math.abs(wa-wb);
+  // current streak (newest first)
+  var streak='';
+  if(rows.length&&rows[0].winner!=='draw'){
+    var w=rows[0].winner,c=0;for(var i=0;i<rows.length&&rows[i].winner===w;i++)c++;
+    if(c>1)streak=(w==='a'?P.a:P.b)+' has won the last '+c;
+  }
+  var dots=rows.slice(0,10).reverse().map(function(x){
+    var c=x.winner==='a'?'a':(x.winner==='b'?'b':'d');
+    var t=x.winner==='a'?P.a[0]:(x.winner==='b'?P.b[0]:'=');
+    return '<span class="h2h-dot '+c+'" title="'+h2hEsc(new Date(x.played_at).toLocaleDateString('en-GB')+' · '+h2hModeName(x.game_mode))+'">'+h2hEsc(String(t).toUpperCase())+'</span>';
+  }).join('');
+  // by game
+  var modes={};
+  rows.forEach(function(x){var m=modes[x.game_mode]||(modes[x.game_mode]={a:0,b:0,d:0});if(x.winner==='a')m.a++;else if(x.winner==='b')m.b++;else m.d++;});
+  var modeRows=Object.keys(modes).map(function(k){var m=modes[k];
+    return '<div class="h2h-row"><span>'+h2hEsc(h2hModeName(k))+'</span><span>'+h2hEsc(P.a)+' '+m.a+' – '+m.b+' '+h2hEsc(P.b)+(m.d?' · '+m.d+' drawn':'')+'</span></div>';}).join('');
+  // x01 legs
+  var lf=0,la=0,legGames=0;
+  rows.forEach(function(x){if(x.game_mode==='x01'&&x.score_a!=null&&x.score_b!=null){lf+=x.score_a;la+=x.score_b;legGames++;}});
+  var first=new Date(rows[rows.length-1].played_at).toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+  var last=new Date(rows[0].played_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  box.innerHTML=sel+
+    '<div class="h2h-score"><div class="nm">'+h2hEsc(P.a)+'</div><div class="num">'+wa+' – '+wb+'</div><div class="nm">'+h2hEsc(P.b)+'</div></div>'+
+    '<div class="h2h-sub">'+h2hEsc(lead)+(dr?' · '+dr+' drawn':'')+(streak?' · '+h2hEsc(streak):'')+'</div>'+
+    '<div class="h2h-dots" aria-label="Last results, oldest to newest">'+dots+'</div>'+
+    (legGames?'<div class="h2h-row"><span>501 / X01 legs</span><span>'+h2hEsc(P.a)+' '+lf+' – '+la+' '+h2hEsc(P.b)+'</span></div>':'')+
+    modeRows+
+    '<div class="h2h-row"><span>Games played</span><span>'+rows.length+' since '+h2hEsc(first)+'</span></div>'+
+    '<div class="h2h-row"><span>Last played</span><span>'+h2hEsc(last)+'</span></div>'+
+    '<button class="h2h-del" id="h2h-del" type="button">Delete this record</button>';
+  document.getElementById('h2h-sel').addEventListener('change',function(e){h2hPair=e.target.value;renderHeadToHead();});
+  document.getElementById('h2h-del').addEventListener('click',deleteH2HPair);
+}
+async function deleteH2HPair(){
+  var p=h2hPair&&h2hPair.split('|');if(!p)return;
+  if(!confirm('Delete every recorded game between these two players? This cannot be undone.'))return;
+  try{
+    var r=await sb.from('head_to_head').delete().eq('a_key',p[0]).eq('b_key',p[1]);
+    if(r.error)throw r.error;
+    h2hRows=h2hRows.filter(function(x){return !(x.a_key===p[0]&&x.b_key===p[1]);});
+    h2hPair=null;renderHeadToHead();
+  }catch(e){alert('Could not delete the record: '+(e.message||e));}
+}
+
+
+function openH2H(pairKey){
+  showScreen('screen-h2h');
+  var box=document.getElementById('h2h-body');if(box)box.textContent='Loading…';
+  loadHeadToHead(pairKey);
+  fcLoadFriends();
+}
+
+// ── Friends: find players, requests, and linked games ──
+var fcFriends=[],fcFriendRows=[],fcLink=null;
+async function fcLoadFriends(){
+  try{
+    if(!fcUser)return;
+    var r=await sb.rpc('friend_list');
+    if(r.error)throw r.error;
+    fcFriendRows=r.data||[];
+    fcFriends=fcFriendRows.filter(function(x){return x.status==='accepted';}).map(function(x){return {id:x.other_id,username:x.other_username,fid:x.friendship_id};});
+    var incoming=fcFriendRows.filter(function(x){return x.status==='pending'&&x.direction==='received';}).length;
+    var bd=document.getElementById('fr-badge');
+    if(bd){bd.textContent=incoming;bd.style.display=incoming?'inline-block':'none';}
+    var wrap=document.getElementById('friend-play'),sel=document.getElementById('friend-sel');
+    if(wrap&&sel){
+      var cur=sel.value;
+      sel.innerHTML='<option value="">— Or type names below —</option>'+fcFriends.map(function(f){return '<option value="'+h2hEsc(f.id)+'">'+h2hEsc(f.username)+'</option>';}).join('');
+      sel.value=cur&&fcFriends.some(function(f){return f.id===cur;})?cur:'';
+      wrap.style.display=fcFriends.length?'':'none';
+    }
+    frRender();
+  }catch(e){console.error('fcLoadFriends:',e);}
+}
+// fcInit() runs in an earlier script block, so load the friends list once this block is ready too
+(function waitForUser(n){if(typeof fcUser!=='undefined'&&fcUser){fcLoadFriends();}else if(n>0){setTimeout(function(){waitForUser(n-1);},400);}})(25);
+function fcClearLink(){fcLink=null;var sel=document.getElementById('friend-sel');if(sel)sel.value='';}
+function fcPickFriend(){
+  var sel=document.getElementById('friend-sel');
+  var f=fcFriends.filter(function(x){return x.id===sel.value;})[0];
+  if(!f||!fcUser){fcLink=null;return;}
+  document.getElementById('num-players').value='2';
+  updatePlayerNames();
+  var ins=document.querySelectorAll('#player-names input');
+  if(ins[0])ins[0].value=fcUser.username;
+  if(ins[1])ins[1].value=f.username;
+  fcLink={id:f.id,me:fcUser.username,friend:f.username};
+}
+(function(){
+  document.addEventListener('input',function(e){
+    if(!fcLink||!e.target||!e.target.closest||!e.target.closest('#player-names'))return;
+    var ins=document.querySelectorAll('#player-names input');
+    if(ins.length!==2||fcNameKey(ins[0].value)!==fcNameKey(fcLink.me)||fcNameKey(ins[1].value)!==fcNameKey(fcLink.friend))fcClearLink();
+  });
+  document.addEventListener('change',function(e){if(e.target&&e.target.id==='num-players'&&fcLink)fcClearLink();});
+})();
+function frPlay(id){
+  showScreen('screen-setup');
+  var sel=document.getElementById('friend-sel');
+  if(sel){sel.value=id;fcPickFriend();}
+}
+function frMsg(t){var el=document.getElementById('fr-result');if(el)el.innerHTML='<div class="fr-msg">'+h2hEsc(t)+'</div>';}
+async function frSearch(){
+  var q=(document.getElementById('fr-q').value||'').trim();
+  if(q.length<2){frMsg('Type the full username.');return;}
+  frMsg('Searching…');
+  try{
+    var r=await sb.rpc('find_player',{p_username:q});
+    if(r.error)throw r.error;
+    var p=r.data&&r.data[0];
+    if(!p){frMsg('No player found with that exact username.');return;}
+    var existing=fcFriendRows.filter(function(x){return x.other_id===p.id;})[0];
+    if(existing){frMsg(existing.status==='accepted'?p.username+' is already your friend.':(existing.direction==='sent'?'You have already sent '+p.username+' a request.':p.username+' has already sent you a request. Accept it below.'));return;}
+    document.getElementById('fr-result').innerHTML='<div class="fr-row"><span class="nm">'+h2hEsc(p.username)+'</span><span class="acts"><button class="fr-btn" type="button" onclick="frSend(\''+h2hEsc(p.id)+'\')">Send friend request</button></span></div>';
+  }catch(e){console.error('frSearch:',e);frMsg('Could not search right now. Please try again.');}
+}
+async function frSend(id){
+  try{
+    var r=await sb.rpc('friend_request',{p_user:id});
+    if(r.error)throw r.error;
+    var m={sent:'Request sent.',accepted:'You are now friends.',already_friends:'You are already friends.',already_sent:'Request already sent.',limit:'You have too many requests waiting. Wait for some to be answered.',invalid:'That request could not be sent.'};
+    frMsg(m[r.data]||'Done.');
+    document.getElementById('fr-q').value='';
+    fcLoadFriends();
+  }catch(e){console.error('frSend:',e);frMsg('Could not send the request. Please try again.');}
+}
+async function frRespond(fid,accept){
+  try{var r=await sb.rpc('friend_respond',{p_id:fid,p_accept:accept});if(r.error)throw r.error;}catch(e){console.error('frRespond:',e);}
+  fcLoadFriends();
+}
+async function frRemove(fid,what){
+  if(!confirm(what))return;
+  try{var r=await sb.rpc('friend_remove',{p_id:fid});if(r.error)throw r.error;}catch(e){console.error('frRemove:',e);}
+  fcLoadFriends();
+}
+function frRender(){
+  var box=document.getElementById('fr-list');if(!box)return;
+  var inc=fcFriendRows.filter(function(x){return x.status==='pending'&&x.direction==='received';});
+  var fr=fcFriendRows.filter(function(x){return x.status==='accepted';});
+  var sent=fcFriendRows.filter(function(x){return x.status==='pending'&&x.direction==='sent';});
+  var h='';
+  if(inc.length)h+='<div class="fr-msg" style="margin-top:.5rem">Requests for you</div>'+inc.map(function(x){
+    return '<div class="fr-row"><span class="nm">'+h2hEsc(x.other_username)+'</span><span class="acts"><button class="fr-btn" type="button" onclick="frRespond(\''+h2hEsc(x.friendship_id)+'\',true)">Accept</button><button class="fr-btn alt" type="button" onclick="frRespond(\''+h2hEsc(x.friendship_id)+'\',false)">Decline</button></span></div>';}).join('');
+  if(fr.length)h+='<div class="fr-msg" style="margin-top:.5rem">Your friends</div>'+fr.map(function(x){
+    return '<div class="fr-row"><span class="nm">'+h2hEsc(x.other_username)+'</span><span class="acts"><button class="fr-btn" type="button" onclick="frPlay(\''+h2hEsc(x.other_id)+'\')">Play</button><button class="fr-btn alt" type="button" onclick="frRemove(\''+h2hEsc(x.friendship_id)+'\',\'Remove this friend? Games already recorded stay in both of your records.\')">Remove</button></span></div>';}).join('');
+  if(sent.length)h+='<div class="fr-msg" style="margin-top:.5rem">Waiting for a reply</div>'+sent.map(function(x){
+    return '<div class="fr-row"><span class="nm">'+h2hEsc(x.other_username)+'</span><span class="acts"><button class="fr-btn alt" type="button" onclick="frRemove(\''+h2hEsc(x.friendship_id)+'\',\'Cancel this request?\')">Cancel</button></span></div>';}).join('');
+  if(!h)h='<div class="fr-msg">No friends yet.</div>';
+  box.innerHTML=h;
+}
+
+// ── Head-to-head: remember the result of every finished two-player game ──
+var FC_H2H_LAST='';
+function fcNameKey(n){return String(n||'').trim().toLowerCase().replace(/\s+/g,' ').slice(0,40);}
+// winnerIdx: index of the winner, or -1 for a draw. scores: optional [p0,p1] (legs/points/lives).
+async function fcH2H(mode,players,winnerIdx,scores){
+  try{
+    if(!fcUser||!players||players.length!==2)return;
+    var generic=/^player( ?\d+)?$/i;
+    var n=players.map(function(p){return String(p==null?'':p).trim().slice(0,40);});
+    if(!n[0]||!n[1]||generic.test(n[0])||generic.test(n[1]))return;
+    var k=n.map(fcNameKey);
+    if(k[0]===k[1])return;
+    var o=k[0]<k[1]?[0,1]:[1,0];
+    var sc=function(i){return scores&&isFinite(scores[i])?Math.round(scores[i]):null;};
+    var row={game_mode:String(mode).slice(0,30),player_a:n[o[0]],player_b:n[o[1]],a_key:k[o[0]],b_key:k[o[1]],
+      winner:winnerIdx<0?'draw':(winnerIdx===o[0]?'a':'b'),score_a:sc(o[0]),score_b:sc(o[1])};
+    var sig=[row.game_mode,row.a_key,row.b_key,row.winner,row.score_a,row.score_b].join('|');
+    var now=Date.now();
+    if(FC_H2H_LAST.split('@')[0]===sig&&now-Number(FC_H2H_LAST.split('@')[1]||0)<20000)return; // same finish twice
+    FC_H2H_LAST=sig+'@'+now;
+    var linked=fcLink&&fcNameKey(n[0])===fcNameKey(fcLink.me)&&fcNameKey(n[1])===fcNameKey(fcLink.friend);
+    var done=false;
+    if(linked){
+      var rr=await sb.rpc('record_friend_game',{p_friend:fcLink.id,p_mode:row.game_mode,
+        p_winner:winnerIdx<0?'draw':(winnerIdx===0?'me':'friend'),p_my_score:sc(0),p_friend_score:sc(1)});
+      if(!rr.error&&rr.data&&rr.data.a_key){row.a_key=rr.data.a_key;row.b_key=rr.data.b_key;done=true;}
+      else console.error('record_friend_game failed, saving to your own record only',rr.error);
+    }
+    if(!done){
+      var ins=await sb.from('head_to_head').insert(row);
+      if(ins.error)throw ins.error;
+    }
+    var res=await sb.from('head_to_head').select('winner').eq('a_key',row.a_key).eq('b_key',row.b_key).limit(5000);
+    if(res.error||!res.data)return;
+    var wa=0,wb=0,dr=0;
+    res.data.forEach(function(r){if(r.winner==='a')wa++;else if(r.winner==='b')wb++;else dr++;});
+    // show from the point of view of the two names in the order they played
+    var first=o[0]===0?wa:wb,second=o[0]===0?wb:wa;
+    var el=document.getElementById('win-h2h');
+    if(el){
+      el.title='See the full record';el.textContent='Head-to-head: '+n[0]+' '+first+' – '+second+' '+n[1]+(dr?' · '+dr+' drawn':'')+' ›';
+      el.style.display='block';el.style.cursor='pointer';
+      el.onclick=function(){openH2H(row.a_key+'|'+row.b_key);};
+    }
+  }catch(e){console.error('fcH2H: could not save head-to-head',e);}
+}
+// Winner by score (highest, or lowest when lowest=true); a tie counts as a draw.
+function fcH2HByScore(mode,players,scores,lowest){
+  if(!scores||scores.length!==2)return;
+  var w=scores[0]===scores[1]?-1:((lowest?scores[0]<scores[1]:scores[0]>scores[1])?0:1);
+  return fcH2H(mode,players,w,scores);
+}
 // "Won by 6 points (23 – 17)" for the win screen. lowest=true when the lowest score wins.
 function fcMarginText(scores,unit,lowest){
   if(!scores||scores.length<2)return '';
@@ -2714,6 +3020,7 @@ function cricketWinDetail(cr,p){
 function showWinByName(name,detail){
   document.getElementById('win-title').textContent=name+(name.indexOf(' & ')>-1?' Win! 🏆':' Wins! 🏆');
   document.getElementById('win-name').textContent='';
+  var h2h0=document.getElementById('win-h2h');if(h2h0){h2h0.textContent='';h2h0.style.display='none';}
   document.getElementById('win-legs').textContent=detail||'';
   showScreen('screen-win');
   fxWin();
@@ -2745,6 +3052,6 @@ window.hiMatcher=new RegExpMatcher({
   ...englishRecommendedTransformers
 });
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-win-margins</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-friends</div>
 </body>
 </html>
