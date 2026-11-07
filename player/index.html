@@ -1,9 +1,9 @@
-<!-- VERSION: v1-real-stats -->
+<!-- VERSION: v2-ghpages-route -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzE0MTgxNCIvPgogIDxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YTdjNTkiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNGE3YzU5IiBzdHJva2Utd2lkdGg9IjEiLz4KICA8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI0IiBmaWxsPSIjZThjODQwIi8+Cjwvc3ZnPg==">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PGNpcmNsZSBjeD0iMzIiIGN5PSIzMiIgcj0iMzAiIGZpbGw9IiNlODQwMmYiLz48Y2lyY2xlIGN4PSIzMiIgY3k9IjMyIiByPSIyMyIgZmlsbD0iI2ZmZiIvPjxjaXJjbGUgY3g9IjMyIiBjeT0iMzIiIHI9IjE2IiBmaWxsPSIjZTg0MDJmIi8+PGNpcmNsZSBjeD0iMzIiIGN5PSIzMiIgcj0iOSIgZmlsbD0iI2ZmZiIvPjxjaXJjbGUgY3g9IjMyIiBjeT0iMzIiIHI9IjQuNSIgZmlsbD0iI2U4NDAyZiIvPjxsaW5lIHgxPSIzMiIgeTE9IjMyIiB4Mj0iNTQiIHkyPSIxMCIgc3Ryb2tlPSIjMmY2ZmQwIiBzdHJva2Utd2lkdGg9IjMuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTUwIDYgTDYwIDQgTDU4IDE0IFoiIGZpbGw9IiMyZjZmZDAiLz48L3N2Zz4=">
   <meta name="description" content="View Flight Chalker player profile and darts statistics.">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://flightchalker.co.uk/player">
@@ -14,7 +14,7 @@
   <meta property="og:site_name" content="Flight Chalker">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Player Profile — Flight Chalker</title>
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-WQRGJRFF1Q"></script>
+<script src="/fc-consent.js"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-WQRGJRFF1Q');</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -61,6 +61,7 @@ main{max-width:700px;margin:0 auto;padding:2rem 1rem 4rem}
   .profile-meta{justify-content:center}
 }
 </style>
+<link rel="stylesheet" href="/fc-loader.css">
 </head>
 <body>
 
@@ -70,7 +71,7 @@ main{max-width:700px;margin:0 auto;padding:2rem 1rem 4rem}
 </header>
 
 <main>
-  <div id="loading" class="loading"><span class="spin"></span> Loading profile...</div>
+  <div id="loading" class="loading"><span class="spin throw"></span> Loading profile...</div>
   <div id="not-found" class="not-found" style="display:none">
     <h2>Player Not Found</h2>
     <p>This profile doesn't exist or may have been removed.</p>
@@ -132,8 +133,15 @@ const sb = window.supabase.createClient(
 );
 
 // Get username from URL path /player/username
+// GitHub Pages has no URL rewriting, so /player/<name> arrives here via 404.html as /player/?u=<name>.
+// A direct /player/?u=<name> link works too. The address bar is tidied to /player/<name> afterwards.
 var pathParts = window.location.pathname.split('/');
-var username = pathParts[pathParts.length-1] || pathParts[pathParts.length-2];
+var qUser = null;
+try{qUser = new URLSearchParams(window.location.search).get('u');}catch(e){}
+var username = (qUser && qUser.trim()) || pathParts[pathParts.length-1] || pathParts[pathParts.length-2];
+if(qUser && qUser.trim()){
+  try{history.replaceState(null,'','/player/'+encodeURIComponent(qUser.trim()));}catch(e){}
+}
 
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
@@ -206,8 +214,12 @@ async function loadProfile(){
   if(!username || username==='player'){showNotFound();return;}
 
   try{
+    // player_profiles is the public-safe view (id, username, created_at -
+    // never email). This page is public, so it must never fetch email at
+    // all, even if it isn't rendered - it was sitting in this page's
+    // network response for anyone to see. See migration_01_security.sql.
     var { data:profiles, error:profileErr } = await sb
-      .from('users').select('id, username, email, created_at')
+      .from('player_profiles').select('id, username, created_at')
       .eq('username', username).limit(1);
     if(profileErr) throw profileErr;
     if(!profiles||!profiles.length){showNotFound();return;}
@@ -250,6 +262,6 @@ async function loadProfile(){
 
 loadProfile();
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v1-real-stats</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v2-ghpages-route</div>
 </body>
 </html>
