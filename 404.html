@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Page not found — Flight Chalker</title>
+<style>
+:root{--bg:#0d1711;--text:#f1efe4;--dim:#9aa090;--amber:#f2cf4a;--green:#4a7c59;--border:#34503e}
+@media (prefers-color-scheme: light){:root{--bg:#f4f1e8;--text:#222;--dim:#555;--amber:#8a6d00;--green:#3d7a52;--border:#cfc8b4}}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;text-align:center;padding:1rem}
+h1{font-size:2rem;margin:.2rem 0 .5rem;color:var(--amber)}
+p{color:var(--dim);margin:0 0 1.25rem}
+a{display:inline-block;color:var(--text);border:1px solid var(--green);border-radius:8px;padding:.6rem 1.1rem;text-decoration:none;font-weight:600;margin:.25rem}
+a:hover{border-color:var(--amber);color:var(--amber)}
+</style>
+<script>
+// Player profile links look like /player/<username>. GitHub Pages cannot rewrite them,
+// so pass them to the real profile page, which reads the name from ?u=
+(function(){
+  var m=location.pathname.match(/^\/player\/([^\/]+)\/?$/);
+  if(m){
+    var name=m[1];
+    try{name=decodeURIComponent(name);}catch(e){}
+    if(name&&name.toLowerCase()!=='index.html'){
+      location.replace('/player/?u='+encodeURIComponent(name));
+    }
+  }
+})();
+</script>
+</head>
+<body>
+<main>
+  <div style="font-size:3rem">🎯</div>
+  <h1>Page not found</h1>
+  <p>That page has missed the board.</p>
+  <a href="/">Home</a><a href="/dashboard">My Dashboard</a>
+</main>
+</body>
+</html>
