@@ -1,1 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- VERSION: v-flight-designer -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flight Designer — Flight Chalker</title>
+<meta name="description" content="Design your own dart flight and use it as your Flight Chalker avatar.">
+<link rel="canonical" href="https://flightchalker.co.uk/flight-designer">
+<script src="/fc-consent.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/fc-flight.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0d1711;--surface:#142119;--s2:#252e25;--green:#4a7c59;--gl:#5a9469;--amber:#f2cf4a;--text:#f1efe4;--dim:#9aa090;--border:#34503e}
+@media (prefers-color-scheme: light){:root{--bg:#f4f1e8;--surface:#fff;--s2:#efeadb;--green:#3d7a52;--gl:#2f6a44;--amber:#8a6d00;--text:#222;--dim:#555;--border:#cfc8b4}}
+body{background:var(--bg);color:var(--text);font-family:Barlow,sans-serif;line-height:1.5}
+header{background:var(--surface);border-bottom:2px solid var(--green);padding:.8rem 1rem;display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap}
+.logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.2rem;letter-spacing:.05em;text-transform:uppercase;color:var(--text);text-decoration:none}
+.logo span{color:var(--amber)}
+.btn{display:inline-block;background:var(--s2);border:1px solid var(--green);border-radius:6px;padding:.45rem .9rem;font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gl);text-decoration:none;cursor:pointer}
+.btn:hover{border-color:var(--amber);color:var(--amber)}
+.btn.primary{background:var(--green);color:#fff;border-color:var(--green);font-size:1rem;padding:.7rem 1.4rem}
+main{max-width:760px;margin:0 auto;padding:1.5rem 1rem 4rem}
+h1{font-family:'Barlow Condensed',sans-serif;font-size:2.1rem;font-weight:900;text-transform:uppercase;color:var(--amber);line-height:1.1;margin-bottom:.4rem}
+.lead{color:var(--dim);margin-bottom:1.2rem}
+.stage{display:flex;gap:1.5rem;align-items:center;justify-content:center;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.2rem;margin-bottom:1rem}
+.big{width:130px}
+.dartprev{width:150px}
+@media(max-width:480px){.big{width:100px}.dartprev{width:110px}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:1rem}
+.card h2{font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);margin-bottom:.6rem}
+.opts{display:flex;flex-wrap:wrap;gap:.45rem}
+.opt{background:var(--s2);border:2px solid var(--border);border-radius:8px;padding:.45rem .8rem;color:var(--text);font:600 .9rem Barlow,sans-serif;cursor:pointer;min-height:44px}
+.opt[aria-pressed=true]{border-color:var(--amber);color:var(--amber)}
+.sw{width:44px;height:44px;border-radius:50%;border:3px solid var(--border);cursor:pointer;padding:0}
+.sw[aria-pressed=true]{border-color:var(--amber);box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--amber)}
+.crow{display:flex;gap:.45rem;flex-wrap:wrap;margin-bottom:.8rem}
+.crow:last-child{margin-bottom:0}
+.lab{width:100%;font-size:.8rem;color:var(--dim)}
+input[type=text]{background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:.6rem .8rem;font:700 1.1rem 'Barlow Condensed',sans-serif;letter-spacing:.15em;text-transform:uppercase;width:7rem}
+label.chk{display:flex;gap:.6rem;align-items:flex-start;cursor:pointer}
+label.chk input{width:22px;height:22px;margin-top:.1rem;flex-shrink:0}
+.msg{margin-top:.8rem;min-height:1.4rem;font-weight:600}
+.msg.ok{color:var(--gl)}.msg.err{color:#e0735a}
+.hide{display:none}
+</style>
+</head>
+<body>
+<header>
+  <a href="/" class="logo">Flight <span>Chalker</span></a>
+  <div style="display:flex;gap:.5rem;flex-wrap:wrap"><a class="btn" href="/dashboard">My Dashboard</a><a class="btn" href="/scorer">Play Darts →</a></div>
+</header>
+<main>
+  <h1>Flight Designer</h1>
+  <p class="lead">Design your own dart flight. It becomes your avatar on Flight Chalker.</p>
 
+  <div id="gate" class="card hide"><p>Please <a href="/login" style="color:var(--amber)">sign in</a> to design and save your flight.</p></div>
+
+  <div id="app" class="hide">
+    <div class="stage" aria-live="polite">
+      <div class="big" id="prev-big"></div>
+      <div class="dartprev" id="prev-dart"></div>
+      <div style="text-align:center"><div id="prev-av"></div><div style="font-size:.8rem;color:var(--dim);margin-top:.4rem">Your avatar</div></div>
+    </div>
+    <div class="card"><h2>Quick start</h2><div class="opts"><button class="opt" id="rnd" type="button">🎲 Surprise me</button><button class="opt" id="rst" type="button">↺ Start again</button></div></div>
+    <div class="card"><h2>Shape</h2><div class="opts" id="o-shape"></div></div>
+    <div class="card"><h2>Pattern</h2><div class="opts" id="o-pattern"></div></div>
+    <div class="card"><h2>Colours</h2>
+      <div class="crow" id="c-c1"><span class="lab">Main colour</span></div>
+      <div class="crow" id="c-c2"><span class="lab">Pattern colour</span></div>
+      <div class="crow" id="c-c3"><span class="lab">Badge and letters colour</span></div>
+    </div>
+    <div class="card"><h2>Badge</h2><div class="opts" id="o-motif"></div></div>
+    <div class="card"><h2>Initials (optional)</h2><div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap"><input type="text" id="txt" maxlength="3" autocomplete="off" aria-label="Initials, optional"><button class="opt" type="button" id="notxt">No text</button></div><div style="font-size:.8rem;color:var(--dim);margin-top:.4rem">Up to 3 letters or numbers. Leave blank for a flight with no text.</div></div>
+    <div class="card"><label class="chk"><input type="checkbox" id="want"><span><strong>I'd like to be able to order my flights printed.</strong><br><span style="color:var(--dim);font-size:.85rem">Just lets us know there's interest. Nothing is ordered and nobody sees this but us.</span></span></label></div>
+    <button class="btn primary" id="save" type="button">Save my flight</button>
+    <div class="msg" id="msg" role="status"></div>
+  </div>
+</main>
+<script>
+var sb=window.supabase.createClient('https://xkovqamknwyjzlgijcel.supabase.co','sb_publishable_1zeVlEGjUdGNwA-i8pktHg_nSjRXYEQ');
+var F=window.FCFlight, d=F.clean(F.DEFAULT), $=function(i){return document.getElementById(i);};
+function draw(){
+  $('prev-big').innerHTML=F.svg(d);
+  $('prev-dart').innerHTML=F.dart(d,{angle:30});
+  $('prev-av').innerHTML=F.avatar(d,72);
+  ['shape','pattern','motif'].forEach(function(k){
+    Array.prototype.forEach.call($('o-'+k).children,function(b){b.setAttribute('aria-pressed',b.dataset.v===d[k]);});
+  });
+  ['c1','c2','c3'].forEach(function(k){
+    Array.prototype.forEach.call($('c-'+k).querySelectorAll('.sw'),function(b){b.setAttribute('aria-pressed',b.dataset.v.toLowerCase()===d[k].toLowerCase());});
+  });
+  $('txt').value=d.text;
+}
+function build(){
+  [['shape',F.SHAPES],['pattern',F.PATTERNS],['motif',F.MOTIFS]].forEach(function(p){
+    p[1].forEach(function(v){
+      var b=document.createElement('button');b.type='button';b.className='opt';b.dataset.v=v;b.textContent=F.NAMES[p[0]][v];
+      b.onclick=function(){d[p[0]]=v;draw();};$('o-'+p[0]).appendChild(b);
+    });
+  });
+  ['c1','c2','c3'].forEach(function(k){
+    F.PALETTE.forEach(function(c){
+      var b=document.createElement('button');b.type='button';b.className='sw';b.dataset.v=c;b.style.background=c;b.setAttribute('aria-label','Colour '+c);
+      b.onclick=function(){d[k]=c;draw();};$('c-'+k).appendChild(b);
+    });
+  });
+  $('txt').oninput=function(){d.text=this.value.replace(/[^A-Za-z0-9]/g,'').toUpperCase().slice(0,3);draw();};
+  $('notxt').onclick=function(){d.text='';draw();};
+  $('rnd').onclick=function(){var t=d.text;d=F.clean(F.random());d.text=t;draw();};
+  $('rst').onclick=function(){d=F.clean(F.DEFAULT);draw();};
+  $('save').onclick=save;
+}
+async function save(){
+  var m=$('msg');m.className='msg';m.textContent='Saving…';$('save').disabled=true;
+  try{
+    var r=await sb.rpc('set_my_flight',{p_design:F.clean(d),p_wants_order:$('want').checked});
+    if(r.error)throw r.error;
+    m.className='msg ok';m.textContent='Saved! Your flight is now your avatar.';
+  }catch(e){m.className='msg err';m.textContent='Sorry, that did not save. Please try again.';}
+  $('save').disabled=false;
+}
+(async function(){
+  build();draw();
+  var s=await sb.auth.getSession();
+  if(!s.data||!s.data.session){$('gate').classList.remove('hide');return;}
+  $('app').classList.remove('hide');
+  try{
+    var r=await sb.from('player_flights').select('design,wants_to_order').maybeSingle();
+    if(r.data){d=F.clean(r.data.design);$('want').checked=!!r.data.wants_to_order;draw();}
+  }catch(e){}
+})();
+</script>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;pointer-events:none">v-flight-designer</div>
+</body>
+</html>
