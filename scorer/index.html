@@ -392,6 +392,10 @@ html[data-skin="dartboard"] .killer-badge{background:#101010;color:#e0243a;borde
 .fx-switch{margin-top:1.1rem;background:none;border:0;color:var(--dim);font-family:'Barlow Condensed',sans-serif;font-size:.95rem;letter-spacing:.06em;text-decoration:underline;cursor:pointer;padding:.4rem}
 .h2h-card{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:1.25rem;margin-bottom:1.5rem}
 .h2h-card select{width:100%;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:.55rem .6rem;font-size:.95rem;margin-bottom:1rem}
+.fc-av{display:none}
+@media(min-width:700px){.fc-av{display:inline-flex;vertical-align:middle;margin-right:.55rem}.player-card .pc-name.has-av{display:flex;align-items:center}.fc-av-win{display:flex;justify-content:center;margin-bottom:.6rem}.fc-av-win .fc-av{display:inline-flex;margin:0}.fc-av-h{display:flex;justify-content:center;margin-bottom:.35rem}.fc-av-h .fc-av{display:inline-flex;margin:0}}
+.fc-av-win,.fc-av-h{display:none}
+@media(min-width:700px){.fc-av-win,.fc-av-h{display:flex}}
 .h2h-score{display:flex;align-items:center;justify-content:center;gap:.75rem;text-align:center;margin-bottom:.5rem}
 .h2h-score .nm{flex:1;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.1rem;word-break:break-word}
 .h2h-score .num{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:2.6rem;color:var(--amber);line-height:1}
@@ -418,6 +422,8 @@ html[data-skin="dartboard"] .killer-badge{background:#101010;color:#e0243a;borde
 </style>
 <!-- Google Analytics -->
 <script src="/fc-consent.js"></script>
+<script src="/fc-flight.js"></script>
+<script src="/fc-achievements.js"></script>
 <script src="/subscription-config.js"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -890,6 +896,7 @@ html[data-skin="dartboard"] .killer-badge{background:#101010;color:#e0243a;borde
   </div>
   <div class="win-wrap">
     <div class="win-emoji" id="win-emoji">🏆</div>
+    <div class="fc-av-win" id="win-av"></div>
     <div class="win-title" id="win-title">Winner!</div>
     <div class="win-name" id="win-name"></div>
     <div class="win-legs" id="win-legs"></div>
@@ -1485,6 +1492,7 @@ function showWin(winner){
   fcEnd('x01',{winner:gs.players[winner],best:best,s180:s180,legs:gs.legs.slice()});
   var h2h1=document.getElementById('win-h2h');if(h2h1){h2h1.textContent='';h2h1.style.display='none';}
   fcH2H('x01',gs.players,winner,gs.legs);
+  fcSetWinAv(gs.players[winner]);
   document.getElementById('win-title').textContent=gs.players[winner]+' Wins! 🏆';
   var legMargin='';
   if(gs.players.length>1){var lo=gs.legs.filter(function(_,i){return i!==winner;}),lm=gs.legs[winner]-Math.max.apply(null,lo);if(lm>0)legMargin='Won by '+lm+' leg'+(lm===1?'':'s')+' · ';}
@@ -1522,13 +1530,14 @@ function renderGame(){
   var row=document.getElementById('players-row');
   var cols=gs.players.length<=2?gs.players.length:2;
   row.style.gridTemplateColumns='repeat('+cols+',1fr)';
+  var anyAv=fcAnyFlight(gs.players);
   row.innerHTML=gs.players.map(function(name,i){
     var score=gs.scores[i];
     var isActive=i===gs.currentPlayer;
     var scoreClass=score<=40?'danger':score<=170?'finishing':'';
     return '<div class="player-card'+(isActive?' active-player':'')+'">'
       +(isActive?'<div class="pc-turn">🎯</div>':'')
-      +'<div class="pc-name" onclick="fcRenamePlayer(&quot;x01&quot;,'+i+')" style="cursor:pointer" title="Tap to rename">'+esc(name)+' ✎</div>'
+      +'<div class="pc-name'+(anyAv?' has-av':'')+'" onclick="fcRenamePlayer(&quot;x01&quot;,'+i+')" style="cursor:pointer" title="Tap to rename">'+(anyAv?fcAv(name,46):'')+esc(name)+' ✎</div>'
       +'<div class="pc-score '+scoreClass+'">'+score+'</div>'
       +'<div class="pc-legs">Legs: '+gs.legs[i]+'</div>'
       +(function(){var st=x01Stats(i);return '<div class="pc-stats"><span>Avg <b>'+st.avg+'</b></span><span>Last <b>'+st.last+'</b></span><span>80+ <b>'+st.n80+'</b></span><span>Best <b>'+st.best+'</b></span></div>';})()
@@ -1634,6 +1643,7 @@ async function fcEnd(gameType,result){
   }catch(e){
     console.error('fcEnd: could not save session:',e);
   }
+  if(window.FCAch)setTimeout(function(){FCAch.check(sb);},500);
   if(typeof gtag!=='undefined')gtag('event','game_complete',{game_type:gameType,duration:dur});
 }
 async function fcTrain(gameType,score,meta){
@@ -1649,6 +1659,7 @@ async function fcTrain(gameType,score,meta){
   }catch(e){
     console.error('fcTrain: could not save session:',e);
   }
+  if(window.FCAch)setTimeout(function(){FCAch.check(sb);},500);
   if(typeof gtag!=='undefined')gtag('event','training_complete',{game_type:gameType,score:score});
 }
 // ──────────────────────────────────────────────────────────────────────────
@@ -2753,6 +2764,35 @@ function renderBaseball(){
   document.getElementById('baseball-scores').innerHTML=h;
 }
 
+
+// ── Flight avatars (shown on tablets and larger only; hidden on phones) ──
+var fcFlightMap={};
+function fcFKey(n){return String(n==null?'':n).trim().toLowerCase();}
+async function fcLoadFlights(){
+  try{
+    if(!fcUser||!window.FCFlight)return;
+    var ids=[fcUser.id].concat((fcFriends||[]).map(function(f){return f.id;}));
+    var names={};names[fcUser.id]=fcUser.username;(fcFriends||[]).forEach(function(f){names[f.id]=f.username;});
+    var r=await sb.from('player_flight_designs').select('user_id,design').in('user_id',ids);
+    if(r.error||!r.data)return;
+    r.data.forEach(function(x){if(names[x.user_id])fcFlightMap[fcFKey(names[x.user_id])]=x.design;});
+    if(typeof gs!=='undefined'&&gs&&gs.players&&document.getElementById('screen-game')&&document.getElementById('screen-game').classList.contains('active')&&typeof renderGame==='function')renderGame();
+    if(typeof h2hRows!=='undefined'&&h2hRows.length&&typeof renderHeadToHead==='function'&&document.getElementById('screen-h2h')&&document.getElementById('screen-h2h').classList.contains('active'))renderHeadToHead();
+  }catch(e){}
+}
+function fcHasFlight(n){return !!fcFlightMap[fcFKey(n)];}
+function fcAnyFlight(list){return !!window.FCFlight&&(list||[]).some(fcHasFlight);}
+function fcAv(name,px){
+  var d=fcFlightMap[fcFKey(name)];
+  if(d&&window.FCFlight)return '<span class="fc-av">'+FCFlight.avatar(d,px)+'</span>';
+  var ch=h2hEsc(String(name||'?').trim().charAt(0).toUpperCase()||'?');
+  return '<span class="fc-av"><span style="display:inline-flex;align-items:center;justify-content:center;width:'+px+'px;height:'+px+'px;border-radius:50%;background:#243628;border:2px solid #34503e;color:#9aa090;font:900 '+Math.round(px*0.45)+'px Barlow Condensed,sans-serif">'+ch+'</span></span>';
+}
+function fcSetWinAv(name){
+  var el=document.getElementById('win-av');if(!el)return;
+  el.innerHTML=fcHasFlight(name)?fcAv(name,96):'';
+}
+
 // ── Head-to-head records (from two-player games finished on the scorer) ──
 var h2hRows=[],h2hPair=null;
 function h2hEsc(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -2816,7 +2856,7 @@ function renderHeadToHead(){
   var first=new Date(rows[rows.length-1].played_at).toLocaleDateString('en-GB',{month:'long',year:'numeric'});
   var last=new Date(rows[0].played_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
   box.innerHTML=sel+
-    '<div class="h2h-score"><div class="nm">'+h2hEsc(P.a)+'</div><div class="num">'+wa+' – '+wb+'</div><div class="nm">'+h2hEsc(P.b)+'</div></div>'+
+    '<div class="h2h-score"><div class="nm">'+(fcAnyFlight([P.a,P.b])?'<div class="fc-av-h">'+fcAv(P.a,56)+'</div>':'')+h2hEsc(P.a)+'</div><div class="num">'+wa+' – '+wb+'</div><div class="nm">'+(fcAnyFlight([P.a,P.b])?'<div class="fc-av-h">'+fcAv(P.b,56)+'</div>':'')+h2hEsc(P.b)+'</div></div>'+
     '<div class="h2h-sub">'+h2hEsc(lead)+(dr?' · '+dr+' drawn':'')+(streak?' · '+h2hEsc(streak):'')+'</div>'+
     '<div class="h2h-dots" aria-label="Last results, oldest to newest">'+dots+'</div>'+
     (legGames?'<div class="h2h-row"><span>501 / X01 legs</span><span>'+h2hEsc(P.a)+' '+lf+' – '+la+' '+h2hEsc(P.b)+'</span></div>':'')+
@@ -2869,7 +2909,7 @@ async function fcLoadFriends(){
   }catch(e){console.error('fcLoadFriends:',e);}
 }
 // fcInit() runs in an earlier script block, so load the friends list once this block is ready too
-(function waitForUser(n){if(typeof fcUser!=='undefined'&&fcUser){fcLoadFriends();}else if(n>0){setTimeout(function(){waitForUser(n-1);},400);}})(25);
+(function waitForUser(n){if(typeof fcUser!=='undefined'&&fcUser){Promise.resolve(fcLoadFriends()).then(fcLoadFlights,fcLoadFlights);}else if(n>0){setTimeout(function(){waitForUser(n-1);},400);}})(25);
 function fcClearLink(){fcLink=null;var sel=document.getElementById('friend-sel');if(sel)sel.value='';}
 function fcPickFriend(){
   var sel=document.getElementById('friend-sel');
@@ -2949,7 +2989,19 @@ function frRender(){
 var FC_H2H_LAST='';
 function fcNameKey(n){return String(n||'').trim().toLowerCase().replace(/\s+/g,' ').slice(0,40);}
 // winnerIdx: index of the winner, or -1 for a draw. scores: optional [p0,p1] (legs/points/lives).
+var FC_SESS_LAST='';
+function fcSessionRecord(mode,players,winnerIdx){
+  try{
+    if(!fcUser||mode==='x01'||!players)return;
+    var sig=mode+'|'+players.join(',')+'|'+winnerIdx,now=Date.now();
+    if(FC_SESS_LAST.split('@')[0]===sig&&now-Number(FC_SESS_LAST.split('@')[1]||0)<20000)return;
+    FC_SESS_LAST=sig+'@'+now;
+    var w=(winnerIdx>=0&&players[winnerIdx])?String(players[winnerIdx]):null;
+    fcEnd(mode,{winner:w,best:null,s180:0,legs:null});
+  }catch(e){}
+}
 async function fcH2H(mode,players,winnerIdx,scores){
+  fcSessionRecord(mode,players,winnerIdx);
   try{
     if(!fcUser||!players||players.length!==2)return;
     var generic=/^player( ?\d+)?$/i;
@@ -2993,6 +3045,11 @@ async function fcH2H(mode,players,winnerIdx,scores){
 }
 // Winner by score (highest, or lowest when lowest=true); a tie counts as a draw.
 function fcH2HByScore(mode,players,scores,lowest){
+  if(scores&&scores.length>2&&players){
+    var top=lowest?Math.min.apply(null,scores):Math.max.apply(null,scores),tops=scores.filter(function(t){return t===top;}).length;
+    fcSessionRecord(mode,players,tops===1?scores.indexOf(top):-1);
+    return;
+  }
   if(!scores||scores.length!==2)return;
   var w=scores[0]===scores[1]?-1:((lowest?scores[0]<scores[1]:scores[0]>scores[1])?0:1);
   return fcH2H(mode,players,w,scores);
@@ -3018,6 +3075,7 @@ function cricketWinDetail(cr,p){
   return 'Won by '+m+' point'+(m===1?'':'s')+(cr.players.length===2?' ('+mine+' – '+next+')':' ('+mine+', next best '+next+')');
 }
 function showWinByName(name,detail){
+  fcSetWinAv(name);
   document.getElementById('win-title').textContent=name+(name.indexOf(' & ')>-1?' Win! 🏆':' Wins! 🏆');
   document.getElementById('win-name').textContent='';
   var h2h0=document.getElementById('win-h2h');if(h2h0){h2h0.textContent='';h2h0.style.display='none';}
@@ -3052,6 +3110,6 @@ window.hiMatcher=new RegExpMatcher({
   ...englishRecommendedTransformers
 });
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-friends</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-achievements</div>
 </body>
 </html>
