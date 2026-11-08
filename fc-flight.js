@@ -2,15 +2,15 @@
    A design is {shape, pattern, motif, c1, c2, c3, text}. Everything is drawn as SVG, no images. */
 (function(){
   var SHAPES={
-    standard:'M30 126 L9 42 Q5 12 50 6 Q95 12 91 42 L70 126 Z',
-    slim:'M39 126 L25 40 Q23 10 50 6 Q77 10 75 40 L61 126 Z',
-    kite:'M50 4 L95 54 L57 127 L43 127 L5 54 Z',
-    pear:'M37 126 Q8 84 18 42 Q27 8 50 6 Q73 8 82 42 Q92 84 63 126 Z'
+    standard:'M47 127 L10 80 Q5 72 5 62 L5 26 Q5 14 17 13 Q50 7 83 13 Q95 14 95 26 L95 62 Q95 72 90 80 L53 127 Z',
+    slim:'M47 127 L24 84 Q19 76 19 66 L19 30 Q19 19 29 17 Q50 11 71 17 Q81 19 81 30 L81 66 Q81 76 76 84 L53 127 Z',
+    kite:'M50 4 L77 15.7 C90 20.5 97.5 31 97.5 45 C97.5 52 95 56 92 61 L53 127 L47 127 L8 61 C5 56 2.5 52 2.5 45 C2.5 31 10 20.5 23 15.7 Z',
+    pear:'M50 4 C72 9 91 30 91 56 C91 86 68 108 53 127 L47 127 C32 108 9 86 9 56 C9 30 28 9 50 4 Z'
   };
-  var PATTERNS=['solid','stripes','half','chevron','dots','rings'];
+  var PATTERNS=['solid','stripes','half','chevron','dots','rings','rays'];
   var MOTIFS=['none','star','bolt','board','heart','crown','flame','trophy','pint','dart','moon','sun','diamond','clover'];
   var NAMES={shape:{standard:'Standard',slim:'Slim',kite:'Kite',pear:'Pear'},
-    pattern:{solid:'Plain',stripes:'Stripes',half:'Split',chevron:'Chevrons',dots:'Dots',rings:'Rings'},
+    pattern:{solid:'Plain',stripes:'Stripes',half:'Split',chevron:'Chevrons',dots:'Dots',rings:'Rings',rays:'Fan'},
     motif:{none:'None',star:'Star',bolt:'Bolt',board:'Board',heart:'Heart',crown:'Crown',flame:'Flame',trophy:'Trophy',pint:'Pint',dart:'Dart',moon:'Moon',sun:'Sun',diamond:'Diamond',clover:'Clover'}};
   var DEFAULT={shape:'standard',pattern:'stripes',motif:'star',c1:'#1f6f43',c2:'#f2cf4a',c3:'#ffffff',text:''};
   var PALETTE=['#c0392b','#e67e22','#f2cf4a','#27ae60','#1f6f43','#2980b9','#1b2a6b','#8e44ad','#e84393','#111111','#ffffff','#95a5a6'];
@@ -42,6 +42,13 @@
       s+='<g fill="'+d.c2+'">';
       for(j=0;j<8;j++)for(i=0;i<6;i++)s+='<circle cx="'+(i*20+(j%2?10:0))+'" cy="'+(j*18+4)+'" r="5"/>';
       s+='</g>';
+    }else if(d.pattern==='rays'){
+      s+='<g fill="'+d.c2+'">';
+      [-80,-60,-40,-20,0,20,40,60,80].forEach(function(c){
+        var a1=(c-5)*Math.PI/180,a2=(c+5)*Math.PI/180;
+        s+='<polygon points="50,129 '+(50+220*Math.sin(a1)).toFixed(1)+','+(129-220*Math.cos(a1)).toFixed(1)+' '+(50+220*Math.sin(a2)).toFixed(1)+','+(129-220*Math.cos(a2)).toFixed(1)+'"/>';
+      });
+      s+='</g>';
     }else if(d.pattern==='rings'){
       s+='<g fill="none" stroke="'+d.c2+'" stroke-width="6">';
       [14,28,42,58,76].forEach(function(r){s+='<circle cx="50" cy="52" r="'+r+'"/>';});
@@ -72,11 +79,11 @@
     return '';
   }
   function inner(d,id){
-    var text=d.text?'<text x="50" y="108" text-anchor="middle" font-family="Barlow Condensed,Arial Narrow,Arial,sans-serif" font-weight="900" font-size="21" fill="'+d.c3+'" stroke="rgba(0,0,0,.5)" stroke-width="3.2" paint-order="stroke" stroke-linejoin="round">'+d.text+'</text>':'';
+    var text=d.text?'<text x="50" y="100" text-anchor="middle" font-family="Barlow Condensed,Arial Narrow,Arial,sans-serif" font-weight="900" font-size="21" fill="'+d.c3+'" stroke="rgba(0,0,0,.5)" stroke-width="3.2" paint-order="stroke" stroke-linejoin="round">'+d.text+'</text>':'';
     return '<defs><clipPath id="'+id+'"><path d="'+SHAPES[d.shape]+'"/></clipPath></defs>'
       +'<g clip-path="url(#'+id+')">'+patternSvg(d)+(d.motif!=='none'?'<circle cx="50" cy="58" r="25" fill="'+d.c1+'" fill-opacity=".88"/><g transform="translate(50 58) scale(1.2) translate(-50 -58)">'+motifSvg(d)+'</g>':'')+'</g>'
       +'<path d="'+SHAPES[d.shape]+'" fill="none" stroke="rgba(0,0,0,.5)" stroke-width="2.5" stroke-linejoin="round"/>'
-      +'<path d="M43 127 L57 127 L55 132 L45 132 Z" fill="#8a9080"/>'
+      +(true?'<path d="M47 127 L53 127 L52 132 L48 132 Z" fill="#8a9080"/>':'<path d="M43 127 L57 127 L55 132 L45 132 Z" fill="#8a9080"/>')
       +text;
   }
   function svg(design,opts){
