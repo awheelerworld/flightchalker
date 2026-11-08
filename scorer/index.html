@@ -1415,7 +1415,7 @@ function confirmDouble(wasDouble){
 
 function recordScore(val,remaining){
   if(val===180&&typeof fx180==='function')fx180();
-  var visit={player:gs.currentPlayer,scored:val};
+  var visit={player:gs.currentPlayer,scored:val,leg:gs.currentLeg};
   gs.all.push(visit);
   gs.history.push({player:gs.currentPlayer,prevScore:remaining,scored:val,visit:visit});
   gs.scores[gs.currentPlayer]-=val;
@@ -1425,7 +1425,7 @@ function recordScore(val,remaining){
   speak(val+'. '+gs.scores[gs.currentPlayer]+' remaining.');
 }
 
-function logBust(){gs.all.push({player:gs.currentPlayer,scored:0,bust:true});}
+function logBust(){gs.all.push({player:gs.currentPlayer,scored:0,bust:true,leg:gs.currentLeg});}
 function advancePlayer(){
   gs.currentPlayer=(gs.currentPlayer+1)%gs.players.length;
   renderGame();
@@ -1461,6 +1461,8 @@ function undoLast(){
 // ── Leg won ────────────────────────────────────────────────────────────────────
 function legWon(){
   var winner=gs.currentPlayer;
+  var outVisit=gs.all.length?gs.all[gs.all.length-1]:null;
+  if(outVisit&&outVisit.player===winner)outVisit.out=true;
   gs.legs[winner]++;
   gs.legHistory.push({leg:gs.currentLeg,winner:winner,scores:gs.legs.slice()});
   toast(gs.players[winner]+' wins leg '+gs.currentLeg+'! 🎉');
@@ -1489,7 +1491,7 @@ function showWin(winner){
   // Whole match, every leg (history only holds the current leg).
   var best=Math.max.apply(null,gs.all.map(function(h){return h.scored||0;}).concat([0]));
   var s180=gs.all.filter(function(h){return h.scored===180;}).length;
-  fcEnd('x01',{winner:gs.players[winner],best:best,s180:s180,legs:gs.legs.slice()});
+  fcEnd('x01',{winner:gs.players[winner],best:best,s180:s180,legs:gs.legs.slice(),meta:fcX01Meta(winner)});
   var h2h1=document.getElementById('win-h2h');if(h2h1){h2h1.textContent='';h2h1.style.display='none';}
   fcH2H('x01',gs.players,winner,gs.legs);
   fcSetWinAv(gs.players[winner]);
@@ -1515,6 +1517,39 @@ function playAgain(){
   renderGame();
 }
 
+// Badge details for the logged-in player in a finished 501/301 match (nothing is recorded if they are not a player)
+function fcX01Meta(winner){
+  try{
+    if(!fcUser||!gs||!gs.players)return null;
+    var me=-1;
+    gs.players.forEach(function(n,i){if(String(n).trim().toLowerCase()===String(fcUser.username).trim().toLowerCase())me=i;});
+    if(me<0)return null;
+    var mine=gs.all.filter(function(h){return h.player===me;});
+    var opp=gs.legs.filter(function(_,i){return i!==me;}),oppMax=opp.length?Math.max.apply(null,opp):0;
+    var won=(winner===me);
+    var behind=(gs.legHistory||[]).some(function(l){
+      var o=l.scores.filter(function(_,i){return i!==me;});
+      return Math.max.apply(null,o.concat([0]))>l.scores[me];
+    });
+    var total=mine.reduce(function(a,h){return a+(h.scored||0);},0);
+    var bestOut=0,nine=0,legsSeen={};
+    mine.forEach(function(h){
+      if(h.out){
+        if(h.scored>bestOut)bestOut=h.scored;
+        var inLeg=mine.filter(function(x){return x.leg===h.leg;}).length;
+        if(gs.startScore===501&&inLeg===3)nine++;
+      }
+    });
+    return {
+      start:gs.startScore,legsToWin:gs.legsToWin,players:gs.players.length,
+      myLegs:gs.legs[me],won:won,
+      whitewash:won&&gs.legsToWin>=2&&oppMax===0,
+      comeback:won&&behind,
+      visits:mine.length,avg:mine.length?Math.floor(total/mine.length):0,
+      bestCheckout:bestOut,nineDarters:nine
+    };
+  }catch(e){return null;}
+}
 // Live per-player stats from the whole-match log (busts count as a 0 visit)
 function x01Stats(p){
   var v=(gs.all||[]).filter(function(h){return h.player===p;});
@@ -1638,7 +1673,7 @@ async function fcEnd(gameType,result){
       score: result.best||null,
       checkouts_180: result.s180||0,
       duration_seconds: dur,
-      meta: { legs: result.legs||null }
+      meta: Object.assign({ legs: result.legs||null }, result.meta||{})
     });
   }catch(e){
     console.error('fcEnd: could not save session:',e);
@@ -3110,6 +3145,6 @@ window.hiMatcher=new RegExpMatcher({
   ...englishRecommendedTransformers
 });
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-achievements</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-501-badges</div>
 </body>
 </html>
