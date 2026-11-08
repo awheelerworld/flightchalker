@@ -195,6 +195,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif
 </script>
 <script src="/subscription-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/fc-achievements.js"></script>
 <script src="/caller.js"></script>
 <link rel="stylesheet" href="/fc-theme.css">
 <style id="fc-unify">
@@ -1012,12 +1013,12 @@ function fcEnd(gameType,result){
     session_type: 'game',
     game_mode: gameType,
     result: result.winner||null,
-    won: won,
+    won: (typeof result.won==='boolean')?result.won:won,
     score: result.best||null,
     checkouts_180: result.s180||0,
     duration_seconds: dur,
-    meta: { legs: result.legs||null }
-  }).then(function(){}).catch(function(e){console.error('fcEnd: could not save session:',e);});
+    meta: Object.assign({ legs: result.legs||null }, result.meta||{})
+  }).then(function(){if(window.FCAch)FCAch.check(sb);}).catch(function(e){console.error('fcEnd: could not save session:',e);});
   if(typeof gtag!=='undefined')gtag('event','game_complete',{game_type:gameType,duration:dur});
 }
 async function fcTrain(gameType,score,meta){
@@ -1033,6 +1034,7 @@ async function fcTrain(gameType,score,meta){
   }catch(e){
     console.error('fcTrain: could not save session:',e);
   }
+  if(window.FCAch)setTimeout(function(){FCAch.check(sb);},500);
   if(typeof gtag!=='undefined')gtag('event','training_complete',{game_type:gameType,score:score});
 }
 // ──────────────────────────────────────────────────────────────────────────
@@ -1817,7 +1819,8 @@ function cpuFinish(winner){
   var youWon=winner==='You';
   // Deferred, not fired here — see cpuCommitResult. Lets the player undo a
   // checkout that came from a mis-tapped score before it's ever written.
-  cpu.pendingResult={winner:winner,best:cpu.start-Math.min(cpu.you,cpu.cpuScore)};
+  cpu.pendingResult={winner:winner,won:youWon,best:cpu.start-Math.min(cpu.you,cpu.cpuScore),
+    meta:{skill:cpu.skill,start:cpu.start,yourAvg:cpu.yourDartsThrown?Math.round(cpu.yourScoredTotal/cpu.yourDartsThrown*3):0,cpuAvg:cpu.cpuDartsThrown?Math.round(cpu.cpuScoredTotal/cpu.cpuDartsThrown*3):0}};
   if(typeof ScoreCaller!=='undefined'){
     callerSay(function(){ScoreCaller.callComplete(youWon?'You win!':'CPU wins');});
   }
