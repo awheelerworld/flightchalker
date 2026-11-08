@@ -1,4 +1,4 @@
-<!-- VERSION: v26-order -->
+<!-- VERSION: v32-achievements -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,6 +15,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard — Flight Chalker</title>
 <script src="/fc-consent.js"></script>
+<script src="/fc-flight.js"></script>
+<script src="/fc-achievements.js"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-WQRGJRFF1Q');</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -214,17 +216,17 @@ main{max-width:1100px !important;padding:48px 32px 72px !important}
       <p>Checkout practice, around the clock, doubles training.</p>
       <div class="go">Train now →</div>
     </a>
-    <a href="/party" class="game-card">
-      <div class="icon">🎉</div>
-      <h3>Party Mode</h3>
-      <p>Set up a knockout or round robin tournament. Share the link - no accounts needed for guests.</p>
-      <div class="go">Start a tournament →</div>
-    </a>
     <a href="/?pick=1" class="game-card">
       <div class="icon">🏆</div>
       <h3>League Team View</h3>
       <p>Fixtures, league table and match recording for your team.</p>
       <div class="go">View league →</div>
+    </a>
+    <a href="/party" class="game-card">
+      <div class="icon">🎉</div>
+      <h3>Party Mode</h3>
+      <p>Set up a knockout or round robin tournament. Share the link - no accounts needed for guests.</p>
+      <div class="go">Start a tournament →</div>
     </a>
     <a href="/admin" class="game-card">
       <div class="icon">⚙️</div>
@@ -237,6 +239,24 @@ main{max-width:1100px !important;padding:48px 32px 72px !important}
       <h3>Organiser Guide</h3>
       <p>How to set up a league, add teams and fixtures, and manage it.</p>
       <div class="go">Read the guide →</div>
+    </a>
+    <a href="/achievements" class="game-card">
+      <div class="icon">🏅</div>
+      <h3>Achievements</h3>
+      <p id="ach-sub">Badges, progress and your trophy cabinet.</p>
+      <div class="go">See your badges →</div>
+    </a>
+    <a href="/flight-designer" class="game-card">
+      <div class="icon">🎯</div>
+      <h3>Design Your Flight</h3>
+      <p>Create your own dart flight and use it as your avatar.</p>
+      <div class="go">Open the designer →</div>
+    </a>
+    <a href="/dart-setup" class="game-card">
+      <div class="icon">🛠️</div>
+      <h3>Dart Setup Guide</h3>
+      <p>Board height, throwing distance, lighting and how to choose your darts.</p>
+      <div class="go">Open the guide →</div>
     </a>
   </div>
 
@@ -323,6 +343,10 @@ main{max-width:1100px !important;padding:48px 32px 72px !important}
   <!-- Profile -->
   <div class="sec-title">Profile Settings</div>
   <div class="profile-card">
+    <div class="profile-row">
+      <span class="label">Your flight</span>
+      <span style="display:flex;align-items:center;gap:.6rem"><span id="profile-flight"></span><a href="/flight-designer" style="font-size:.75rem;color:var(--dim)">Design</a></span>
+    </div>
     <div class="profile-row">
       <span class="label">Username</span>
       <span>
@@ -518,6 +542,24 @@ async function loadDashboard(user){
   document.getElementById('profile-username').textContent = '@'+username;
   document.getElementById('profile-email').textContent = user.emailAddresses[0]?.emailAddress || '';
   document.getElementById('profile-link').href = '/player/'+username;
+  try{
+    if(window.FCAch){
+      FCAch.check(sb).then(function(res){
+        if(!res)return;
+        var live=res.rows.length,got=res.rows.filter(function(x){return x.tier>0;}).length;
+        var el=document.getElementById('ach-sub');
+        if(el)el.textContent=got+' of '+live+' badges earned.';
+      });
+    }
+  }catch(e){}
+  try{
+    if(window.FCFlight){
+      sb.from('player_flights').select('design').maybeSingle().then(function(r){
+        var el=document.getElementById('profile-flight');
+        if(el) el.innerHTML = r&&r.data ? FCFlight.avatar(r.data.design,56) : '<span style="color:var(--dim);font-size:.85rem">Not designed yet</span>';
+      },function(){});
+    }
+  }catch(e){}
 
   // Member since
   var since = new Date(user.createdAt).toLocaleDateString('en-GB',{month:'long',year:'numeric'});
@@ -1021,6 +1063,6 @@ window.addEventListener('load', async function(){
   }
 });
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v26-order</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v32-achievements</div>
 </body>
 </html>
