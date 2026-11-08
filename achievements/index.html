@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- VERSION: v-achievements -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Achievements — Flight Chalker</title>
+<meta name="description" content="Your Flight Chalker badges, progress and trophy cabinet.">
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://flightchalker.co.uk/achievements">
+<script src="/fc-consent.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/fc-achievements.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0d1711;--surface:#142119;--s2:#252e25;--green:#4a7c59;--gl:#5a9469;--amber:#f2cf4a;--text:#f1efe4;--dim:#9aa090;--border:#34503e}
+@media (prefers-color-scheme: light){:root{--bg:#f4f1e8;--surface:#fff;--s2:#efeadb;--green:#3d7a52;--gl:#2f6a44;--amber:#8a6d00;--text:#222;--dim:#555;--border:#cfc8b4}}
+body{background:var(--bg);color:var(--text);font-family:Barlow,sans-serif;line-height:1.5}
+header{background:var(--surface);border-bottom:2px solid var(--green);padding:.8rem 1rem;display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap}
+.logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.2rem;letter-spacing:.05em;text-transform:uppercase;color:var(--text);text-decoration:none}
+.logo span{color:var(--amber)}
+.btn{display:inline-block;background:var(--s2);border:1px solid var(--green);border-radius:6px;padding:.45rem .9rem;font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gl);text-decoration:none;cursor:pointer}
+.btn:hover{border-color:var(--amber);color:var(--amber)}
+main{max-width:900px;margin:0 auto;padding:1.5rem 1rem 4rem}
+h1{font-family:'Barlow Condensed',sans-serif;font-size:2.1rem;font-weight:900;text-transform:uppercase;color:var(--amber);line-height:1.1;margin-bottom:.3rem}
+.lead{color:var(--dim);margin-bottom:1.2rem}
+h2{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);margin:1.8rem 0 .6rem;border-bottom:2px solid var(--green);padding-bottom:.25rem;display:flex;gap:.6rem;align-items:baseline}
+h2 small{font-size:.9rem;color:var(--dim);font-weight:600;letter-spacing:.03em;text-transform:none}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem}
+.summary{display:flex;gap:1.2rem;flex-wrap:wrap;align-items:center}
+.big{font-family:'Barlow Condensed',sans-serif;font-size:2.4rem;font-weight:900;color:var(--amber);line-height:1}
+.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem}
+.slot{min-height:104px;border:2px dashed var(--border);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.35rem;text-align:center;padding:.6rem;font-size:.85rem;color:var(--dim)}
+.slot.full{border-style:solid}
+.slot b{color:var(--text);font-weight:600;font-size:.9rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.6rem}
+.badge{display:grid;grid-template-columns:auto 1fr;gap:.2rem .8rem;align-items:start;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.8rem}
+.badge.locked .nm{color:var(--dim)}
+.badge .nm{font-weight:600;line-height:1.2}
+.badge .ds{font-size:.88rem;color:var(--dim)}
+.pill{display:inline-block;font-size:.68rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;border-radius:5px;padding:0 .4rem;margin-left:.4rem;border:1px solid var(--border);color:var(--dim);vertical-align:.1em}
+.pill.common{color:#b08d57;border-color:#b08d57}.pill.rare{color:#8fa0b3;border-color:#8fa0b3}.pill.epic{color:#c9a227;border-color:#c9a227}.pill.legendary{color:#b366f0;border-color:#b366f0}
+.prog{grid-column:1/-1;margin-top:.45rem}
+.bar{height:8px;border-radius:5px;background:var(--s2);overflow:hidden;border:1px solid var(--border)}
+.bar i{display:block;height:100%;background:var(--gl)}
+.ptxt{font-size:.78rem;color:var(--dim);margin-top:.2rem;display:flex;justify-content:space-between;gap:.5rem}
+.pin{grid-column:1/-1;justify-self:start;margin-top:.4rem;font:600 .8rem Barlow,sans-serif;background:var(--s2);color:var(--gl);border:1px solid var(--green);border-radius:6px;padding:.35rem .7rem;min-height:36px;cursor:pointer}
+.pin.on{color:var(--amber);border-color:var(--amber)}
+.soon{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:.4rem .8rem;color:var(--dim);font-size:.9rem}
+.soon div{display:flex;gap:.5rem;align-items:center;min-width:0}
+.lb{width:100%;border-collapse:collapse}
+.lb td{padding:.5rem .4rem;border-bottom:1px solid var(--border)}
+.lb td:last-child{text-align:right;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.15rem;color:var(--amber)}
+.lb tr.me td:first-child{font-weight:700;color:var(--amber)}
+.hide{display:none}
+@media (max-width:480px){h1{font-size:1.8rem}.slots{gap:.4rem}.slot{font-size:.78rem;padding:.4rem}}
+</style>
+</head>
+<body>
+<header>
+  <a href="/dashboard" class="logo">Flight <span>Chalker</span></a>
+  <div style="display:flex;gap:.5rem;flex-wrap:wrap"><a class="btn" href="/dashboard">My Dashboard</a><a class="btn" href="/scorer">Play Darts →</a></div>
+</header>
+<main>
+  <h1>Achievements</h1>
+  <p class="lead">Badges you earn by playing, training and beating your friends. Pin your three best to your profile.</p>
+  <div id="gate" class="card hide">Please <a href="/login" style="color:var(--amber)">sign in</a> to see your achievements.</div>
+  <div id="msg" class="card hide"></div>
+  <div id="app" class="hide">
+    <div class="card summary"><div><div class="big" id="earned">0</div><div style="color:var(--dim)" id="earned-sub"></div></div><div style="flex:1;min-width:200px"><div class="bar"><i id="earned-bar" style="width:0%"></i></div></div></div>
+    <h2>Trophy cabinet <small>shown on your profile</small></h2>
+    <div class="slots" id="slots"></div>
+    <h2>Friends leaderboard <small>badges earned</small></h2>
+    <div class="card"><table class="lb" id="lb"><tbody><tr><td>Loading…</td></tr></tbody></table></div>
+    <div id="cats"></div>
+    <h2>Coming soon <small>these need extra detail recorded during games</small></h2>
+    <div class="soon" id="soon"></div>
+  </div>
+</main>
+<script>
+var sb=window.supabase.createClient('https://xkovqamknwyjzlgijcel.supabase.co','sb_publishable_1zeVlEGjUdGNwA-i8pktHg_nSjRXYEQ');
+var $=function(i){return document.getElementById(i);},esc=FCAch.esc;
+var DEFS=[],ROWS={},PINS=[];
+function nextTarget(d,v){for(var i=0;i<d.tiers.length;i++){if(v<d.tiers[i])return d.tiers[i];}return null;}
+function render(){
+  var live=DEFS.filter(function(d){return d.live;}),soon=DEFS.filter(function(d){return !d.live;});
+  var got=live.filter(function(d){return ROWS[d.key]&&ROWS[d.key].tier>0;}).length;
+  $('earned').textContent=got;$('earned-sub').textContent='of '+live.length+' badges earned';
+  $('earned-bar').style.width=(live.length?Math.round(got/live.length*100):0)+'%';
+  // trophy cabinet
+  var byKey={};DEFS.forEach(function(d){byKey[d.key]=d;});
+  var sl='';
+  for(var i=0;i<3;i++){
+    var k=PINS[i],d=k&&byKey[k];
+    sl+=d?'<div class="slot full">'+FCAch.medal(d,ROWS[k]?ROWS[k].tier:1,52)+'<b>'+esc(d.name)+'</b></div>'
+         :'<div class="slot">Empty slot<br>Pin a badge below</div>';
+  }
+  $('slots').innerHTML=sl;
+  // categories
+  var cats=[],seen={};live.forEach(function(d){if(!seen[d.category]){seen[d.category]=1;cats.push(d.category);}});
+  $('cats').innerHTML=cats.map(function(c){
+    var list=live.filter(function(d){return d.category===c;});
+    var n=list.filter(function(d){return ROWS[d.key]&&ROWS[d.key].tier>0;}).length;
+    return '<h2>'+esc(c)+' <small>'+n+'/'+list.length+'</small></h2><div class="grid">'+list.map(card).join('')+'</div>';
+  }).join('');
+  $('soon').innerHTML=soon.map(function(d){return '<div>'+FCAch.medal(d,0,28,true)+'<span style="min-width:0">'+esc(d.name)+'</span></div>';}).join('');
+  [].forEach.call(document.querySelectorAll('.pin'),function(b){b.onclick=function(){togglePin(b.dataset.k);};});
+}
+function card(d){
+  var r=ROWS[d.key]||{value:0,tier:0},earned=r.tier>0,tgt=nextTarget(d,r.value);
+  var pct=tgt?Math.min(100,Math.round(r.value/tgt*100)):100;
+  var prog=tgt?'<div class="prog"><div class="bar"><i style="width:'+pct+'%"></i></div><div class="ptxt"><span>'+r.value+' / '+tgt+' '+esc(d.unit)+'</span><span>'+(earned?'Next level':'')+'</span></div></div>'
+              :'<div class="prog"><div class="ptxt"><span>'+(d.tiers.length>1?'Completed all levels':'Earned')+'</span></div></div>';
+  var pinned=PINS.indexOf(d.key)>-1;
+  return '<div class="badge'+(earned?'':' locked')+'">'+FCAch.medal(d,r.tier,52,!earned)+'<div><div class="nm">'+esc(d.name)+'<span class="pill '+d.rarity+'">'+FCAch.RARITY[d.rarity].label+'</span></div><div class="ds">'+esc(d.description)+'</div></div>'+prog
+    +(earned?'<button class="pin'+(pinned?' on':'')+'" data-k="'+esc(d.key)+'" type="button">'+(pinned?'★ Pinned':'☆ Pin to profile')+'</button>':'')+'</div>';
+}
+async function togglePin(k){
+  var i=PINS.indexOf(k),next=PINS.slice();
+  if(i>-1)next.splice(i,1);else{if(next.length>=3){$('msg').textContent='You can pin up to 3 badges. Unpin one first.';$('msg').classList.remove('hide');setTimeout(function(){$('msg').classList.add('hide');},3500);return;}next.push(k);}
+  try{var r=await sb.rpc('set_my_pins',{p_keys:next});if(r.error)throw r.error;PINS=next;render();}
+  catch(e){$('msg').textContent='Sorry, that did not save. Please try again.';$('msg').classList.remove('hide');}
+}
+async function loadBoard(){
+  try{
+    var r=await sb.rpc('friend_badge_counts');if(r.error)throw r.error;
+    var rows=r.data||[];
+    $('lb').innerHTML='<tbody>'+(rows.length>1?rows.map(function(x,i){return '<tr'+(x.is_me?' class="me"':'')+'><td>'+(i+1)+'. '+esc(x.username)+(x.is_me?' (you)':'')+'</td><td>'+x.badges+'</td></tr>';}).join('')
+      :'<tr><td style="color:var(--dim)">Add friends from the Head-to-Head screen in the scorer to compare badges.</td></tr>')+'</tbody>';
+  }catch(e){$('lb').innerHTML='<tbody><tr><td style="color:var(--dim)">Could not load the leaderboard.</td></tr></tbody>';}
+}
+(async function(){
+  var s=await sb.auth.getSession();
+  if(!s.data||!s.data.session){$('gate').classList.remove('hide');return;}
+  var res=await FCAch.check(sb,false);
+  if(!res){$('msg').textContent='Could not load your achievements. Please refresh the page.';$('msg').classList.remove('hide');return;}
+  DEFS=res.defs;res.rows.forEach(function(x){ROWS[x.key]=x;});
+  try{var p=await sb.from('player_achievements').select('key,pinned').eq('pinned',true);if(p.data)PINS=p.data.map(function(x){return x.key;});}catch(e){}
+  $('app').classList.remove('hide');render();loadBoard();
+})();
+</script>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;pointer-events:none">v-achievements</div>
+</body>
+</html>
