@@ -2087,7 +2087,20 @@ async function loadFixtureList(){
     var teamMap={},teamById={};teams.forEach(function(t){teamMap[t.id]=t.team_name;teamById[t.id]=t;});
     var chk=await resultCheckPanel(leagueId,teams);
     if(!fixtures||!fixtures.length){el.innerHTML=chk+'<div class="nh">No fixtures yet for this league.</div>';return;}
-    el.innerHTML=chk+fixtures.map(function(f){
+    // Byes (rest weeks): shown in date order between the fixtures. Safe if the table is missing.
+    var byeRows=[];
+    try{ byeRows=(await sb('league_byes?league_id=eq.'+leagueId+'&order=bye_date.asc&select=team_id,bye_date'))||[]; }catch(e){ byeRows=[]; }
+    var byeByDate={};
+    byeRows.forEach(function(b){(byeByDate[b.bye_date]=byeByDate[b.bye_date]||[]).push(teamMap[b.team_id]||'?');});
+    var listItems=Object.keys(byeByDate).map(function(dt){
+      var bd=new Date(dt+'T00:00:00');
+      var bfmt=bd.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+      return {date:dt,html:'<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem .75rem;background:var(--bg);border:1px dashed var(--border);border-radius:5px;margin-bottom:.4rem;flex-wrap:wrap">'
+        +'<div style="font-size:.8rem;color:var(--dim);min-width:120px">'+bfmt+'</div>'
+        +'<div style="flex:1;font-size:.9rem;font-weight:600;color:var(--dim)">Bye: '+byeByDate[dt].sort().map(esc).join(', ')+'</div>'
+        +'<div style="font-size:.75rem;padding:2px 8px;border-radius:3px;background:transparent;color:var(--amber);border:1px solid var(--amber)">Bye</div></div>'};
+    });
+    fixtures.forEach(function(f){listItems.push({date:f.fixture_date,html:(function(){
       var d=new Date(f.fixture_date+'T00:00:00');
       var fmt=d.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
       var statusStyle=f.played?'background:#1a2a1e;color:var(--gl);border:1px solid var(--green)':'background:var(--s3);color:var(--dim);border:1px solid var(--border)';
@@ -2105,7 +2118,9 @@ async function loadFixtureList(){
         +'<button onclick="deleteFixture(&quot;'+f.id+'&quot;)" style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--dim);font-size:.72rem;padding:2px 8px;cursor:pointer">Delete</button>'
         +'<div id="fxs-'+f.id+'" style="display:none;width:100%;flex-basis:100%"></div>'
         +'</div>';
-    }).join('');
+    })()});});
+    el.innerHTML=chk+listItems.map(function(x,i){return {d:x.date,i:i,h:x.html};})
+      .sort(function(p,q){return p.d<q.d?-1:p.d>q.d?1:p.i-q.i;}).map(function(x){return x.h;}).join('');
   }catch(e){el.innerHTML='<div class="nh">Error: '+esc(e.message)+'</div>';}
 }
 
