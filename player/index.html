@@ -1,4 +1,4 @@
-<!-- VERSION: v2-ghpages-route -->
+<!-- VERSION: v4-trophies -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,6 +15,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Player Profile — Flight Chalker</title>
 <script src="/fc-consent.js"></script>
+<script src="/fc-flight.js"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-WQRGJRFF1Q');</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -156,6 +157,34 @@ function showProfile(profile, summary, recentSessions){
 
   document.getElementById('profile-avatar').textContent = profile.username[0].toUpperCase();
   document.getElementById('profile-username').textContent = profile.username;
+  try{
+    sb.rpc('get_player_trophies',{p_username:profile.username}).then(function(r){
+      if(!r||r.error||!r.data||!r.data.length)return;
+      var RC={common:'#b08d57',rare:'#9aa090',epic:'#e0b93a',legendary:'#c05cff'};
+      var box=document.getElementById('profile-trophies');
+      if(!box){
+        box=document.createElement('div');box.id='profile-trophies';
+        box.style.cssText='display:flex;gap:.7rem;flex-wrap:wrap;align-items:center;margin-top:.6rem';
+        var h=document.getElementById('profile-username').closest('h1');
+        if(h&&h.parentNode)h.parentNode.appendChild(box);
+      }
+      box.innerHTML=r.data.map(function(t){
+        var n=String(t.name).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});
+        return '<span title="'+n+'" style="display:inline-flex;align-items:center;gap:.35rem;background:var(--s2);border:2px solid '+(RC[t.rarity]||'#b08d57')+';border-radius:20px;padding:.15rem .6rem .15rem .35rem;font-size:.85rem"><span style="font-size:1.2rem">'+t.icon+'</span>'+n+'</span>';
+      }).join('')+'<span style="color:var(--dim);font-size:.8rem">'+r.data[0].total_badges+' badges</span>';
+    },function(){});
+  }catch(e){}
+  try{
+    if(window.FCFlight){
+      sb.from('player_flight_designs').select('design').eq('user_id',profile.id).maybeSingle().then(function(r){
+        if(r&&r.data&&r.data.design){
+          var av=document.getElementById('profile-avatar');
+          av.innerHTML=FCFlight.svg(r.data.design,{width:34});
+          av.style.overflow='hidden'; av.style.transform='none';
+        }
+      },function(){});
+    }
+  }catch(e){}
 
   var since = profile.created_at ? new Date(profile.created_at).toLocaleDateString('en-GB',{month:'long',year:'numeric'}) : '';
   document.getElementById('profile-since').textContent = since ? 'Member since '+since : '';
@@ -262,6 +291,6 @@ async function loadProfile(){
 
 loadProfile();
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v2-ghpages-route</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v4-trophies</div>
 </body>
 </html>
