@@ -1,1 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dart Setup Guide — Flight Chalker</title>
+<meta name="description" content="How to set up a dartboard and oche (height, throwing distance, lighting) and how to choose darts: weight, barrel, shaft and flights.">
+<link rel="canonical" href="https://flightchalker.co.uk/dart-setup">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0d1711;--surface:#142119;--s2:#252e25;--green:#4a7c59;--gl:#5a9469;--amber:#f2cf4a;--text:#f1efe4;--dim:#9aa090;--border:#34503e}
+@media (prefers-color-scheme: light){:root{--bg:#f4f1e8;--surface:#fff;--s2:#efeadb;--green:#3d7a52;--gl:#2f6a44;--amber:#8a6d00;--text:#222;--dim:#555;--border:#cfc8b4}}
+body{background:var(--bg);color:var(--text);font-family:Barlow,sans-serif;line-height:1.6;font-size:1rem}
+header{background:var(--surface);border-bottom:2px solid var(--green);padding:.8rem 1rem;display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap}
+.logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.2rem;letter-spacing:.05em;text-transform:uppercase;color:var(--text);text-decoration:none}
+.logo span{color:var(--amber)}
+.btn{display:inline-block;background:var(--s2);border:1px solid var(--green);border-radius:6px;padding:.45rem .9rem;font-family:'Barlow Condensed',sans-serif;font-size:.85rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gl);text-decoration:none}
+.btn:hover{border-color:var(--amber);color:var(--amber)}
+main{max-width:760px;margin:0 auto;padding:1.5rem 1rem 4rem}
+h1{font-family:'Barlow Condensed',sans-serif;font-size:2.1rem;font-weight:900;text-transform:uppercase;color:var(--amber);line-height:1.1;margin-bottom:.5rem}
+.lead{color:var(--dim);margin-bottom:1.25rem}
+h2{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:900;text-transform:uppercase;letter-spacing:.05em;margin:2rem 0 .75rem;color:var(--gl)}
+.toc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.25rem;margin-bottom:1rem}
+.toc a{display:block;color:var(--text);text-decoration:none;padding:.2rem 0}
+.toc a:hover{color:var(--amber)}
+details{background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:.6rem}
+summary{cursor:pointer;padding:.85rem 1.1rem;font-weight:600;list-style:none;display:flex;justify-content:space-between;gap:.5rem}
+summary::-webkit-details-marker{display:none}
+summary::after{content:'+';color:var(--amber);font-weight:700}
+details[open] summary::after{content:'–'}
+details[open] summary{border-bottom:1px solid var(--border)}
+.body{padding:.9rem 1.1rem 1rem}
+.body p{margin-bottom:.7rem}
+.body ol,.body ul{margin:0 0 .8rem 1.3rem}
+.body li{margin-bottom:.35rem}
+.tip{background:var(--s2);border-left:3px solid var(--amber);border-radius:4px;padding:.6rem .9rem;margin:.7rem 0;font-size:.92rem}
+.warn{background:var(--s2);border-left:3px solid #c0392b;border-radius:4px;padding:.6rem .9rem;margin:.7rem 0;font-size:.92rem}
+code{background:var(--s2);border-radius:4px;padding:1px 5px;font-size:.9em}
+b,strong{font-weight:600}
+.tabs{display:flex;gap:.5rem;margin:1rem 0 1.25rem;flex-wrap:wrap}
+.tabs button{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1rem;letter-spacing:.04em;text-transform:uppercase;background:var(--s2);color:var(--text);border:1px solid var(--border);border-radius:999px;padding:.5rem 1.1rem;cursor:pointer}
+.tabs button[aria-selected="true"]{border-color:var(--amber);color:var(--amber)}
+.panel[hidden]{display:none}
+table.spec{width:100%;border-collapse:collapse;margin:.4rem 0 1rem;font-size:.95rem}
+table.spec th,table.spec td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--border);vertical-align:top}
+table.spec th{color:var(--gl);font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.04em}
+figure{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.8rem;margin:.8rem 0 1.1rem}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-size:.85rem;color:var(--dim);margin-top:.4rem}
+svg .ln{stroke:var(--text);stroke-width:2;fill:none}
+svg .dm{stroke:var(--amber);stroke-width:1.5;fill:none}
+svg .tx{fill:var(--text);font-size:13px;font-family:Barlow,sans-serif}
+svg .am{fill:var(--amber);font-size:13px;font-weight:600;font-family:Barlow,sans-serif}
+</style>
+<link rel="stylesheet" href="/fc-theme.css">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PGNpcmNsZSBjeD0iMzIiIGN5PSIzMiIgcj0iMzAiIGZpbGw9IiNlODQwMmYiLz48Y2lyY2xlIGN4PSIzMiIgY3k9IjMyIiByPSIyMyIgZmlsbD0iI2ZmZiIvPjxjaXJjbGUgY3g9IjMyIiBjeT0iMzIiIHI9IjE2IiBmaWxsPSIjZTg0MDJmIi8+PGNpcmNsZSBjeD0iMzIiIGN5PSIzMiIgcj0iOSIgZmlsbD0iI2ZmZiIvPjxjaXJjbGUgY3g9IjMyIiBjeT0iMzIiIHI9IjQuNSIgZmlsbD0iI2U4NDAyZiIvPjxsaW5lIHgxPSIzMiIgeTE9IjMyIiB4Mj0iNTQiIHkyPSIxMCIgc3Ryb2tlPSIjMmY2ZmQwIiBzdHJva2Utd2lkdGg9IjMuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTUwIDYgTDYwIDQgTDU4IDE0IFoiIGZpbGw9IiMyZjZmZDAiLz48L3N2Zz4=">
+</head>
+<body>
+<header>
+  <a href="/" class="logo">Flight <span>Chalker</span></a>
+  <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+    <a class="btn" href="/dashboard">My Dashboard</a>
+    <a class="btn" href="/scorer">Play Darts →</a>
+  </div>
+</header>
+<main>
+<h1>Dart Setup Guide</h1>
+<p class="lead">Get your board up properly and find darts that suit you. Pick a section below.</p>
 
+<div class="tabs" role="tablist">
+  <button role="tab" id="t-board" aria-selected="true" aria-controls="p-board">Board &amp; oche</button>
+  <button role="tab" id="t-darts" aria-selected="false" aria-controls="p-darts">Choosing darts</button>
+</div>
+
+<section class="panel" id="p-board" role="tabpanel" aria-labelledby="t-board">
+<h2>The measurements that matter</h2>
+<p>These are the standard competition measurements used for steel-tip darts. Use them and your home board plays exactly like the one at the pub or league venue.</p>
+<table class="spec">
+<tr><th>What</th><th>Measurement</th></tr>
+<tr><td>Height of the bullseye from the floor</td><td><b>5 ft 8 in</b> (173 cm)</td></tr>
+<tr><td>Throwing distance, board face to the oche (measured along the floor)</td><td><b>7 ft 9¼ in</b> (237 cm)</td></tr>
+<tr><td>Diagonal from the bullseye to the front edge of the oche (a handy check)</td><td><b>9 ft 7¼ in</b> (293 cm)</td></tr>
+<tr><td>Board orientation</td><td><b>20 at the top</b>, 3 at the bottom</td></tr>
+</table>
+
+<figure>
+<svg viewBox="0 0 520 260" role="img" aria-label="Side view: bullseye 173 centimetres above the floor, oche 237 centimetres back from the board face, diagonal 293 centimetres.">
+  <line class="ln" x1="30" y1="220" x2="500" y2="220"/>
+  <rect x="60" y="40" width="12" height="100" fill="var(--s2)" stroke="var(--text)" stroke-width="2"/>
+  <circle cx="72" cy="90" r="4" fill="var(--amber)"/>
+  <line class="dm" x1="40" y1="90" x2="40" y2="220"/>
+  <text class="am" x="46" y="160">173 cm</text>
+  <text class="tx" x="46" y="176">(5 ft 8 in)</text>
+  <line class="dm" x1="72" y1="238" x2="400" y2="238"/>
+  <text class="am" x="170" y="254">237 cm (7 ft 9¼ in)</text>
+  <line class="ln" x1="400" y1="212" x2="400" y2="228"/>
+  <text class="tx" x="380" y="204">oche</text>
+  <line class="dm" x1="72" y1="90" x2="400" y2="220" stroke-dasharray="6 4"/>
+  <text class="am" x="215" y="140">293 cm diagonal</text>
+  <text class="tx" x="30" y="30">Board</text>
+</svg>
+<figcaption>Side view. The board is hung so the bullseye is 173 cm from the floor, and you stand behind a line 237 cm back from the board face.</figcaption>
+</figure>
+
+<details open><summary>Hanging the board</summary><div class="body">
+<ol>
+<li>Pick a wall that is solid and flat, with clear space either side and nothing fragile nearby.</li>
+<li>Measure <b>173 cm</b> up from the floor to the centre of the bullseye and mark it.</li>
+<li>Fit the bracket so the board hangs with the <b>20 at the top</b>. Many brackets let you rotate the board to even out wear. Do this regularly.</li>
+<li>Check the board is level and sits flat against the wall.</li>
+</ol>
+<div class="tip">If the floor is uneven or carpeted, measure the height at the spot where you stand to throw.</div>
+</div></details>
+
+<details><summary>Marking the oche</summary><div class="body">
+<ol>
+<li>Hold a tape measure at the board face (the front of the wires), directly below the bullseye.</li>
+<li>Measure <b>237 cm</b> out along the floor in a straight line and mark it.</li>
+<li>Fix a strip of tape, a thin board or a purpose-made oche there. Stand behind it with your front foot touching but not over the line.</li>
+<li>To double check, measure from the bullseye to the front edge of the oche. It should be <b>293 cm</b>.</li>
+</ol>
+</div></details>
+
+<details><summary>Electronic and soft-tip boards</summary><div class="body">
+<p>Soft-tip (electronic) boards use the same <b>173 cm</b> height. The usual throwing distance is longer, at <b>8 ft (244 cm)</b>. If your board came with its own instructions, follow them.</p>
+</div></details>
+
+<details><summary>Lighting and surroundings</summary><div class="body">
+<ul>
+<li>Light the board <b>evenly</b> from above or from the sides. Avoid a single lamp that casts a shadow from your arm or head.</li>
+<li>Avoid glare. A shiny board face under a bright spot light is hard on the eyes.</li>
+<li>Protect the wall with a surround or backboard, which also catches bounce-outs.</li>
+<li>Keep a clear throwing lane. Nobody should be able to walk in front of the board while you throw.</li>
+<li>Pick up dropped darts straight away. A dart on the floor can break a tip or injure a foot.</li>
+</ul>
+<div class="warn">Always keep children and pets well away from the throwing area and the board.</div>
+</div></details>
+
+<details><summary>Looking after your board</summary><div class="body">
+<ul>
+<li>Turn the board a little every few weeks so no one number wears out first.</li>
+<li>Store sisal boards somewhere dry. Damp makes them swell and the fibres stop closing up.</li>
+<li>Replace the board when it is chewed up and darts regularly fall out.</li>
+</ul>
+</div></details>
+</section>
+
+<section class="panel" id="p-darts" role="tabpanel" aria-labelledby="t-darts" hidden>
+<h2>Finding darts that suit you</h2>
+<p>There is no best dart, only the one that feels right for your grip. Start with a set that is comfortable, then change one thing at a time so you know what made the difference.</p>
+
+<details open><summary>Weight</summary><div class="body">
+<ul>
+<li>Most steel-tip players throw somewhere between <b>20 g and 26 g</b>. Starting around 22 to 24 g is common.</li>
+<li>Heavier darts tend to fly flatter and feel more solid. Lighter darts can feel quicker but may need a faster, more arced throw.</li>
+<li>Competition rules cap a dart at 50 g, so there is a great deal of room below that.</li>
+<li>Change weight in small steps of 1 or 2 g.</li>
+</ul>
+</div></details>
+
+<details><summary>The barrel</summary><div class="body">
+<ul>
+<li><b>Material:</b> brass is cheap and fine for beginners. Tungsten is denser, so the barrel is slimmer for the same weight. 80% tungsten is cheaper, 90% and 95% are slimmer and pricier.</li>
+<li><b>Shape:</b> straight barrels feel even in the hand. Torpedo barrels carry the weight toward the front. Others taper at the rear.</li>
+<li><b>Grip:</b> a rougher or ringed finish holds well and is good if your fingers get sweaty. A smoother one lets the dart leave your hand cleanly. Try each and see what you prefer.</li>
+</ul>
+</div></details>
+
+<details><summary>The shaft (stem)</summary><div class="body">
+<ul>
+<li>Shafts come in short, medium and long sizes. A longer shaft moves the flight back and can make the dart settle more quickly. A shorter shaft keeps the flight closer to the barrel.</li>
+<li>Nylon shafts are cheap and flexible. Aluminium and carbon last longer.</li>
+<li>If the dart wobbles in flight, trying a different length is the easiest fix.</li>
+<li>Check that the shaft is screwed in snugly. A loose one will slip and move the flight.</li>
+</ul>
+</div></details>
+
+<details><summary>The flights</summary><div class="body">
+<ul>
+<li><b>Standard</b> flights give good lift and stability and are a safe starting point.</li>
+<li><b>Slim</b> flights have less drag, so the dart flies a bit faster and flatter.</li>
+<li><b>Kite and pear</b> shapes are further options. Look for a shape that fits your throw.</li>
+<li>Larger flights give more stability but more drag. Smaller flights are quicker but twitchier.</li>
+<li>Replace flights as soon as they are bent or torn. They are the cheapest way to improve consistency.</li>
+</ul>
+</div></details>
+
+<details><summary>Tips for trying new darts</summary><div class="body">
+<ol>
+<li>Throw a few hundred darts before judging a new set. They will feel strange at first.</li>
+<li>Change only one thing at a time: weight, then shaft length, then flights.</li>
+<li>Ask team mates if you can borrow their darts for a few throws.</li>
+<li>Pay attention to where the dart lands, not how it looks.</li>
+</ol>
+</div></details>
+</section>
+
+<p style="margin-top:2rem;text-align:center"><a class="btn" href="/scorer">Play Darts →</a></p>
+</main>
+<script>
+(function(){
+  var tabs=[].slice.call(document.querySelectorAll('.tabs [role=tab]'));
+  function show(id){
+    tabs.forEach(function(t){
+      var on=t.id===id;
+      t.setAttribute('aria-selected',on?'true':'false');
+      var p=document.getElementById(t.getAttribute('aria-controls'));
+      if(p)p.hidden=!on;
+    });
+    try{history.replaceState(null,'','#'+(id==='t-darts'?'darts':'board'));}catch(e){}
+  }
+  tabs.forEach(function(t){t.addEventListener('click',function(){show(t.id);});});
+  if(location.hash==='#darts')show('t-darts');
+})();
+</script>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-dart-setup</div>
+</body>
+</html>
