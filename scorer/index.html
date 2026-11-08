@@ -2721,7 +2721,8 @@ function renderTotal(){
 
 // ── BASEBALL ──────────────────────────────────────────────────────────────────
 var baseball={};
-var BASEBALL_INNINGS=9;
+var BASEBALL_INNINGS=9,BASEBALL_MAX_EXTRA=6;
+function baseballTarget(inn){var t=baseball.targets;return t[(inn-1)%BASEBALL_INNINGS];}
 
 function startBaseball(){
   var names=Array.from(document.getElementById('player-names').querySelectorAll('input')).map(function(i){return i.value.trim()||'Player';});
@@ -2744,7 +2745,7 @@ function baseballDart(mult){
   if(b.currentDarts.length>=3)return;
   b.history.push(baseballSnap());
   b.currentDarts.push(mult);
-  speak(mult===0?'Miss':(mult===1?'Single':mult===2?'Double':'Treble')+' '+b.targets[b.inning-1]);
+  speak(mult===0?'Miss':(mult===1?'Single':mult===2?'Double':'Treble')+' '+baseballTarget(b.inning));
   renderBaseball();
 }
 function baseballNext(){
@@ -2760,16 +2761,42 @@ function baseballNext(){
     b.inning++;
     if(b.inning>BASEBALL_INNINGS){
       var totals=b.players.map(function(_,i){return baseballTotal(i);});
+      var topT=Math.max.apply(null,totals),tied=totals.filter(function(t){return t===topT;}).length>1;
+      if(tied&&b.inning<=BASEBALL_INNINGS+BASEBALL_MAX_EXTRA){toast('Tied! Extra inning '+(b.inning-BASEBALL_INNINGS)+' - target '+baseballTarget(b.inning));renderBaseball();return;}
+      window.FC_NEXT_META=baseballMeta(totals);
       fcH2HByScore('baseball',b.players,totals);showWinByName(fcWinnerNames(b.players,totals,false),baseballMarginText(totals));return;
     }
   }
   renderBaseball();
 }
+function baseballMeta(totals){
+  try{
+    if(!fcUser)return null;
+    var b=baseball,me=-1,u=String(fcUser.username).trim().toLowerCase();
+    b.players.forEach(function(n,i){if(String(n).trim().toLowerCase()===u)me=i;});
+    if(me<0)return null;
+    var mine=b.runs[me],cum=[0,0],trail=0,np=b.players.length;
+    var cm=0,co=b.players.map(function(){return 0;});
+    for(var k=0;k<mine.length;k++){
+      cm+=mine[k];
+      var best=0;
+      b.players.forEach(function(_,i){co[i]+=(b.runs[i][k]||0);if(i!==me&&co[i]>best)best=co[i];});
+      if(best-cm>trail)trail=best-cm;
+    }
+    var top=Math.max.apply(null,totals),winners=totals.filter(function(t){return t===top;}).length;
+    var won=(totals[me]===top&&winners===1);
+    var reg=mine.slice(0,BASEBALL_INNINGS);
+    return {runs:mine.slice(),total:totals[me],maxInning:Math.max.apply(null,mine.concat([0])),
+      scoredAll:reg.length===BASEBALL_INNINGS&&reg.every(function(r){return r>0;}),
+      scoreless:reg.filter(function(r){return r===0;}).length,
+      maxTrail:trail,extra:Math.max(0,mine.length-BASEBALL_INNINGS),won:won,players:np};
+  }catch(e){return null;}
+}
 function baseballMarginText(totals){return fcMarginText(totals,'run');}
 function renderBaseball(){
-  var b=baseball,n=b.targets[Math.min(b.inning,BASEBALL_INNINGS)-1],cols='1fr '+'repeat('+b.players.length+',1fr)';
+  var b=baseball,n=baseballTarget(b.inning),cols='1fr '+'repeat('+b.players.length+',1fr)';
   document.getElementById('baseball-turn-title').textContent=b.players[b.currentPlayer]+"'s turn";
-  document.getElementById('baseball-target-label').textContent='Inning '+b.inning+' of '+BASEBALL_INNINGS+' — Target: '+n+' (S=1 D=2 T=3 runs)';
+  document.getElementById('baseball-target-label').textContent=(b.inning>BASEBALL_INNINGS?'EXTRA INNING '+(b.inning-BASEBALL_INNINGS):'Inning '+b.inning+' of '+BASEBALL_INNINGS)+' — Target: '+n+' (S=1 D=2 T=3 runs)';
   for(var d=0;d<3;d++){
     var chip=document.getElementById('bb-dart-'+d);
     if(d<b.currentDarts.length){var m=b.currentDarts[d];chip.textContent=m===0?'Miss':(m===1?'S':m===2?'D':'T')+n;chip.className='dart-chip has-value';}
@@ -2784,9 +2811,9 @@ function renderBaseball(){
     h+='<div style="color:'+(i===b.currentPlayer?'var(--amber)':'var(--dim)')+';cursor:pointer" onclick="fcRenamePlayer(&quot;baseball&quot;,'+i+')" title="Tap to rename">'+esc(p)+' ✎</div>';
   });
   h+='</div>';
-  for(var inn=1;inn<=BASEBALL_INNINGS;inn++){
-    var cls='halveit-row'+(inn===n?' halveit-current':inn<n?' halveit-done':'');
-    h+='<div class="'+cls+'" style="grid-template-columns:'+cols+'"><div>'+inn+' · <b>'+b.targets[inn-1]+'</b></div>';
+  for(var inn=1;inn<=Math.max(BASEBALL_INNINGS,b.inning);inn++){
+    var cls='halveit-row'+(inn===b.inning?' halveit-current':inn<b.inning?' halveit-done':'');
+    h+='<div class="'+cls+'" style="grid-template-columns:'+cols+'"><div>'+inn+' · <b>'+baseballTarget(inn)+'</b></div>';
     b.players.forEach(function(_,i){
       var v=b.runs[i][inn-1];
       h+='<div style="font-weight:700;color:var(--amber)">'+(v===undefined?'&mdash;':v)+'</div>';
@@ -3027,12 +3054,13 @@ function fcNameKey(n){return String(n||'').trim().toLowerCase().replace(/\s+/g,'
 var FC_SESS_LAST='';
 function fcSessionRecord(mode,players,winnerIdx){
   try{
-    if(!fcUser||mode==='x01'||!players)return;
+    if(!fcUser||mode==='x01'||!players){window.FC_NEXT_META=null;return;}
     var sig=mode+'|'+players.join(',')+'|'+winnerIdx,now=Date.now();
     if(FC_SESS_LAST.split('@')[0]===sig&&now-Number(FC_SESS_LAST.split('@')[1]||0)<20000)return;
     FC_SESS_LAST=sig+'@'+now;
     var w=(winnerIdx>=0&&players[winnerIdx])?String(players[winnerIdx]):null;
-    fcEnd(mode,{winner:w,best:null,s180:0,legs:null});
+    var xm=window.FC_NEXT_META||null;window.FC_NEXT_META=null;
+    fcEnd(mode,{winner:w,best:null,s180:0,legs:null,meta:xm});
   }catch(e){}
 }
 async function fcH2H(mode,players,winnerIdx,scores){
@@ -3145,6 +3173,6 @@ window.hiMatcher=new RegExpMatcher({
   ...englishRecommendedTransformers
 });
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-501-badges</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-baseball-badges</div>
 </body>
 </html>
