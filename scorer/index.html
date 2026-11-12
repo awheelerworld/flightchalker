@@ -1984,7 +1984,8 @@ function startCricket(variant){
   variant=variant||'std';
   var names=Array.from(document.getElementById('player-names').querySelectorAll('input')).map(function(i){return i.value.trim()||'Player';});
   names.forEach(fcSaveRecentName);
-  cricket={players:names,marks:names.map(function(){return{20:0,19:0,18:0,17:0,16:0,15:0,25:0};}),points:names.map(function(){return 0;}),currentPlayer:0,dartsThrown:0,history:[],variant:variant,rulesKey:variant==='cut'?'cricket-cut':variant==='none'?'cricket-none':'cricket'};
+  cricket={players:names,marks:names.map(function(){return{20:0,19:0,18:0,17:0,16:0,15:0,25:0};}),points:names.map(function(){return 0;}),currentPlayer:0,dartsThrown:0,history:[],variant:variant,rulesKey:variant==='cut'?'cricket-cut':variant==='none'?'cricket-none':'cricket',
+    me:cricketMeIdx(names),vc:{},bullStart:-1,hat:false,bandit:false,trail:0};
   document.getElementById('cricket-hdr-sub').textContent=variant==='cut'?'Cut-Throat Cricket':variant==='none'?'No-Score Cricket':'Cricket';
   showScreen('screen-cricket');
   document.getElementById('cricket-numpad').innerHTML=[20,19,18,17,16,15,'Bull','Miss'].map(function(n){
@@ -1994,9 +1995,39 @@ function startCricket(variant){
   renderCricket();
 }
 
+function cricketMeIdx(names){
+  var me=-1;
+  try{if(fcUser){var u=String(fcUser.username).trim().toLowerCase();names.forEach(function(n,i){if(String(n).trim().toLowerCase()===u)me=i;});}}catch(e){}
+  return me;
+}
+function cricketTrack(num){
+  var cr=cricket,p=cr.currentPlayer;
+  if(cr.me<0||p!==cr.me||num===0)return;
+  cr.vc[num]=(cr.vc[num]||0)+1;
+  if(cr.vc[num]>=3)cr.hat=true;
+}
+function cricketTrail(){
+  var cr=cricket;
+  if(cr.me<0||cr.variant!=='std')return;
+  cr.players.forEach(function(_,i){if(i!==cr.me){var d=cr.points[i]-cr.points[cr.me];if(d>cr.trail)cr.trail=d;}});
+}
+function cricketMeta(w){
+  try{
+    var cr=cricket;
+    if(cr.me<0)return null;
+    var oppClosed=cr.players.some(function(_,i){return i!==cr.me&&cNums.some(function(n){return cr.marks[i][n]>=3;});});
+    var oppPts=Math.max.apply(null,cr.points.filter(function(_,i){return i!==cr.me;}).concat([0]));
+    var won=(w===cr.me);
+    return {variant:cr.variant,won:won,hatTrick:cr.hat,bullBandit:cr.bandit,points:cr.points[cr.me],oppPoints:oppPts,
+      cleanSweep:won&&!oppClosed,maxTrail:cr.trail,players:cr.players.length};
+  }catch(e){return null;}
+}
 function cricketDart(num){
   var cr=cricket,p=cr.currentPlayer;
-  cr.history.push({marks:JSON.parse(JSON.stringify(cr.marks)),points:cr.points.slice(),currentPlayer:cr.currentPlayer,dartsThrown:cr.dartsThrown});
+  cr.history.push({marks:JSON.parse(JSON.stringify(cr.marks)),points:cr.points.slice(),currentPlayer:cr.currentPlayer,dartsThrown:cr.dartsThrown,
+    vc:JSON.parse(JSON.stringify(cr.vc)),bullStart:cr.bullStart,hat:cr.hat,bandit:cr.bandit,trail:cr.trail});
+  if(num===25&&cr.me===p&&cr.bullStart<0)cr.bullStart=cr.marks[p][25];
+  cricketTrack(num);
   if(num===0){cr.dartsThrown++;if(cr.dartsThrown>=3){cricketNext();return;}toast('Miss');speak('Miss');renderCricket();return;}
   if(!cNums.includes(num)){cr.history.pop();return;}
   cr.dartsThrown++;
@@ -2017,6 +2048,8 @@ function cricketDart(num){
       if(canScore){cr.points[p]+=num;toast('+'+num+' pts!');speak((num===25?'Bull':num)+'. Plus '+num+' points.');}
     }
   }
+  if(cr.me===p&&cr.bullStart===0&&cr.marks[p][25]>=3)cr.bandit=true;
+  cricketTrail();
   if(cr.dartsThrown>=3){cricketNext();return;}
   renderCricket();
 }
@@ -2026,6 +2059,7 @@ function cricketUndo(){
   if(!cr.history||!cr.history.length){toast('Nothing to undo',true);return;}
   var last=cr.history.pop();
   cr.marks=last.marks;cr.points=last.points;cr.currentPlayer=last.currentPlayer;cr.dartsThrown=last.dartsThrown;
+  cr.vc=last.vc||{};cr.bullStart=last.bullStart;cr.hat=last.hat;cr.bandit=last.bandit;cr.trail=last.trail;
   renderCricket();
   toast('Undone');
 }
@@ -2033,11 +2067,12 @@ function cricketUndo(){
 function cricketMiss(){cricketDart(0);}
 
 function cricketNext(){
-  var cr=cricket;cr.dartsThrown=0;
+  var cr=cricket;cr.dartsThrown=0;cr.vc={};cr.bullStart=-1;
   for(var p=0;p<cr.players.length;p++){
     var closedAll=cNums.every(function(n){return cr.marks[p][n]>=3;});
     var okPoints=cr.variant==='none'?true:cr.variant==='cut'?cr.points[p]<=Math.min.apply(null,cr.points):cr.points[p]>=Math.max.apply(null,cr.points);
     if(closedAll&&okPoints){
+      window.FC_NEXT_META=cricketMeta(p);
       fcH2H('cricket',cr.players,p,cr.points);showWinByName(cr.players[p],cricketWinDetail(cr,p));return;
     }
   }
@@ -3173,6 +3208,6 @@ window.hiMatcher=new RegExpMatcher({
   ...englishRecommendedTransformers
 });
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-baseball-badges</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-cricket-badges</div>
 </body>
 </html>
