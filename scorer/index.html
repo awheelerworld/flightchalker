@@ -2134,7 +2134,7 @@ function killerDart(num){
     var t=k.doubles.indexOf(num);
     if(t!==-1&&t!==p&&k.lives[t]>0){
       k.lives[t]--;toast(k.players[t]+' -1 life!',true);speak(k.players[t]+' loses a life!');
-      if(k.lives[t]<=0){if(k.lives.filter(function(l){return l>0;}).length===1){fcH2H('killer',k.players,p,k.lives);showWinByName(k.players[p],'Last one standing'+(k.lives[p]>0?' with '+k.lives[p]+(k.lives[p]===1?' life':' lives')+' left':''));return;}}
+      if(k.lives[t]<=0){if(k.lives.filter(function(l){return l>0;}).length===1){window.FC_NEXT_META={won:cricketMeIdx(k.players)===p,flawless:cricketMeIdx(k.players)===p&&k.lives[p]>=k.maxLives};fcH2H('killer',k.players,p,k.lives);showWinByName(k.players[p],'Last one standing'+(k.lives[p]>0?' with '+k.lives[p]+(k.lives[p]===1?' life':' lives')+' left':''));return;}}
     } else if(t===p){k.lives[p]--;k.isKiller[p]=false;toast('Own double! -1 life 😬',true);speak('Own double! Lost a life.');}
     else{speak('Miss');}
     k.dartsThrown++;
@@ -2236,6 +2236,7 @@ function shanghaiDart(val,mult){
     if(mults.includes(1)&&mults.includes(2)&&mults.includes(3)){
       toast('SHANGHAI! Instant win! 🎯');
       speak('Shanghai! Instant win!');
+      window.FC_NEXT_META={shanghaiHit:cricketMeIdx(sh.players)===sh.currentPlayer};
       fcH2H('shanghai',sh.players,sh.currentPlayer,sh.scores);setTimeout(function(){showWinByName(sh.players[sh.currentPlayer],'Shanghai! Single, double and treble in one round');},800);
       return;
     }
@@ -2566,7 +2567,7 @@ function startHalveIt(){
   var names=Array.from(document.getElementById('player-names').querySelectorAll('input')).map(function(i){return i.value.trim()||'Player';});
   names.forEach(fcSaveRecentName);
   var rounds=hiCustomRounds.length?hiCustomRounds.slice():hiTargets.slice();
-  halveit={players:names,scores:names.map(function(){return 0;}),currentPlayer:0,currentRound:0,inputVal:'',rounds:rounds,history:[]};
+  halveit={players:names,scores:names.map(function(){return 0;}),currentPlayer:0,currentRound:0,inputVal:'',rounds:rounds,history:[],halved:names.map(function(){return 0;})};
   showScreen('screen-halveit');
   document.getElementById('halveit-numpad').innerHTML=[7,8,9,4,5,6,1,2,3,'CLR',0,'X'].map(function(n){
     return '<button class="np'+(n==='CLR'?' sp':n==='X'?' dl':'')+'" onclick="halveitNumpad(&quot;'+n+'&quot;)">'+n+'</button>';
@@ -2576,14 +2577,14 @@ function startHalveIt(){
 
 function hiSnapshot(){
   var hv=halveit;
-  return {scores:hv.scores.slice(),currentPlayer:hv.currentPlayer,currentRound:hv.currentRound};
+  return {scores:hv.scores.slice(),currentPlayer:hv.currentPlayer,currentRound:hv.currentRound,halved:(hv.halved||[]).slice()};
 }
 
 function halveitUndo(){
   var hv=halveit;
   if(!hv.history||!hv.history.length){toast('Nothing to undo',true);return;}
   var last=hv.history.pop();
-  hv.scores=last.scores;hv.currentPlayer=last.currentPlayer;hv.currentRound=last.currentRound;
+  hv.scores=last.scores;hv.currentPlayer=last.currentPlayer;hv.currentRound=last.currentRound;hv.halved=last.halved||hv.halved;
   hv.inputVal='';
   var inp=document.getElementById('halveit-input');
   if(inp)inp.value='';
@@ -2604,17 +2605,25 @@ function halveitScore(s){halveit.inputVal=String(s);document.getElementById('hal
 function halveitSubmit(){
   var hv=halveit,p=hv.currentPlayer,scored=parseInt(hv.inputVal)||0;
   hv.history.push(hiSnapshot());
-  if(scored===0){hv.scores[p]=Math.floor(hv.scores[p]/2);toast('Missed! Score halved!',true);speak('Missed! Halved to '+hv.scores[p]+'.');}
+  if(scored===0){if(hv.halved)hv.halved[p]++;hv.scores[p]=Math.floor(hv.scores[p]/2);toast('Missed! Score halved!',true);speak('Missed! Halved to '+hv.scores[p]+'.');}
   else{hv.scores[p]+=scored;toast('+'+scored+' points!');speak(scored+'. '+hv.scores[p]+' total.');}
   hv.inputVal='';document.getElementById('halveit-input').value='';
   hv.currentPlayer=(hv.currentPlayer+1)%hv.players.length;
   if(hv.currentPlayer===0){
     hv.currentRound++;
-    if(hv.currentRound>=hv.rounds.length){fcH2HByScore('halveit',hv.players,hv.scores);showWinByName(fcWinnerNames(hv.players,hv.scores,false),fcMarginText(hv.scores,'point'));return;}
+    if(hv.currentRound>=hv.rounds.length){window.FC_NEXT_META=halveMeta();fcH2HByScore('halveit',hv.players,hv.scores);showWinByName(fcWinnerNames(hv.players,hv.scores,false),fcMarginText(hv.scores,'point'));return;}
   }
   renderHalveIt();
 }
 
+function halveMeta(){
+  try{
+    var hv=halveit,me=cricketMeIdx(hv.players);
+    if(me<0)return null;
+    var top=Math.max.apply(null,hv.scores),won=hv.scores[me]===top&&hv.scores.filter(function(x){return x===top;}).length===1;
+    return {won:won,misses:hv.halved[me]};
+  }catch(e){return null;}
+}
 function halveitCustomHit(){
   var hv=halveit,round=hv.rounds[hv.currentRound],p=hv.currentPlayer;
   if(!round||typeof round!=='object')return;
@@ -2625,7 +2634,7 @@ function halveitCustomHit(){
   hv.currentPlayer=(hv.currentPlayer+1)%hv.players.length;
   if(hv.currentPlayer===0){
     hv.currentRound++;
-    if(hv.currentRound>=hv.rounds.length){fcH2HByScore('halveit',hv.players,hv.scores);showWinByName(fcWinnerNames(hv.players,hv.scores,false),fcMarginText(hv.scores,'point'));return;}
+    if(hv.currentRound>=hv.rounds.length){window.FC_NEXT_META=halveMeta();fcH2HByScore('halveit',hv.players,hv.scores);showWinByName(fcWinnerNames(hv.players,hv.scores,false),fcMarginText(hv.scores,'point'));return;}
   }
   renderHalveIt();
 }
@@ -2702,6 +2711,9 @@ function fcWinnerNames(players,scores,lowest){
   var target=lowest?Math.min.apply(null,scores):Math.max.apply(null,scores);
   return players.filter(function(_,i){return scores[i]===target;}).join(' & ');
 }
+function countupMeta(){
+  try{var me=cricketMeIdx(total.players);if(me<0)return null;return {best:total.best[me],score:total.scores[me]};}catch(e){return null;}
+}
 function totalSubmit(){
   var t=total,p=t.currentPlayer,val=parseInt(t.inputVal)||0;
   if(val>180){toast('Maximum score for 3 darts is 180',true);return;}
@@ -2730,7 +2742,7 @@ function totalSubmit(){
   t.currentPlayer=(t.currentPlayer+1)%t.players.length;
   if(t.currentPlayer===0){
     t.round++;
-    if(t.kind==='countup'&&t.round>COUNTUP_ROUNDS){fcH2HByScore('countup',t.players,t.scores);showWinByName(fcWinnerNames(t.players,t.scores,false),fcMarginText(t.scores,'point'));return;}
+    if(t.kind==='countup'&&t.round>COUNTUP_ROUNDS){window.FC_NEXT_META=countupMeta();fcH2HByScore('countup',t.players,t.scores);showWinByName(fcWinnerNames(t.players,t.scores,false),fcMarginText(t.scores,'point'));return;}
   }
   renderTotal();
 }
@@ -3208,6 +3220,6 @@ window.hiMatcher=new RegExpMatcher({
   ...englishRecommendedTransformers
 });
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-cricket-badges</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v-games-badges</div>
 </body>
 </html>
