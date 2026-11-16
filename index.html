@@ -3228,7 +3228,7 @@ async function renderNextMatch(){
     var loaded=oppEl&&dateEl&&oppEl.value===opp&&dateEl.value===f.fixture_date;
     box.className='nm-card';
     box.innerHTML='<div style="flex:1;min-width:200px"><div class="nm-lbl">'+label+'</div>'
-      +'<div class="nm-t">'+esc(currentTeam.team_name)+' <span style="color:var(--dim);font-weight:600">vs</span> '+esc(opp)+'</div>'
+      +'<div class="nm-t">'+(isHome?esc(currentTeam.team_name)+' <span style="color:var(--dim);font-weight:600">vs</span> '+esc(opp):esc(opp)+' <span style="color:var(--dim);font-weight:600">vs</span> '+esc(currentTeam.team_name))+'</div>'
       +'<div class="nm-m">'+esc(fmt)+' · '+(isHome?'Home':'Away')+' · <b style="color:'+(diff===0?'var(--amber)':'inherit')+'">'+when+'</b></div>'+vh+'</div>'
       +'<button class="btnp" id="nm-rec" style="font-size:.95rem;padding:.6rem 1.2rem;white-space:nowrap">'+(loaded?'Continue scoring →':'Record result →')+'</button>';
     box.style.display='flex';
@@ -3297,7 +3297,7 @@ async function renderFixtures(){
           +' <button class="hb" style="border-color:#6a5200;color:var(--amber)" onclick="markWalkover(\''+f.id+'\',\''+esc(oppName)+'\',\''+f.fixture_date+'\')">Walkover</button>';
       }
       return '<div class="fx-entry'+(diff===0?' today':'')+(isPlayed?' played':(f.id===nextFxId?' next':(diff>=0?' upcoming':'')))+'"><div class="fx-date">'+fmt+(f.id===nextFxId?' <span class="fx-next">NEXT</span>':'')+'</div>'
-        +'<div class="fx-teams">'+esc(currentTeam.team_name)+'<span class="vs">vs</span>'+esc(oppName)+'</div>'
+        +'<div class="fx-teams">'+(isHome?esc(currentTeam.team_name)+'<span class="vs">vs</span>'+esc(oppName):esc(oppName)+'<span class="vs">vs</span>'+esc(currentTeam.team_name))+'</div>'
         +'<div class="fx-venue">'+venue+'</div>'
         +'<div class="'+dcls+'">'+dlbl+'</div>'
         +'<span class="fx-status '+(isPlayed?'played':'upcoming')+'">'+(isPlayed?'Played':'Upcoming')+'</span>'
