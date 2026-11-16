@@ -1,4 +1,4 @@
-<!-- VERSION: v32-achievements -->
+<!-- VERSION: v33-flight-welcome -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -195,7 +195,7 @@ main{max-width:1100px !important;padding:48px 32px 72px !important}
   <!-- Welcome -->
   <div class="welcome">
     <div class="welcome-text">
-      <h2>Welcome back, <span id="welcome-name">Player</span> 🎯</h2>
+      <h2>Welcome back, <span id="welcome-name">Player</span> <span id="welcome-av" style="display:inline-block;vertical-align:middle;line-height:1">🎯</span></h2>
       <p>Your teams, your leagues and your stats in one place.</p>
     </div>
     <div class="free-badge">✓ Free Member</div>
@@ -555,6 +555,8 @@ async function loadDashboard(user){
   try{
     if(window.FCFlight){
       sb.from('player_flights').select('design').maybeSingle().then(function(r){
+        var wav=document.getElementById('welcome-av');
+        if(wav&&r&&r.data&&r.data.design)wav.innerHTML=FCFlight.avatar(r.data.design,40);
         var el=document.getElementById('profile-flight');
         if(el) el.innerHTML = r&&r.data ? FCFlight.avatar(r.data.design,56) : '<span style="color:var(--dim);font-size:.85rem">Not designed yet</span>';
       },function(){});
@@ -1063,6 +1065,6 @@ window.addEventListener('load', async function(){
   }
 });
 </script>
-<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v32-achievements</div>
+<div style="position:fixed;bottom:6px;right:8px;font-size:.65rem;color:#4a5a4a;opacity:.6;z-index:999;pointer-events:none">v33-flight-welcome</div>
 </body>
 </html>
