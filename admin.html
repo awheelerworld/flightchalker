@@ -308,6 +308,40 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
   <!-- FIXTURES PANEL -->
   <div id="panel-fixtures" class="panel">
     <div class="card">
+      <h2>Existing Fixtures</h2>
+      <div class="field" style="margin-bottom:1rem">
+        <label>Filter by League</label>
+        <select id="fx-filter-league" onchange="loadFixtureList()">
+          <option value="">— All leagues —</option>
+        </select>
+      </div>
+      <div id="fixture-list"><div class="nh">Select a league to view fixtures</div></div>
+    </div>
+    <div class="card" style="margin-top:1rem">
+      <h2>Add Single Fixture</h2>
+      <div class="grid">
+        <div class="field"><label>League</label>
+          <select id="fx-league" onchange="loadFixtureTeams()">
+            <option value="">— Select league —</option>
+          </select>
+        </div>
+        <div class="field"><label>Season</label>
+          <input type="number" id="fx-season" value="1" min="1">
+        </div>
+        <div class="field"><label>Date</label>
+          <input type="date" id="fx-date">
+        </div>
+        <div class="field"><label>Home Team</label>
+          <select id="fx-home"><option value="">— Select —</option></select>
+        </div>
+        <div class="field"><label>Away Team</label>
+          <select id="fx-away"><option value="">— Select —</option></select>
+        </div>
+      </div>
+      <button class="btn-admin" onclick="addFixture()"><span id="fx-spin" style="display:none" class="spin blue"></span>Add Fixture</button>
+      <div class="st" id="fx-status"></div>
+    </div>
+    <div class="card" style="margin-top:1rem">
       <h2>Import Fixture List</h2>
       <p style="font-size:.82rem;color:var(--dim);margin-bottom:.5rem;line-height:1.5">Download the template, fill in your fixtures, then upload to bulk-import a full season. Teams must already be registered in the league, with names matching exactly.</p>
       <p style="font-size:.78rem;color:var(--dim);margin-bottom:.5rem;line-height:1.5"><strong style="color:var(--gl)">Byes:</strong> put BYE in place of a team (Home or Away column) for a rest week. Those rows are recognised and skipped.</p>
@@ -333,40 +367,6 @@ main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 4rem}
       <div class="st" id="import-status" style="margin-top:.75rem"></div>
     </div>
 
-    <div class="card">
-      <h2>Add Single Fixture</h2>
-      <div class="grid">
-        <div class="field"><label>League</label>
-          <select id="fx-league" onchange="loadFixtureTeams()">
-            <option value="">— Select league —</option>
-          </select>
-        </div>
-        <div class="field"><label>Season</label>
-          <input type="number" id="fx-season" value="1" min="1">
-        </div>
-        <div class="field"><label>Date</label>
-          <input type="date" id="fx-date">
-        </div>
-        <div class="field"><label>Home Team</label>
-          <select id="fx-home"><option value="">— Select —</option></select>
-        </div>
-        <div class="field"><label>Away Team</label>
-          <select id="fx-away"><option value="">— Select —</option></select>
-        </div>
-      </div>
-      <button class="btn-admin" onclick="addFixture()"><span id="fx-spin" style="display:none" class="spin blue"></span>Add Fixture</button>
-      <div class="st" id="fx-status"></div>
-    </div>
-    <div class="card" style="margin-top:1rem">
-      <h2>Existing Fixtures</h2>
-      <div class="field" style="margin-bottom:1rem">
-        <label>Filter by League</label>
-        <select id="fx-filter-league" onchange="loadFixtureList()">
-          <option value="">— All leagues —</option>
-        </select>
-      </div>
-      <div id="fixture-list"><div class="nh">Select a league to view fixtures</div></div>
-    </div>
   </div>
 
   <!-- CREATE LEAGUE PANEL: guided set-up (1 Format, 2 Teams, 3 Fixtures, 4 Publish & send) -->
@@ -2092,21 +2092,24 @@ async function loadFixtureList(){
     try{ byeRows=(await sb('league_byes?league_id=eq.'+leagueId+'&order=bye_date.asc&select=team_id,bye_date'))||[]; }catch(e){ byeRows=[]; }
     var byeByDate={};
     byeRows.forEach(function(b){(byeByDate[b.bye_date]=byeByDate[b.bye_date]||[]).push(teamMap[b.team_id]||'?');});
+    var tN=new Date(),todayStr=tN.getFullYear()+'-'+String(tN.getMonth()+1).padStart(2,'0')+'-'+String(tN.getDate()).padStart(2,'0');
     var listItems=Object.keys(byeByDate).map(function(dt){
       var bd=new Date(dt+'T00:00:00');
       var bfmt=bd.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
-      return {date:dt,html:'<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem .75rem;background:var(--bg);border:1px dashed var(--border);border-radius:5px;margin-bottom:.4rem;flex-wrap:wrap">'
+      return {date:dt,grp:(dt<todayStr?'done':'up'),html:'<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem .75rem;background:var(--bg);border:1px dashed var(--border);border-radius:5px;margin-bottom:.4rem;flex-wrap:wrap">'
         +'<div style="font-size:.8rem;color:var(--dim);min-width:120px">'+bfmt+'</div>'
         +'<div style="flex:1;font-size:.9rem;font-weight:600;color:var(--dim)">Bye: '+byeByDate[dt].sort().map(esc).join(', ')+'</div>'
         +'<div style="font-size:.75rem;padding:2px 8px;border-radius:3px;background:transparent;color:var(--amber);border:1px solid var(--amber)">Bye</div></div>'};
     });
-    fixtures.forEach(function(f){listItems.push({date:f.fixture_date,html:(function(){
+    fixtures.forEach(function(f){listItems.push({date:f.fixture_date,grp:(f.played?'done':(f.fixture_date<todayStr?'needs':'up')),html:(function(){
       var d=new Date(f.fixture_date+'T00:00:00');
       var fmt=d.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
-      var statusStyle=f.played?'background:#1a2a1e;color:var(--gl);border:1px solid var(--green)':'background:var(--s3);color:var(--dim);border:1px solid var(--border)';
-      var statusText=f.played?'Played':'Upcoming';
+      var needs=!f.played&&f.fixture_date<todayStr;
+      var statusStyle=f.played?'background:#1a2a1e;color:var(--gl);border:1px solid var(--green)':(needs?'background:#3a2c08;color:var(--amber);border:1px solid var(--amber);font-weight:700':'background:var(--s3);color:var(--dim);border:1px solid var(--border)');
+      var statusText=f.played?'✓ Played':(needs?'Needs score':(f.fixture_date===todayStr?'Today':'Upcoming'));
+      var edge=f.played?'var(--green)':(needs?'var(--amber)':'var(--border)');
       fxCache[f.id]={home:teamMap[f.home_team_id]||'Home',away:teamMap[f.away_team_id]||'Away',hid:f.home_team_id,date:f.fixture_date,played:!!f.played};
-      return '<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem .75rem;background:var(--bg);border:1px solid var(--border);border-radius:5px;margin-bottom:.4rem;flex-wrap:wrap">'
+      return '<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem .75rem;background:'+(needs?'#241f10':'var(--bg)')+';border:1px solid '+(needs?'var(--amber)':'var(--border)')+';border-left:4px solid '+edge+';border-radius:5px;margin-bottom:.4rem;flex-wrap:wrap'+(f.played?';opacity:.85':'')+'">'
         +'<div style="font-size:.8rem;color:var(--dim);min-width:120px">'+fmt+'</div>'
         +'<div style="flex:1;font-size:.9rem;font-weight:600">'+esc(teamMap[f.home_team_id]||'?')+' <span style="color:var(--dim);font-weight:400">vs</span> '+esc(teamMap[f.away_team_id]||'?')
           +(function(){var h=teamById[f.home_team_id]||{};var u=mapsUrl(h.venue_name,h.venue_address);
@@ -2114,16 +2117,36 @@ async function loadFixtureList(){
               :'<div style="font-size:.74rem;font-weight:400;color:var(--amber);margin-top:2px">No home venue set for '+esc(teamMap[f.home_team_id]||'this team')+'</div>';})()
           +'</div>'
         +'<div style="font-size:.75rem;padding:2px 8px;border-radius:3px;'+statusStyle+'">'+statusText+'</div>'
-        +'<button onclick="openScoreForm(&quot;'+f.id+'&quot;)" style="background:none;border:1px solid var(--green);border-radius:4px;color:var(--gl);font-size:.72rem;padding:2px 8px;cursor:pointer">'+(f.played?'Edit score':'Enter score')+'</button>'
+        +'<button onclick="openScoreForm(&quot;'+f.id+'&quot;)" style="'+(needs?'background:var(--amber);border:1px solid var(--amber);color:#1a1405;font-weight:700;font-size:.78rem;padding:4px 12px':'background:none;border:1px solid var(--green);color:var(--gl);font-size:.72rem;padding:2px 8px')+';border-radius:4px;cursor:pointer">'+(f.played?'Edit score':'Enter score')+'</button>'
         +'<button onclick="deleteFixture(&quot;'+f.id+'&quot;)" style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--dim);font-size:.72rem;padding:2px 8px;cursor:pointer">Delete</button>'
         +'<div id="fxs-'+f.id+'" style="display:none;width:100%;flex-basis:100%"></div>'
         +'</div>';
     })()});});
-    el.innerHTML=chk+listItems.map(function(x,i){return {d:x.date,i:i,h:x.html};})
-      .sort(function(p,q){return p.d<q.d?-1:p.d>q.d?1:p.i-q.i;}).map(function(x){return x.h;}).join('');
+    function fxSorted(g){return listItems.filter(function(x){return x.grp===g;}).map(function(x,i){return {d:x.date,i:i,h:x.html};})
+      .sort(function(p,q){return p.d<q.d?-1:p.d>q.d?1:p.i-q.i;}).map(function(x){return x.h;}).join('');}
+    var nNeeds=fixtures.filter(function(f){return !f.played&&f.fixture_date<todayStr;}).length;
+    var nUp=fixtures.filter(function(f){return !f.played&&f.fixture_date>=todayStr;}).length;
+    var nDone=fixtures.filter(function(f){return f.played;}).length;
+    var chip='border-radius:999px;padding:4px 12px;font-size:.78rem;cursor:pointer;border:1px solid var(--border);background:var(--bg);color:var(--dim)';
+    var grpHead=function(t,c){return '<div style="margin:1rem 0 .5rem;font-size:.74rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:'+c+'">'+t+'</div>';};
+    var body='<div id="fx-chips" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.4rem">'
+      +'<button type="button" data-f="all" onclick="fxFilter(\'all\')" style="'+chip+'">All ('+fixtures.length+')</button>'
+      +'<button type="button" data-f="needs" onclick="fxFilter(\'needs\')" style="'+chip+'">Needs score ('+nNeeds+')</button>'
+      +'<button type="button" data-f="up" onclick="fxFilter(\'up\')" style="'+chip+'">Upcoming ('+nUp+')</button>'
+      +'<button type="button" data-f="done" onclick="fxFilter(\'done\')" style="'+chip+'">Played ('+nDone+')</button></div>';
+    var gN=fxSorted('needs'),gU=fxSorted('up'),gD=fxSorted('done');
+    if(gN)body+='<div class="fxgrp" data-g="needs">'+grpHead('Needs scoring ('+nNeeds+')','var(--amber)')+gN+'</div>';
+    if(gU)body+='<div class="fxgrp" data-g="up">'+grpHead('Upcoming ('+nUp+')','var(--gl)')+gU+'</div>';
+    if(gD)body+='<div class="fxgrp" data-g="done">'+grpHead('Played','var(--dim)')+gD+'</div>';
+    el.innerHTML=chk+body;
+    fxFilter('all');
   }catch(e){el.innerHTML='<div class="nh">Error: '+esc(e.message)+'</div>';}
 }
 
+function fxFilter(f){
+  document.querySelectorAll('#fixture-list .fxgrp').forEach(function(g){g.style.display=(f==='all'||g.getAttribute('data-g')===f)?'':'none';});
+  document.querySelectorAll('#fx-chips button').forEach(function(b){var on=b.getAttribute('data-f')===f;b.style.background=on?'var(--blue)':'var(--bg)';b.style.color=on?'#06101a':'var(--dim)';b.style.borderColor=on?'var(--blue)':'var(--border)';b.style.fontWeight=on?'700':'400';});
+}
 // ── Final score entry (for teams with no captain yet) ──────────────────────────
 var fxCache={};
 async function openScoreForm(id){
